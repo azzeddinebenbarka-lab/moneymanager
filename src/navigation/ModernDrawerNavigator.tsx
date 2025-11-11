@@ -1,0 +1,524 @@
+// src/navigation/ModernDrawerNavigator.tsx - VERSION COMPLÈTEMENT CORRIGÉE
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createStackNavigator } from '@react-navigation/stack';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import ModernDrawerContent from '../components/layout/ModernDrawerContent';
+import { useTheme } from '../context/ThemeContext';
+
+// Import des écrans
+import AccountDetailScreen from '../screens/AccountDetailScreen';
+import AccountsScreen from '../screens/AccountsScreen';
+import AddAnnualChargeScreen from '../screens/AddAnnualChargeScreen';
+import AddRecurringTransactionScreen from '../screens/AddRecurringTransactionScreen';
+import AddTransactionScreen from '../screens/AddTransactionScreen';
+import AlertsScreen from '../screens/AlertsScreen';
+import AnalyticsDashboardScreen from '../screens/AnalyticsDashboardScreen';
+import AnnualChargesScreen from '../screens/AnnualChargesScreen';
+import BudgetsScreen from '../screens/BudgetsScreen';
+import CategoriesScreen from '../screens/CategoriesScreen';
+import CategoryAnalysisScreen from '../screens/CategoryAnalysisScreen';
+import CurrencySettingsScreen from '../screens/CurrencySettingsScreen';
+import DashboardScreen from '../screens/DashboardScreen';
+import EditAnnualChargeScreen from '../screens/EditAnnualChargeScreen';
+import EditBudgetScreen from '../screens/EditBudgetScreen';
+import EditRecurringTransactionScreen from '../screens/EditRecurringTransactionScreen';
+import EditTransactionScreen from '../screens/EditTransactionScreen';
+import MonthDetailScreen from '../screens/MonthDetailScreen';
+import MonthsOverviewScreen from '../screens/MonthsOverviewScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import RecurringTransactionsScreen from '../screens/RecurringTransactionsScreen';
+import ReportsScreen from '../screens/ReportsScreen';
+import SettingsScreen from '../screens/SettingsScreen';
+import TransactionsScreen from '../screens/TransactionsScreen';
+import TransferScreen from '../screens/TransferScreen';
+import DebtStackNavigator from './DebtStackNavigator';
+import SavingsStackNavigator from './SavingsStackNavigator';
+
+// Types pour la navigation
+type DrawerParamList = {
+  // Navigation principale
+  Dashboard: undefined;
+  Accounts: undefined;
+  Transactions: undefined;
+  AddTransaction: undefined;
+  EditTransaction: { transactionId: string };
+  RecurringTransactions: undefined;
+  AddRecurringTransaction: undefined;
+  EditRecurringTransaction: { transactionId: string };
+  Transfer: undefined;
+  Categories: undefined;
+  Budgets: undefined;
+  EditBudget: { budgetId: string };
+  Alerts: undefined;
+  Reports: undefined;
+  
+  // Analytics et Rapports
+  Analytics: undefined;
+  AnalyticsDashboard: undefined;
+  CategoryAnalysis: undefined;
+  
+  // Gestion financière
+  AnnualCharges: undefined;
+  AddAnnualCharge: undefined;
+  EditAnnualCharge: { chargeId: string };
+  Debts: undefined;
+  AddDebt: undefined;
+  EditDebt: { debtId: string };
+  DebtDetail: { debtId: string };
+  Savings: undefined;
+  AddSavingsGoal: undefined;
+  EditSavingsGoal: { goalId: string };
+  SavingsDetail: { goalId: string };
+  
+  // Paramètres
+  Profile: undefined;
+  Settings: undefined;
+  CurrencySettings: undefined;
+  
+  // Autres
+  AccountDetail: { accountId: string };
+  
+  // ✅ NOUVELLES ROUTES POUR LA PHASE 8
+  MonthsOverview: undefined;
+  MonthDetail: { year: number; month: number };
+};
+
+const Drawer = createDrawerNavigator<DrawerParamList>();
+const Stack = createStackNavigator();
+
+// Stack pour Tableau de Bord
+const DashboardStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="DashboardMain" component={DashboardScreen} />
+    <Stack.Screen name="AccountDetail" component={AccountDetailScreen} />
+    <Stack.Screen name="Transfer" component={TransferScreen} />
+  </Stack.Navigator>
+);
+
+// Stack pour Transactions
+const TransactionStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="TransactionsList" component={TransactionsScreen} />
+    <Stack.Screen name="AddTransaction" component={AddTransactionScreen} />
+    <Stack.Screen name="EditTransaction" component={EditTransactionScreen} />
+    <Stack.Screen name="AccountDetail" component={AccountDetailScreen} />
+    <Stack.Screen name="Transfer" component={TransferScreen} />
+  </Stack.Navigator>
+);
+
+// Stack pour Comptes
+const AccountsStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="AccountsList" component={AccountsScreen} />
+    <Stack.Screen name="AccountDetail" component={AccountDetailScreen} />
+    <Stack.Screen name="Transfer" component={TransferScreen} />
+    <Stack.Screen name="AddTransaction" component={AddTransactionScreen} />
+  </Stack.Navigator>
+);
+
+// Stack pour Budgets
+const BudgetsStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="BudgetsList" component={BudgetsScreen} />
+    <Stack.Screen name="EditBudget" component={EditBudgetScreen} />
+  </Stack.Navigator>
+);
+
+// Stack pour Catégories
+const CategoriesStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="CategoriesList" component={CategoriesScreen} />
+  </Stack.Navigator>
+);
+
+// Stack pour Analytics
+const AnalyticsStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="AnalyticsDashboard" component={AnalyticsDashboardScreen} />
+    <Stack.Screen name="ReportsList" component={ReportsScreen} />
+    <Stack.Screen name="CategoryAnalysis" component={CategoryAnalysisScreen} />
+  </Stack.Navigator>
+);
+
+// Stack pour Paramètres
+const SettingsStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="SettingsList" component={SettingsScreen} />
+    <Stack.Screen name="Profile" component={ProfileScreen} />
+    <Stack.Screen name="CurrencySettings" component={CurrencySettingsScreen} />
+  </Stack.Navigator>
+);
+
+// Stack pour Charges Annuelles
+const AnnualChargesStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="AnnualChargesList" component={AnnualChargesScreen} />
+    <Stack.Screen name="AddAnnualCharge" component={AddAnnualChargeScreen} />
+    <Stack.Screen name="EditAnnualCharge" component={EditAnnualChargeScreen} />
+  </Stack.Navigator>
+);
+
+// Stack pour Transactions Récurrentes
+const RecurringTransactionsStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="RecurringTransactionsList" component={RecurringTransactionsScreen} />
+    <Stack.Screen name="AddRecurringTransaction" component={AddRecurringTransactionScreen} />
+    <Stack.Screen name="EditRecurringTransaction" component={EditRecurringTransactionScreen} />
+  </Stack.Navigator>
+);
+
+// ✅ NOUVEAU : Stack pour Vue par Mois
+const MonthsStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="MonthsOverview" component={MonthsOverviewScreen} />
+    <Stack.Screen name="MonthDetail" component={MonthDetailScreen} />
+  </Stack.Navigator>
+);
+
+const ModernDrawerNavigator = () => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  const drawerScreenOptions = {
+    headerShown: false,
+    drawerStyle: {
+      backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
+      width: 320,
+    },
+    drawerActiveTintColor: isDark ? '#FFFFFF' : '#007AFF',
+    drawerInactiveTintColor: isDark ? '#8E8E93' : '#8E8E93',
+    drawerLabelStyle: {
+      fontSize: 15,
+      fontWeight: '500' as const,
+      marginLeft: -16,
+    },
+    drawerItemStyle: {
+      borderRadius: 12,
+      marginHorizontal: 8,
+      marginVertical: 2,
+    },
+    drawerActiveBackgroundColor: isDark ? '#2C2C2E' : '#F2F2F7',
+  };
+
+  return (
+    <Drawer.Navigator
+      drawerContent={(props) => <ModernDrawerContent {...props} />}
+      screenOptions={drawerScreenOptions}
+      initialRouteName="Dashboard"
+    >
+      {/* SECTION PRINCIPALE */}
+      <Drawer.Screen
+        name="Dashboard"
+        component={DashboardStack}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <View style={[styles.iconContainer, { backgroundColor: '#007AFF' }]}>
+              <Ionicons name="speedometer" size={size-2} color="#FFFFFF" />
+            </View>
+          ),
+          drawerLabel: "Tableau de Bord",
+        }}
+      />
+
+      {/* ✅ NOUVELLE SECTION : VUE PAR MOIS */}
+      <Drawer.Screen
+        name="MonthsOverview"
+        component={MonthsStack}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <View style={[styles.iconContainer, { backgroundColor: '#8B5CF6' }]}>
+              <Ionicons name="calendar" size={size-2} color="#FFFFFF" />
+            </View>
+          ),
+          drawerLabel: "Vue par Mois",
+        }}
+      />
+
+      {/* SECTION TRANSACTIONS */}
+      <Drawer.Screen
+        name="Transactions"
+        component={TransactionStack}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <View style={[styles.iconContainer, { backgroundColor: '#34C759' }]}>
+              <Ionicons name="swap-horizontal" size={size-2} color="#FFFFFF" />
+            </View>
+          ),
+          drawerLabel: "Transactions",
+        }}
+      />
+
+      <Drawer.Screen
+        name="RecurringTransactions"
+        component={RecurringTransactionsStack}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <View style={[styles.iconContainer, { backgroundColor: '#007AFF' }]}>
+              <MaterialIcons name="autorenew" size={size-2} color="#FFFFFF" />
+            </View>
+          ),
+          drawerLabel: "Transactions Récurrentes",
+        }}
+      />
+
+      {/* SECTION COMPTES */}
+      <Drawer.Screen
+        name="Accounts"
+        component={AccountsStack}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <View style={[styles.iconContainer, { backgroundColor: '#5856D6' }]}>
+              <Ionicons name="wallet" size={size-2} color="#FFFFFF" />
+            </View>
+          ),
+          drawerLabel: "Comptes",
+        }}
+      />
+
+      {/* SECTION BUDGETS ET PLANIFICATION */}
+      <Drawer.Screen
+        name="Budgets"
+        component={BudgetsStack}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <View style={[styles.iconContainer, { backgroundColor: '#FF9500' }]}>
+              <Ionicons name="pie-chart" size={size-2} color="#FFFFFF" />
+            </View>
+          ),
+          drawerLabel: "Budgets",
+        }}
+      />
+
+      <Drawer.Screen
+        name="Categories"
+        component={CategoriesStack}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <View style={[styles.iconContainer, { backgroundColor: '#FF6B35' }]}>
+              <Ionicons name="pricetags" size={size-2} color="#FFFFFF" />
+            </View>
+          ),
+          drawerLabel: "Catégories",
+        }}
+      />
+
+      <Drawer.Screen
+        name="AnnualCharges"
+        component={AnnualChargesStack}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <View style={[styles.iconContainer, { backgroundColor: '#FF3B30' }]}>
+              <MaterialIcons name="event" size={size-2} color="#FFFFFF" />
+            </View>
+          ),
+          drawerLabel: "Charges Annuelles",
+        }}
+      />
+
+      {/* SECTION ÉPARGNE ET DETTES */}
+      <Drawer.Screen
+        name="Savings"
+        component={SavingsStackNavigator}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <View style={[styles.iconContainer, { backgroundColor: '#32D74B' }]}>
+              <Ionicons name="trending-up" size={size-2} color="#FFFFFF" />
+            </View>
+          ),
+          drawerLabel: "Épargne & Objectifs",
+        }}
+      />
+
+      <Drawer.Screen
+        name="Debts"
+        component={DebtStackNavigator}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <View style={[styles.iconContainer, { backgroundColor: '#FF453A' }]}>
+              <Ionicons name="trending-down" size={size-2} color="#FFFFFF" />
+            </View>
+          ),
+          drawerLabel: "Gestion des Dettes",
+        }}
+      />
+
+      {/* SECTION ANALYTICS */}
+      <Drawer.Screen
+        name="Analytics"
+        component={AnalyticsStack}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <View style={[styles.iconContainer, { backgroundColor: '#AF52DE' }]}>
+              <Ionicons name="bar-chart" size={size-2} color="#FFFFFF" />
+            </View>
+          ),
+          drawerLabel: "Analytics & Rapports",
+        }}
+      />
+
+      {/* ✅ AJOUTER AnalyticsDashboard COMME ROUTE DIRECTE POUR CORRIGER L'ERREUR */}
+      <Drawer.Screen 
+        name="AnalyticsDashboard" 
+        component={AnalyticsDashboardScreen} 
+        options={{
+          drawerLabel: "Dashboard Analytics",
+          drawerItemStyle: { display: 'none' } // Caché du menu
+        }}
+      />
+
+      <Drawer.Screen
+        name="CategoryAnalysis"
+        component={CategoryAnalysisScreen}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <View style={[styles.iconContainer, { backgroundColor: '#BF5AF2' }]}>
+              <Ionicons name="analytics" size={size-2} color="#FFFFFF" />
+            </View>
+          ),
+          drawerLabel: "Analyse par Catégorie",
+        }}
+      />
+
+      {/* SECTION ALERTES */}
+      <Drawer.Screen
+        name="Alerts"
+        component={AlertsScreen}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <View style={[styles.iconContainer, { backgroundColor: '#FFD60A' }]}>
+              <Ionicons name="notifications" size={size-2} color="#000000" />
+            </View>
+          ),
+          drawerLabel: "Alertes & Notifications",
+        }}
+      />
+
+      {/* SECTION PARAMÈTRES */}
+      <Drawer.Screen
+        name="Settings"
+        component={SettingsStack}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <View style={[styles.iconContainer, { backgroundColor: '#8E8E93' }]}>
+              <Ionicons name="settings" size={size-2} color="#FFFFFF" />
+            </View>
+          ),
+          drawerLabel: "Paramètres",
+        }}
+      />
+
+      {/* PROFIL */}
+      <Drawer.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <View style={[styles.iconContainer, { backgroundColor: '#5AC8FA' }]}>
+              <Ionicons name="person" size={size-2} color="#FFFFFF" />
+            </View>
+          ),
+          drawerLabel: "Mon Profil",
+        }}
+      />
+
+      {/* ÉCRANS CACHÉS DU DRAWER */}
+      <Drawer.Screen 
+        name="AddTransaction" 
+        component={AddTransactionScreen} 
+        options={{
+          drawerLabel: "Nouvelle Transaction",
+          drawerItemStyle: { display: 'none' }
+        }}
+      />
+
+      <Drawer.Screen 
+        name="AddRecurringTransaction" 
+        component={AddRecurringTransactionScreen} 
+        options={{
+          drawerLabel: "Nouvelle Transaction Récurrente",
+          drawerItemStyle: { display: 'none' }
+        }}
+      />
+
+      <Drawer.Screen 
+        name="Transfer" 
+        component={TransferScreen} 
+        options={{
+          drawerLabel: "Transfert",
+          drawerItemStyle: { display: 'none' }
+        }}
+      />
+
+      <Drawer.Screen 
+        name="EditTransaction" 
+        component={EditTransactionScreen} 
+        options={{
+          drawerLabel: "Modifier Transaction",
+          drawerItemStyle: { display: 'none' }
+        }}
+      />
+      
+      <Drawer.Screen 
+        name="EditBudget" 
+        component={EditBudgetScreen} 
+        options={{
+          drawerLabel: "Modifier Budget",
+          drawerItemStyle: { display: 'none' }
+        }}
+      />
+      
+      <Drawer.Screen 
+        name="EditAnnualCharge" 
+        component={EditAnnualChargeScreen} 
+        options={{
+          drawerLabel: "Modifier Charge",
+          drawerItemStyle: { display: 'none' }
+        }}
+      />
+      
+      <Drawer.Screen 
+        name="EditRecurringTransaction" 
+        component={EditRecurringTransactionScreen} 
+        options={{
+          drawerLabel: "Modifier Transaction Récurrente",
+          drawerItemStyle: { display: 'none' }
+        }}
+      />
+      
+      <Drawer.Screen 
+        name="AccountDetail" 
+        component={AccountDetailScreen} 
+        options={{
+          drawerLabel: "Détails Compte",
+          drawerItemStyle: { display: 'none' }
+        }}
+      />
+
+      {/* ✅ NOUVEAU : Écran de détail mois (caché) */}
+      <Drawer.Screen 
+        name="MonthDetail" 
+        component={MonthDetailScreen} 
+        options={{
+          drawerLabel: "Détail du Mois",
+          drawerItemStyle: { display: 'none' }
+        }}
+      />
+
+    </Drawer.Navigator>
+  );
+};
+
+const styles = StyleSheet.create({
+  iconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+});
+
+export default ModernDrawerNavigator;

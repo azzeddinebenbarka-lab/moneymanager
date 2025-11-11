@@ -1,0 +1,585 @@
+// src/services/categoryService.ts - SERVICE COMPLET ET ORGANISÉ
+import { Category } from '../types';
+import { getDatabase } from './database/sqlite';
+
+interface DatabaseCategory {
+  id: string;
+  user_id: string;
+  name: string;
+  type: string;
+  color: string;
+  icon: string;
+  created_at: string;
+}
+
+export const categoryService = {
+  // ===== OPÉRATIONS CRUD =====
+
+  // CREATE - Créer une catégorie
+  createCategory: async (category: Omit<Category, 'id' | 'createdAt'>, userId: string = 'default-user'): Promise<string> => {
+    const db = await getDatabase();
+    
+    try {
+      // Vérifier que la table existe
+      await checkAndRepairCategoriesTable();
+
+      const id = `cat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const createdAt = new Date().toISOString();
+
+      console.log('🔄 [categoryService] Creating category:', { 
+        id, 
+        name: category.name, 
+        type: category.type 
+      });
+
+      await db.runAsync(
+        `INSERT INTO categories (id, user_id, name, type, color, icon, created_at) 
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [id, userId, category.name, category.type, category.color, category.icon, createdAt]
+      );
+      
+      console.log('✅ [categoryService] Category created successfully:', id);
+      return id;
+      
+    } catch (error) {
+      console.error('❌ [categoryService] Error in createCategory:', error);
+      
+      // Réparer et réessayer en cas d'erreur de structure
+      if (error instanceof Error && (
+        error.message.includes('no such table') ||
+        error.message.includes('no column named')
+      )) {
+        console.log('🛠️ [categoryService] Table issue detected, repairing...');
+        await repairCategoriesTable();
+        
+        // Réessayer après réparation
+        return await categoryService.createCategory(category, userId);
+      }
+      
+      throw new Error(`Impossible de créer la catégorie: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+    }
+  },
+
+  // READ - Récupérer toutes les catégories
+  getAllCategories: async (userId: string = 'default-user'): Promise<Category[]> => {
+    try {
+      const db = await getDatabase();
+      
+      await checkAndRepairCategoriesTable();
+      
+      console.log('🔍 [categoryService] Fetching all categories...');
+      
+      const result = await db.getAllAsync(
+        `SELECT * FROM categories WHERE user_id = ? ORDER BY type, name`,
+        [userId]
+      ) as DatabaseCategory[];
+      
+      console.log('✅ [categoryService] Found', result.length, 'categories');
+      
+      const categories: Category[] = result.map((item) => ({
+        id: item.id,
+        name: item.name,
+        type: item.type as 'expense' | 'income',
+        color: item.color,
+        icon: item.icon,
+        createdAt: item.created_at,
+      }));
+      
+      return categories;
+    } catch (error) {
+      console.error('❌ [categoryService] Error in getAllCategories:', error);
+      
+      if (error instanceof Error && error.message.includes('no such table')) {
+        await repairCategoriesTable();
+        return [];
+      }
+      
+      throw error;
+    }
+  },
+
+  // READ - Récupérer une catégorie par ID
+  getCategoryById: async (id: string, userId: string = 'default-user'): Promise<Category | null> => {
+    try {
+      const db = await getDatabase();
+      
+      await checkAndRepairCategoriesTable();
+      
+      console.log('🔍 [categoryService] Fetching category by ID:', id);
+      
+      const result = await db.getFirstAsync(
+        `SELECT * FROM categories WHERE id = ? AND user_id = ?`,
+        [id, userId]
+      ) as DatabaseCategory | null;
+      
+      if (result) {
+        const category: Category = {
+          id: result.id,
+          name: result.name,
+          type: result.type as 'expense' | 'income',
+          color: result.color,
+          icon: result.icon,
+          createdAt: result.created_at,
+        };
+        console.log('✅ [categoryService] Category found:', category.name);
+        return category;
+      }
+      
+      console.log('❌ [categoryService] Category not found for ID:', id);
+      return null;
+    } catch (error) {
+      console.error('❌ [categoryService] Error in getCategoryById:', error);
+      
+      if (error instanceof Error && error.message.includes('no such table')) {
+        await repairCategoriesTable();
+        return null;
+      }
+      
+      throw error;
+    }
+  },
+
+  // READ - Récupérer les catégories par type
+  getCategoriesByType: async (type: 'expense' | 'income', userId: string = 'default-user'): Promise<Category[]> => {
+    try {
+      const db = await getDatabase();
+      
+      await checkAndRepairCategoriesTable();
+      
+      console.log('🔍 [categoryService] Fetching categories by type:', type);
+      
+      const result = await db.getAllAsync(
+        `SELECT * FROM categories WHERE type = ? AND user_id = ? ORDER BY name`,
+        [type, userId]
+      ) as DatabaseCategory[];
+      
+      console.log('✅ [categoryService] Found', result.length, 'categories for type:', type);
+      
+      const categories: Category[] = result.map((item) => ({
+        id: item.id,
+        name: item.name,
+        type: item.type as 'expense' | 'income',
+        color: item.color,
+        icon: item.icon,
+        createdAt: item.created_at,
+      }));
+      
+      return categories;
+    } catch (error) {
+      console.error('❌ [categoryService] Error in getCategoriesByType:', error);
+      
+      if (error instanceof Error && error.message.includes('no such table')) {
+        await repairCategoriesTable();
+        return [];
+      }
+      
+      throw error;
+    }
+  },
+
+  // UPDATE - Mettre à jour une catégorie
+  updateCategory: async (id: string, category: Omit<Category, 'id' | 'createdAt'>, userId: string = 'default-user'): Promise<void> => {
+    const db = await getDatabase();
+    
+    await checkAndRepairCategoriesTable();
+    
+    try {
+      console.log('🔄 [categoryService] Updating category:', id);
+      
+      await db.runAsync(
+        `UPDATE categories 
+         SET name = ?, type = ?, color = ?, icon = ?
+         WHERE id = ? AND user_id = ?`,
+        [category.name, category.type, category.color, category.icon, id, userId]
+      );
+      
+      console.log('✅ [categoryService] Category updated successfully');
+    } catch (error) {
+      console.error('❌ [categoryService] Error in updateCategory:', error);
+      throw error;
+    }
+  },
+
+  // DELETE - Supprimer une catégorie
+  deleteCategory: async (id: string, userId: string = 'default-user'): Promise<void> => {
+    const db = await getDatabase();
+    
+    await checkAndRepairCategoriesTable();
+    
+    try {
+      console.log('🗑️ [categoryService] Deleting category:', id);
+      
+      await db.runAsync(
+        `DELETE FROM categories WHERE id = ? AND user_id = ?`,
+        [id, userId]
+      );
+      
+      console.log('✅ [categoryService] Category deleted successfully');
+    } catch (error) {
+      console.error('❌ [categoryService] Error in deleteCategory:', error);
+      throw error;
+    }
+  },
+
+  // ===== RECHERCHE ET FILTRES =====
+
+  // Rechercher des catégories par nom
+  searchCategories: async (searchTerm: string, userId: string = 'default-user'): Promise<Category[]> => {
+    try {
+      const db = await getDatabase();
+      
+      await checkAndRepairCategoriesTable();
+      
+      console.log('🔍 [categoryService] Searching categories for:', searchTerm);
+      
+      const result = await db.getAllAsync(
+        `SELECT * FROM categories WHERE name LIKE ? AND user_id = ? ORDER BY name`,
+        [`%${searchTerm}%`, userId]
+      ) as DatabaseCategory[];
+      
+      const categories: Category[] = result.map((item) => ({
+        id: item.id,
+        name: item.name,
+        type: item.type as 'expense' | 'income',
+        color: item.color,
+        icon: item.icon,
+        createdAt: item.created_at,
+      }));
+      
+      console.log('✅ [categoryService] Search results:', categories.length, 'categories found');
+      return categories;
+    } catch (error) {
+      console.error('❌ [categoryService] Error in searchCategories:', error);
+      
+      if (error instanceof Error && error.message.includes('no such table')) {
+        await repairCategoriesTable();
+        return [];
+      }
+      
+      throw error;
+    }
+  },
+
+  // ===== UTILITAIRES =====
+
+  // Vérifier si une catégorie est utilisée dans des transactions
+  isCategoryUsed: async (categoryId: string, userId: string = 'default-user'): Promise<boolean> => {
+    try {
+      const db = await getDatabase();
+      
+      await checkAndRepairCategoriesTable();
+      
+      const result = await db.getFirstAsync(
+        `SELECT COUNT(*) as count FROM transactions WHERE category = ? AND user_id = ?`,
+        [categoryId, userId]
+      ) as { count: number };
+      
+      const isUsed = result.count > 0;
+      console.log(`🔍 [categoryService] Category ${categoryId} is used:`, isUsed);
+      
+      return isUsed;
+    } catch (error) {
+      console.error('❌ [categoryService] Error in isCategoryUsed:', error);
+      
+      if (error instanceof Error && error.message.includes('no such table')) {
+        await repairCategoriesTable();
+        return false;
+      }
+      
+      throw error;
+    }
+  },
+
+  // Obtenir les statistiques des catégories
+  getCategoryStats: async (userId: string = 'default-user'): Promise<{
+    totalCategories: number;
+    expenseCategories: number;
+    incomeCategories: number;
+    categoriesByType: Record<string, number>;
+  }> => {
+    try {
+      const db = await getDatabase();
+      
+      await checkAndRepairCategoriesTable();
+      
+      // Total des catégories
+      const countResult = await db.getFirstAsync(
+        `SELECT COUNT(*) as count FROM categories WHERE user_id = ?`,
+        [userId]
+      ) as { count: number };
+      const totalCategories = countResult?.count || 0;
+      
+      // Catégories par type
+      const typeResult = await db.getAllAsync(
+        `SELECT type, COUNT(*) as count FROM categories WHERE user_id = ? GROUP BY type`,
+        [userId]
+      ) as { type: string; count: number }[];
+      
+      const categoriesByType: Record<string, number> = {};
+      let expenseCategories = 0;
+      let incomeCategories = 0;
+      
+      typeResult.forEach(item => {
+        categoriesByType[item.type] = item.count;
+        if (item.type === 'expense') expenseCategories = item.count;
+        if (item.type === 'income') incomeCategories = item.count;
+      });
+      
+      console.log('📊 [categoryService] Category stats:', { 
+        totalCategories, 
+        expenseCategories, 
+        incomeCategories, 
+        categoriesByType 
+      });
+      
+      return {
+        totalCategories,
+        expenseCategories,
+        incomeCategories,
+        categoriesByType
+      };
+    } catch (error) {
+      console.error('❌ [categoryService] Error in getCategoryStats:', error);
+      
+      if (error instanceof Error && error.message.includes('no such table')) {
+        await repairCategoriesTable();
+        return {
+          totalCategories: 0,
+          expenseCategories: 0,
+          incomeCategories: 0,
+          categoriesByType: {}
+        };
+      }
+      
+      throw error;
+    }
+  },
+
+  // Initialiser les catégories par défaut
+  initializeDefaultCategories: async (userId: string = 'default-user'): Promise<void> => {
+    try {
+      const db = await getDatabase();
+      
+      await checkAndRepairCategoriesTable();
+      
+      // Vérifier si des catégories existent déjà pour cet utilisateur
+      const existingCategories = await db.getAllAsync(
+        `SELECT * FROM categories WHERE user_id = ?`,
+        [userId]
+      ) as DatabaseCategory[];
+      
+      if (existingCategories.length === 0) {
+        console.log('🔄 [categoryService] Initializing default categories...');
+        
+        const defaultCategories = [
+          // Dépenses
+          { id: 'cat_1', name: 'Alimentation', type: 'expense', color: '#FF6B6B', icon: 'restaurant' },
+          { id: 'cat_2', name: 'Transport', type: 'expense', color: '#4ECDC4', icon: 'car' },
+          { id: 'cat_3', name: 'Logement', type: 'expense', color: '#45B7D1', icon: 'home' },
+          { id: 'cat_4', name: 'Loisirs', type: 'expense', color: '#96CEB4', icon: 'game-controller' },
+          { id: 'cat_5', name: 'Santé', type: 'expense', color: '#FFEAA7', icon: 'medical' },
+          { id: 'cat_6', name: 'Shopping', type: 'expense', color: '#DDA0DD', icon: 'cart' },
+          { id: 'cat_7', name: 'Éducation', type: 'expense', color: '#98D8C8', icon: 'school' },
+          { id: 'cat_8', name: 'Voyages', type: 'expense', color: '#F7DC6F', icon: 'airplane' },
+          { id: 'cat_9', name: 'Autres dépenses', type: 'expense', color: '#778899', icon: 'ellipsis-horizontal' },
+          
+          // Revenus
+          { id: 'cat_10', name: 'Salaire', type: 'income', color: '#52C41A', icon: 'cash' },
+          { id: 'cat_11', name: 'Investissements', type: 'income', color: '#FAAD14', icon: 'trending-up' },
+          { id: 'cat_12', name: 'Cadeaux', type: 'income', color: '#722ED1', icon: 'gift' },
+          { id: 'cat_13', name: 'Prime', type: 'income', color: '#13C2C2', icon: 'trophy' },
+          { id: 'cat_14', name: 'Autres revenus', type: 'income', color: '#20B2AA', icon: 'add-circle' },
+        ];
+
+        for (const category of defaultCategories) {
+          const createdAt = new Date().toISOString();
+          await db.runAsync(
+            `INSERT INTO categories (id, user_id, name, type, color, icon, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [category.id, userId, category.name, category.type, category.color, category.icon, createdAt]
+          );
+        }
+        
+        console.log('✅ [categoryService] Default categories initialized successfully');
+      } else {
+        console.log('ℹ️ [categoryService] Categories already exist, skipping initialization');
+      }
+    } catch (error) {
+      console.error('❌ [categoryService] Error initializing default categories:', error);
+      throw error;
+    }
+  },
+
+  // ===== DIAGNOSTIC ET RÉPARATION =====
+
+  // Diagnostic de la table
+  diagnoseTable: async (): Promise<{
+    exists: boolean;
+    structure: any[];
+    rowCount: number;
+    sampleData: any[];
+  }> => {
+    try {
+      const db = await getDatabase();
+      console.log('🔧 [categoryService] Comprehensive table diagnosis...');
+      
+      // Vérifier si la table existe
+      const tableExists = await db.getFirstAsync(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='categories'"
+      );
+      
+      if (!tableExists) {
+        console.log('❌ [categoryService] Table categories does not exist');
+        return {
+          exists: false,
+          structure: [],
+          rowCount: 0,
+          sampleData: []
+        };
+      }
+      
+      // Structure de la table
+      const structure = await db.getAllAsync(`PRAGMA table_info(categories)`) as any[];
+      console.log('🔧 [categoryService] Table structure:', structure);
+      
+      // Nombre de lignes
+      const countResult = await db.getFirstAsync(`SELECT COUNT(*) as count FROM categories`) as { count: number };
+      const rowCount = countResult.count;
+      
+      // Données d'exemple
+      const sampleData = rowCount > 0 ? 
+        await db.getAllAsync(`SELECT * FROM categories LIMIT 3`) as any[] : [];
+      
+      console.log('✅ [categoryService] Diagnosis completed:', {
+        exists: true,
+        rowCount,
+        sampleDataCount: sampleData.length
+      });
+      
+      return {
+        exists: true,
+        structure,
+        rowCount,
+        sampleData
+      };
+    } catch (error) {
+      console.error('❌ [categoryService] Error in diagnoseTable:', error);
+      return {
+        exists: false,
+        structure: [],
+        rowCount: 0,
+        sampleData: []
+      };
+    }
+  },
+
+  // Réparation d'urgence
+  emergencyRepair: async (): Promise<void> => {
+    console.log('🛠️ [categoryService] Starting emergency repair...');
+    await repairCategoriesTable();
+    console.log('✅ [categoryService] Emergency repair completed');
+  }
+};
+
+// ===== FONCTIONS INTERNES =====
+
+// Vérifier et réparer la table categories si nécessaire
+const checkAndRepairCategoriesTable = async (): Promise<void> => {
+  try {
+    const db = await getDatabase();
+    
+    // Vérifier si la table existe
+    const tableExists = await db.getFirstAsync(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='categories'"
+    );
+    
+    if (!tableExists) {
+      console.log('🛠️ [categoryService] Categories table does not exist, creating...');
+      await repairCategoriesTable();
+      return;
+    }
+    
+    // Vérifier la structure
+    const tableInfo = await db.getAllAsync(`PRAGMA table_info(categories)`) as any[];
+    const requiredColumns = ['id', 'user_id', 'name', 'type', 'color', 'icon', 'created_at'];
+    const missingColumns = requiredColumns.filter(col => 
+      !tableInfo.some(column => column.name === col)
+    );
+    
+    if (missingColumns.length > 0) {
+      console.log('🛠️ [categoryService] Missing columns detected:', missingColumns);
+      await repairCategoriesTable();
+    }
+    
+  } catch (error) {
+    console.error('❌ [categoryService] Error checking table structure:', error);
+    // En cas d'erreur, recréer la table
+    await repairCategoriesTable();
+  }
+};
+
+// Fonction de réparation de la table categories
+const repairCategoriesTable = async (): Promise<void> => {
+  try {
+    const db = await getDatabase();
+    console.log('🛠️ [categoryService] Repairing categories table...');
+    
+    // Sauvegarder les données existantes
+    let existingData: DatabaseCategory[] = [];
+    try {
+      existingData = await db.getAllAsync(`SELECT * FROM categories`) as DatabaseCategory[];
+      console.log(`🔧 [categoryService] Backing up ${existingData.length} categories`);
+    } catch (error) {
+      console.log('🔧 [categoryService] No existing data to backup');
+    }
+    
+    // Supprimer et recréer la table
+    await db.execAsync('DROP TABLE IF EXISTS categories');
+    
+    await db.execAsync(`
+      CREATE TABLE categories (
+        id TEXT PRIMARY KEY NOT NULL,
+        user_id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        type TEXT NOT NULL,
+        color TEXT NOT NULL,
+        icon TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      );
+    `);
+    
+    console.log('✅ [categoryService] Categories table recreated');
+    
+    // Réinsérer les données sauvegardées
+    if (existingData.length > 0) {
+      let restoredCount = 0;
+      for (const category of existingData) {
+        try {
+          await db.runAsync(
+            `INSERT INTO categories (id, user_id, name, type, color, icon, created_at) 
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+              category.id,
+              category.user_id,
+              category.name,
+              category.type,
+              category.color,
+              category.icon,
+              category.created_at || new Date().toISOString()
+            ]
+          );
+          restoredCount++;
+        } catch (insertError) {
+          console.warn('⚠️ [categoryService] Could not restore category:', category.id);
+        }
+      }
+      console.log(`✅ [categoryService] Restored ${restoredCount}/${existingData.length} categories`);
+    }
+    
+  } catch (error) {
+    console.error('❌ [categoryService] Error repairing categories table:', error);
+    throw error;
+  }
+};
+
+export default categoryService;

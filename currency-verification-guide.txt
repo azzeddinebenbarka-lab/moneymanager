@@ -1,0 +1,23 @@
+﻿VÉRIFICATION DES MODIFICATIONS DE DEVISES :
+
+✅ MODIFICATIONS EFFECTUÉES :
+1. App.tsx - CurrencyProvider ajouté
+2. DashboardScreen.tsx - Support devise intégré
+3. TransactionsScreen.tsx - Montants formatés
+4. AccountsScreen.tsx - Soldes formatés  
+5. BudgetsScreen.tsx - Budgets formatés
+6. ReportsScreen.tsx - Statistiques formatées
+
+🔧 POUR TESTER :
+1. Allez dans Paramètres → Devises
+2. Changez la devise (ex: EUR → MAD)
+3. Retournez au Dashboard
+4. Vérifiez que tous les montants utilisent la nouvelle devise
+
+⚠️ SI ÇA NE FONCTIONNE PAS :
+- Vérifiez que CurrencyContext.tsx existe dans src/context/
+- Vérifiez que useCurrencyFormat.ts existe dans src/hooks/
+- Redémarrez l'application complètement
+
+📞 SUPPORT :
+Les devises supportées : EUR, USD, MAD, GBP, CAD, CHF, JPY, etc.

@@ -1,0 +1,24 @@
+﻿GUIDE RAPIDE POUR APPLIQUER LES MODIFICATIONS :
+
+1. TransactionsScreen.tsx :
+   - Import: import { useCurrencyFormat } from '../hooks/useCurrencyFormat';
+   - Hook: const { formatAmount } = useCurrencyFormat();
+   - Remplacer: {transaction.amount.toFixed(2)} € -> {formatAmount(transaction.amount)}
+
+2. AccountsScreen.tsx :
+   - Même import et hook
+   - Remplacer: {account.balance.toFixed(2)} € -> {formatAmount(account.balance)}
+
+3. BudgetsScreen.tsx :
+   - Même import et hook
+   - Remplacer: {budget.amount.toFixed(2)} € -> {formatAmount(budget.amount)}
+
+4. ReportsScreen.tsx :
+   - Même import et hook
+   - Remplacer tous les montants dans les stats et graphiques
+
+ASTUCE VS CODE :
+   Ctrl+H (Replace All) :
+   Find: .toFixed(2)} €
+   Replace: )}
+   PUIS ajoutez formatAmount() autour des variables
