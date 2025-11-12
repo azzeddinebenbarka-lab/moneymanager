@@ -36,6 +36,9 @@ export const useDebts = (userId: string = 'default-user') => {
       setError(null);
       console.log('🔍 [useDebts] Loading debts...');
       
+      // ✅ S'ASSURER QUE LA TABLE EXISTE AVANT TOUTE OPÉRATION
+      await debtService.ensureDebtsTableExists();
+      
       // ✅ MISE À JOUR AUTOMATIQUE DES STATUTS AVANT CHARGEMENT
       await debtService.updateDebtStatuses(userId);
       
@@ -241,6 +244,18 @@ export const useDebts = (userId: string = 'default-user') => {
     }
   }, [userId, loadDebts]);
 
+  /**
+   * ✅ DIAGNOSTIC DE LA BASE DE DONNÉES
+   */
+  const diagnoseDatabase = useCallback(async () => {
+    try {
+      return await debtService.diagnoseDatabase();
+    } catch (err) {
+      console.error('❌ [useDebts] Error diagnosing database:', err);
+      throw err;
+    }
+  }, []);
+
   const refreshDebts = useCallback(async (): Promise<void> => {
     await loadDebts();
   }, [loadDebts]);
@@ -285,6 +300,7 @@ export const useDebts = (userId: string = 'default-user') => {
     clearError,
     checkPaymentEligibility,
     updateDebtStatuses,
+    diagnoseDatabase,
   };
 };
 

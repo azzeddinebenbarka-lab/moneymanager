@@ -1,4 +1,4 @@
-// src/components/transaction/RecurringTransactionForm.tsx
+// src/components/transaction/RecurringTransactionForm.tsx - VERSION CORRIGÉE
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useCurrency } from '../../context/CurrencyContext'; // ✅ AJOUT: Import du contexte devise
 import { useTheme } from '../../context/ThemeContext';
 import { useAccounts } from '../../hooks/useAccounts';
 import { useCategories } from '../../hooks/useCategories';
@@ -36,6 +37,7 @@ const RecurringTransactionForm: React.FC<RecurringTransactionFormProps> = ({
   editingTransaction,
 }) => {
   const { theme } = useTheme();
+  const { formatAmount } = useCurrency(); // ✅ CORRECTION: Ajout du contexte devise
   const { accounts, loading: accountsLoading } = useAccounts();
   const { categories, loading: categoriesLoading } = useCategories();
   const isDark = theme === 'dark';
@@ -94,6 +96,21 @@ const RecurringTransactionForm: React.FC<RecurringTransactionFormProps> = ({
     }
   }, [formData.type, categories]);
 
+  // ✅ CORRECTION: Récupérer le symbole de devise
+  const getCurrencySymbol = () => {
+    return formatAmount(0, true).replace(/[0-9.,\s]/g, '').trim() || 'MAD';
+  };
+
+  // ✅ CORRECTION: Formatage avec la devise courante
+  const formatDisplayAmount = (value: string): string => {
+    if (!value) return '';
+    
+    const num = parseFloat(value);
+    if (isNaN(num)) return '';
+    
+    return formatAmount(num, false);
+  };
+
   const handleSubmit = () => {
     if (!formData.description.trim()) {
       alert('Veuillez saisir une description');
@@ -115,9 +132,10 @@ const RecurringTransactionForm: React.FC<RecurringTransactionFormProps> = ({
       return;
     }
 
+    // ✅ CORRECTION: Inclure userId avec valeur par défaut
     const transactionData: Omit<RecurringTransaction, 'id' | 'createdAt'> = {
       description: formData.description.trim(),
-      amount: parseFloat(formData.amount),
+      amount: formData.type === 'expense' ? -Math.abs(parseFloat(formData.amount)) : Math.abs(parseFloat(formData.amount)),
       type: formData.type,
       category: formData.category,
       accountId: formData.accountId,
@@ -125,6 +143,7 @@ const RecurringTransactionForm: React.FC<RecurringTransactionFormProps> = ({
       startDate: formData.startDate,
       endDate: formData.endDate || undefined,
       isActive: formData.isActive,
+      userId: editingTransaction?.userId || 'default-user', // ✅ CORRECTION: Ajout du userId
     };
 
     onSubmit(transactionData);
@@ -221,14 +240,24 @@ const RecurringTransactionForm: React.FC<RecurringTransactionFormProps> = ({
 
           <View style={styles.inputGroup}>
             <Text style={[styles.label, isDark && styles.darkText]}>Montant</Text>
-            <TextInput
-              style={[styles.input, isDark && styles.darkInput]}
-              value={formData.amount}
-              onChangeText={(text) => setFormData({ ...formData, amount: text.replace(',', '.') })}
-              keyboardType="decimal-pad"
-              placeholder="0.00"
-              placeholderTextColor={isDark ? '#666' : '#999'}
-            />
+            <View style={styles.amountContainer}>
+              <Text style={[styles.currencySymbol, isDark && styles.darkText]}>
+                {getCurrencySymbol()} {/* ✅ CORRECTION: Symbole devise dynamique */}
+              </Text>
+              <TextInput
+                style={[styles.input, styles.amountInput, isDark && styles.darkInput]}
+                value={formData.amount}
+                onChangeText={(text) => setFormData({ ...formData, amount: text.replace(',', '.') })}
+                keyboardType="decimal-pad"
+                placeholder="0.00"
+                placeholderTextColor={isDark ? '#666' : '#999'}
+              />
+            </View>
+            {formData.amount && (
+              <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+                {formatDisplayAmount(formData.amount)} {/* ✅ CORRECTION: Affichage formaté */}
+              </Text>
+            )}
           </View>
 
           <View style={styles.inputGroup}>
@@ -285,7 +314,7 @@ const RecurringTransactionForm: React.FC<RecurringTransactionFormProps> = ({
                   styles.accountBalance,
                   isDark && styles.darkSubtext,
                 ]}>
-                  {account.balance.toFixed(2)} €
+                  {formatAmount(account.balance, false)} {/* ✅ CORRECTION: Format devise */}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -446,6 +475,29 @@ const styles = StyleSheet.create({
     backgroundColor: '#2c2c2e',
     borderColor: '#38383a',
     color: '#fff',
+  },
+  // ✅ CORRECTION: Styles pour le conteneur de montant
+  amountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  currencySymbol: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+    marginRight: 12,
+    position: 'absolute',
+    left: 16,
+    zIndex: 1,
+  },
+  amountInput: {
+    paddingLeft: 40,
+  },
+  hint: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+    fontStyle: 'italic',
   },
   typeContainer: {
     flexDirection: 'row',

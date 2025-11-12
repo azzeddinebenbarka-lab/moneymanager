@@ -230,9 +230,6 @@ const AccountForm: React.FC<AccountFormProps> = ({
               Solde initial *
             </Text>
             <View style={styles.amountContainer}>
-              <Text style={[styles.currencySymbol, isDark && styles.darkText]}>
-                {form.currency === 'MAD' ? 'MAD' : '€'}
-              </Text>
               <TextInput
                 style={[styles.input, styles.amountInput, isDark && styles.darkInput]}
                 value={form.balance}
@@ -485,7 +482,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   amountInput: {
-    paddingLeft: 40,
+    paddingLeft: 10,
   },
   hint: {
     fontSize: 12,

@@ -1,4 +1,4 @@
-// src/screens/DebtDetailScreen.tsx - VERSION CORRIGÉE AVEC ÉCHÉANCES
+// src/screens/DebtDetailScreen.tsx - VERSION CORRIGÉE AVEC SYSTÈME DE DEVISE
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useCurrency } from '../context/CurrencyContext'; // ✅ AJOUT: Import du contexte devise
 import { useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useDebts } from '../hooks/useDebts';
@@ -23,9 +24,10 @@ interface DebtDetailScreenProps {
 const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }) => {
   const { debtId } = route.params;
   const { theme } = useTheme();
+  const { formatAmount } = useCurrency(); // ✅ CORRECTION: Ajout du contexte devise
   const { 
     getDebtById, 
-    makePayment, // ✅ CORRECTION : Méthode maintenant disponible
+    makePayment,
     getPaymentHistory, 
     deleteDebt,
     refreshDebts 
@@ -41,6 +43,16 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
   const [selectedAccountId, setSelectedAccountId] = useState('');
 
   const isDark = theme === 'dark';
+
+  // ✅ CORRECTION: Récupérer le symbole de devise
+  const getCurrencySymbol = () => {
+    return formatAmount(0, true).replace(/[0-9.,\s]/g, '').trim() || 'MAD';
+  };
+
+  // ✅ CORRECTION: Formatage avec la devise courante
+  const formatDisplayAmount = (amount: number, showSymbol: boolean = true): string => {
+    return formatAmount(amount, showSymbol);
+  };
 
   const loadDebtData = useCallback(async () => {
     try {
@@ -60,7 +72,6 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
     }
   }, [debtId, getDebtById, getPaymentHistory]);
 
-  // ✅ CORRECTION : Fonction de paiement avec gestion d'erreur
   const handleMakePayment = async () => {
     if (!debt || !paymentAmount || !selectedAccountId) {
       Alert.alert('Erreur', 'Veuillez remplir tous les champs');
@@ -78,7 +89,6 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
       return;
     }
 
-    // ✅ Vérification de l'éligibilité au paiement
     if (debt.paymentEligibility && !debt.paymentEligibility.isEligible) {
       Alert.alert('Paiement non autorisé', debt.paymentEligibility.reason);
       return;
@@ -93,7 +103,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
       setPaymentAmount('');
       setSelectedAccountId('');
       await loadDebtData();
-      await refreshDebts(); // ✅ Rafraîchir la liste globale
+      await refreshDebts();
     } catch (error: any) {
       console.error('Error making payment:', error);
       Alert.alert('Erreur', error.message || 'Impossible d\'effectuer le paiement');
@@ -126,7 +136,6 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
     );
   };
 
-  // ✅ CORRECTION : Fonction pour obtenir le libellé du statut
   const getStatusLabel = (status: Debt['status']): string => {
     switch (status) {
       case 'active': return 'Active';
@@ -137,7 +146,6 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
     }
   };
 
-  // ✅ CORRECTION : Fonction pour obtenir la couleur du statut
   const getStatusColor = (status: Debt['status']): string => {
     switch (status) {
       case 'active': return '#3B82F6';
@@ -203,10 +211,10 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
           
           <View style={styles.amountSection}>
             <Text style={[styles.currentAmount, isDark && styles.darkText]}>
-              {debt.currentAmount.toFixed(2)}€
+              {formatDisplayAmount(debt.currentAmount)} {/* ✅ CORRECTION: Format devise */}
             </Text>
             <Text style={[styles.initialAmount, isDark && styles.darkSubtext]}>
-              sur {debt.initialAmount.toFixed(2)}€ initial
+              sur {formatDisplayAmount(debt.initialAmount)} initial {/* ✅ CORRECTION: Format devise */}
             </Text>
           </View>
 
@@ -242,7 +250,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
                 Mensualité
               </Text>
               <Text style={[styles.statValue, isDark && styles.darkText]}>
-                {debt.monthlyPayment.toFixed(2)}€
+                {formatDisplayAmount(debt.monthlyPayment)} {/* ✅ CORRECTION: Format devise */}
               </Text>
             </View>
             <View style={styles.statItem}>
@@ -395,7 +403,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
                     <Ionicons name="checkmark-circle" size={20} color="#10B981" />
                     <View style={styles.paymentDetails}>
                       <Text style={[styles.paymentAmount, isDark && styles.darkText]}>
-                        {payment.amount.toFixed(2)}€
+                        {formatDisplayAmount(payment.amount)} {/* ✅ CORRECTION: Format devise */}
                       </Text>
                       <Text style={[styles.paymentDate, isDark && styles.darkSubtext]}>
                         {new Date(payment.paymentDate).toLocaleDateString('fr-FR')}
@@ -404,10 +412,10 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
                   </View>
                   <View style={styles.paymentRight}>
                     <Text style={[styles.paymentPrincipal, isDark && styles.darkSubtext]}>
-                      Principal: {payment.principal.toFixed(2)}€
+                      Principal: {formatDisplayAmount(payment.principal, false)} {/* ✅ CORRECTION: Format devise */}
                     </Text>
                     <Text style={[styles.paymentInterest, isDark && styles.darkSubtext]}>
-                      Intérêts: {payment.interest.toFixed(2)}€
+                      Intérêts: {formatDisplayAmount(payment.interest, false)} {/* ✅ CORRECTION: Format devise */}
                     </Text>
                   </View>
                 </View>
@@ -452,16 +460,21 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
                 <Text style={[styles.label, isDark && styles.darkText]}>
                   Montant à payer
                 </Text>
-                <TextInput
-                  style={[styles.input, isDark && styles.darkInput]}
-                  value={paymentAmount}
-                  onChangeText={setPaymentAmount}
-                  placeholder="0,00"
-                  placeholderTextColor={isDark ? "#888" : "#999"}
-                  keyboardType="decimal-pad"
-                />
+                <View style={styles.amountContainer}>
+                  <Text style={[styles.currencySymbol, isDark && styles.darkText]}>
+                    {getCurrencySymbol()} {/* ✅ CORRECTION: Symbole devise dynamique */}
+                  </Text>
+                  <TextInput
+                    style={[styles.input, styles.amountInput, isDark && styles.darkInput]}
+                    value={paymentAmount}
+                    onChangeText={setPaymentAmount}
+                    placeholder="0,00"
+                    placeholderTextColor={isDark ? "#888" : "#999"}
+                    keyboardType="decimal-pad"
+                  />
+                </View>
                 <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-                  Solde restant: {debt.currentAmount.toFixed(2)}€
+                  Solde restant: {formatDisplayAmount(debt.currentAmount)} {/* ✅ CORRECTION: Format devise */}
                 </Text>
               </View>
 
@@ -486,7 +499,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
                           {account.name}
                         </Text>
                         <Text style={[styles.accountBalance, isDark && styles.darkSubtext]}>
-                          {account.balance.toFixed(2)}€ disponible
+                          {formatDisplayAmount(account.balance, false)} disponible {/* ✅ CORRECTION: Format devise */}
                         </Text>
                       </View>
                       {selectedAccountId === account.id && (
@@ -921,6 +934,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#000',
+  },
+  // ✅ CORRECTION: Styles pour le conteneur de montant avec devise
+  amountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  currencySymbol: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+    marginRight: 12,
+    position: 'absolute',
+    left: 16,
+    zIndex: 1,
+  },
+  amountInput: {
+    paddingLeft: 40,
   },
   input: {
     backgroundColor: '#f8f9fa',

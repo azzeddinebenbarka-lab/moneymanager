@@ -1,4 +1,4 @@
-﻿// src/screens/DashboardScreen.tsx - VERSION CORRIGÉE SANS FinancialFlowCard
+﻿// src/screens/DashboardScreen.tsx - VERSION CORRIGÉE AVEC PIE CHART
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useRef, useState } from 'react';
 import {
@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import PieChart from 'react-native-pie-chart';
 import { useCurrency } from '../context/CurrencyContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
@@ -24,8 +25,8 @@ import { calculationService } from '../services/calculationService';
 
 const { width } = Dimensions.get('window');
 
-// ✅ COMPOSANT GRAPHIQUE CERCLE POUR REVENUS/DÉPENSES/SOLDE
-interface CircleChartProps {
+// ✅ COMPOSANT PIE CHART POUR REVENUS/DÉPENSES/SOLDE
+interface PieChartProps {
   income: number;
   expenses: number;
   balance: number;
@@ -33,7 +34,7 @@ interface CircleChartProps {
   formatAmount: (amount: number) => string;
 }
 
-const CircleChart: React.FC<CircleChartProps> = ({ 
+const FinancialPieChart: React.FC<PieChartProps> = ({ 
   income, 
   expenses, 
   balance, 
@@ -44,76 +45,100 @@ const CircleChart: React.FC<CircleChartProps> = ({
   
   if (total === 0) {
     return (
-      <View style={styles.circleChart}>
-        <View style={[styles.circle, { backgroundColor: isDark ? '#38383a' : '#f0f0f0' }]}>
-          <Text style={[styles.circleText, isDark && styles.darkText]}>Aucune donnée</Text>
+      <View style={styles.pieChartContainer}>
+        <View style={[styles.emptyPie, { backgroundColor: isDark ? '#38383a' : '#f0f0f0' }]}>
+          <Text style={[styles.emptyPieText, isDark && styles.darkText]}>Aucune donnée</Text>
         </View>
       </View>
     );
   }
 
-  const incomePercentage = (income / total) * 100;
-  const expensesPercentage = (expenses / total) * 100;
-  const balancePercentage = (Math.abs(balance) / total) * 100;
+  // ✅ CORRECTION: Préparer les données avec des valeurs minimales pour éviter les erreurs
+const series = [
+  Math.max(0.1, income),      // Revenus (vert)
+  Math.max(0.1, expenses),    // Dépenses (rouge)
+  Math.max(0.1, Math.abs(balance)) // Solde (bleu/orange)
+] as number[]; // ✅ AJOUT: Cast explicite en number[]
+
+  // ✅ Couleurs correspondantes
+  const sliceColors = [
+    '#10B981', // Vert pour les revenus
+    '#EF4444', // Rouge pour les dépenses
+    balance >= 0 ? '#007AFF' : '#F59E0B' // Bleu pour épargne, Orange pour déficit
+  ];
+
+  // ✅ Calculer les pourcentages
+  const incomePercentage = total > 0 ? (income / total) * 100 : 0;
+  const expensesPercentage = total > 0 ? (expenses / total) * 100 : 0;
+  const balancePercentage = total > 0 ? (Math.abs(balance) / total) * 100 : 0;
 
   return (
-    <View style={styles.circleChart}>
-      <View style={styles.circle}>
-        {/* Revenus - Vert */}
-        <View 
-          style={[
-            styles.circleSegment,
-            { 
-              backgroundColor: '#10B981',
-              transform: [{ rotate: '0deg' }],
-              width: `${incomePercentage}%`
-            }
-          ]} 
+    <View style={styles.pieChartContainer}>
+      {/* Graphique Pie Chart */}
+      <View style={styles.pieChartWrapper}>
+        <PieChart
+          widthAndHeight={120}
+          series={series}
+          sliceColor={sliceColors}
+          coverRadius={0.6}
+          coverFill={isDark ? '#1E293B' : '#F8FAFC'}
         />
-        {/* Dépenses - Rouge */}
-        <View 
-          style={[
-            styles.circleSegment,
-            { 
-              backgroundColor: '#EF4444',
-              transform: [{ rotate: `${incomePercentage * 3.6}deg` }],
-              width: `${expensesPercentage}%`
-            }
-          ]} 
-        />
-        {/* Solde - Bleu ou Orange selon positif/négatif */}
-        <View 
-          style={[
-            styles.circleSegment,
-            { 
-              backgroundColor: balance >= 0 ? '#007AFF' : '#F59E0B',
-              transform: [{ rotate: `${(incomePercentage + expensesPercentage) * 3.6}deg` }],
-              width: `${balancePercentage}%`
-            }
-          ]} 
-        />
+        
+        {/* Centre du pie chart avec le solde */}
+        <View style={styles.pieChartCenter}>
+          <Text style={[
+            styles.pieCenterAmount, 
+            isDark && styles.darkText,
+            { color: balance >= 0 ? '#10B981' : '#EF4444' }
+          ]}>
+            {formatAmount(Math.abs(balance))}
+          </Text>
+          <Text style={[styles.pieCenterLabel, isDark && styles.darkSubtext]}>
+            {balance >= 0 ? 'Épargne' : 'Déficit'}
+          </Text>
+        </View>
       </View>
       
-      <View style={styles.circleLegend}>
+      {/* Légende */}
+      <View style={styles.pieLegend}>
         <View style={styles.legendItem}>
           <View style={[styles.legendColor, { backgroundColor: '#10B981' }]} />
-          <Text style={[styles.legendText, isDark && styles.darkSubtext]}>Revenus</Text>
+          <View style={styles.legendTextContainer}>
+            <Text style={[styles.legendLabel, isDark && styles.darkSubtext]}>Revenus</Text>
+            <Text style={[styles.legendPercentage, isDark && styles.darkText]}>
+              {incomePercentage.toFixed(1)}%
+            </Text>
+          </View>
           <Text style={[styles.legendAmount, isDark && styles.darkText]}>
             {formatAmount(income)}
           </Text>
         </View>
+        
         <View style={styles.legendItem}>
           <View style={[styles.legendColor, { backgroundColor: '#EF4444' }]} />
-          <Text style={[styles.legendText, isDark && styles.darkSubtext]}>Dépenses</Text>
+          <View style={styles.legendTextContainer}>
+            <Text style={[styles.legendLabel, isDark && styles.darkSubtext]}>Dépenses</Text>
+            <Text style={[styles.legendPercentage, isDark && styles.darkText]}>
+              {expensesPercentage.toFixed(1)}%
+            </Text>
+          </View>
           <Text style={[styles.legendAmount, isDark && styles.darkText]}>
             {formatAmount(expenses)}
           </Text>
         </View>
+        
         <View style={styles.legendItem}>
-          <View style={[styles.legendColor, { backgroundColor: balance >= 0 ? '#007AFF' : '#F59E0B' }]} />
-          <Text style={[styles.legendText, isDark && styles.darkSubtext]}>
-            {balance >= 0 ? 'Épargne' : 'Déficit'}
-          </Text>
+          <View style={[styles.legendColor, { 
+            backgroundColor: balance >= 0 ? '#007AFF' : '#F59E0B' 
+          }]} />
+          <View style={styles.legendTextContainer}>
+            <Text style={[styles.legendLabel, isDark && styles.darkSubtext]}>
+              {balance >= 0 ? 'Épargne' : 'Déficit'}
+            </Text>
+            <Text style={[styles.legendPercentage, isDark && styles.darkText]}>
+              {balancePercentage.toFixed(1)}%
+            </Text>
+          </View>
           <Text style={[styles.legendAmount, isDark && styles.darkText]}>
             {formatAmount(Math.abs(balance))}
           </Text>
@@ -123,7 +148,7 @@ const CircleChart: React.FC<CircleChartProps> = ({
   );
 };
 
-// ✅ COMPOSANT SANTÉ FINANCIÈRE
+// ✅ COMPOSANT SANTÉ FINANCIÈRE (inchangé)
 interface FinancialHealthCardProps {
   score: number;
   isDark: boolean;
@@ -256,7 +281,7 @@ const DashboardScreen: React.FC = () => {
     fadeAnim
   ]);
 
-  // ✅ HEADER MODERNE
+  // ✅ HEADER MODERNE (inchangé)
   const ModernHeader = () => (
     <View style={[styles.header, isDark && styles.darkHeader]}>
       <View style={styles.headerContent}>
@@ -291,7 +316,7 @@ const DashboardScreen: React.FC = () => {
     </View>
   );
 
-  // ✅ ACTIONS RAPIDES
+  // ✅ ACTIONS RAPIDES (inchangé)
   const QuickActionsGrid = () => {
     const quickActions = [
       { 
@@ -327,7 +352,7 @@ const DashboardScreen: React.FC = () => {
         title: 'Analyses', 
         icon: '📈', 
         color: '#06B6D4',
-        screen: 'AnalyticsDashboard' as never // ✅ CORRIGÉ : Utiliser la route directe
+        screen: 'AnalyticsDashboard' as never
       },
       {
         id: 'months',
@@ -367,7 +392,7 @@ const DashboardScreen: React.FC = () => {
     );
   };
 
-  // ✅ CARTE PATRIMOINE NET
+  // ✅ CARTE PATRIMOINE NET (inchangé)
   const NetWorthCard = () => {
     const { netWorth } = analytics;
     const trend = netWorth.history.length >= 2 
@@ -418,7 +443,7 @@ const DashboardScreen: React.FC = () => {
     );
   };
 
-  // ✅ CARTE GRAPHIQUE CERCLE REVENUS/DÉPENSES/SOLDE
+  // ✅ CARTE PIE CHART REVENUS/DÉPENSES/SOLDE
   const FinancialFlowChartCard = () => {
     const { cashFlow } = analytics;
     const balance = cashFlow.netFlow;
@@ -438,7 +463,7 @@ const DashboardScreen: React.FC = () => {
           </Text>
         </View>
 
-        <CircleChart 
+        <FinancialPieChart 
           income={cashFlow.income}
           expenses={cashFlow.expenses}
           balance={balance}
@@ -449,7 +474,7 @@ const DashboardScreen: React.FC = () => {
     );
   };
 
-  // ✅ CARTE BUDGETS
+  // ✅ CARTE BUDGETS (inchangé)
   const BudgetOverviewCard = () => {
     const activeBudgets = budgets.filter(budget => budget.isActive).slice(0, 3);
 
@@ -520,7 +545,7 @@ const DashboardScreen: React.FC = () => {
     );
   };
 
-  // ✅ CARTE ÉPARGNE
+  // ✅ CARTE ÉPARGNE (inchangé)
   const SavingsProgressCard = () => {
     const activeGoals = goals.filter(goal => !goal.isCompleted).slice(0, 3);
 
@@ -590,7 +615,7 @@ const DashboardScreen: React.FC = () => {
     );
   };
 
-  // ✅ CARTE DETTES
+  // ✅ CARTE DETTES (inchangé)
   const DebtsCard = () => {
     const activeDebts = debts.filter(debt => debt.status === 'active' || debt.status === 'overdue').slice(0, 3);
 
@@ -895,52 +920,99 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1E293B',
   },
-  // Styles pour le graphique cercle
-  circleChart: {
+  // ✅ STYLES POUR LE PIE CHART
+  simpleChart: {
+  position: 'relative',
+  width: 120,
+  height: 120,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+chartBars: {
+  width: 120,
+  height: 120,
+  flexDirection: 'row',
+  alignItems: 'flex-end',
+  justifyContent: 'space-between',
+  paddingHorizontal: 8,
+},
+chartBar: {
+  width: 20,
+  borderRadius: 4,
+  minHeight: 4,
+},
+chartCenter: {
+  position: 'absolute',
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+  pieChartContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginVertical: 16,
   },
-  circle: {
+  pieChartWrapper: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pieChartCenter: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pieCenterAmount: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  pieCenterLabel: {
+    fontSize: 10,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 2,
+  },
+  emptyPie: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#f0f0f0',
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'relative',
-    overflow: 'hidden',
   },
-  circleSegment: {
-    position: 'absolute',
-    height: '100%',
-    borderRadius: 60,
-    transformOrigin: 'center',
-  },
-  circleText: {
+  emptyPieText: {
     fontSize: 12,
     color: '#666',
     textAlign: 'center',
   },
-  circleLegend: {
-    marginTop: 16,
-    width: '100%',
+  pieLegend: {
+    flex: 1,
+    marginLeft: 16,
+    gap: 12,
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
   },
   legendColor: {
     width: 12,
     height: 12,
     borderRadius: 6,
   },
-  legendText: {
-    fontSize: 12,
-    color: '#64748B',
+  legendTextContainer: {
     flex: 1,
     marginLeft: 8,
+  },
+  legendLabel: {
+    fontSize: 12,
+    color: '#64748B',
+  },
+  legendPercentage: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#1E293B',
+    marginTop: 2,
   },
   legendAmount: {
     fontSize: 12,

@@ -1,4 +1,4 @@
-// src/services/debtService.ts - VERSION AVEC SYSTÈME D'ÉCHÉANCES STRICTES
+// src/services/debtService.ts - VERSION COMPLÈTEMENT CORRIGÉE
 import { CreateDebtData, Debt, DebtPayment, PaymentEligibility, UpdateDebtData } from '../types/Debt';
 import { accountService } from './accountService';
 import { getDatabase } from './database/sqlite';
@@ -44,10 +44,96 @@ interface DatabaseDebtPayment {
 
 export const debtService = {
   /**
+   * ✅ S'ASSURER QUE LA TABLE DEBTS A TOUTES LES COLONNES NÉCESSAIRES
+   */
+  async ensureDebtsTableExists(): Promise<void> {
+    try {
+      const db = await getDatabase();
+      
+      // Vérifier si la table existe
+      const tableExists = await db.getFirstAsync(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='debts'"
+      );
+      
+      if (!tableExists) {
+        console.log('🛠️ [debtService] Creating debts table...');
+        
+        await db.execAsync(`
+          CREATE TABLE IF NOT EXISTS debts (
+            id TEXT PRIMARY KEY NOT NULL,
+            user_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            creditor TEXT NOT NULL,
+            initial_amount REAL NOT NULL,
+            current_amount REAL NOT NULL,
+            interest_rate REAL NOT NULL DEFAULT 0,
+            monthly_payment REAL NOT NULL,
+            start_date TEXT NOT NULL,
+            due_date TEXT NOT NULL,
+            due_month TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'active',
+            category TEXT NOT NULL,
+            color TEXT NOT NULL,
+            notes TEXT,
+            created_at TEXT NOT NULL,
+            next_due_date TEXT,
+            type TEXT NOT NULL DEFAULT 'personal',
+            auto_pay INTEGER NOT NULL DEFAULT 0,
+            payment_account_id TEXT
+          );
+        `);
+        
+        console.log('✅ [debtService] debts table created successfully');
+      } else {
+        console.log('🔍 [debtService] Checking debts table structure...');
+        
+        // Vérifier la structure de la table
+        const tableInfo = await db.getAllAsync(`PRAGMA table_info(debts)`) as any[];
+        console.log('📋 [debtService] Table structure:', tableInfo);
+        
+        // ✅ AJOUTER TOUTES LES COLONNES MANQUANTES
+        const requiredColumns = [
+          { name: 'notes', type: 'TEXT' },
+          { name: 'start_date', type: 'TEXT' },
+          { name: 'due_month', type: 'TEXT' },
+          { name: 'category', type: 'TEXT' },
+          { name: 'color', type: 'TEXT' },
+          { name: 'type', type: 'TEXT' },
+          { name: 'auto_pay', type: 'INTEGER' },
+          { name: 'payment_account_id', type: 'TEXT' },
+          { name: 'next_due_date', type: 'TEXT' }
+        ];
+        
+        for (const requiredColumn of requiredColumns) {
+          const columnExists = tableInfo.some(col => col.name === requiredColumn.name);
+          if (!columnExists) {
+            console.log(`🛠️ [debtService] Adding ${requiredColumn.name} column to debts...`);
+            
+            try {
+              await db.execAsync(`
+                ALTER TABLE debts ADD COLUMN ${requiredColumn.name} ${requiredColumn.type};
+              `);
+              console.log(`✅ [debtService] ${requiredColumn.name} column added successfully`);
+            } catch (alterError) {
+              console.warn(`⚠️ [debtService] Could not add column ${requiredColumn.name}:`, alterError);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('❌ [debtService] Error ensuring debts table exists:', error);
+      throw error;
+    }
+  },
+
+  /**
    * ✅ CRÉATION DE DETTE AVEC GESTION AUTOMATIQUE DU STATUT
    */
   async createDebt(debtData: CreateDebtData, userId: string = 'default-user'): Promise<string> {
     try {
+      // ✅ S'ASSURER QUE LA TABLE EXISTE AVANT TOUTE OPÉRATION
+      await this.ensureDebtsTableExists();
+
       const db = await getDatabase();
       const id = `debt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const createdAt = new Date().toISOString();
@@ -65,14 +151,6 @@ export const debtService = {
       } else if (dueDate < now) {
         status = 'overdue';
       }
-
-      // ✅ CALCUL DE L'ÉLIGIBILITÉ INITIALE
-      const paymentEligibility = this.calculatePaymentEligibility({
-        dueDate: debtData.dueDate,
-        dueMonth,
-        status,
-        currentAmount: debtData.initialAmount
-      });
 
       await db.runAsync(
         `INSERT INTO debts (
@@ -116,6 +194,9 @@ export const debtService = {
    */
   async getAllDebts(userId: string = 'default-user'): Promise<Debt[]> {
     try {
+      // ✅ S'ASSURER QUE LA TABLE EXISTE AVANT TOUTE OPÉRATION
+      await this.ensureDebtsTableExists();
+
       const db = await getDatabase();
       
       const result = await db.getAllAsync(
@@ -770,6 +851,55 @@ export const debtService = {
       );
     } catch (error) {
       console.error('❌ [debtService] Error getting overdue debts:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * ✅ DIAGNOSTIC DE LA BASE DE DONNÉES
+   */
+  async diagnoseDatabase(): Promise<{
+    debtsTableExists: boolean;
+    paymentsTableExists: boolean;
+    debtsCount: number;
+    paymentsCount: number;
+    tableStructure: any[];
+  }> {
+    try {
+      const db = await getDatabase();
+      
+      const debtsTableExists = !!(await db.getFirstAsync(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='debts'"
+      ));
+      
+      const paymentsTableExists = !!(await db.getFirstAsync(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='debt_payments'"
+      ));
+      
+      let debtsCount = 0;
+      let paymentsCount = 0;
+      let tableStructure: any[] = [];
+      
+      if (debtsTableExists) {
+        const debtsResult = await db.getFirstAsync(`SELECT COUNT(*) as count FROM debts`) as { count: number };
+        debtsCount = debtsResult?.count || 0;
+        tableStructure = await db.getAllAsync(`PRAGMA table_info(debts)`) as any[];
+      }
+      
+      if (paymentsTableExists) {
+        const paymentsResult = await db.getFirstAsync(`SELECT COUNT(*) as count FROM debt_payments`) as { count: number };
+        paymentsCount = paymentsResult?.count || 0;
+      }
+      
+      return {
+        debtsTableExists,
+        paymentsTableExists,
+        debtsCount,
+        paymentsCount,
+        tableStructure
+      };
+    } catch (error) {
+      console.error('❌ [debtService] Error diagnosing database:', error);
       throw error;
     }
   }

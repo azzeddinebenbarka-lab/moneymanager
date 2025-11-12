@@ -1,4 +1,4 @@
-// src/screens/DebtsScreen.tsx - VERSION CORRIGÉE AVEC ÉCHÉANCES
+// src/screens/DebtsScreen.tsx - VERSION COMPLÈTEMENT CORRIGÉE AVEC MAD
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
@@ -9,12 +9,14 @@ import {
   View,
 } from 'react-native';
 import DebtForm from '../components/debts/DebtForm';
+import { useCurrency } from '../context/CurrencyContext'; // ✅ AJOUT: Import du contexte devise
 import { useTheme } from '../context/ThemeContext';
 import { useDebts } from '../hooks/useDebts';
 import { Debt } from '../types/Debt';
 
 const DebtsScreen = ({ navigation }: any) => {
   const { theme } = useTheme();
+  const { formatAmount } = useCurrency(); // ✅ CORRECTION: Ajout du contexte devise
   const { debts, stats, createDebt, updateDebt, refreshDebts } = useDebts();
   const isDark = theme === 'dark';
 
@@ -76,6 +78,11 @@ const DebtsScreen = ({ navigation }: any) => {
     }
   };
 
+  // ✅ CORRECTION : Fonction pour formater les montants avec devise
+  const formatCurrency = (amount: number): string => {
+    return formatAmount(amount, false); // false pour ne pas afficher le symbole deux fois
+  };
+
   const renderDebtItem = ({ item }: { item: Debt }) => (
     <TouchableOpacity
       style={[styles.debtCard, isDark && styles.darkCard]}
@@ -92,8 +99,9 @@ const DebtsScreen = ({ navigation }: any) => {
           </Text>
         </View>
         <View style={styles.amountSection}>
+          {/* ✅ CORRECTION : Utilisation de formatAmount pour le montant */}
           <Text style={[styles.debtAmount, isDark && styles.darkText]}>
-            {item.currentAmount.toFixed(2)}€
+            {formatCurrency(item.currentAmount)}
           </Text>
           <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
             <Text style={styles.statusText}>
@@ -122,30 +130,37 @@ const DebtsScreen = ({ navigation }: any) => {
 
       <View style={styles.debtDetails}>
         <View style={styles.detailItem}>
-          <Ionicons name="calendar" size={14} color="#666" />
+          <Ionicons name="calendar" size={14} color={isDark ? "#888" : "#666"} />
           <Text style={[styles.detailText, isDark && styles.darkSubtext]}>
             {new Date(item.dueDate).toLocaleDateString('fr-FR')}
           </Text>
         </View>
         <View style={styles.detailItem}>
-          <Ionicons name="trending-up" size={14} color="#666" />
+          <Ionicons name="trending-up" size={14} color={isDark ? "#888" : "#666"} />
           <Text style={[styles.detailText, isDark && styles.darkSubtext]}>
             {item.interestRate}%
           </Text>
         </View>
         <View style={styles.detailItem}>
-          <Ionicons name="card" size={14} color="#666" />
+          <Ionicons name="card" size={14} color={isDark ? "#888" : "#666"} />
+          {/* ✅ CORRECTION : Utilisation de formatAmount pour le paiement mensuel */}
           <Text style={[styles.detailText, isDark && styles.darkSubtext]}>
-            {item.monthlyPayment.toFixed(2)}€/mois
+            {formatCurrency(item.monthlyPayment)}/mois
           </Text>
         </View>
       </View>
 
       {/* ✅ NOUVEAU : Affichage de l'éligibilité au paiement */}
       {item.paymentEligibility && !item.paymentEligibility.isEligible && (
-        <View style={styles.eligibilityWarning}>
+        <View style={[
+          styles.eligibilityWarning,
+          isDark && styles.darkEligibilityWarning
+        ]}>
           <Ionicons name="information-circle" size={14} color="#F59E0B" />
-          <Text style={styles.eligibilityText}>
+          <Text style={[
+            styles.eligibilityText,
+            isDark && styles.darkEligibilityText
+          ]}>
             {item.paymentEligibility.reason}
           </Text>
         </View>
@@ -163,8 +178,9 @@ const DebtsScreen = ({ navigation }: any) => {
               Dettes
             </Text>
             <Text style={[styles.subtitle, isDark && styles.darkSubtext]}>
-  {stats.totalDebt} dettes - {stats.totalRemaining?.toFixed(2) || '0.00'}€ restant
-</Text>
+              {/* ✅ CORRECTION : Utilisation de formatAmount pour le total restant */}
+              {stats.totalDebt} dettes - {formatCurrency(stats.totalRemaining || 0)} restant
+            </Text>
           </View>
           <TouchableOpacity 
             style={[styles.addButton, isDark && styles.darkAddButton]}
@@ -294,11 +310,26 @@ const DebtsScreen = ({ navigation }: any) => {
             </Text>
           </View>
           <View style={styles.statItem}>
+            {/* ✅ CORRECTION : Utilisation de formatAmount pour le montant restant */}
             <Text style={[styles.statValue, isDark && styles.darkText]}>
-  {stats.totalRemaining?.toFixed(0) || '0'}€
-</Text>
+              {formatCurrency(stats.totalRemaining || 0)}
+            </Text>
             <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
               Restant
+            </Text>
+          </View>
+        </View>
+
+        {/* ✅ NOUVEAU : Section paiement mensuel total */}
+        <View style={styles.monthlyPaymentSection}>
+          <View style={styles.monthlyPaymentItem}>
+            <Ionicons name="calendar-outline" size={16} color={isDark ? "#888" : "#666"} />
+            <Text style={[styles.monthlyPaymentLabel, isDark && styles.darkSubtext]}>
+              Paiement mensuel total:
+            </Text>
+            {/* ✅ CORRECTION : Utilisation de formatAmount pour le paiement mensuel */}
+            <Text style={[styles.monthlyPaymentValue, isDark && styles.darkText]}>
+              {formatCurrency(stats.monthlyPayment || 0)}
             </Text>
           </View>
         </View>
@@ -312,15 +343,21 @@ const DebtsScreen = ({ navigation }: any) => {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          refreshing={false}
+          onRefresh={refreshDebts}
         />
       ) : (
         <View style={styles.emptyState}>
-          <Ionicons name="card-outline" size={64} color="#666" />
+          <Ionicons 
+            name="card-outline" 
+            size={64} 
+            color={isDark ? "#888" : "#666"} 
+          />
           <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
-            Aucune dette {filter !== 'all' ? `"${filter}"` : ''} trouvée
+            Aucune dette {filter !== 'all' ? `"${getStatusLabel(filter as Debt['status'])}"` : ''} trouvée
           </Text>
           <TouchableOpacity 
-            style={styles.emptyButton}
+            style={[styles.emptyButton, isDark && styles.darkEmptyButton]}
             onPress={() => {
               setEditingDebt(undefined);
               setShowDebtForm(true);
@@ -416,6 +453,7 @@ const styles = StyleSheet.create({
   statsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginBottom: 12,
   },
   statItem: {
     alignItems: 'center',
@@ -431,6 +469,27 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     textAlign: 'center',
+  },
+  monthlyPaymentSection: {
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    paddingTop: 12,
+  },
+  monthlyPaymentItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  monthlyPaymentLabel: {
+    fontSize: 14,
+    color: '#666',
+    flex: 1,
+    marginLeft: 8,
+  },
+  monthlyPaymentValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
   },
   filters: {
     flexDirection: 'row',
@@ -563,10 +622,16 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     gap: 6,
   },
+  darkEligibilityWarning: {
+    backgroundColor: '#453209',
+  },
   eligibilityText: {
     fontSize: 11,
     color: '#92400E',
     flex: 1,
+  },
+  darkEligibilityText: {
+    color: '#FBBF24',
   },
   emptyState: {
     flex: 1,
@@ -586,6 +651,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
+  },
+  darkEmptyButton: {
+    backgroundColor: '#0A84FF',
   },
   emptyButtonText: {
     color: '#fff',

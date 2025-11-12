@@ -1,9 +1,10 @@
-// src/screens/AddSavingsGoalScreen.tsx - VERSION COMPLÈTEMENT CORRIGÉE AVEC DEVISE
+// src/screens/AddSavingsGoalScreen.tsx - VERSION AVEC DÉFILEMENT CORRIGÉ
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useState } from 'react';
 import {
   Alert,
+  Dimensions,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,11 +13,14 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
-import { useCurrency } from '../context/CurrencyContext'; // ✅ AJOUT: Import du contexte devise
+import { useCurrency } from '../context/CurrencyContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useSavings } from '../hooks/useSavings';
 import { CreateSavingsGoalData, SavingsGoal } from '../types/Savings';
+
+// ✅ AJOUT: Obtenir les dimensions de l'écran
+const { height: screenHeight } = Dimensions.get('window');
 
 interface SavingsGoalForm {
   name: string;
@@ -37,7 +41,7 @@ interface AddSavingsGoalScreenProps {
 
 const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
-  const { formatAmount } = useCurrency(); // ✅ CORRECTION: Utilisation du contexte devise
+  const { formatAmount } = useCurrency();
   const { createGoal } = useSavings();
   const { accounts } = useAccounts();
   
@@ -76,7 +80,6 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
     '#AF52DE', '#FF2D55', '#32D74B', '#FFD60A'
   ];
 
-  // ✅ CORRECTION: Nouvelle fonction de gestion des montants avec devise
   const handleAmountChange = (field: 'targetAmount' | 'currentAmount' | 'monthlyContribution', value: string) => {
     let cleanedValue = value.replace(/[^\d,.]/g, '');
     cleanedValue = cleanedValue.replace(',', '.');
@@ -92,17 +95,15 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
     }));
   };
 
-  // ✅ CORRECTION: Formatage avec la devise courante
   const formatDisplayAmount = (value: string): string => {
     if (!value) return '';
     
     const num = parseFloat(value);
     if (isNaN(num)) return '';
     
-    return formatAmount(num, false); // ✅ Utilise la fonction du contexte devise
+    return formatAmount(num, false);
   };
 
-  // ✅ CORRECTION: Récupérer le symbole de devise
   const getCurrencySymbol = () => {
     return formatAmount(0, true).replace(/[0-9.,\s]/g, '').trim() || 'MAD';
   };
@@ -185,10 +186,12 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
 
   return (
     <SafeAreaView>
+      {/* ✅ CORRECTION: ScrollView avec hauteur définie et défilement activé */}
       <ScrollView 
         style={[styles.container, isDark && styles.darkContainer]}
         contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={true} // ✅ CORRECTION: Activation du défilement
+        showsVerticalScrollIndicator={true}
+        keyboardShouldPersistTaps="handled" // ✅ Permet de taper même en faisant défiler
       >
         <View style={styles.header}>
           <TouchableOpacity 
@@ -337,7 +340,7 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
                     {account.name}
                   </Text>
                   <Text style={[styles.accountBalance, isDark && styles.darkSubtext]}>
-                    {formatAmount(account.balance, false)} {/* ✅ CORRECTION: Format devise */}
+                    {formatAmount(account.balance, false)}
                   </Text>
                 </View>
                 {form.savingsAccountId === account.id && (
@@ -375,7 +378,7 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
                     {account.name}
                   </Text>
                   <Text style={[styles.accountBalance, isDark && styles.darkSubtext]}>
-                    {formatAmount(account.balance, false)} {/* ✅ CORRECTION: Format devise */}
+                    {formatAmount(account.balance, false)}
                   </Text>
                 </View>
                 {form.contributionAccountId === account.id && (
@@ -394,7 +397,13 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
           <Text style={[styles.label, isDark && styles.darkText]}>
             Catégorie
           </Text>
-          <View style={styles.categoriesContainer}>
+          {/* ✅ CORRECTION: ScrollView horizontal pour les catégories */}
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={true}
+            style={styles.categoriesScrollContainer}
+            contentContainerStyle={styles.categoriesContent}
+          >
             {categories.map((category) => (
               <TouchableOpacity
                 key={category.value}
@@ -423,7 +432,7 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
                 </Text>
               </TouchableOpacity>
             ))}
-          </View>
+          </ScrollView>
         </View>
 
         {/* Couleur */}
@@ -473,12 +482,14 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
             </Text>
           </TouchableOpacity>
         </View>
+
+        {/* ✅ CORRECTION: Espace supplémentaire pour permettre le défilement */}
+        <View style={styles.bottomSpacer} />
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-// Les styles restent identiques à votre version
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -489,6 +500,8 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
+    // ✅ CORRECTION: Pas de hauteur fixe pour permettre le défilement naturel
+    minHeight: '100%', // S'assure que le contenu prend au moins toute la hauteur
   },
   header: {
     flexDirection: 'row',
@@ -542,6 +555,7 @@ const styles = StyleSheet.create({
   },
   amountInput: {
     paddingLeft: 10,
+    paddingRight: 10,
   },
   hint: {
     fontSize: 12,
@@ -609,10 +623,12 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: 4,
   },
-  categoriesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+  // ✅ CORRECTION: Styles pour le ScrollView des catégories
+  categoriesScrollContainer: {
+    maxHeight: 60, // Limite la hauteur du scroll horizontal
+  },
+  categoriesContent: {
+    paddingRight: 20, // Espace pour le défilement
   },
   categoryButton: {
     flexDirection: 'row',
@@ -624,6 +640,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     gap: 8,
+    marginRight: 8, // Espace entre les boutons
+    minWidth: 120, // Largeur minimale pour les boutons
   },
   darkCategoryButton: {
     backgroundColor: '#333',
@@ -667,6 +685,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     marginTop: 32,
+    marginBottom: 20, // Espace avant le bas
   },
   cancelButton: {
     flex: 1,
@@ -697,6 +716,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+  },
+  // ✅ CORRECTION: Espace supplémentaire pour le défilement
+  bottomSpacer: {
+    height: 40, // Espace supplémentaire en bas pour permettre le défilement
   },
   darkText: {
     color: '#fff',
