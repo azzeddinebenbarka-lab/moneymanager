@@ -203,7 +203,6 @@ const ModernDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
         <View style={styles.userInfo}>
           <Text style={styles.userName}>MoneyManager</Text>
           <Text style={styles.userEmail}>Gestion Financière</Text>
-          <Text style={styles.versionText}>Menu 100% Fonctionnel</Text>
         </View>
       </View>
 

@@ -24,10 +24,10 @@ interface RecurringTransactionFormProps {
 }
 
 const FREQUENCY_OPTIONS = [
-  { value: 'daily', label: 'Quotidienne', icon: 'calendar' },
-  { value: 'weekly', label: 'Hebdomadaire', icon: 'calendar' },
-  { value: 'monthly', label: 'Mensuelle', icon: 'calendar' },
-  { value: 'yearly', label: 'Annuelle', icon: 'calendar' },
+  { value: 'daily', label: 'Quotidienne', icon: 'today' }, // ✅ "today" au lieu de "calendar"
+  { value: 'weekly', label: 'Hebdomadaire', icon: 'calendar' }, // ✅ "calendar" est correct
+  { value: 'monthly', label: 'Mensuelle', icon: 'calendar' }, // ✅ "calendar" est correct
+  { value: 'yearly', label: 'Annuelle', icon: 'calendar' }, // ✅ "calendar" est correct
 ];
 
 const RecurringTransactionForm: React.FC<RecurringTransactionFormProps> = ({

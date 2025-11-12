@@ -1,14 +1,14 @@
-// src/screens/AddMultipleCategoriesScreen.tsx - VERSION CORRIGÉE ET OPTIMISÉE
+// src/screens/AddMultipleCategoriesScreen.tsx - VERSION SANS TEMPLATES PRÉDÉFINIS
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useTheme } from '../context/ThemeContext';
@@ -23,7 +23,7 @@ interface CategoryTemplate {
 
 const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { theme } = useTheme();
-  const { createMultipleCategories } = useCategories(); // ✅ CORRECTION: Utilisation de la méthode multiple
+  const { createMultipleCategories } = useCategories();
   const isDark = theme === 'dark';
 
   const [customCategories, setCustomCategories] = useState<CategoryTemplate[]>([
@@ -31,39 +31,13 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
   ]);
   const [loading, setLoading] = useState(false);
 
-  // Catégories prédéfinies pour inspiration
-  const predefinedTemplates: CategoryTemplate[] = [
-    // Dépenses
-    { name: 'Loyer', type: 'expense', icon: 'home', color: '#EF4444' },
-    { name: 'Épicerie', type: 'expense', icon: 'cart', color: '#10B981' },
-    { name: 'Transport', type: 'expense', icon: 'car', color: '#3B82F6' },
-    { name: 'Santé', type: 'expense', icon: 'medical', color: '#8B5CF6' },
-    { name: 'Loisirs', type: 'expense', icon: 'game-controller', color: '#F59E0B' },
-    { name: 'Restaurant', type: 'expense', icon: 'restaurant', color: '#EC4899' },
-    { name: 'Shopping', type: 'expense', icon: 'bag', color: '#06B6D4' },
-    { name: 'Abonnements', type: 'expense', icon: 'card', color: '#84CC16' },
-    { name: 'Électricité', type: 'expense', icon: 'flash', color: '#FFD700' },
-    { name: 'Eau', type: 'expense', icon: 'water', color: '#00BFFF' },
-    { name: 'Internet', type: 'expense', icon: 'wifi', color: '#9370DB' },
-    { name: 'Téléphone', type: 'expense', icon: 'phone', color: '#32CD32' },
-    
-    // Revenus
-    { name: 'Salaire', type: 'income', icon: 'cash', color: '#10B981' },
-    { name: 'Freelance', type: 'income', icon: 'laptop', color: '#3B82F6' },
-    { name: 'Investissements', type: 'income', icon: 'trending-up', color: '#F59E0B' },
-    { name: 'Cadeaux', type: 'income', icon: 'gift', color: '#EC4899' },
-    { name: 'Prime', type: 'income', icon: 'trophy', color: '#FF6B6B' },
-    { name: 'Location', type: 'income', icon: 'business', color: '#4ECDC4' },
-    { name: 'Dividendes', type: 'income', icon: 'bar-chart', color: '#45B7D1' },
-  ];
-
   const iconOptions = [
     'cart', 'home', 'car', 'medical', 'restaurant', 'cafe', 'airplane', 
     'game-controller', 'book', 'school', 'shirt', 'gift', 'heart', 'star',
-    'phone', 'wifi', 'tv', 'musical-notes', 'basketball', 'fitness',
+    'call', 'wifi', 'tv', 'musical-notes', 'basketball', 'fitness',
     'bed', 'cut', 'color-palette', 'construct', 'hammer', 'flash',
-    'water', 'train', 'bus', 'bicycle', 'walk', 'bed', 'pizza',
-    'beer', 'wine', 'cafe', 'ice-cream', 'fast-food', 'nutrition'
+    'water', 'train', 'bus', 'bicycle', 'walk', 'pizza', 'beer', 
+    'wine', 'ice-cream', 'fast-food', 'nutrition'
   ];
 
   const colorOptions = [
@@ -92,10 +66,6 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
     ));
   };
 
-  const useTemplate = (template: CategoryTemplate) => {
-    setCustomCategories(prev => [...prev, { ...template }]);
-  };
-
   const handleCreateCategories = async () => {
     const validCategories = customCategories.filter(cat => 
       cat.name.trim() && cat.icon && cat.color
@@ -108,7 +78,6 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
 
     setLoading(true);
     try {
-      // ✅ CORRECTION: Utilisation de la méthode createMultipleCategories
       const result = await createMultipleCategories(validCategories);
       
       if (result.success) {
@@ -197,53 +166,11 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
           </View>
         </View>
 
-        {/* Templates prédéfinis */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
-            Templates Prédéfinis
-          </Text>
-          <Text style={[styles.sectionSubtitle, isDark && styles.darkSubtext]}>
-            Cliquez pour ajouter rapidement
-          </Text>
-          
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={true}
-            contentContainerStyle={styles.templatesContainer}
-          >
-            {predefinedTemplates.map((template, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[styles.templateCard, isDark && styles.darkCard]}
-                onPress={() => useTemplate(template)}
-              >
-                <View style={[styles.templateIcon, { backgroundColor: template.color }]}>
-                  <Ionicons name={template.icon as any} size={20} color="#fff" />
-                </View>
-                <Text style={[styles.templateName, isDark && styles.darkText]}>
-                  {template.name}
-                </Text>
-                <View style={[
-                  styles.typeBadge,
-                  { backgroundColor: template.type === 'income' ? '#10B98120' : '#EF444420' }
-                ]}>
-                  <Text style={[
-                    styles.typeBadgeText,
-                    { color: template.type === 'income' ? '#10B981' : '#EF4444' }
-                  ]}>
-                    {template.type === 'income' ? 'Revenu' : 'Dépense'}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
         {/* Formulaire catégories personnalisées */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
-              Vos Catégories Personnalisées
+              Créer vos catégories
             </Text>
             <TouchableOpacity 
               style={styles.addButton}
@@ -254,6 +181,10 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
               <Text style={styles.addButtonText}>Nouveau</Text>
             </TouchableOpacity>
           </View>
+
+          <Text style={[styles.sectionSubtitle, isDark && styles.darkSubtext]}>
+            Remplissez les champs pour chaque catégorie
+          </Text>
 
           {customCategories.map((category, index) => (
             <View key={index} style={[styles.categoryCard, isDark && styles.darkCard]}>
@@ -465,6 +396,7 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
   );
 };
 
+// Les styles restent identiques à la version précédente
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -538,7 +470,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
   },
   sectionTitle: {
     fontSize: 20,
@@ -548,47 +480,7 @@ const styles = StyleSheet.create({
   sectionSubtitle: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 12,
-  },
-  templatesContainer: {
-    paddingRight: 16,
-    gap: 12,
-  },
-  templateCard: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    minWidth: 100,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  templateIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  templateName: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#000',
-    textAlign: 'center',
-    marginBottom: 6,
-  },
-  typeBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  typeBadgeText: {
-    fontSize: 10,
-    fontWeight: '600',
+    marginBottom: 16,
   },
   addButton: {
     flexDirection: 'row',

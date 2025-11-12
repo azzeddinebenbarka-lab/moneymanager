@@ -1,4 +1,4 @@
-// src/screens/CategoriesScreen.tsx - VERSION COMPLÈTEMENT CORRIGÉE
+// src/screens/CategoriesScreen.tsx - VERSION CORRIGÉE SANS TEMPLATES
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
@@ -214,7 +214,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           onRefresh={onRefresh}
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={
-            <View>
+            <>
               <View style={styles.section}>
                 <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
                   Dépenses ({expenseCategories.length})
@@ -247,7 +247,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 )}
               </View>
 
-              {/* ✅ AJOUT: Bouton pour l'ajout multiple */}
+              {/* ✅ BOUTON POUR L'AJOUT MULTIPLE */}
               <TouchableOpacity 
                 style={[styles.multipleButton, isDark && styles.darkMultipleButton]}
                 onPress={() => navigation.navigate('AddMultipleCategories')}
@@ -257,7 +257,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   Ajouter plusieurs catégories
                 </Text>
               </TouchableOpacity>
-            </View>
+            </>
           }
           ListFooterComponent={<View style={styles.spacer} />}
         />
@@ -720,7 +720,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  // ✅ AJOUT: Styles pour le bouton multiple
+  // ✅ STYLES POUR LE BOUTON MULTIPLE
   multipleButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -748,4 +748,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CategoriesScreen;
+export default CategoriesScreen; 

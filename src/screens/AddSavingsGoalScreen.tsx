@@ -65,15 +65,15 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
   const savingsAccounts = accounts.filter(acc => acc.type === 'savings');
   const contributionAccounts = accounts.filter(acc => acc.type !== 'savings');
 
-  const categories = [
-    { value: 'vacation' as const, label: 'Vacances', icon: 'airplane' },
-    { value: 'car' as const, label: 'Voiture', icon: 'car' },
-    { value: 'house' as const, label: 'Maison', icon: 'home' },
-    { value: 'emergency' as const, label: 'Urgence', icon: 'medical' },
-    { value: 'education' as const, label: 'Éducation', icon: 'school' },
-    { value: 'retirement' as const, label: 'Retraite', icon: 'heart' },
-    { value: 'other' as const, label: 'Autre', icon: 'flag' },
-  ];
+const categories = [
+  { value: 'vacation' as const, label: 'Vacances', icon: 'airplane' },
+  { value: 'car' as const, label: 'Voiture', icon: 'car' },
+  { value: 'house' as const, label: 'Maison', icon: 'home' },
+  { value: 'emergency' as const, label: 'Urgence', icon: 'medical' },
+  { value: 'education' as const, label: 'Éducation', icon: 'school' },
+  { value: 'retirement' as const, label: 'Retraite', icon: 'heart' },
+  { value: 'other' as const, label: 'Autre', icon: 'flag' },
+];
 
   const colors = [
     '#007AFF', '#34C759', '#FF3B30', '#FF9500', '#5856D6', 
