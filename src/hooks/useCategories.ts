@@ -1,7 +1,14 @@
-// src/hooks/useCategories.ts - VERSION CORRIGÉE
+// src/hooks/useCategories.ts - VERSION CORRIGÉE AVEC CRÉATION MULTIPLE
 import { useCallback, useEffect, useState } from 'react';
 import categoryService from '../services/categoryService';
 import { Category } from '../types';
+
+// ✅ INTERFACE POUR LA CRÉATION MULTIPLE
+interface MultipleCreateResult {
+  success: boolean;
+  created: number;
+  errors: string[];
+}
 
 export const useCategories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -33,6 +40,37 @@ export const useCategories = () => {
       setError(`Erreur lors de la création de la catégorie: ${errorMessage}`);
       console.error('Error creating category:', err);
       throw err;
+    }
+  }, [loadCategories]);
+
+  // ✅ NOUVELLE MÉTHODE : Création multiple
+  const createMultipleCategories = useCallback(async (
+    categoriesData: Omit<Category, 'id' | 'createdAt'>[]
+  ): Promise<MultipleCreateResult> => {
+    try {
+      setError(null);
+      setLoading(true);
+      
+      const result = await categoryService.createMultipleCategories(categoriesData);
+      
+      // Recharger les catégories après création
+      if (result.created > 0) {
+        await loadCategories();
+      }
+      
+      return result;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+      setError(`Erreur lors de la création multiple: ${errorMessage}`);
+      console.error('Error creating multiple categories:', err);
+      
+      return {
+        success: false,
+        created: 0,
+        errors: [errorMessage]
+      };
+    } finally {
+      setLoading(false);
     }
   }, [loadCategories]);
 
@@ -148,6 +186,7 @@ export const useCategories = () => {
     
     // Actions CRUD
     createCategory,
+    createMultipleCategories, // ✅ NOUVEAU
     updateCategory,
     deleteCategory,
     getCategoryById,

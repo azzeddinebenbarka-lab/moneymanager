@@ -11,6 +11,7 @@ import { useTheme } from '../context/ThemeContext';
 import AccountDetailScreen from '../screens/AccountDetailScreen';
 import AccountsScreen from '../screens/AccountsScreen';
 import AddAnnualChargeScreen from '../screens/AddAnnualChargeScreen';
+import AddMultipleCategoriesScreen from '../screens/AddMultipleCategoriesScreen';
 import AddRecurringTransactionScreen from '../screens/AddRecurringTransactionScreen';
 import AddTransactionScreen from '../screens/AddTransactionScreen';
 import AlertsScreen from '../screens/AlertsScreen';
@@ -53,6 +54,7 @@ type DrawerParamList = {
   EditBudget: { budgetId: string };
   Alerts: undefined;
   Reports: undefined;
+  AddMultipleCategories: undefined;
   
   // Analytics et Rapports
   Analytics: undefined;
@@ -132,6 +134,7 @@ const CategoriesStack = () => (
     <Stack.Screen name="CategoriesList" component={CategoriesScreen} />
   </Stack.Navigator>
 );
+
 
 // Stack pour Analytics
 const AnalyticsStack = () => (
@@ -441,6 +444,20 @@ const ModernDrawerNavigator = () => {
           drawerItemStyle: { display: 'none' }
         }}
       />
+
+      <Drawer.Screen 
+  name="AddMultipleCategories" 
+  component={AddMultipleCategoriesScreen}
+  options={{ 
+    title: 'Ajout Multiple Catégories',
+    drawerIcon: ({ color, size }) => (
+      <View style={[styles.iconContainer, { backgroundColor: '#FF6B35' }]}>
+        <Ionicons name="layers" size={size-2} color="#FFFFFF" />
+      </View>
+    ),
+    drawerLabel: "Ajout Multiple",
+  }}
+/>
 
       <Drawer.Screen 
         name="Transfer" 

@@ -1,4 +1,4 @@
-// src/screens/CategoriesScreen.tsx
+// src/screens/CategoriesScreen.tsx - VERSION COMPLÈTEMENT CORRIGÉE
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
@@ -13,11 +13,30 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from '../components/SafeAreaView';
 import { useTheme } from '../context/ThemeContext';
 import { useCategories } from '../hooks/useCategories';
 import { Category } from '../types';
 
-const CategoriesScreen = () => {
+// ✅ DÉFINITION DES TYPES LOCAUX
+interface CategoryFormData {
+  name: string;
+  type: 'expense' | 'income';
+  color: string;
+  icon: string;
+}
+
+interface DatabaseCategory {
+  id: string;
+  user_id: string;
+  name: string;
+  type: string;
+  color: string;
+  icon: string;
+  created_at: string;
+}
+
+const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { theme } = useTheme();
   const { categories, loading, error, createCategory, updateCategory, deleteCategory, refreshCategories } = useCategories();
   const [refreshing, setRefreshing] = useState(false);
@@ -25,30 +44,32 @@ const CategoriesScreen = () => {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const isDark = theme === 'dark';
 
-  const [formData, setFormData] = useState<Omit<Category, 'id'>>({
+  const [formData, setFormData] = useState<CategoryFormData>({
     name: '',
-    type: 'expense' as 'expense' | 'income',
+    type: 'expense',
     color: '#007AFF',
     icon: 'ellipsis-horizontal',
   });
 
-  const categoryColors = [
+  // ✅ CORRECTION: Tableaux de couleurs et icônes avec types appropriés
+  const categoryColors: string[] = [
     '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#778899',
     '#50C878', '#FFD700', '#9370DB', '#20B2AA', '#007AFF', '#FF9500', '#5856D6'
   ];
 
-  const categoryIcons = [
+  const categoryIcons: string[] = [
     'restaurant', 'car', 'home', 'game-controller', 'medical', 'cart', 'ellipsis-horizontal',
     'cash', 'gift', 'trending-up', 'add-circle', 'airplane', 'book', 'cafe'
   ];
 
-  const onRefresh = async () => {
+  // ✅ CORRECTION: Fonction de rafraîchissement typée
+  const onRefresh = async (): Promise<void> => {
     setRefreshing(true);
     await refreshCategories();
     setRefreshing(false);
   };
 
-  const openAddModal = () => {
+  const openAddModal = (): void => {
     setEditingCategory(null);
     setFormData({
       name: '',
@@ -59,7 +80,7 @@ const CategoriesScreen = () => {
     setModalVisible(true);
   };
 
-  const openEditModal = (category: Category) => {
+  const openEditModal = (category: Category): void => {
     setEditingCategory(category);
     setFormData({
       name: category.name,
@@ -70,12 +91,12 @@ const CategoriesScreen = () => {
     setModalVisible(true);
   };
 
-  const closeModal = () => {
+  const closeModal = (): void => {
     setModalVisible(false);
     setEditingCategory(null);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (): Promise<void> => {
     if (!formData.name.trim()) {
       Alert.alert('Erreur', 'Veuillez saisir un nom pour la catégorie');
       return;
@@ -95,7 +116,7 @@ const CategoriesScreen = () => {
     }
   };
 
-  const handleDelete = (category: Category) => {
+  const handleDelete = (category: Category): void => {
     Alert.alert(
       'Supprimer la catégorie',
       `Êtes-vous sûr de vouloir supprimer "${category.name}" ?`,
@@ -117,6 +138,7 @@ const CategoriesScreen = () => {
     );
   };
 
+  // ✅ CORRECTION: Fonction de rendu correctement typée - SUPPRIMER JSX.Element
   const renderCategoryItem = ({ item }: { item: Category }) => (
     <TouchableOpacity 
       style={[styles.categoryItem, isDark && styles.darkCard]}
@@ -141,9 +163,11 @@ const CategoriesScreen = () => {
     </TouchableOpacity>
   );
 
-  const expenseCategories = categories.filter(cat => cat.type === 'expense');
-  const incomeCategories = categories.filter(cat => cat.type === 'income');
+  // ✅ CORRECTION: Filtrage des catégories avec types
+  const expenseCategories = categories.filter((cat: Category) => cat.type === 'expense');
+  const incomeCategories = categories.filter((cat: Category) => cat.type === 'income');
 
+  // ✅ CORRECTION: État de chargement
   if (loading && !refreshing) {
     return (
       <View style={[styles.container, isDark && styles.darkContainer, styles.center]}>
@@ -155,6 +179,7 @@ const CategoriesScreen = () => {
     );
   }
 
+  // ✅ CORRECTION: État d'erreur
   if (error) {
     return (
       <View style={[styles.container, isDark && styles.darkContainer, styles.center]}>
@@ -170,213 +195,229 @@ const CategoriesScreen = () => {
   }
 
   return (
-    <View style={[styles.container, isDark && styles.darkContainer]}>
-      <View style={[styles.header, isDark && styles.darkHeader]}>
-        <Text style={[styles.title, isDark && styles.darkText]}>
-          Catégories
-        </Text>
-        <Text style={[styles.subtitle, isDark && styles.darkSubtext]}>
-          Gérez vos catégories de transactions
-        </Text>
-      </View>
-
-      <FlatList
-        data={[]}
-        renderItem={null}
-        refreshing={refreshing}
-        onRefresh={onRefresh}
-        showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          <>
-            <View style={styles.section}>
-              <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
-                Dépenses ({expenseCategories.length})
-              </Text>
-              {expenseCategories.map((category) => (
-                <View key={category.id}>
-                  {renderCategoryItem({ item: category })}
-                </View>
-              ))}
-              {expenseCategories.length === 0 && (
-                <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
-                  Aucune catégorie de dépense
-                </Text>
-              )}
-            </View>
-
-            <View style={styles.section}>
-              <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
-                Revenus ({incomeCategories.length})
-              </Text>
-              {incomeCategories.map((category) => (
-                <View key={category.id}>
-                  {renderCategoryItem({ item: category })}
-                </View>
-              ))}
-              {incomeCategories.length === 0 && (
-                <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
-                  Aucune catégorie de revenu
-                </Text>
-              )}
-            </View>
-          </>
-        }
-        ListFooterComponent={<View style={styles.spacer} />}
-      />
-
-      <TouchableOpacity 
-        style={styles.fab}
-        onPress={openAddModal}
-      >
-        <Ionicons name="add" size={24} color="#fff" />
-      </TouchableOpacity>
-
-      <Modal
-        visible={modalVisible}
-        animationType="slide"
-        onRequestClose={closeModal}
-      >
-        <View style={[styles.modalContainer, isDark && styles.darkContainer]}>
-          <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, isDark && styles.darkText]}>
-              {editingCategory ? 'Modifier la catégorie' : 'Nouvelle catégorie'}
-            </Text>
-            <TouchableOpacity onPress={closeModal}>
-              <Ionicons name="close" size={24} color={isDark ? '#fff' : '#000'} />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={styles.modalContent}>
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, isDark && styles.darkText]}>Nom</Text>
-              <TextInput
-                style={[styles.input, isDark && styles.darkInput]}
-                value={formData.name}
-                onChangeText={(text) => setFormData({ ...formData, name: text })}
-                placeholder="Nom de la catégorie"
-                placeholderTextColor={isDark ? '#666' : '#999'}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, isDark && styles.darkText]}>Type</Text>
-              <View style={styles.typeContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.typeButton,
-                    formData.type === 'expense' && styles.typeButtonSelected,
-                  ]}
-                  onPress={() => setFormData({ ...formData, type: 'expense' })}
-                >
-                  <Text style={[
-                    styles.typeButtonText,
-                    formData.type === 'expense' && styles.typeButtonTextSelected,
-                  ]}>
-                    Dépense
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.typeButton,
-                    formData.type === 'income' && styles.typeButtonSelected,
-                  ]}
-                  onPress={() => setFormData({ ...formData, type: 'income' })}
-                >
-                  <Text style={[
-                    styles.typeButtonText,
-                    formData.type === 'income' && styles.typeButtonTextSelected,
-                  ]}>
-                    Revenu
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, isDark && styles.darkText]}>Couleur</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View style={styles.colorsContainer}>
-                  {categoryColors.map((color) => (
-                    <TouchableOpacity
-                      key={color}
-                      style={[
-                        styles.colorButton,
-                        { backgroundColor: color },
-                        formData.color === color && styles.colorButtonSelected,
-                      ]}
-                      onPress={() => setFormData({ ...formData, color })}
-                    >
-                      {formData.color === color && (
-                        <Ionicons name="checkmark" size={16} color="#fff" />
-                      )}
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </ScrollView>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, isDark && styles.darkText]}>Icône</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View style={styles.iconsContainer}>
-                  {categoryIcons.map((icon) => (
-                    <TouchableOpacity
-                      key={icon}
-                      style={[
-                        styles.iconButton,
-                        isDark && styles.darkIconButton,
-                        formData.icon === icon && styles.iconButtonSelected,
-                      ]}
-                      onPress={() => setFormData({ ...formData, icon })}
-                    >
-                      <Ionicons 
-                        name={icon as any} 
-                        size={20} 
-                        color={formData.icon === icon ? '#007AFF' : (isDark ? '#fff' : '#000')} 
-                      />
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </ScrollView>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, isDark && styles.darkText]}>Aperçu</Text>
-              <View style={[styles.preview, isDark && styles.darkCard]}>
-                <View style={[styles.colorIndicator, { backgroundColor: formData.color }]} />
-                <Ionicons name={formData.icon as any} size={20} color={isDark ? '#fff' : '#000'} />
-                <Text style={[styles.previewText, isDark && styles.darkText]}>
-                  {formData.name || 'Nom de la catégorie'}
-                </Text>
-              </View>
-            </View>
-          </ScrollView>
-
-          <View style={styles.modalActions}>
-            <TouchableOpacity
-              style={[styles.cancelButton, isDark && styles.darkCancelButton]}
-              onPress={closeModal}
-            >
-              <Text style={[styles.cancelButtonText, isDark && styles.darkText]}>
-                Annuler
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.submitButton, !formData.name && styles.submitButtonDisabled]}
-              onPress={handleSubmit}
-              disabled={!formData.name}
-            >
-              <Text style={styles.submitButtonText}>
-                {editingCategory ? 'Modifier' : 'Créer'}
-              </Text>
-            </TouchableOpacity>
-          </View>
+    <SafeAreaView>
+      <View style={[styles.container, isDark && styles.darkContainer]}>
+        <View style={[styles.header, isDark && styles.darkHeader]}>
+          <Text style={[styles.title, isDark && styles.darkText]}>
+            Catégories
+          </Text>
+          <Text style={[styles.subtitle, isDark && styles.darkSubtext]}>
+            Gérez vos catégories de transactions
+          </Text>
         </View>
-      </Modal>
-    </View>
+
+        {/* ✅ CORRECTION: FlatList avec ListHeaderComponent correctement typé */}
+        <FlatList
+          data={[]}
+          renderItem={null as any}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            <View>
+              <View style={styles.section}>
+                <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+                  Dépenses ({expenseCategories.length})
+                </Text>
+                {expenseCategories.map((category: Category) => (
+                  <View key={category.id}>
+                    {renderCategoryItem({ item: category })}
+                  </View>
+                ))}
+                {expenseCategories.length === 0 && (
+                  <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
+                    Aucune catégorie de dépense
+                  </Text>
+                )}
+              </View>
+
+              <View style={styles.section}>
+                <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+                  Revenus ({incomeCategories.length})
+                </Text>
+                {incomeCategories.map((category: Category) => (
+                  <View key={category.id}>
+                    {renderCategoryItem({ item: category })}
+                  </View>
+                ))}
+                {incomeCategories.length === 0 && (
+                  <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
+                    Aucune catégorie de revenu
+                  </Text>
+                )}
+              </View>
+
+              {/* ✅ AJOUT: Bouton pour l'ajout multiple */}
+              <TouchableOpacity 
+                style={[styles.multipleButton, isDark && styles.darkMultipleButton]}
+                onPress={() => navigation.navigate('AddMultipleCategories')}
+              >
+                <Ionicons name="layers" size={20} color="#007AFF" />
+                <Text style={styles.multipleButtonText}>
+                  Ajouter plusieurs catégories
+                </Text>
+              </TouchableOpacity>
+            </View>
+          }
+          ListFooterComponent={<View style={styles.spacer} />}
+        />
+
+        <TouchableOpacity 
+          style={styles.fab}
+          onPress={openAddModal}
+        >
+          <Ionicons name="add" size={24} color="#fff" />
+        </TouchableOpacity>
+
+        {/* ✅ CORRECTION: Modal avec types corrects */}
+        <Modal
+          visible={modalVisible}
+          animationType="slide"
+          onRequestClose={closeModal}
+        >
+          <View style={[styles.modalContainer, isDark && styles.darkContainer]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, isDark && styles.darkText]}>
+                {editingCategory ? 'Modifier la catégorie' : 'Nouvelle catégorie'}
+              </Text>
+              <TouchableOpacity onPress={closeModal}>
+                <Ionicons name="close" size={24} color={isDark ? '#fff' : '#000'} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalContent}>
+              <View style={styles.inputGroup}>
+                <Text style={[styles.label, isDark && styles.darkText]}>Nom</Text>
+                <TextInput
+                  style={[styles.input, isDark && styles.darkInput]}
+                  value={formData.name}
+                  onChangeText={(text: string) => setFormData({ ...formData, name: text })}
+                  placeholder="Nom de la catégorie"
+                  placeholderTextColor={isDark ? '#666' : '#999'}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={[styles.label, isDark && styles.darkText]}>Type</Text>
+                <View style={styles.typeContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.typeButton,
+                      formData.type === 'expense' && styles.typeButtonSelected,
+                    ]}
+                    onPress={() => setFormData({ ...formData, type: 'expense' })}
+                  >
+                    <Text style={[
+                      styles.typeButtonText,
+                      formData.type === 'expense' && styles.typeButtonTextSelected,
+                    ]}>
+                      Dépense
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.typeButton,
+                      formData.type === 'income' && styles.typeButtonSelected,
+                    ]}
+                    onPress={() => setFormData({ ...formData, type: 'income' })}
+                  >
+                    <Text style={[
+                      styles.typeButtonText,
+                      formData.type === 'income' && styles.typeButtonTextSelected,
+                    ]}>
+                      Revenu
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={[styles.label, isDark && styles.darkText]}>Couleur</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View style={styles.colorsContainer}>
+                    {categoryColors.map((color: string) => (
+                      <TouchableOpacity
+                        key={color}
+                        style={[
+                          styles.colorButton,
+                          { backgroundColor: color },
+                          formData.color === color && styles.colorButtonSelected,
+                        ]}
+                        onPress={() => setFormData({ ...formData, color })}
+                      >
+                        {formData.color === color && (
+                          <Ionicons name="checkmark" size={16} color="#fff" />
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </ScrollView>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={[styles.label, isDark && styles.darkText]}>Icône</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View style={styles.iconsContainer}>
+                    {categoryIcons.map((icon: string) => (
+                      <TouchableOpacity
+                        key={icon}
+                        style={[
+                          styles.iconButton,
+                          isDark && styles.darkIconButton,
+                          formData.icon === icon && styles.iconButtonSelected,
+                        ]}
+                        onPress={() => setFormData({ ...formData, icon })}
+                      >
+                        <Ionicons 
+                          name={icon as any} 
+                          size={20} 
+                          color={formData.icon === icon ? '#007AFF' : (isDark ? '#fff' : '#000')} 
+                        />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </ScrollView>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={[styles.label, isDark && styles.darkText]}>Aperçu</Text>
+                <View style={[styles.preview, isDark && styles.darkCard]}>
+                  <View style={[styles.colorIndicator, { backgroundColor: formData.color }]} />
+                  <Ionicons name={formData.icon as any} size={20} color={isDark ? '#fff' : '#000'} />
+                  <Text style={[styles.previewText, isDark && styles.darkText]}>
+                    {formData.name || 'Nom de la catégorie'}
+                  </Text>
+                </View>
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.cancelButton, isDark && styles.darkCancelButton]}
+                onPress={closeModal}
+              >
+                <Text style={[styles.cancelButtonText, isDark && styles.darkText]}>
+                  Annuler
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.submitButton, !formData.name && styles.submitButtonDisabled]}
+                onPress={handleSubmit}
+                disabled={!formData.name}
+              >
+                <Text style={styles.submitButtonText}>
+                  {editingCategory ? 'Modifier' : 'Créer'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </View>
+    </SafeAreaView>
   );
 };
 
+// ✅ CORRECTION: Styles avec toutes les propriétés nécessaires
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -677,6 +718,26 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: '#fff',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  // ✅ AJOUT: Styles pour le bouton multiple
+  multipleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#007AFF15',
+    padding: 16,
+    borderRadius: 12,
+    margin: 16,
+    marginTop: 8,
+    gap: 12,
+    justifyContent: 'center',
+  },
+  darkMultipleButton: {
+    backgroundColor: '#007AFF20',
+  },
+  multipleButtonText: {
+    fontSize: 16,
+    color: '#007AFF',
     fontWeight: '600',
   },
   darkText: {

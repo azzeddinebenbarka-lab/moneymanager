@@ -1,7 +1,8 @@
-// src/services/categoryService.ts - SERVICE COMPLET ET ORGANISÉ
+// src/services/categoryService.ts - VERSION COMPLÈTEMENT CORRIGÉE
 import { Category } from '../types';
 import { getDatabase } from './database/sqlite';
 
+// ✅ INTERFACES TYPÉES
 interface DatabaseCategory {
   id: string;
   user_id: string;
@@ -12,11 +13,35 @@ interface DatabaseCategory {
   created_at: string;
 }
 
+interface CreateCategoryData {
+  name: string;
+  type: 'expense' | 'income';
+  color: string;
+  icon: string;
+  budget?: number;
+  isActive?: boolean;
+}
+
+interface CategoryStats {
+  totalCategories: number;
+  expenseCategories: number;
+  incomeCategories: number;
+  categoriesByType: Record<string, number>;
+}
+
+interface TableDiagnosis {
+  exists: boolean;
+  structure: any[];
+  rowCount: number;
+  sampleData: any[];
+}
+
+// ✅ SERVICE PRINCIPAL
 export const categoryService = {
   // ===== OPÉRATIONS CRUD =====
 
   // CREATE - Créer une catégorie
-  createCategory: async (category: Omit<Category, 'id' | 'createdAt'>, userId: string = 'default-user'): Promise<string> => {
+  async createCategory(categoryData: CreateCategoryData, userId: string = 'default-user'): Promise<string> {
     const db = await getDatabase();
     
     try {
@@ -28,14 +53,22 @@ export const categoryService = {
 
       console.log('🔄 [categoryService] Creating category:', { 
         id, 
-        name: category.name, 
-        type: category.type 
+        name: categoryData.name, 
+        type: categoryData.type 
       });
 
       await db.runAsync(
         `INSERT INTO categories (id, user_id, name, type, color, icon, created_at) 
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [id, userId, category.name, category.type, category.color, category.icon, createdAt]
+        [
+          id, 
+          userId, 
+          categoryData.name, 
+          categoryData.type, 
+          categoryData.color, 
+          categoryData.icon, 
+          createdAt
+        ]
       );
       
       console.log('✅ [categoryService] Category created successfully:', id);
@@ -53,7 +86,7 @@ export const categoryService = {
         await repairCategoriesTable();
         
         // Réessayer après réparation
-        return await categoryService.createCategory(category, userId);
+        return await categoryService.createCategory(categoryData, userId);
       }
       
       throw new Error(`Impossible de créer la catégorie: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
@@ -61,7 +94,7 @@ export const categoryService = {
   },
 
   // READ - Récupérer toutes les catégories
-  getAllCategories: async (userId: string = 'default-user'): Promise<Category[]> => {
+  async getAllCategories(userId: string = 'default-user'): Promise<Category[]> {
     try {
       const db = await getDatabase();
       
@@ -99,7 +132,7 @@ export const categoryService = {
   },
 
   // READ - Récupérer une catégorie par ID
-  getCategoryById: async (id: string, userId: string = 'default-user'): Promise<Category | null> => {
+  async getCategoryById(id: string, userId: string = 'default-user'): Promise<Category | null> {
     try {
       const db = await getDatabase();
       
@@ -140,7 +173,7 @@ export const categoryService = {
   },
 
   // READ - Récupérer les catégories par type
-  getCategoriesByType: async (type: 'expense' | 'income', userId: string = 'default-user'): Promise<Category[]> => {
+  async getCategoriesByType(type: 'expense' | 'income', userId: string = 'default-user'): Promise<Category[]> {
     try {
       const db = await getDatabase();
       
@@ -178,7 +211,11 @@ export const categoryService = {
   },
 
   // UPDATE - Mettre à jour une catégorie
-  updateCategory: async (id: string, category: Omit<Category, 'id' | 'createdAt'>, userId: string = 'default-user'): Promise<void> => {
+  async updateCategory(
+    id: string, 
+    categoryData: Omit<Category, 'id' | 'createdAt'>, 
+    userId: string = 'default-user'
+  ): Promise<void> {
     const db = await getDatabase();
     
     await checkAndRepairCategoriesTable();
@@ -190,7 +227,7 @@ export const categoryService = {
         `UPDATE categories 
          SET name = ?, type = ?, color = ?, icon = ?
          WHERE id = ? AND user_id = ?`,
-        [category.name, category.type, category.color, category.icon, id, userId]
+        [categoryData.name, categoryData.type, categoryData.color, categoryData.icon, id, userId]
       );
       
       console.log('✅ [categoryService] Category updated successfully');
@@ -201,7 +238,7 @@ export const categoryService = {
   },
 
   // DELETE - Supprimer une catégorie
-  deleteCategory: async (id: string, userId: string = 'default-user'): Promise<void> => {
+  async deleteCategory(id: string, userId: string = 'default-user'): Promise<void> {
     const db = await getDatabase();
     
     await checkAndRepairCategoriesTable();
@@ -224,7 +261,7 @@ export const categoryService = {
   // ===== RECHERCHE ET FILTRES =====
 
   // Rechercher des catégories par nom
-  searchCategories: async (searchTerm: string, userId: string = 'default-user'): Promise<Category[]> => {
+  async searchCategories(searchTerm: string, userId: string = 'default-user'): Promise<Category[]> {
     try {
       const db = await getDatabase();
       
@@ -263,7 +300,7 @@ export const categoryService = {
   // ===== UTILITAIRES =====
 
   // Vérifier si une catégorie est utilisée dans des transactions
-  isCategoryUsed: async (categoryId: string, userId: string = 'default-user'): Promise<boolean> => {
+  async isCategoryUsed(categoryId: string, userId: string = 'default-user'): Promise<boolean> {
     try {
       const db = await getDatabase();
       
@@ -272,9 +309,9 @@ export const categoryService = {
       const result = await db.getFirstAsync(
         `SELECT COUNT(*) as count FROM transactions WHERE category = ? AND user_id = ?`,
         [categoryId, userId]
-      ) as { count: number };
+      ) as { count: number } | null;
       
-      const isUsed = result.count > 0;
+      const isUsed = result?.count ? result.count > 0 : false;
       console.log(`🔍 [categoryService] Category ${categoryId} is used:`, isUsed);
       
       return isUsed;
@@ -291,12 +328,7 @@ export const categoryService = {
   },
 
   // Obtenir les statistiques des catégories
-  getCategoryStats: async (userId: string = 'default-user'): Promise<{
-    totalCategories: number;
-    expenseCategories: number;
-    incomeCategories: number;
-    categoriesByType: Record<string, number>;
-  }> => {
+  async getCategoryStats(userId: string = 'default-user'): Promise<CategoryStats> {
     try {
       const db = await getDatabase();
       
@@ -306,7 +338,7 @@ export const categoryService = {
       const countResult = await db.getFirstAsync(
         `SELECT COUNT(*) as count FROM categories WHERE user_id = ?`,
         [userId]
-      ) as { count: number };
+      ) as { count: number } | null;
       const totalCategories = countResult?.count || 0;
       
       // Catégories par type
@@ -356,7 +388,7 @@ export const categoryService = {
   },
 
   // Initialiser les catégories par défaut
-  initializeDefaultCategories: async (userId: string = 'default-user'): Promise<void> => {
+  async initializeDefaultCategories(userId: string = 'default-user'): Promise<void> {
     try {
       const db = await getDatabase();
       
@@ -412,12 +444,7 @@ export const categoryService = {
   // ===== DIAGNOSTIC ET RÉPARATION =====
 
   // Diagnostic de la table
-  diagnoseTable: async (): Promise<{
-    exists: boolean;
-    structure: any[];
-    rowCount: number;
-    sampleData: any[];
-  }> => {
+  async diagnoseTable(): Promise<TableDiagnosis> {
     try {
       const db = await getDatabase();
       console.log('🔧 [categoryService] Comprehensive table diagnosis...');
@@ -442,8 +469,8 @@ export const categoryService = {
       console.log('🔧 [categoryService] Table structure:', structure);
       
       // Nombre de lignes
-      const countResult = await db.getFirstAsync(`SELECT COUNT(*) as count FROM categories`) as { count: number };
-      const rowCount = countResult.count;
+      const countResult = await db.getFirstAsync(`SELECT COUNT(*) as count FROM categories`) as { count: number } | null;
+      const rowCount = countResult?.count || 0;
       
       // Données d'exemple
       const sampleData = rowCount > 0 ? 
@@ -473,10 +500,89 @@ export const categoryService = {
   },
 
   // Réparation d'urgence
-  emergencyRepair: async (): Promise<void> => {
+  async emergencyRepair(): Promise<void> {
     console.log('🛠️ [categoryService] Starting emergency repair...');
     await repairCategoriesTable();
     console.log('✅ [categoryService] Emergency repair completed');
+  },
+
+  // ✅ NOUVELLE MÉTHODE : Création multiple de catégories
+  async createMultipleCategories(
+    categoriesData: CreateCategoryData[], 
+    userId: string = 'default-user'
+  ): Promise<{ success: boolean; created: number; errors: string[] }> {
+    const results = {
+      success: true,
+      created: 0,
+      errors: [] as string[]
+    };
+
+    try {
+      const db = await getDatabase();
+      await checkAndRepairCategoriesTable();
+
+      console.log(`🔄 [categoryService] Creating ${categoriesData.length} categories...`);
+
+      for (const categoryData of categoriesData) {
+        try {
+          if (!categoryData.name.trim()) {
+            results.errors.push(`Nom manquant pour une catégorie`);
+            continue;
+          }
+
+          if (!categoryData.type || !['expense', 'income'].includes(categoryData.type)) {
+            results.errors.push(`Type invalide pour: ${categoryData.name}`);
+            continue;
+          }
+
+          if (!categoryData.color) {
+            results.errors.push(`Couleur manquante pour: ${categoryData.name}`);
+            continue;
+          }
+
+          if (!categoryData.icon) {
+            results.errors.push(`Icône manquante pour: ${categoryData.name}`);
+            continue;
+          }
+
+          const id = `cat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          const createdAt = new Date().toISOString();
+
+          await db.runAsync(
+            `INSERT INTO categories (id, user_id, name, type, color, icon, created_at) 
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [id, userId, categoryData.name.trim(), categoryData.type, categoryData.color, categoryData.icon, createdAt]
+          );
+
+          results.created++;
+          console.log(`✅ [categoryService] Category created: ${categoryData.name}`);
+
+        } catch (error) {
+          const errorMsg = `Erreur création "${categoryData.name}": ${error instanceof Error ? error.message : 'Erreur inconnue'}`;
+          results.errors.push(errorMsg);
+          console.error(`❌ [categoryService] ${errorMsg}`);
+        }
+      }
+
+      if (results.errors.length > 0) {
+        results.success = false;
+        console.warn(`⚠️ [categoryService] Completed with ${results.errors.length} errors`);
+      } else {
+        console.log(`✅ [categoryService] All ${results.created} categories created successfully`);
+      }
+
+      return results;
+
+    } catch (error) {
+      const errorMsg = `Erreur globale création multiple: ${error instanceof Error ? error.message : 'Erreur inconnue'}`;
+      console.error(`❌ [categoryService] ${errorMsg}`);
+      
+      return {
+        success: false,
+        created: results.created,
+        errors: [...results.errors, errorMsg]
+      };
+    }
   }
 };
 
@@ -543,8 +649,7 @@ const repairCategoriesTable = async (): Promise<void> => {
         type TEXT NOT NULL,
         color TEXT NOT NULL,
         icon TEXT NOT NULL,
-        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
     `);
     
