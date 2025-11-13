@@ -446,7 +446,6 @@ export const annualChargeService = {
           amount: result.amount,
           dueDate: result.due_date,
           category: result.category,
-          description: result.description || '',
           notes: result.description || '',
           isRecurring: Boolean(result.is_recurring),
           isActive: Boolean(result.is_active),

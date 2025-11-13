@@ -1,8 +1,10 @@
-// src/components/savings/SavingsGoalForm.tsx - VERSION COMPLÈTEMENT CORRIGÉE AVEC MAD
+// src/components/savings/SavingsGoalForm.tsx - VERSION AVEC DÉFILEMENT CORRIGÉ
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useMemo, useState } from 'react';
 import {
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,7 +12,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { useCurrency } from '../../context/CurrencyContext'; // ✅ AJOUT IMPORT
+import { useCurrency } from '../../context/CurrencyContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useAccounts } from '../../hooks/useAccounts';
 import { useSavings } from '../../hooks/useSavings';
@@ -49,7 +51,7 @@ const COLORS = [
 
 export const SavingsGoalForm = ({ onSubmit, loading }: Props) => {
   const { theme } = useTheme();
-  const { formatAmount } = useCurrency(); // ✅ AJOUT HOOK
+  const { formatAmount } = useCurrency();
   const { accounts } = useAccounts();
   const { calculateRequiredMonthlySavings, calculateGoalAchievementDate } = useSavings();
   
@@ -156,361 +158,376 @@ export const SavingsGoalForm = ({ onSubmit, loading }: Props) => {
     return icons[category] || '💰';
   };
 
-  // ✅ FONCTION POUR OBTENIR LE SYMBOLE DE DEVISE
+  // Fonction pour obtenir le symbole de devise
   const getCurrencySymbol = () => {
-    return formatAmount(0, false).split(' ')[0]; // Récupère juste le symbole
+    return formatAmount(0, false).split(' ')[0];
   };
 
   return (
-    <ScrollView 
-      style={[styles.form, isDark && styles.darkForm]} 
-      showsVerticalScrollIndicator={false}
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      {/* Nom de l'objectif */}
-      <View style={styles.inputGroup}>
-        <Text style={[styles.label, isDark && styles.darkText]}>Nom de l'objectif *</Text>
-        <TextInput
-          style={[styles.input, isDark && styles.darkInput]}
-          value={formData.name}
-          onChangeText={(value) => updateFormData('name', value)}
-          placeholder="Ex: Achat voiture, Vacances en Grèce..."
-          placeholderTextColor={isDark ? "#888" : "#999"}
-        />
-      </View>
-
-      {/* Catégorie */}
-      <View style={styles.inputGroup}>
-        <Text style={[styles.label, isDark && styles.darkText]}>Catégorie</Text>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false} 
-          style={styles.categoriesContainer}
-        >
-          {CATEGORIES.map((category) => (
-            <TouchableOpacity
-              key={category.value}
-              style={[
-                styles.categoryButton,
-                formData.category === category.value && styles.activeCategoryButton,
-                { borderColor: category.color }
-              ]}
-              onPress={() => {
-                updateFormData('category', category.value);
-                updateFormData('icon', getCategoryIcon(category.value));
-                updateFormData('color', category.color);
-              }}
-            >
-              <Text style={[
-                styles.categoryText,
-                formData.category === category.value && styles.activeCategoryText,
-              ]}>
-                {category.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* Montant cible */}
-      <View style={styles.inputGroup}>
-        <Text style={[styles.label, isDark && styles.darkText]}>Montant cible *</Text>
-        <View style={[styles.amountInput, isDark && styles.darkAmountInput]}>
-          {/* ✅ CORRECTION : Utiliser le symbole de devise dynamique */}
-          <Text style={[styles.currencySymbol, isDark && styles.darkText]}>
-            {getCurrencySymbol()}
-          </Text>
+      {/* ✅ CORRECTION: ScrollView principal avec défilement complet */}
+      <ScrollView 
+        style={[styles.scrollView, isDark && styles.darkForm]} 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={true}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Nom de l'objectif */}
+        <View style={styles.inputGroup}>
+          <Text style={[styles.label, isDark && styles.darkText]}>Nom de l'objectif *</Text>
           <TextInput
-            style={[styles.input, styles.amountTextInput, isDark && styles.darkInput]}
-            value={formData.targetAmount}
-            onChangeText={(value) => updateFormData('targetAmount', value.replace(',', '.'))}
-            placeholder="0.00"
+            style={[styles.input, isDark && styles.darkInput]}
+            value={formData.name}
+            onChangeText={(value) => updateFormData('name', value)}
+            placeholder="Ex: Achat voiture, Vacances en Grèce..."
             placeholderTextColor={isDark ? "#888" : "#999"}
-            keyboardType="decimal-pad"
           />
         </View>
-        {/* ✅ CORRECTION : Afficher le montant formaté */}
-        {formData.targetAmount && (
-          <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-            Objectif: {formatAmount(parseFloat(formData.targetAmount) || 0)}
-          </Text>
-        )}
-      </View>
 
-      {/* Compte d'épargne */}
-      <View style={styles.inputGroup}>
-        <Text style={[styles.label, isDark && styles.darkText]}>Compte d'épargne *</Text>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false} 
-          style={styles.accountsContainer}
-        >
-          {savingsAccounts.map((account) => (
-            <TouchableOpacity
-              key={account.id}
-              style={[
-                styles.accountButton,
-                formData.savingsAccountId === account.id && styles.activeAccountButton,
-                isDark && styles.darkAccountButton
-              ]}
-              onPress={() => updateFormData('savingsAccountId', account.id)}
-            >
-              <View style={[styles.accountColor, { backgroundColor: account.color }]} />
-              <View style={styles.accountInfo}>
-                <Text style={[
-                  styles.accountName, 
-                  isDark && styles.darkText,
-                  formData.savingsAccountId === account.id && styles.activeAccountText
-                ]}>
-                  {account.name}
-                </Text>
-                {/* ✅ CORRECTION : Utiliser formatAmount pour le solde */}
-                <Text style={[
-                  styles.accountBalance, 
-                  isDark && styles.darkSubtext,
-                  formData.savingsAccountId === account.id && styles.activeAccountSubtext
-                ]}>
-                  {formatAmount(account.balance)}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-        {savingsAccounts.length === 0 && (
-          <Text style={[styles.warningText, isDark && styles.darkSubtext]}>
-            Aucun compte d'épargne trouvé. Créez d'abord un compte d'épargne.
-          </Text>
-        )}
-      </View>
-
-      {/* Compte de contribution */}
-      <View style={styles.inputGroup}>
-        <Text style={[styles.label, isDark && styles.darkText]}>Compte source des contributions</Text>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false} 
-          style={styles.accountsContainer}
-        >
-          {contributionAccounts.map((account) => (
-            <TouchableOpacity
-              key={account.id}
-              style={[
-                styles.accountButton,
-                formData.contributionAccountId === account.id && styles.activeAccountButton,
-                isDark && styles.darkAccountButton
-              ]}
-              onPress={() => updateFormData('contributionAccountId', account.id)}
-            >
-              <View style={[styles.accountColor, { backgroundColor: account.color }]} />
-              <View style={styles.accountInfo}>
-                <Text style={[
-                  styles.accountName, 
-                  isDark && styles.darkText,
-                  formData.contributionAccountId === account.id && styles.activeAccountText
-                ]}>
-                  {account.name}
-                </Text>
-                {/* ✅ CORRECTION : Utiliser formatAmount pour le solde */}
-                <Text style={[
-                  styles.accountBalance, 
-                  isDark && styles.darkSubtext,
-                  formData.contributionAccountId === account.id && styles.activeAccountSubtext
-                ]}>
-                  {formatAmount(account.balance)}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-        <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-          Sélectionnez le compte depuis lequel les fonds seront transférés
-        </Text>
-      </View>
-
-      {/* Date cible */}
-      <View style={styles.inputGroup}>
-        <Text style={[styles.label, isDark && styles.darkText]}>Date cible</Text>
-        <TouchableOpacity 
-          style={[styles.dateButton, isDark && styles.darkInput]}
-          onPress={() => setShowDatePicker(true)}
-        >
-          <Text style={[styles.dateButtonText, isDark && styles.darkText]}>
-            {formData.targetDate.toLocaleDateString('fr-FR', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </Text>
-        </TouchableOpacity>
-        
-        {showDatePicker && (
-          <DateTimePicker
-            value={formData.targetDate}
-            mode="date"
-            display="default"
-            minimumDate={new Date()}
-            onChange={(event, date) => {
-              setShowDatePicker(false);
-              if (date) updateFormData('targetDate', date);
-            }}
-          />
-        )}
-      </View>
-
-      {/* Mode de calcul */}
-      <View style={styles.inputGroup}>
-        <Text style={[styles.label, isDark && styles.darkText]}>Calcul de la mensualité</Text>
-        <View style={styles.calculationMode}>
-          <TouchableOpacity
-            style={[
-              styles.modeButton,
-              calculateMode === 'auto' && styles.modeButtonActive,
-              isDark && styles.darkModeButton
-            ]}
-            onPress={() => setCalculateMode('auto')}
+        {/* Catégorie */}
+        <View style={styles.inputGroup}>
+          <Text style={[styles.label, isDark && styles.darkText]}>Catégorie</Text>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false} 
+            style={styles.categoriesContainer}
+            contentContainerStyle={styles.horizontalContent}
           >
-            <Text style={[
-              styles.modeButtonText,
-              calculateMode === 'auto' && styles.modeButtonTextActive,
-              isDark && styles.darkText
-            ]}>
-              Auto
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.modeButton,
-              calculateMode === 'manual' && styles.modeButtonActive,
-              isDark && styles.darkModeButton
-            ]}
-            onPress={() => setCalculateMode('manual')}
-          >
-            <Text style={[
-              styles.modeButtonText,
-              calculateMode === 'manual' && styles.modeButtonTextActive,
-              isDark && styles.darkText
-            ]}>
-              Manuel
-            </Text>
-          </TouchableOpacity>
+            {CATEGORIES.map((category) => (
+              <TouchableOpacity
+                key={category.value}
+                style={[
+                  styles.categoryButton,
+                  formData.category === category.value && styles.activeCategoryButton,
+                  { borderColor: category.color }
+                ]}
+                onPress={() => {
+                  updateFormData('category', category.value);
+                  updateFormData('icon', getCategoryIcon(category.value));
+                  updateFormData('color', category.color);
+                }}
+              >
+                <Text style={[
+                  styles.categoryText,
+                  formData.category === category.value && styles.activeCategoryText,
+                ]}>
+                  {category.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
-      </View>
 
-      {/* Contribution mensuelle */}
-      <View style={styles.inputGroup}>
-        <Text style={[styles.label, isDark && styles.darkText]}>
-          Contribution mensuelle {calculateMode === 'auto' && '(calculée automatiquement)'}
-        </Text>
-        <View style={[styles.amountInput, isDark && styles.darkAmountInput]}>
-          <Text style={[styles.currencySymbol, isDark && styles.darkText]}>
-            {getCurrencySymbol()}
-          </Text>
-          {calculateMode === 'auto' ? (
-            <Text style={[styles.calculatedAmount, isDark && styles.darkText]}>
-              {calculatedMonthlyContribution.toFixed(2)}
+        {/* Montant cible */}
+        <View style={styles.inputGroup}>
+          <Text style={[styles.label, isDark && styles.darkText]}>Montant cible *</Text>
+          <View style={[styles.amountInput, isDark && styles.darkAmountInput]}>
+            <Text style={[styles.currencySymbol, isDark && styles.darkText]}>
+              {getCurrencySymbol()}
             </Text>
-          ) : (
             <TextInput
               style={[styles.input, styles.amountTextInput, isDark && styles.darkInput]}
-              value={formData.monthlyContribution}
-              onChangeText={(value) => updateFormData('monthlyContribution', value.replace(',', '.'))}
+              value={formData.targetAmount}
+              onChangeText={(value) => updateFormData('targetAmount', value.replace(',', '.'))}
               placeholder="0.00"
               placeholderTextColor={isDark ? "#888" : "#999"}
               keyboardType="decimal-pad"
             />
+          </View>
+          {formData.targetAmount && (
+            <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+              Objectif: {formatAmount(parseFloat(formData.targetAmount) || 0)}
+            </Text>
           )}
         </View>
-        {/* ✅ CORRECTION : Afficher la contribution formatée */}
-        {calculateMode === 'auto' && formData.targetAmount && (
-          <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-            Contribution: {formatAmount(calculatedMonthlyContribution)}
-          </Text>
-        )}
-        {calculateMode === 'manual' && formData.monthlyContribution && (
-          <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-            Contribution: {formatAmount(parseFloat(formData.monthlyContribution) || 0)}
-          </Text>
-        )}
-      </View>
 
-      {/* Informations calculées */}
-      {calculatedTargetDate && calculateMode === 'manual' && (
-        <View style={[styles.calculationInfo, isDark && styles.darkCalculationInfo]}>
-          <Text style={[styles.calculationInfoText, isDark && styles.darkText]}>
-            Avec cette contribution, vous atteindrez votre objectif le {' '}
-            {new Date(calculatedTargetDate).toLocaleDateString('fr-FR', { 
-              day: 'numeric', 
-              month: 'long', 
-              year: 'numeric' 
-            })}
-          </Text>
-        </View>
-      )}
-
-      {calculateMode === 'auto' && (
-        <View style={[styles.calculationInfo, isDark && styles.darkCalculationInfo]}>
-          <Text style={[styles.calculationInfoText, isDark && styles.darkText]}>
-            Pour atteindre votre objectif à la date choisie, vous devez épargner {' '}
-            <Text style={styles.highlight}>
-              {formatAmount(calculatedMonthlyContribution)} par mois
+        {/* Compte d'épargne */}
+        <View style={styles.inputGroup}>
+          <Text style={[styles.label, isDark && styles.darkText]}>Compte d'épargne *</Text>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false} 
+            style={styles.accountsContainer}
+            contentContainerStyle={styles.horizontalContent}
+          >
+            {savingsAccounts.map((account) => (
+              <TouchableOpacity
+                key={account.id}
+                style={[
+                  styles.accountButton,
+                  formData.savingsAccountId === account.id && styles.activeAccountButton,
+                  isDark && styles.darkAccountButton
+                ]}
+                onPress={() => updateFormData('savingsAccountId', account.id)}
+              >
+                <View style={[styles.accountColor, { backgroundColor: account.color }]} />
+                <View style={styles.accountInfo}>
+                  <Text style={[
+                    styles.accountName, 
+                    isDark && styles.darkText,
+                    formData.savingsAccountId === account.id && styles.activeAccountText
+                  ]}>
+                    {account.name}
+                  </Text>
+                  <Text style={[
+                    styles.accountBalance, 
+                    isDark && styles.darkSubtext,
+                    formData.savingsAccountId === account.id && styles.activeAccountSubtext
+                  ]}>
+                    {formatAmount(account.balance)}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          {savingsAccounts.length === 0 && (
+            <Text style={[styles.warningText, isDark && styles.darkSubtext]}>
+              Aucun compte d'épargne trouvé. Créez d'abord un compte d'épargne.
             </Text>
+          )}
+        </View>
+
+        {/* Compte de contribution */}
+        <View style={styles.inputGroup}>
+          <Text style={[styles.label, isDark && styles.darkText]}>Compte source des contributions</Text>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false} 
+            style={styles.accountsContainer}
+            contentContainerStyle={styles.horizontalContent}
+          >
+            {contributionAccounts.map((account) => (
+              <TouchableOpacity
+                key={account.id}
+                style={[
+                  styles.accountButton,
+                  formData.contributionAccountId === account.id && styles.activeAccountButton,
+                  isDark && styles.darkAccountButton
+                ]}
+                onPress={() => updateFormData('contributionAccountId', account.id)}
+              >
+                <View style={[styles.accountColor, { backgroundColor: account.color }]} />
+                <View style={styles.accountInfo}>
+                  <Text style={[
+                    styles.accountName, 
+                    isDark && styles.darkText,
+                    formData.contributionAccountId === account.id && styles.activeAccountText
+                  ]}>
+                    {account.name}
+                  </Text>
+                  <Text style={[
+                    styles.accountBalance, 
+                    isDark && styles.darkSubtext,
+                    formData.contributionAccountId === account.id && styles.activeAccountSubtext
+                  ]}>
+                    {formatAmount(account.balance)}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+            Sélectionnez le compte depuis lequel les fonds seront transférés
           </Text>
         </View>
-      )}
 
-      {/* Couleur */}
-      <View style={styles.inputGroup}>
-        <Text style={[styles.label, isDark && styles.darkText]}>Couleur</Text>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false} 
-          style={styles.colorsContainer}
-        >
-          {COLORS.map((color) => (
+        {/* Date cible */}
+        <View style={styles.inputGroup}>
+          <Text style={[styles.label, isDark && styles.darkText]}>Date cible</Text>
+          <TouchableOpacity 
+            style={[styles.dateButton, isDark && styles.darkInput]}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <Text style={[styles.dateButtonText, isDark && styles.darkText]}>
+              {formData.targetDate.toLocaleDateString('fr-FR', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </Text>
+          </TouchableOpacity>
+          
+          {showDatePicker && (
+            <DateTimePicker
+              value={formData.targetDate}
+              mode="date"
+              display="default"
+              minimumDate={new Date()}
+              onChange={(event, date) => {
+                setShowDatePicker(false);
+                if (date) updateFormData('targetDate', date);
+              }}
+            />
+          )}
+        </View>
+
+        {/* Mode de calcul */}
+        <View style={styles.inputGroup}>
+          <Text style={[styles.label, isDark && styles.darkText]}>Calcul de la mensualité</Text>
+          <View style={styles.calculationMode}>
             <TouchableOpacity
-              key={color}
               style={[
-                styles.colorButton,
-                { backgroundColor: color },
-                formData.color === color && styles.colorButtonSelected
+                styles.modeButton,
+                calculateMode === 'auto' && styles.modeButtonActive,
+                isDark && styles.darkModeButton
               ]}
-              onPress={() => updateFormData('color', color)}
+              onPress={() => setCalculateMode('auto')}
             >
-              {formData.color === color && (
-                <Text style={styles.colorCheck}>✓</Text>
-              )}
+              <Text style={[
+                styles.modeButtonText,
+                calculateMode === 'auto' && styles.modeButtonTextActive,
+                isDark && styles.darkText
+              ]}>
+                Auto
+              </Text>
             </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
+            <TouchableOpacity
+              style={[
+                styles.modeButton,
+                calculateMode === 'manual' && styles.modeButtonActive,
+                isDark && styles.darkModeButton
+              ]}
+              onPress={() => setCalculateMode('manual')}
+            >
+              <Text style={[
+                styles.modeButtonText,
+                calculateMode === 'manual' && styles.modeButtonTextActive,
+                isDark && styles.darkText
+              ]}>
+                Manuel
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
-      {/* Bouton de soumission */}
-      <TouchableOpacity
-        style={[
-          styles.submitButton, 
-          loading && styles.submitButtonDisabled,
-          (!formData.name || !formData.targetAmount || !formData.savingsAccountId) && styles.submitButtonDisabled
-        ]}
-        onPress={handleSubmit}
-        disabled={loading || !formData.name || !formData.targetAmount || !formData.savingsAccountId}
-      >
-        <Text style={styles.submitButtonText}>
-          {loading ? 'Création en cours...' : 'Créer l\'objectif'}
-        </Text>
-      </TouchableOpacity>
+        {/* Contribution mensuelle */}
+        <View style={styles.inputGroup}>
+          <Text style={[styles.label, isDark && styles.darkText]}>
+            Contribution mensuelle {calculateMode === 'auto' && '(calculée automatiquement)'}
+          </Text>
+          <View style={[styles.amountInput, isDark && styles.darkAmountInput]}>
+            <Text style={[styles.currencySymbol, isDark && styles.darkText]}>
+              {getCurrencySymbol()}
+            </Text>
+            {calculateMode === 'auto' ? (
+              <Text style={[styles.calculatedAmount, isDark && styles.darkText]}>
+                {calculatedMonthlyContribution.toFixed(2)}
+              </Text>
+            ) : (
+              <TextInput
+                style={[styles.input, styles.amountTextInput, isDark && styles.darkInput]}
+                value={formData.monthlyContribution}
+                onChangeText={(value) => updateFormData('monthlyContribution', value.replace(',', '.'))}
+                placeholder="0.00"
+                placeholderTextColor={isDark ? "#888" : "#999"}
+                keyboardType="decimal-pad"
+              />
+            )}
+          </View>
+          {calculateMode === 'auto' && formData.targetAmount && (
+            <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+              Contribution: {formatAmount(calculatedMonthlyContribution)}
+            </Text>
+          )}
+          {calculateMode === 'manual' && formData.monthlyContribution && (
+            <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+              Contribution: {formatAmount(parseFloat(formData.monthlyContribution) || 0)}
+            </Text>
+          )}
+        </View>
 
-      <View style={styles.spacer} />
-    </ScrollView>
+        {/* Informations calculées */}
+        {calculatedTargetDate && calculateMode === 'manual' && (
+          <View style={[styles.calculationInfo, isDark && styles.darkCalculationInfo]}>
+            <Text style={[styles.calculationInfoText, isDark && styles.darkText]}>
+              Avec cette contribution, vous atteindrez votre objectif le {' '}
+              {new Date(calculatedTargetDate).toLocaleDateString('fr-FR', { 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric' 
+              })}
+            </Text>
+          </View>
+        )}
+
+        {calculateMode === 'auto' && (
+          <View style={[styles.calculationInfo, isDark && styles.darkCalculationInfo]}>
+            <Text style={[styles.calculationInfoText, isDark && styles.darkText]}>
+              Pour atteindre votre objectif à la date choisie, vous devez épargner {' '}
+              <Text style={styles.highlight}>
+                {formatAmount(calculatedMonthlyContribution)} par mois
+              </Text>
+            </Text>
+          </View>
+        )}
+
+        {/* Couleur */}
+        <View style={styles.inputGroup}>
+          <Text style={[styles.label, isDark && styles.darkText]}>Couleur</Text>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false} 
+            style={styles.colorsContainer}
+            contentContainerStyle={styles.horizontalContent}
+          >
+            {COLORS.map((color) => (
+              <TouchableOpacity
+                key={color}
+                style={[
+                  styles.colorButton,
+                  { backgroundColor: color },
+                  formData.color === color && styles.colorButtonSelected
+                ]}
+                onPress={() => updateFormData('color', color)}
+              >
+                {formData.color === color && (
+                  <Text style={styles.colorCheck}>✓</Text>
+                )}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* ✅ CORRECTION: Bouton de soumission DANS le ScrollView */}
+        <TouchableOpacity
+          style={[
+            styles.submitButton, 
+            loading && styles.submitButtonDisabled,
+            (!formData.name || !formData.targetAmount || !formData.savingsAccountId) && styles.submitButtonDisabled
+          ]}
+          onPress={handleSubmit}
+          disabled={loading || !formData.name || !formData.targetAmount || !formData.savingsAccountId}
+        >
+          <Text style={styles.submitButtonText}>
+            {loading ? 'Création en cours...' : 'Créer l\'objectif'}
+          </Text>
+        </TouchableOpacity>
+
+        {/* ✅ CORRECTION: Espace supplémentaire pour le défilement */}
+        <View style={styles.bottomSpacer} />
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  form: {
-    padding: 16,
+  container: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
     backgroundColor: '#fff',
   },
   darkForm: {
     backgroundColor: '#1c1c1e',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 16,
   },
   inputGroup: {
     marginBottom: 20,
@@ -570,6 +587,9 @@ const styles = StyleSheet.create({
   },
   categoriesContainer: {
     flexDirection: 'row',
+  },
+  horizontalContent: {
+    paddingRight: 16,
   },
   categoryButton: {
     paddingHorizontal: 16,
@@ -743,6 +763,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 20,
+    marginBottom: 10,
   },
   submitButtonDisabled: {
     backgroundColor: '#bdc3c7',
@@ -752,8 +773,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  spacer: {
-    height: 20,
+  bottomSpacer: {
+    height: 30,
   },
   darkText: {
     color: '#fff',

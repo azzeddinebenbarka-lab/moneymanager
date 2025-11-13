@@ -77,7 +77,7 @@ type DrawerParamList = {
   
   // ✅ CORRECTION : Ajout de IslamicCharges
   IslamicCharges: undefined;
-  
+  IslamicSettings: undefined;
   // Paramètres
   Profile: undefined;
   Settings: undefined;

@@ -13,12 +13,14 @@ export interface IslamicHoliday {
 
 export interface IslamicCharge extends IslamicHoliday {
   year: number;
-  calculatedDate: Date; // Date grégorienne calculée
+  calculatedDate: Date;
   amount: number;
   isPaid: boolean;
   paidDate?: Date;
   accountId?: string;
-  autoDeduct?: boolean; // ✅ AJOUTÉ
+  autoDeduct?: boolean;
+  paymentMethod?: string;
+  reminderDays?: number;
 }
 
 export interface IslamicCharge {
@@ -45,11 +47,34 @@ export interface IslamicSettings {
   calculationMethod: 'UmmAlQura' | 'Fixed';
   customCharges: IslamicHoliday[];
   autoCreateCharges: boolean;
-  includeRecommended: boolean; // ✅ AJOUTÉ
-  defaultAmounts: { // ✅ AJOUTÉ
+  includeRecommended: boolean;
+  defaultAmounts: {
     obligatory: number;
     recommended: number;
   };
+}
+
+export interface CreateIslamicChargeData {
+  name: string;
+  arabicName?: string;
+  description: string;
+  hijriMonth: number;
+  hijriDay: number;
+  type: 'obligatory' | 'recommended' | 'custom';
+  defaultAmount: number;
+  year: number;
+  accountId?: string;
+  autoDeduct?: boolean;
+}
+
+export interface UpdateIslamicChargeData {
+  amount?: number;
+  isPaid?: boolean;
+  paidDate?: Date;
+  accountId?: string;
+  autoDeduct?: boolean;
+  paymentMethod?: string;
+  reminderDays?: number;
 }
 
 // Types pour les montants par défaut
@@ -72,4 +97,17 @@ export const DEFAULT_ISLAMIC_SETTINGS: IslamicSettings = {
   autoCreateCharges: true,
   includeRecommended: true,
   defaultAmounts: DEFAULT_ISLAMIC_AMOUNTS
+};
+
+export const convertIslamicTypeToAnnualChargeType = (type: IslamicHoliday['type']): 'normal' | 'obligatory' | 'recommended' => {
+  switch (type) {
+    case 'obligatory':
+      return 'obligatory';
+    case 'recommended':
+      return 'recommended';
+    case 'custom':
+      return 'recommended'; // ✅ Conversion : 'custom' devient 'recommended'
+    default:
+      return 'normal';
+  }
 };

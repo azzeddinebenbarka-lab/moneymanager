@@ -5,6 +5,8 @@ import React, { useState } from 'react';
 import {
   Alert,
   Dimensions,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -65,15 +67,15 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
   const savingsAccounts = accounts.filter(acc => acc.type === 'savings');
   const contributionAccounts = accounts.filter(acc => acc.type !== 'savings');
 
-const categories = [
-  { value: 'vacation' as const, label: 'Vacances', icon: 'airplane' },
-  { value: 'car' as const, label: 'Voiture', icon: 'car' },
-  { value: 'house' as const, label: 'Maison', icon: 'home' },
-  { value: 'emergency' as const, label: 'Urgence', icon: 'medical' },
-  { value: 'education' as const, label: 'Éducation', icon: 'school' },
-  { value: 'retirement' as const, label: 'Retraite', icon: 'heart' },
-  { value: 'other' as const, label: 'Autre', icon: 'flag' },
-];
+  const categories = [
+    { value: 'vacation' as const, label: 'Vacances', icon: 'airplane' },
+    { value: 'car' as const, label: 'Voiture', icon: 'car' },
+    { value: 'house' as const, label: 'Maison', icon: 'home' },
+    { value: 'emergency' as const, label: 'Urgence', icon: 'medical' },
+    { value: 'education' as const, label: 'Éducation', icon: 'school' },
+    { value: 'retirement' as const, label: 'Retraite', icon: 'heart' },
+    { value: 'other' as const, label: 'Autre', icon: 'flag' },
+  ];
 
   const colors = [
     '#007AFF', '#34C759', '#FF3B30', '#FF9500', '#5856D6', 
@@ -102,10 +104,6 @@ const categories = [
     if (isNaN(num)) return '';
     
     return formatAmount(num, false);
-  };
-
-  const getCurrencySymbol = () => {
-    return formatAmount(0, true).replace(/[0-9.,\s]/g, '').trim() || 'MAD';
   };
 
   const handleSave = async () => {
@@ -186,306 +184,311 @@ const categories = [
 
   return (
     <SafeAreaView>
-      {/* ✅ CORRECTION: ScrollView avec hauteur définie et défilement activé */}
-      <ScrollView 
-        style={[styles.container, isDark && styles.darkContainer]}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={true}
-        keyboardShouldPersistTaps="handled" // ✅ Permet de taper même en faisant défiler
+      {/* ✅ CORRECTION: KeyboardAvoidingView pour gérer le clavier */}
+      <KeyboardAvoidingView 
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#000"} />
-          </TouchableOpacity>
-          <Text style={[styles.title, isDark && styles.darkText]}>
-            Nouvel Objectif
-          </Text>
-        </View>
+        {/* ✅ CORRECTION: ScrollView avec défilement complet */}
+        <ScrollView 
+          style={[styles.scrollView, isDark && styles.darkContainer]}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={true}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.header}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#000"} />
+            </TouchableOpacity>
+            <Text style={[styles.title, isDark && styles.darkText]}>
+              Nouvel Objectif
+            </Text>
+          </View>
 
-        {/* Nom de l'objectif */}
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
-            Nom de l'objectif *
-          </Text>
-          <TextInput
-            style={[styles.input, isDark && styles.darkInput]}
-            value={form.name}
-            onChangeText={(text) => setForm(prev => ({ ...prev, name: text }))}
-            placeholder="Ex: Achat voiture, Vacances..."
-            placeholderTextColor={isDark ? "#888" : "#999"}
-          />
-        </View>
-
-        {/* Montant cible */}
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
-            Montant cible *
-          </Text>
-          <View style={styles.amountContainer}>
+          {/* Nom de l'objectif */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, isDark && styles.darkText]}>
+              Nom de l'objectif *
+            </Text>
             <TextInput
-              style={[styles.input, styles.amountInput, isDark && styles.darkInput]}
-              value={form.targetAmount}
-              onChangeText={(value) => handleAmountChange('targetAmount', value)}
-              placeholder="0,00"
+              style={[styles.input, isDark && styles.darkInput]}
+              value={form.name}
+              onChangeText={(text) => setForm(prev => ({ ...prev, name: text }))}
+              placeholder="Ex: Achat voiture, Vacances..."
               placeholderTextColor={isDark ? "#888" : "#999"}
-              keyboardType="decimal-pad"
-              returnKeyType="done"
             />
           </View>
-          {form.targetAmount && (
+
+          {/* Montant cible */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, isDark && styles.darkText]}>
+              Montant cible *
+            </Text>
+            <View style={styles.amountContainer}>
+              <TextInput
+                style={[styles.input, styles.amountInput, isDark && styles.darkInput]}
+                value={form.targetAmount}
+                onChangeText={(value) => handleAmountChange('targetAmount', value)}
+                placeholder="0,00"
+                placeholderTextColor={isDark ? "#888" : "#999"}
+                keyboardType="decimal-pad"
+                returnKeyType="done"
+              />
+            </View>
+            {form.targetAmount && (
+              <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+                {formatDisplayAmount(form.targetAmount)}
+              </Text>
+            )}
+          </View>
+
+          {/* Épargne actuelle */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, isDark && styles.darkText]}>
+              Épargne actuelle
+            </Text>
+            <View style={styles.amountContainer}>
+              <TextInput
+                style={[styles.input, styles.amountInput, isDark && styles.darkInput]}
+                value={form.currentAmount}
+                onChangeText={(value) => handleAmountChange('currentAmount', value)}
+                placeholder="0,00"
+                placeholderTextColor={isDark ? "#888" : "#999"}
+                keyboardType="decimal-pad"
+                returnKeyType="done"
+              />
+            </View>
+            {form.currentAmount && (
+              <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+                {formatDisplayAmount(form.currentAmount)}
+              </Text>
+            )}
+          </View>
+
+          {/* Contribution mensuelle */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, isDark && styles.darkText]}>
+              Contribution mensuelle *
+            </Text>
+            <View style={styles.amountContainer}>
+              <TextInput
+                style={[styles.input, styles.amountInput, isDark && styles.darkInput]}
+                value={form.monthlyContribution}
+                onChangeText={(value) => handleAmountChange('monthlyContribution', value)}
+                placeholder="0,00"
+                placeholderTextColor={isDark ? "#888" : "#999"}
+                keyboardType="decimal-pad"
+                returnKeyType="done"
+              />
+            </View>
+            {form.monthlyContribution && (
+              <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+                {formatDisplayAmount(form.monthlyContribution)}
+              </Text>
+            )}
+            {monthsRemaining > 0 && (
+              <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+                Temps estimé: {monthsRemaining} mois
+              </Text>
+            )}
+          </View>
+
+          {/* Date cible */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, isDark && styles.darkText]}>
+              Date cible
+            </Text>
+            <TouchableOpacity 
+              style={[styles.dateButton, isDark && styles.darkInput]}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Text style={[styles.dateText, isDark && styles.darkText]}>
+                {form.targetDate.toLocaleDateString('fr-FR')}
+              </Text>
+              <Ionicons name="calendar" size={20} color={isDark ? "#fff" : "#666"} />
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={form.targetDate}
+                mode="date"
+                display="default"
+                onChange={handleDateChange}
+                minimumDate={new Date()}
+              />
+            )}
+          </View>
+
+          {/* Compte d'épargne */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, isDark && styles.darkText]}>
+              Compte d'épargne *
+            </Text>
+            <View style={styles.accountsContainer}>
+              {savingsAccounts.map((account) => (
+                <TouchableOpacity
+                  key={account.id}
+                  style={[
+                    styles.accountButton,
+                    form.savingsAccountId === account.id && styles.accountButtonSelected,
+                    isDark && styles.darkAccountButton
+                  ]}
+                  onPress={() => setForm(prev => ({ ...prev, savingsAccountId: account.id }))}
+                >
+                  <View style={[styles.accountColor, { backgroundColor: account.color }]} />
+                  <View style={styles.accountInfo}>
+                    <Text style={[styles.accountName, isDark && styles.darkText]}>
+                      {account.name}
+                    </Text>
+                    <Text style={[styles.accountBalance, isDark && styles.darkSubtext]}>
+                      {formatAmount(account.balance, false)}
+                    </Text>
+                  </View>
+                  {form.savingsAccountId === account.id && (
+                    <Ionicons name="checkmark-circle" size={20} color="#007AFF" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+            {savingsAccounts.length === 0 && (
+              <Text style={[styles.warningText, isDark && styles.darkSubtext]}>
+                Aucun compte d'épargne trouvé. Créez d'abord un compte d'épargne.
+              </Text>
+            )}
+          </View>
+
+          {/* Compte source des contributions */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, isDark && styles.darkText]}>
+              Compte source des contributions
+            </Text>
+            <View style={styles.accountsContainer}>
+              {contributionAccounts.map((account) => (
+                <TouchableOpacity
+                  key={account.id}
+                  style={[
+                    styles.accountButton,
+                    form.contributionAccountId === account.id && styles.accountButtonSelected,
+                    isDark && styles.darkAccountButton
+                  ]}
+                  onPress={() => setForm(prev => ({ ...prev, contributionAccountId: account.id }))}
+                >
+                  <View style={[styles.accountColor, { backgroundColor: account.color }]} />
+                  <View style={styles.accountInfo}>
+                    <Text style={[styles.accountName, isDark && styles.darkText]}>
+                      {account.name}
+                    </Text>
+                    <Text style={[styles.accountBalance, isDark && styles.darkSubtext]}>
+                      {formatAmount(account.balance, false)}
+                    </Text>
+                  </View>
+                  {form.contributionAccountId === account.id && (
+                    <Ionicons name="checkmark-circle" size={20} color="#007AFF" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
             <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-              {formatDisplayAmount(form.targetAmount)}
+              Sélectionnez le compte depuis lequel les fonds seront transférés
             </Text>
-          )}
-        </View>
-
-        {/* Épargne actuelle */}
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
-            Épargne actuelle
-          </Text>
-          <View style={styles.amountContainer}>
-            <TextInput
-              style={[styles.input, styles.amountInput, isDark && styles.darkInput]}
-              value={form.currentAmount}
-              onChangeText={(value) => handleAmountChange('currentAmount', value)}
-              placeholder="0,00"
-              placeholderTextColor={isDark ? "#888" : "#999"}
-              keyboardType="decimal-pad"
-              returnKeyType="done"
-            />
           </View>
-          {form.currentAmount && (
-            <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-              {formatDisplayAmount(form.currentAmount)}
-            </Text>
-          )}
-        </View>
 
-        {/* Contribution mensuelle */}
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
-            Contribution mensuelle *
-          </Text>
-          <View style={styles.amountContainer}>
-            <TextInput
-              style={[styles.input, styles.amountInput, isDark && styles.darkInput]}
-              value={form.monthlyContribution}
-              onChangeText={(value) => handleAmountChange('monthlyContribution', value)}
-              placeholder="0,00"
-              placeholderTextColor={isDark ? "#888" : "#999"}
-              keyboardType="decimal-pad"
-              returnKeyType="done"
-            />
-          </View>
-          {form.monthlyContribution && (
-            <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-              {formatDisplayAmount(form.monthlyContribution)}
+          {/* Catégorie */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, isDark && styles.darkText]}>
+              Catégorie
             </Text>
-          )}
-          {monthsRemaining > 0 && (
-            <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-              Temps estimé: {monthsRemaining} mois
-            </Text>
-          )}
-        </View>
-
-        {/* Date cible */}
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
-            Date cible
-          </Text>
-          <TouchableOpacity 
-            style={[styles.dateButton, isDark && styles.darkInput]}
-            onPress={() => setShowDatePicker(true)}
-          >
-            <Text style={[styles.dateText, isDark && styles.darkText]}>
-              {form.targetDate.toLocaleDateString('fr-FR')}
-            </Text>
-            <Ionicons name="calendar" size={20} color={isDark ? "#fff" : "#666"} />
-          </TouchableOpacity>
-          {showDatePicker && (
-            <DateTimePicker
-              value={form.targetDate}
-              mode="date"
-              display="default"
-              onChange={handleDateChange}
-              minimumDate={new Date()}
-            />
-          )}
-        </View>
-
-        {/* Compte d'épargne */}
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
-            Compte d'épargne *
-          </Text>
-          <View style={styles.accountsContainer}>
-            {savingsAccounts.map((account) => (
-              <TouchableOpacity
-                key={account.id}
-                style={[
-                  styles.accountButton,
-                  form.savingsAccountId === account.id && styles.accountButtonSelected,
-                  isDark && styles.darkAccountButton
-                ]}
-                onPress={() => setForm(prev => ({ ...prev, savingsAccountId: account.id }))}
-              >
-                <View style={[styles.accountColor, { backgroundColor: account.color }]} />
-                <View style={styles.accountInfo}>
-                  <Text style={[styles.accountName, isDark && styles.darkText]}>
-                    {account.name}
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={true}
+              style={styles.categoriesScrollContainer}
+              contentContainerStyle={styles.categoriesContent}
+            >
+              {categories.map((category) => (
+                <TouchableOpacity
+                  key={category.value}
+                  style={[
+                    styles.categoryButton,
+                    form.category === category.value && styles.categoryButtonSelected,
+                    isDark && styles.darkCategoryButton
+                  ]}
+                  onPress={() => setForm(prev => ({ 
+                    ...prev, 
+                    category: category.value,
+                    icon: category.icon 
+                  }))}
+                >
+                  <Ionicons 
+                    name={category.icon as any} 
+                    size={20} 
+                    color={form.category === category.value ? '#fff' : '#666'} 
+                  />
+                  <Text style={[
+                    styles.categoryText,
+                    form.category === category.value && styles.categoryTextSelected,
+                    isDark && styles.darkText
+                  ]}>
+                    {category.label}
                   </Text>
-                  <Text style={[styles.accountBalance, isDark && styles.darkSubtext]}>
-                    {formatAmount(account.balance, false)}
-                  </Text>
-                </View>
-                {form.savingsAccountId === account.id && (
-                  <Ionicons name="checkmark-circle" size={20} color="#007AFF" />
-                )}
-              </TouchableOpacity>
-            ))}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
-          {savingsAccounts.length === 0 && (
-            <Text style={[styles.warningText, isDark && styles.darkSubtext]}>
-              Aucun compte d'épargne trouvé. Créez d'abord un compte d'épargne.
+
+          {/* Couleur */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, isDark && styles.darkText]}>
+              Couleur
             </Text>
-          )}
-        </View>
-
-        {/* Compte source des contributions */}
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
-            Compte source des contributions
-          </Text>
-          <View style={styles.accountsContainer}>
-            {contributionAccounts.map((account) => (
-              <TouchableOpacity
-                key={account.id}
-                style={[
-                  styles.accountButton,
-                  form.contributionAccountId === account.id && styles.accountButtonSelected,
-                  isDark && styles.darkAccountButton
-                ]}
-                onPress={() => setForm(prev => ({ ...prev, contributionAccountId: account.id }))}
-              >
-                <View style={[styles.accountColor, { backgroundColor: account.color }]} />
-                <View style={styles.accountInfo}>
-                  <Text style={[styles.accountName, isDark && styles.darkText]}>
-                    {account.name}
-                  </Text>
-                  <Text style={[styles.accountBalance, isDark && styles.darkSubtext]}>
-                    {formatAmount(account.balance, false)}
-                  </Text>
-                </View>
-                {form.contributionAccountId === account.id && (
-                  <Ionicons name="checkmark-circle" size={20} color="#007AFF" />
-                )}
-              </TouchableOpacity>
-            ))}
+            <View style={styles.colorsContainer}>
+              {colors.map((color) => (
+                <TouchableOpacity
+                  key={color}
+                  style={[
+                    styles.colorButton,
+                    { backgroundColor: color },
+                    form.color === color && styles.colorButtonSelected
+                  ]}
+                  onPress={() => setForm(prev => ({ ...prev, color }))}
+                >
+                  {form.color === color && (
+                    <Ionicons name="checkmark" size={16} color="#fff" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
-          <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-            Sélectionnez le compte depuis lequel les fonds seront transférés
-          </Text>
-        </View>
 
-        {/* Catégorie */}
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
-            Catégorie
-          </Text>
-          {/* ✅ CORRECTION: ScrollView horizontal pour les catégories */}
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={true}
-            style={styles.categoriesScrollContainer}
-            contentContainerStyle={styles.categoriesContent}
-          >
-            {categories.map((category) => (
-              <TouchableOpacity
-                key={category.value}
-                style={[
-                  styles.categoryButton,
-                  form.category === category.value && styles.categoryButtonSelected,
-                  isDark && styles.darkCategoryButton
-                ]}
-                onPress={() => setForm(prev => ({ 
-                  ...prev, 
-                  category: category.value,
-                  icon: category.icon 
-                }))}
-              >
-                <Ionicons 
-                  name={category.icon as any} 
-                  size={20} 
-                  color={form.category === category.value ? '#fff' : '#666'} 
-                />
-                <Text style={[
-                  styles.categoryText,
-                  form.category === category.value && styles.categoryTextSelected,
-                  isDark && styles.darkText
-                ]}>
-                  {category.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Couleur */}
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
-            Couleur
-          </Text>
-          <View style={styles.colorsContainer}>
-            {colors.map((color) => (
-              <TouchableOpacity
-                key={color}
-                style={[
-                  styles.colorButton,
-                  { backgroundColor: color },
-                  form.color === color && styles.colorButtonSelected
-                ]}
-                onPress={() => setForm(prev => ({ ...prev, color }))}
-              >
-                {form.color === color && (
-                  <Ionicons name="checkmark" size={16} color="#fff" />
-                )}
-              </TouchableOpacity>
-            ))}
+          {/* ✅ CORRECTION: Boutons DANS le ScrollView mais avec un espacement approprié */}
+          <View style={styles.buttonsContainer}>
+            <TouchableOpacity 
+              style={[styles.cancelButton, isDark && styles.darkCancelButton]}
+              onPress={() => navigation.goBack()}
+              disabled={loading}
+            >
+              <Text style={styles.cancelButtonText}>Annuler</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[
+                styles.saveButton, 
+                (loading || !form.name || !form.targetAmount || !form.monthlyContribution || !form.savingsAccountId) && styles.saveButtonDisabled
+              ]}
+              onPress={handleSave}
+              disabled={loading || !form.name || !form.targetAmount || !form.monthlyContribution || !form.savingsAccountId}
+            >
+              <Text style={styles.saveButtonText}>
+                {loading ? 'Création...' : 'Créer l\'objectif'}
+              </Text>
+            </TouchableOpacity>
           </View>
-        </View>
 
-        {/* Boutons */}
-        <View style={styles.buttonsContainer}>
-          <TouchableOpacity 
-            style={[styles.cancelButton, isDark && styles.darkCancelButton]}
-            onPress={() => navigation.goBack()}
-            disabled={loading}
-          >
-            <Text style={styles.cancelButtonText}>Annuler</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[
-              styles.saveButton, 
-              (loading || !form.name || !form.targetAmount || !form.monthlyContribution || !form.savingsAccountId) && styles.saveButtonDisabled
-            ]}
-            onPress={handleSave}
-            disabled={loading || !form.name || !form.targetAmount || !form.monthlyContribution || !form.savingsAccountId}
-          >
-            <Text style={styles.saveButtonText}>
-              {loading ? 'Création...' : 'Créer l\'objectif'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* ✅ CORRECTION: Espace supplémentaire pour permettre le défilement */}
-        <View style={styles.bottomSpacer} />
-      </ScrollView>
+          {/* ✅ CORRECTION: Espace supplémentaire pour permettre le défilement */}
+          <View style={styles.bottomSpacer} />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -493,15 +496,17 @@ const categories = [
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollView: {
+    flex: 1,
     backgroundColor: '#f8f9fa',
   },
   darkContainer: {
     backgroundColor: '#1c1c1e',
   },
-  content: {
+  scrollContent: {
+    flexGrow: 1,
     padding: 20,
-    // ✅ CORRECTION: Pas de hauteur fixe pour permettre le défilement naturel
-    minHeight: '100%', // S'assure que le contenu prend au moins toute la hauteur
   },
   header: {
     flexDirection: 'row',
@@ -543,15 +548,6 @@ const styles = StyleSheet.create({
   amountContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  currencySymbol: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000',
-    marginRight: 12,
-    position: 'absolute',
-    left: 16,
-    zIndex: 1,
   },
   amountInput: {
     paddingLeft: 10,
@@ -623,12 +619,11 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: 4,
   },
-  // ✅ CORRECTION: Styles pour le ScrollView des catégories
   categoriesScrollContainer: {
-    maxHeight: 60, // Limite la hauteur du scroll horizontal
+    maxHeight: 60,
   },
   categoriesContent: {
-    paddingRight: 20, // Espace pour le défilement
+    paddingRight: 20,
   },
   categoryButton: {
     flexDirection: 'row',
@@ -640,8 +635,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     gap: 8,
-    marginRight: 8, // Espace entre les boutons
-    minWidth: 120, // Largeur minimale pour les boutons
+    marginRight: 8,
+    minWidth: 120,
   },
   darkCategoryButton: {
     backgroundColor: '#333',
@@ -685,7 +680,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     marginTop: 32,
-    marginBottom: 20, // Espace avant le bas
+    marginBottom: 20,
   },
   cancelButton: {
     flex: 1,
@@ -717,9 +712,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
   },
-  // ✅ CORRECTION: Espace supplémentaire pour le défilement
   bottomSpacer: {
-    height: 40, // Espace supplémentaire en bas pour permettre le défilement
+    height: 40,
   },
   darkText: {
     color: '#fff',
