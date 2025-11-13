@@ -1,5 +1,5 @@
-﻿// src/services/islamicCalendarService.ts - VERSION COMPLÈTEMENT CORRIGÉE
-import { IslamicHoliday, IslamicCharge } from '../types/IslamicCharge';
+﻿// src/services/islamicCalendarService.ts - VERSION AMÉLIORÉE
+import { IslamicCharge, IslamicHoliday } from '../types/IslamicCharge';
 
 export class IslamicCalendarService {
   private static readonly HOLIDAYS: IslamicHoliday[] = [
@@ -11,7 +11,7 @@ export class IslamicCalendarService {
       hijriMonth: 9,
       hijriDay: 1,
       type: 'obligatory',
-      defaultAmount: 0,
+      defaultAmount: 0, // Pas de montant fixe pour le Ramadan
       isRecurring: true
     },
     {
@@ -60,12 +60,19 @@ export class IslamicCalendarService {
     }
   ];
 
-  // Conversion Hijri → Grégorien (simplifié)
+  // Conversion Hijri → Grégorien (approximation améliorée)
   static hijriToGregorian(hijriYear: number, hijriMonth: number, hijriDay: number): Date {
-    const gregorianDate = new Date();
-    gregorianDate.setFullYear(hijriYear + 579);
-    gregorianDate.setMonth(hijriMonth - 1);
-    gregorianDate.setDate(hijriDay);
+    // Conversion approximative basée sur l'année en cours
+    const currentGregorianYear = new Date().getFullYear();
+    
+    // Approximation: année hijri = année grégorienne - 579
+    const approximateGregorianYear = currentGregorianYear - 579 + hijriYear;
+    
+    // Créer une date approximative
+    const gregorianDate = new Date(approximateGregorianYear, hijriMonth - 1, hijriDay);
+    
+    console.log(`📅 Conversion Hijri: ${hijriYear}-${hijriMonth}-${hijriDay} → Grégorien: ${gregorianDate.toLocaleDateString()}`);
+    
     return gregorianDate;
   }
 
@@ -75,7 +82,17 @@ export class IslamicCalendarService {
     const currentHijriYear = this.getCurrentHijriYear();
 
     this.HOLIDAYS.forEach(holiday => {
+      // ✅ CORRECTION: Utiliser l'année hijri correcte pour chaque fête
       const calculatedDate = this.hijriToGregorian(currentHijriYear, holiday.hijriMonth, holiday.hijriDay);
+      
+      // Vérifier si la date est dans le futur
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (calculatedDate < today) {
+        console.log(`⚠️ Date passée ignorée: ${holiday.name} - ${calculatedDate.toLocaleDateString()}`);
+        return; // Ignorer les dates passées
+      }
       
       // Créer un IslamicCharge COMPLET avec toutes les propriétés
       const islamicCharge: IslamicCharge = {
@@ -99,12 +116,18 @@ export class IslamicCalendarService {
       charges.push(islamicCharge);
     });
 
+    // Trier par date
+    charges.sort((a, b) => a.calculatedDate.getTime() - b.calculatedDate.getTime());
+    
+    console.log(`📅 ${charges.length} charges islamiques générées pour l'année ${year}`);
+    
     return charges;
   }
 
-  // Obtenir l'année hijri actuelle
+  // Obtenir l'année hijri actuelle (approximation)
   static getCurrentHijriYear(): number {
     const gregorianYear = new Date().getFullYear();
+    // Approximation: année hijri = année grégorienne - 579
     return gregorianYear - 579;
   }
 

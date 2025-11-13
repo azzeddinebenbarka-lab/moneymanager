@@ -1,4 +1,4 @@
-// src/services/annualChargeService.ts - VERSION COMPLÈTEMENT CORRIGÉE
+// src/services/annualChargeService.ts - VERSION CORRIGÉE
 import { AnnualCharge, CreateAnnualChargeData, UpdateAnnualChargeData } from '../types/AnnualCharge';
 import { getDatabase } from './database/sqlite';
 
@@ -21,6 +21,7 @@ interface DatabaseAnnualCharge {
   // COLONNES DE PAIEMENT
   is_paid?: number;
   paid_date?: string;
+  reminder_days?: number;
 }
 
 export const annualChargeService = {
@@ -57,6 +58,7 @@ export const annualChargeService = {
             -- COLONNES DE PAIEMENT
             is_paid INTEGER NOT NULL DEFAULT 0,
             paid_date TEXT
+            reminder_days INTEGER DEFAULT 7
           );
         `);
         
@@ -70,24 +72,16 @@ export const annualChargeService = {
         
         console.log('📋 [annualChargeService] Existing columns:', existingColumns);
         
-        // ✅ CORRECTION : AJOUT DE TOUTES LES COLONNES MANQUANTES
+        // Colonnes requises
         const requiredColumns = [
-          // Colonnes de base
           { name: 'description', type: 'TEXT' },
-          { name: 'is_recurring', type: 'INTEGER', defaultValue: '0' },
-          { name: 'is_active', type: 'INTEGER', defaultValue: '1' },
-          // Colonnes pour charges islamiques
           { name: 'is_islamic', type: 'INTEGER', defaultValue: '0' },
           { name: 'islamic_holiday_id', type: 'TEXT' },
           { name: 'arabic_name', type: 'TEXT' },
-          { name: 'type', type: 'TEXT', defaultValue: "'normal'" },
-          // Colonnes de paiement
+          { name: 'type', type: 'TEXT' },
           { name: 'is_paid', type: 'INTEGER', defaultValue: '0' },
-          { name: 'paid_date', type: 'TEXT' },
-          { name: 'reminder_days', type: 'INTEGER', defaultValue: '7' }
+          { name: 'paid_date', type: 'TEXT' }
         ];
-        
-        let columnsAdded = 0;
         
         for (const requiredColumn of requiredColumns) {
           if (!existingColumns.includes(requiredColumn.name)) {
@@ -96,16 +90,13 @@ export const annualChargeService = {
             try {
               if (requiredColumn.defaultValue) {
                 await db.execAsync(
-                  `ALTER TABLE annual_charges 
-                   ADD COLUMN ${requiredColumn.name} ${requiredColumn.type} DEFAULT ${requiredColumn.defaultValue};`
+                  `ALTER TABLE annual_charges ADD COLUMN ${requiredColumn.name} ${requiredColumn.type} DEFAULT ${requiredColumn.defaultValue}`
                 );
               } else {
                 await db.execAsync(
-                  `ALTER TABLE annual_charges 
-                   ADD COLUMN ${requiredColumn.name} ${requiredColumn.type};`
+                  `ALTER TABLE annual_charges ADD COLUMN ${requiredColumn.name} ${requiredColumn.type}`
                 );
               }
-              columnsAdded++;
               console.log(`✅ [annualChargeService] ${requiredColumn.name} column added successfully`);
             } catch (alterError: any) {
               if (alterError.message?.includes('duplicate column name')) {
@@ -118,12 +109,6 @@ export const annualChargeService = {
             console.log(`✅ [annualChargeService] Column ${requiredColumn.name} already exists`);
           }
         }
-        
-        if (columnsAdded > 0) {
-          console.log(`✅ [annualChargeService] Table structure updated: ${columnsAdded} columns added`);
-        } else {
-          console.log('✅ [annualChargeService] All required columns already exist');
-        }
       }
     } catch (error) {
       console.error('❌ [annualChargeService] Error ensuring annual_charges table exists:', error);
@@ -131,7 +116,7 @@ export const annualChargeService = {
     }
   },
 
-  // ✅ CRÉER UNE CHARGE ANNUELLE
+  // ✅ CRÉER UNE CHARGE ANNUELLE - VERSION CORRIGÉE
   async createAnnualCharge(chargeData: CreateAnnualChargeData, userId: string = 'default-user'): Promise<string> {
     try {
       await this.ensureAnnualChargesTableExists();
@@ -142,35 +127,37 @@ export const annualChargeService = {
 
       console.log('🔄 [annualChargeService] Creating annual charge:', { 
         id, 
-        ...chargeData
+        name: chargeData.name,
+        amount: chargeData.amount
       });
 
-      await db.runAsync(
-  `INSERT INTO annual_charges (
-    id, user_id, name, amount, due_date, category, description, 
-    is_recurring, is_active, created_at, is_islamic, islamic_holiday_id, 
-    arabic_name, type, is_paid, paid_date, reminder_days  // ✅ AJOUT
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, // ✅ AJOUT un ?
-  [
-    id,
-    userId,
-    chargeData.name,
-    chargeData.amount,
-    chargeData.dueDate.toISOString(),
-    chargeData.category || 'other',
-    chargeData.description || '',
-    chargeData.isRecurring ? 1 : 0,
-    chargeData.isActive !== false ? 1 : 0,
-    createdAt,
-    chargeData.isIslamic ? 1 : 0,
-    chargeData.islamicHolidayId || null,
-    chargeData.arabicName || null,
-    chargeData.type || 'normal',
-    chargeData.isPaid ? 1 : 0,
-    chargeData.paidDate ? chargeData.paidDate.toISOString() : null,
-    chargeData.reminderDays || 7 // ✅ AJOUT
-  ]
-); 
+      // ✅ CORRECTION: Utiliser des paramètres préparés pour éviter les erreurs SQL
+      const result = await db.runAsync(
+        `INSERT INTO annual_charges (
+          id, user_id, name, amount, due_date, category, description, 
+          is_recurring, is_active, created_at, is_islamic, islamic_holiday_id, 
+          arabic_name, type, is_paid, paid_date
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          userId,
+          chargeData.name, // ✅ Le nom avec "/" sera correctement échappé
+          chargeData.amount,
+          chargeData.dueDate.toISOString(),
+          chargeData.category || 'other',
+          chargeData.description || '',
+          chargeData.isRecurring ? 1 : 0,
+          chargeData.isActive !== false ? 1 : 0,
+          createdAt,
+          chargeData.isIslamic ? 1 : 0,
+          chargeData.islamicHolidayId || null,
+          chargeData.arabicName || null,
+          chargeData.type || 'normal',
+          // VALEURS DE PAIEMENT
+          chargeData.isPaid ? 1 : 0,
+          chargeData.paidDate ? chargeData.paidDate.toISOString() : null
+        ]
+      );
 
       console.log('✅ [annualChargeService] Annual charge created successfully');
       return id;
@@ -200,7 +187,8 @@ export const annualChargeService = {
           islamicHolidayId: 'islamic_holiday_id',
           arabicName: 'arabic_name',
           isPaid: 'is_paid',
-          paidDate: 'paid_date'
+          paidDate: 'paid_date',
+          reminderDays: 'reminder_days'
         };
         
         const dbField = dbFieldMap[field] || field;
@@ -267,7 +255,8 @@ export const annualChargeService = {
         type: (item.type as 'normal' | 'obligatory' | 'recommended') || 'normal',
         // CHAMPS DE PAIEMENT
         isPaid: Boolean(item.is_paid),
-        paidDate: item.paid_date ? new Date(item.paid_date) : undefined
+        paidDate: item.paid_date ? new Date(item.paid_date) : undefined,
+        reminderDays: item.reminder_days || 7
       }));
       
       return charges;
@@ -523,54 +512,72 @@ export const annualChargeService = {
 
   // ✅ GÉNÉRER LES CHARGES RÉCURRENTES POUR L'ANNÉE SUIVANTE
   async generateRecurringChargesForNextYear(userId: string = 'default-user'): Promise<void> {
+    try {
+      await this.ensureAnnualChargesTableExists();
+
+      const db = await getDatabase();
+      const currentYear = new Date().getFullYear();
+      const nextYear = currentYear + 1;
+      
+      const recurringCharges = await this.getAllAnnualCharges(userId);
+      const chargesToCopy = recurringCharges.filter(charge => 
+        charge.isRecurring && charge.isActive
+      );
+
+      console.log(`🔄 Generating ${chargesToCopy.length} recurring charges for ${nextYear}...`);
+
+      for (const charge of chargesToCopy) {
+        const nextYearDueDate = new Date(charge.dueDate);
+        nextYearDueDate.setFullYear(nextYear);
+
+        // Vérifier si la charge existe déjà pour l'année prochaine
+        const existingCharge = await db.getFirstAsync(
+          `SELECT id FROM annual_charges 
+           WHERE user_id = ? AND name = ? AND strftime('%Y', due_date) = ?`,
+          [userId, charge.name, nextYear.toString()]
+        );
+
+        if (!existingCharge) {
+          await this.createAnnualCharge({
+            name: charge.name,
+            amount: charge.amount,
+            dueDate: nextYearDueDate,
+            category: charge.category,
+            description: charge.description,
+            isRecurring: true,
+            isActive: true,
+            isIslamic: charge.isIslamic,
+            islamicHolidayId: charge.islamicHolidayId,
+            arabicName: charge.arabicName,
+            type: charge.type,
+            isPaid: false
+          }, userId);
+        }
+      }
+
+      console.log(`✅ Recurring charges generated for ${nextYear}`);
+    } catch (error) {
+      console.error('❌ Error generating recurring charges:', error);
+      throw error;
+    }
+  },
+
+  async checkIfIslamicChargeExists(holidayId: string, year: number, userId: string = 'default-user'): Promise<boolean> {
   try {
     await this.ensureAnnualChargesTableExists();
 
     const db = await getDatabase();
-    const currentYear = new Date().getFullYear();
-    const nextYear = currentYear + 1;
     
-    const recurringCharges = await this.getAllAnnualCharges(userId);
-    const chargesToCopy = recurringCharges.filter(charge => 
-      charge.isRecurring && charge.isActive
+    const result = await db.getFirstAsync(
+      `SELECT 1 FROM annual_charges 
+       WHERE user_id = ? AND islamic_holiday_id = ? AND strftime('%Y', due_date) = ?`,
+      [userId, holidayId, year.toString()]
     );
-
-    console.log(`🔄 Generating ${chargesToCopy.length} recurring charges for ${nextYear}...`);
-
-    for (const charge of chargesToCopy) {
-      const nextYearDueDate = new Date(charge.dueDate);
-      nextYearDueDate.setFullYear(nextYear);
-
-      // Vérifier si la charge existe déjà pour l'année prochaine
-      const existingCharge = await db.getFirstAsync(
-        `SELECT id FROM annual_charges 
-         WHERE user_id = ? AND name = ? AND strftime('%Y', due_date) = ?`,
-        [userId, charge.name, nextYear.toString()]
-      );
-
-      if (!existingCharge) {
-        await this.createAnnualCharge({
-          name: charge.name,
-          amount: charge.amount,
-          dueDate: nextYearDueDate,
-          category: charge.category,
-          description: charge.description,
-          isRecurring: true,
-          isActive: true,
-          isIslamic: charge.isIslamic,
-          islamicHolidayId: charge.islamicHolidayId,
-          arabicName: charge.arabicName,
-          type: charge.type,
-          isPaid: false
-          // ❌ SUPPRIMER: reminderDays: charge.reminderDays, // Cette propriété n'existe pas
-        }, userId);
-      }
-    }
-
-    console.log(`✅ Recurring charges generated for ${nextYear}`);
+    
+    return !!result;
   } catch (error) {
-    console.error('❌ Error generating recurring charges:', error);
-    throw error;
+    console.error('❌ [annualChargeService] Error checking islamic charge:', error);
+    return false;
   }
 },
 

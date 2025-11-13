@@ -163,11 +163,11 @@ export const IslamicChargesScreen: React.FC = () => {
           {islamicCharges.length > 0 ? (
             islamicCharges.map(charge => (
               <IslamicChargeCard
-                key={charge.id}
-                charge={charge}
-                onUpdateAmount={updateChargeAmount}
-                onMarkAsPaid={markAsPaid}
-              />
+  key={charge.id}
+  charge={charge}
+  onUpdateAmount={updateChargeAmount} // ✅ Doit être passé
+  onMarkAsPaid={markAsPaid}
+/>
             ))
           ) : (
             <View style={styles.emptyState}>

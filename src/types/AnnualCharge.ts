@@ -20,6 +20,7 @@ export interface AnnualCharge {
   // ✅ CORRECTION DÉFINITIVE : Propriétés pour le statut de paiement
   isPaid: boolean;
   paidDate?: Date;
+  reminderDays?: number;
 }
 
 export interface CreateAnnualChargeData {
@@ -76,7 +77,7 @@ export const ANNUAL_CHARGE_CATEGORIES = [
   { value: 'health', label: 'Santé', icon: '🏥' },
   { value: 'gifts', label: 'Cadeaux', icon: '🎁' },
   { value: 'vacation', label: 'Vacances', icon: '🏖️' },
-  { value: 'islamic', label: 'Charges Islamiques', icon: '🕌' },
+  { value: 'islamic', label: 'Charges Islamiques', icon: '🕌' }, // ✅ Doit exister
   { value: 'other', label: 'Autre', icon: '📦' }
 ];
 

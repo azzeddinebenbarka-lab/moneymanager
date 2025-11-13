@@ -1,6 +1,6 @@
-﻿// src/components/islamic/IslamicChargeCard.tsx
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+﻿// src/components/islamic/IslamicChargeCard.tsx - VERSION CORRIGÉE
+import React, { useState } from 'react';
+import { Alert, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useTheme } from '../../context/ThemeContext';
 import { IslamicCharge } from '../../types/IslamicCharge';
@@ -19,6 +19,9 @@ export const IslamicChargeCard: React.FC<IslamicChargeCardProps> = ({
   const { formatAmount } = useCurrency();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editAmount, setEditAmount] = useState(charge.amount.toString());
 
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -36,80 +39,156 @@ export const IslamicChargeCard: React.FC<IslamicChargeCardProps> = ({
     }
   };
 
+  const handleEditAmount = () => {
+    const newAmount = parseFloat(editAmount);
+    if (isNaN(newAmount) || newAmount < 0) {
+      Alert.alert('Erreur', 'Veuillez saisir un montant valide');
+      return;
+    }
+
+    onUpdateAmount(charge.id, newAmount);
+    setEditModalVisible(false);
+    Alert.alert('Succès', 'Montant modifié avec succès');
+  };
+
+  const handleAmountChange = (value: string) => {
+    let cleanedValue = value.replace(/[^\d,.]/g, '');
+    cleanedValue = cleanedValue.replace(',', '.');
+    const parts = cleanedValue.split('.');
+    if (parts.length > 2) {
+      cleanedValue = parts[0] + '.' + parts.slice(1).join('');
+    }
+    setEditAmount(cleanedValue);
+  };
+
   return (
-    <View style={[styles.card, isDark && styles.darkCard]}>
-      <View style={styles.header}>
-        <View style={styles.titleContainer}>
-          <Text style={[styles.name, isDark && styles.darkText]}>
-            {charge.name}
-          </Text>
-          <Text style={[styles.arabicName, isDark && styles.darkSubtext]}>
-            {charge.arabicName}
-          </Text>
+    <>
+      <View style={[styles.card, isDark && styles.darkCard]}>
+        <View style={styles.header}>
+          <View style={styles.titleContainer}>
+            <Text style={[styles.name, isDark && styles.darkText]}>
+              {charge.name}
+            </Text>
+            <Text style={[styles.arabicName, isDark && styles.darkSubtext]}>
+              {charge.arabicName}
+            </Text>
+          </View>
+          <View style={[
+            styles.typeBadge,
+            { backgroundColor: `${getTypeColor(charge.type)}20` }
+          ]}>
+            <Text style={[styles.typeText, { color: getTypeColor(charge.type) }]}>
+              {getTypeText(charge.type)}
+            </Text>
+          </View>
         </View>
-        <View style={[
-          styles.typeBadge,
-          { backgroundColor: `${getTypeColor(charge.type)}20` }
-        ]}>
-          <Text style={[styles.typeText, { color: getTypeColor(charge.type) }]}>
-            {getTypeText(charge.type)}
-          </Text>
-        </View>
-      </View>
 
-      <Text style={[styles.description, isDark && styles.darkSubtext]}>
-        {charge.description}
-      </Text>
-
-      <View style={styles.details}>
-        <View style={styles.dateContainer}>
-          <Text style={[styles.dateLabel, isDark && styles.darkSubtext]}>
-            Date calculée:
-          </Text>
-          <Text style={[styles.date, isDark && styles.darkText]}>
-            {charge.calculatedDate.toLocaleDateString('fr-FR')}
-          </Text>
-        </View>
-        <Text style={[styles.amount, isDark && styles.darkText]}>
-          {formatAmount(charge.amount)}
+        <Text style={[styles.description, isDark && styles.darkSubtext]}>
+          {charge.description}
         </Text>
-      </View>
 
-      <View style={styles.actions}>
-        <TouchableOpacity 
-          style={[
-            styles.actionButton, 
-            styles.payButton,
-            charge.isPaid && styles.disabledButton
-          ]}
-          onPress={() => onMarkAsPaid(charge.id)}
-          disabled={charge.isPaid}
-        >
-          <Text style={styles.actionText}>
-            {charge.isPaid ? '✅ Payé' : '💰 Payer'}
+        <View style={styles.details}>
+          <View style={styles.dateContainer}>
+            <Text style={[styles.dateLabel, isDark && styles.darkSubtext]}>
+              Date calculée:
+            </Text>
+            <Text style={[styles.date, isDark && styles.darkText]}>
+              {charge.calculatedDate.toLocaleDateString('fr-FR')}
+            </Text>
+          </View>
+          <Text style={[styles.amount, isDark && styles.darkText]}>
+            {formatAmount(charge.amount)}
           </Text>
-        </TouchableOpacity>
-        
-        {!charge.isPaid && (
+        </View>
+
+        <View style={styles.actions}>
           <TouchableOpacity 
-            style={[styles.actionButton, styles.editButton]}
-            onPress={() => {
-              // TODO: Implémenter la modification du montant
-              const newAmount = charge.amount + 50;
-              onUpdateAmount(charge.id, newAmount);
-            }}
+            style={[
+              styles.actionButton, 
+              styles.payButton,
+              charge.isPaid && styles.disabledButton
+            ]}
+            onPress={() => onMarkAsPaid(charge.id)}
+            disabled={charge.isPaid}
           >
-            <Text style={styles.actionText}>✏️ Modifier</Text>
+            <Text style={styles.actionText}>
+              {charge.isPaid ? '✅ Payé' : '💰 Payer'}
+            </Text>
           </TouchableOpacity>
+          
+          {!charge.isPaid && (
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.editButton]}
+              onPress={() => setEditModalVisible(true)}
+            >
+              <Text style={styles.actionText}>✏️ Modifier</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {charge.isPaid && charge.paidDate && (
+          <Text style={[styles.paidDate, isDark && styles.darkSubtext]}>
+            Payé le {charge.paidDate.toLocaleDateString('fr-FR')}
+          </Text>
         )}
       </View>
 
-      {charge.isPaid && charge.paidDate && (
-        <Text style={[styles.paidDate, isDark && styles.darkSubtext]}>
-          Payé le {charge.paidDate.toLocaleDateString('fr-FR')}
-        </Text>
-      )}
-    </View>
+      {/* Modal de modification du montant */}
+      <Modal
+        visible={editModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, isDark && styles.darkModalContent]}>
+            <Text style={[styles.modalTitle, isDark && styles.darkText]}>
+              Modifier le montant
+            </Text>
+            
+            <Text style={[styles.chargeName, isDark && styles.darkText]}>
+              {charge.name}
+            </Text>
+            
+            <View style={styles.amountInputContainer}>
+              <Text style={[styles.amountLabel, isDark && styles.darkText]}>
+                Nouveau montant:
+              </Text>
+              <TextInput
+                style={[styles.amountInput, isDark && styles.darkInput]}
+                value={editAmount}
+                onChangeText={handleAmountChange}
+                placeholder="0.00"
+                placeholderTextColor={isDark ? "#888" : "#999"}
+                keyboardType="decimal-pad"
+                autoFocus={true}
+              />
+              {editAmount && (
+                <Text style={[styles.previewAmount, isDark && styles.darkSubtext]}>
+                  {formatAmount(parseFloat(editAmount) || 0)}
+                </Text>
+              )}
+            </View>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setEditModalVisible(false)}
+              >
+                <Text style={styles.cancelButtonText}>Annuler</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.saveButton]}
+                onPress={handleEditAmount}
+              >
+                <Text style={styles.saveButtonText}>Enregistrer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 };
 
@@ -217,6 +296,95 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     marginTop: 8,
+  },
+  // Styles pour le modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+  },
+  darkModalContent: {
+    backgroundColor: '#2c2c2e',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  chargeName: {
+    fontSize: 16,
+    color: '#000',
+    textAlign: 'center',
+    marginBottom: 20,
+    fontStyle: 'italic',
+  },
+  amountInputContainer: {
+    marginBottom: 24,
+  },
+  amountLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+    marginBottom: 8,
+  },
+  amountInput: {
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: '#000',
+    textAlign: 'center',
+  },
+  darkInput: {
+    backgroundColor: '#3a3a3c',
+    borderColor: '#555',
+    color: '#fff',
+  },
+  previewAmount: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#6B7280',
+  },
+  saveButton: {
+    backgroundColor: '#007AFF',
+  },
+  cancelButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   darkText: {
     color: '#fff',
