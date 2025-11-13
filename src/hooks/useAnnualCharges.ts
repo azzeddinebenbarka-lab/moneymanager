@@ -1,226 +1,221 @@
-﻿import { useCallback, useEffect, useState } from 'react';
-import { annualChargeService } from '../services/annualChargeService';
+﻿// src/hooks/useAnnualCharges.ts - VERSION CORRIGÉE
+import { useCallback, useEffect, useState } from 'react';
+import { useCurrency } from '../context/CurrencyContext';
+import annualChargeService from '../services/annualChargeService';
 import { AnnualCharge, CreateAnnualChargeData, UpdateAnnualChargeData } from '../types/AnnualCharge';
 
 export const useAnnualCharges = (userId: string = 'default-user') => {
-  const [charges, setCharges] = useState<AnnualCharge[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [annualCharges, setAnnualCharges] = useState<AnnualCharge[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { formatAmount } = useCurrency();
 
-  // ✅ CORRECTION : useCallback pour loadCharges
-  const loadCharges = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  useEffect(() => {
+    loadAnnualCharges();
+  }, []);
+
+  const loadAnnualCharges = useCallback(async () => {
     try {
-      console.log('🔍 [useAnnualCharges] Loading annual charges...');
-      const annualCharges = await annualChargeService.getAllAnnualCharges(userId);
-      setCharges(annualCharges);
-      console.log('✅ [useAnnualCharges] Loaded', annualCharges.length, 'charges');
+      setIsLoading(true);
+      setError(null);
+      
+      console.log('🔄 [useAnnualCharges] Loading annual charges...');
+      const charges = await annualChargeService.getAllAnnualCharges(userId);
+      setAnnualCharges(charges);
+      
+      console.log(`✅ [useAnnualCharges] Loaded ${charges.length} annual charges`);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement des charges';
-      console.error('❌ [useAnnualCharges] Error loading charges:', errorMessage);
+      const errorMessage = err instanceof Error ? err.message : 'Erreur de chargement des charges annuelles';
       setError(errorMessage);
+      console.error('❌ [useAnnualCharges] Error loading annual charges:', err);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   }, [userId]);
 
-  // Créer une charge annuelle
-  const createCharge = useCallback(async (chargeData: CreateAnnualChargeData): Promise<string> => {
+  const addAnnualCharge = useCallback(async (chargeData: CreateAnnualChargeData): Promise<string> => {
     try {
       setError(null);
-      console.log('🔄 [useAnnualCharges] Creating annual charge...');
-      const chargeId = await annualChargeService.createAnnualCharge(chargeData, userId);
-      await loadCharges();
-      console.log('✅ [useAnnualCharges] Annual charge created successfully');
-      return chargeId;
+      
+      console.log('🔄 [useAnnualCharges] Creating annual charge...', {
+        ...chargeData,
+        isIslamic: chargeData.isIslamic || false
+      });
+      
+      const id = await annualChargeService.createAnnualCharge(chargeData, userId);
+      
+      // Recharger la liste
+      await loadAnnualCharges();
+      
+      console.log('✅ [useAnnualCharges] Annual charge created successfully:', id);
+      return id;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la création de la charge';
-      console.error('❌ [useAnnualCharges] Error creating charge:', errorMessage);
+      const errorMessage = err instanceof Error ? err.message : 'Erreur de création de charge annuelle';
       setError(errorMessage);
+      console.error('❌ [useAnnualCharges] Error creating charge:', err);
       throw err;
     }
-  }, [userId, loadCharges]);
+  }, [userId, loadAnnualCharges]);
 
-  // Mettre à jour une charge annuelle
-  const updateAnnualCharge = useCallback(async (chargeId: string, updates: UpdateAnnualChargeData): Promise<void> => {
+  const updateAnnualCharge = useCallback(async (id: string, updates: UpdateAnnualChargeData): Promise<void> => {
     try {
       setError(null);
-      console.log('🔄 [useAnnualCharges] Updating annual charge:', chargeId);
-      await annualChargeService.updateAnnualCharge(chargeId, updates, userId);
-      await loadCharges();
+      
+      console.log('🔄 [useAnnualCharges] Updating annual charge:', { id, updates });
+      await annualChargeService.updateAnnualCharge(id, updates, userId);
+      
+      // Mettre à jour localement
+      setAnnualCharges(prev => 
+        prev.map(charge => 
+          charge.id === id ? { ...charge, ...updates } : charge
+        )
+      );
+      
       console.log('✅ [useAnnualCharges] Annual charge updated successfully');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la mise à jour de la charge';
-      console.error('❌ [useAnnualCharges] Error updating charge:', errorMessage);
+      const errorMessage = err instanceof Error ? err.message : 'Erreur de mise à jour de charge annuelle';
       setError(errorMessage);
+      console.error('❌ [useAnnualCharges] Error updating charge:', err);
       throw err;
     }
-  }, [userId, loadCharges]);
+  }, [userId]);
 
-  // Supprimer une charge annuelle
-  const deleteAnnualCharge = useCallback(async (chargeId: string): Promise<void> => {
+  const deleteAnnualCharge = useCallback(async (id: string): Promise<void> => {
     try {
       setError(null);
-      console.log('🗑️ [useAnnualCharges] Deleting annual charge:', chargeId);
-      await annualChargeService.deleteAnnualCharge(chargeId, userId);
-      await loadCharges();
+      
+      console.log('🔄 [useAnnualCharges] Deleting annual charge:', id);
+      await annualChargeService.deleteAnnualCharge(id, userId);
+      
+      // Mettre à jour localement
+      setAnnualCharges(prev => prev.filter(charge => charge.id !== id));
+      
       console.log('✅ [useAnnualCharges] Annual charge deleted successfully');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la suppression de la charge';
-      console.error('❌ [useAnnualCharges] Error deleting charge:', errorMessage);
+      const errorMessage = err instanceof Error ? err.message : 'Erreur de suppression de charge annuelle';
       setError(errorMessage);
-      throw err;
-    }
-  }, [userId, loadCharges]);
-
-  // Basculer le statut payé
-  const togglePaidStatus = useCallback(async (chargeId: string, isPaid: boolean): Promise<void> => {
-    try {
-      setError(null);
-      console.log('🔄 [useAnnualCharges] Toggling paid status:', chargeId, isPaid);
-      await annualChargeService.togglePaidStatus(chargeId, isPaid, userId);
-      await loadCharges();
-      console.log('✅ [useAnnualCharges] Paid status toggled successfully');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors du changement de statut';
-      console.error('❌ [useAnnualCharges] Error toggling paid status:', errorMessage);
-      setError(errorMessage);
-      throw err;
-    }
-  }, [userId, loadCharges]);
-
-  // Obtenir une charge par ID
-  const getChargeById = useCallback(async (chargeId: string): Promise<AnnualCharge | null> => {
-    try {
-      setError(null);
-      console.log('🔍 [useAnnualCharges] Getting charge by ID:', chargeId);
-      const charge = await annualChargeService.getAnnualChargeById(chargeId, userId);
-      return charge;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la récupération de la charge';
-      console.error('❌ [useAnnualCharges] Error getting charge by ID:', errorMessage);
-      setError(errorMessage);
+      console.error('❌ [useAnnualCharges] Error deleting charge:', err);
       throw err;
     }
   }, [userId]);
 
-  // Obtenir les statistiques
-  const getStats = useCallback(async () => {
+  const getAnnualChargeById = useCallback(async (id: string): Promise<AnnualCharge | null> => {
     try {
-      setError(null);
-      console.log('📊 [useAnnualCharges] Getting stats...');
-      const stats = await annualChargeService.getAnnualChargeStats(userId);
-      return stats;
+      return await annualChargeService.getAnnualChargeById(id, userId);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la récupération des statistiques';
-      console.error('❌ [useAnnualCharges] Error getting stats:', errorMessage);
+      const errorMessage = err instanceof Error ? err.message : 'Erreur de récupération de charge annuelle';
       setError(errorMessage);
-      throw err;
+      console.error('❌ [useAnnualCharges] Error getting charge by id:', err);
+      return null;
     }
   }, [userId]);
 
-  const getChargesForCurrentMonth = useCallback(async (): Promise<AnnualCharge[]> => {
-  try {
-    const charges = await annualChargeService.getAllAnnualCharges(userId);
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-    
-    return charges.filter(charge => {
-      const dueDate = new Date(charge.dueDate);
-      return dueDate.getMonth() === currentMonth && 
-             dueDate.getFullYear() === currentYear;
-    });
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Erreur lors du filtrage des charges du mois';
-    console.error('❌ [useAnnualCharges] Error getting current month charges:', errorMessage);
-    setError(errorMessage);
-    return [];
-  }
-}, [userId]);
-
-  // Filtrer par statut
-  const getChargesByStatus = useCallback(async (status: 'all' | 'paid' | 'pending' | 'upcoming' | 'overdue') => {
+  const getChargesByCategory = useCallback(async (category: string): Promise<AnnualCharge[]> => {
     try {
-      setError(null);
-      console.log('🔍 [useAnnualCharges] Getting charges by status:', status);
-      const filteredCharges = await annualChargeService.getChargesByStatus(status, userId);
-      return filteredCharges;
+      return await annualChargeService.getAnnualChargesByCategory(category, userId);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors du filtrage des charges';
-      console.error('❌ [useAnnualCharges] Error filtering charges:', errorMessage);
+      const errorMessage = err instanceof Error ? err.message : 'Erreur de récupération par catégorie';
       setError(errorMessage);
-      throw err;
+      console.error('❌ [useAnnualCharges] Error getting charges by category:', err);
+      return [];
     }
   }, [userId]);
 
-  // Traiter les charges dues
-  const processDueCharges = useCallback(async () => {
+  const getIslamicCharges = useCallback(async (): Promise<AnnualCharge[]> => {
     try {
-      setError(null);
-      console.log('🔄 [useAnnualCharges] Processing due charges...');
-      const result = await annualChargeService.processDueCharges(userId);
-      await loadCharges();
-      return result;
+      return await annualChargeService.getIslamicAnnualCharges(userId);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors du traitement des charges dues';
-      console.error('❌ [useAnnualCharges] Error processing due charges:', errorMessage);
+      const errorMessage = err instanceof Error ? err.message : 'Erreur de récupération des charges islamiques';
       setError(errorMessage);
-      throw err;
+      console.error('❌ [useAnnualCharges] Error getting islamic charges:', err);
+      return [];
     }
-  }, [userId, loadCharges]);
+  }, [userId]);
 
-  // Statistiques par catégorie
-  const getChargesByCategory = useCallback(() => {
-    const categories = charges.reduce((acc, charge) => {
-      if (!acc[charge.category]) {
-        acc[charge.category] = 0;
-      }
-      acc[charge.category] += charge.amount;
-      return acc;
-    }, {} as Record<string, number>);
+  const getActiveCharges = useCallback(async (): Promise<AnnualCharge[]> => {
+    try {
+      return await annualChargeService.getActiveAnnualCharges(userId);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur de récupération des charges actives';
+      setError(errorMessage);
+      console.error('❌ [useAnnualCharges] Error getting active charges:', err);
+      return [];
+    }
+  }, [userId]);
 
-    return Object.entries(categories).map(([name, amount]) => ({
-      name,
-      amount,
-    }));
-  }, [charges]);
+  const searchCharges = useCallback(async (query: string): Promise<AnnualCharge[]> => {
+    try {
+      return await annualChargeService.searchAnnualCharges(query, userId);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur de recherche de charges';
+      setError(errorMessage);
+      console.error('❌ [useAnnualCharges] Error searching charges:', err);
+      return [];
+    }
+  }, [userId]);
 
-  // Rafraîchir les charges
-  const refreshAnnualCharges = useCallback(async (): Promise<void> => {
-    await loadCharges();
-  }, [loadCharges]);
+  const getChargesStats = useCallback(async () => {
+    try {
+      return await annualChargeService.getAnnualChargesStats(userId);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur de récupération des statistiques';
+      setError(errorMessage);
+      console.error('❌ [useAnnualCharges] Error getting charges stats:', err);
+      return {
+        totalCharges: 0,
+        totalAmount: 0,
+        activeCharges: 0,
+        islamicCharges: 0,
+        chargesByCategory: {}
+      };
+    }
+  }, [userId]);
 
-  // Réinitialiser les erreurs
-  const clearError = useCallback((): void => {
+  const refreshAnnualCharges = useCallback(async () => {
+    await loadAnnualCharges();
+  }, [loadAnnualCharges]);
+
+  const clearError = useCallback(() => {
     setError(null);
   }, []);
 
-  // ✅ CORRECTION : Charger les données au montage avec dépendance correcte
-  useEffect(() => {
-    loadCharges();
-  }, [loadCharges]);
+  // Calculs locaux
+  const totalAmount = annualCharges.reduce((sum, charge) => sum + charge.amount, 0);
+  const activeCharges = annualCharges.filter(charge => charge.isActive);
+  const islamicCharges = annualCharges.filter(charge => charge.isIslamic);
+  const upcomingCharges = annualCharges
+    .filter(charge => charge.isActive)
+    .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
+    .slice(0, 5);
 
   return {
     // État
-    charges,
-    loading,
+    annualCharges,
+    isLoading,
     error,
-
-    // Actions principales
-    createCharge,
+    
+    // Données calculées
+    totalAmount,
+    activeCharges,
+    islamicCharges,
+    upcomingCharges,
+    
+    // Actions
+    addAnnualCharge,
     updateAnnualCharge,
     deleteAnnualCharge,
-    togglePaidStatus,
-    refreshAnnualCharges,
-    getChargeById,
-    getStats,
-    getChargesByStatus,
-    processDueCharges,
-
-    // Utilitaires
+    getAnnualChargeById,
     getChargesByCategory,
+    getIslamicCharges,
+    getActiveCharges,
+    searchCharges,
+    getChargesStats,
+    refreshAnnualCharges,
     clearError,
+    
+    // Utilitaires
+    formatAmount
   };
 };
+
+export default useAnnualCharges;

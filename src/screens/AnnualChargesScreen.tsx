@@ -1,4 +1,4 @@
-// src/screens/AnnualChargesScreen.tsx - VERSION COMPLÈTEMENT CORRIGÉE ET AMÉLIORÉE
+// src/screens/AnnualChargesScreen.tsx - VERSION DÉFINITIVE CORRIGÉE
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
@@ -10,46 +10,29 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useCurrency } from '../context/CurrencyContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAnnualCharges } from '../hooks/useAnnualCharges';
-
-// ✅ CORRECTION : Interface locale pour éviter les conflits de types
-interface LocalAnnualCharge {
-  id: string;
-  name: string;
-  amount: number;
-  category: string;
-  dueDate: string;
-  isPaid: boolean;
-  createdAt: string;
-  userId?: string;
-  notes?: string;
-  paymentMethod?: string;
-  recurrence?: 'yearly' | 'monthly' | 'quarterly';
-}
+import { useIslamicCharges } from '../hooks/useIslamicCharges';
 
 const AnnualChargesScreen = ({ navigation }: any) => { 
   const { theme } = useTheme();
+  const { formatAmount } = useCurrency();
   const { 
-    charges, 
-    loading, 
+    annualCharges, 
+    isLoading, 
     error, 
     updateAnnualCharge,
     deleteAnnualCharge,
-    togglePaidStatus, 
     refreshAnnualCharges 
   } = useAnnualCharges();
+
+  const { settings: islamicSettings } = useIslamicCharges();
   
   const [refreshing, setRefreshing] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'paid' | 'pending' | 'upcoming' | 'overdue'>('all');
+  const [filter, setFilter] = useState<'all' | 'paid' | 'pending' | 'upcoming' | 'overdue' | 'islamic'>('all');
   
   const isDark = theme === 'dark';
-
-  // ✅ CORRECTION : Conversion des charges vers le type local
-  const localCharges: LocalAnnualCharge[] = charges.map(charge => ({
-    ...charge,
-    userId: charge.userId || 'default-user-id' // Valeur par défaut
-  }));
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -61,14 +44,32 @@ const AnnualChargesScreen = ({ navigation }: any) => {
     navigation.navigate('AddAnnualCharge');
   };
 
- const handleEditCharge = (chargeId: string) => {
-  // ✅ SOLUTION : Utiliser AddAnnualCharge avec un paramètre d'édition
-  navigation.navigate('EditAnnualCharge', { 
-    chargeId: chargeId,
-    mode: 'edit'
-  });
-};
-  const handleDeleteCharge = (charge: LocalAnnualCharge) => {
+  const handleIslamicCharges = () => {
+    if (islamicSettings.isEnabled) {
+      navigation.navigate('IslamicCharges');
+    } else {
+      Alert.alert(
+        'Charges Islamiques',
+        'La fonctionnalité charges islamiques est désactivée. Activez-la dans les paramètres pour gérer les charges liées aux fêtes musulmanes.',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          { 
+            text: 'Paramètres', 
+            onPress: () => navigation.navigate('Settings')
+          }
+        ]
+      );
+    }
+  };
+
+  const handleEditCharge = (chargeId: string) => {
+    navigation.navigate('EditAnnualCharge', { 
+      chargeId: chargeId,
+      mode: 'edit'
+    });
+  };
+
+  const handleDeleteCharge = (charge: any) => {
     Alert.alert(
       'Supprimer la charge',
       `Êtes-vous sûr de vouloir supprimer "${charge.name}" ?`,
@@ -89,11 +90,10 @@ const AnnualChargesScreen = ({ navigation }: any) => {
     );
   };
 
-  // ✅ AMÉLIORATION : Menu d'actions au clic long
-  const handleLongPressCharge = (charge: LocalAnnualCharge) => {
+  const handleLongPressCharge = (charge: any) => {
     Alert.alert(
       charge.name,
-      `Que voulez-vous faire avec cette charge ?\n\nMontant: ${formatCurrency(charge.amount)}\nDate: ${formatDate(charge.dueDate)}`,
+      `Que voulez-vous faire avec cette charge ?\n\nMontant: ${formatAmount(charge.amount)}\nDate: ${formatDate(charge.dueDate)}`,
       [
         { 
           text: 'Modifier', 
@@ -113,42 +113,38 @@ const AnnualChargesScreen = ({ navigation }: any) => {
     );
   };
 
-  const handleTogglePaid = async (charge: LocalAnnualCharge) => {
+  const handleTogglePaid = async (charge: any) => {
     try {
-      await togglePaidStatus(charge.id, !charge.isPaid);
+      // ✅ CORRECTION : Utilisation correcte de isPaid
+      await updateAnnualCharge(charge.id, { 
+        isPaid: !charge.isPaid,
+        paidDate: !charge.isPaid ? new Date() : undefined
+      });
     } catch (error) {
       Alert.alert('Erreur', 'Impossible de modifier le statut de paiement');
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
+  const formatDate = (date: Date | string) => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleDateString('fr-FR', {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
     });
   };
 
-  const getDaysUntilDue = (dueDate: string): number => {
+  const getDaysUntilDue = (dueDate: Date | string): number => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Ignorer l'heure pour la comparaison
-    const due = new Date(dueDate);
+    today.setHours(0, 0, 0, 0);
+    const due = typeof dueDate === 'string' ? new Date(dueDate) : dueDate;
     due.setHours(0, 0, 0, 0);
     const timeDiff = due.getTime() - today.getTime();
     return Math.ceil(timeDiff / (1000 * 3600 * 24));
   };
 
-  const getChargeStatus = (charge: LocalAnnualCharge) => {
+  const getChargeStatus = (charge: any) => {
+    // ✅ CORRECTION : Utilisation correcte de isPaid
     if (charge.isPaid) return 'paid';
     
     const daysUntilDue = getDaysUntilDue(charge.dueDate);
@@ -175,24 +171,33 @@ const AnnualChargesScreen = ({ navigation }: any) => {
     }
   };
 
-  // ✅ CORRECTION : Statistiques calculées localement
+  // Statistiques calculées
   const stats = {
-    totalCharges: localCharges.length,
-    pendingAmount: localCharges
+    totalCharges: annualCharges.length,
+    pendingAmount: annualCharges
+      // ✅ CORRECTION : Utilisation correcte de isPaid
       .filter(charge => !charge.isPaid)
       .reduce((total, charge) => total + charge.amount, 0),
-    overdueCharges: localCharges.filter(charge => {
+    overdueCharges: annualCharges.filter(charge => {
       const daysUntilDue = getDaysUntilDue(charge.dueDate);
+      // ✅ CORRECTION : Utilisation correcte de isPaid
       return !charge.isPaid && daysUntilDue < 0;
-    }),
-    paidCharges: localCharges.filter(charge => charge.isPaid).length
+    }).length,
+    // ✅ CORRECTION : Utilisation correcte de isPaid
+    paidCharges: annualCharges.filter(charge => charge.isPaid).length,
+    islamicCharges: annualCharges.filter(charge => charge.isIslamic).length,
+    islamicAmount: annualCharges
+      .filter(charge => charge.isIslamic)
+      .reduce((total, charge) => total + charge.amount, 0)
   };
 
   // Filtrer les charges selon le filtre actif
-  const filteredCharges = localCharges.filter(charge => {
+  const filteredCharges = annualCharges.filter(charge => {
     if (filter === 'all') return true;
+    // ✅ CORRECTION : Utilisation correcte de isPaid
     if (filter === 'paid') return charge.isPaid;
     if (filter === 'pending') return !charge.isPaid;
+    if (filter === 'islamic') return charge.isIslamic;
     
     const status = getChargeStatus(charge);
     if (filter === 'upcoming') return status === 'upcoming';
@@ -201,7 +206,7 @@ const AnnualChargesScreen = ({ navigation }: any) => {
     return true;
   });
 
-  const renderChargeItem = ({ item }: { item: LocalAnnualCharge }) => {
+  const renderChargeItem = ({ item }: { item: any }) => {
     const status = getChargeStatus(item);
     const daysUntilDue = getDaysUntilDue(item.dueDate);
     const statusColor = getStatusColor(status);
@@ -209,15 +214,29 @@ const AnnualChargesScreen = ({ navigation }: any) => {
     return (
       <TouchableOpacity 
         style={[styles.chargeItem, isDark && styles.darkCard]}
-        onPress={() => handleEditCharge(item.id)} // ✅ CLIC SIMPLE = ÉDITION
-        onLongPress={() => handleLongPressCharge(item)} // ✅ CLIC LONG = MENU D'ACTIONS
+        onPress={() => handleEditCharge(item.id)}
+        onLongPress={() => handleLongPressCharge(item)}
         activeOpacity={0.7}
       >
+        {/* Indicateur islamique */}
+        {item.isIslamic && (
+          <View style={styles.islamicBadge}>
+            <Ionicons name="star" size={12} color="#FFD700" />
+            <Text style={styles.islamicBadgeText}>Islamique</Text>
+          </View>
+        )}
+
         <View style={styles.chargeHeader}>
           <View style={styles.chargeInfo}>
             <Text style={[styles.chargeName, isDark && styles.darkText]}>
               {item.name}
             </Text>
+            {/* Affichage nom arabe si disponible */}
+            {item.arabicName && (
+              <Text style={[styles.arabicName, isDark && styles.darkSubtext]}>
+                {item.arabicName}
+              </Text>
+            )}
             <View style={styles.chargeMeta}>
               <Text style={[styles.chargeCategory, isDark && styles.darkSubtext]}>
                 {item.category}
@@ -240,9 +259,10 @@ const AnnualChargesScreen = ({ navigation }: any) => {
 
         <View style={styles.chargeFooter}>
           <Text style={[styles.chargeAmount, isDark && styles.darkText]}>
-            {formatCurrency(item.amount)}
+            {formatAmount(item.amount)}
           </Text>
           
+          {/* ✅ CORRECTION : Utilisation correcte de isPaid */}
           {!item.isPaid && (
             <View style={styles.daysContainer}>
               <Ionicons 
@@ -265,7 +285,7 @@ const AnnualChargesScreen = ({ navigation }: any) => {
     );
   };
 
-  if (loading && !refreshing) {
+  if (isLoading && !refreshing) {
     return (
       <View style={[styles.container, isDark && styles.darkContainer, styles.center]}>
         <ActivityIndicator size="large" color="#007AFF" />
@@ -298,12 +318,21 @@ const AnnualChargesScreen = ({ navigation }: any) => {
           <Text style={[styles.title, isDark && styles.darkText]}>
             Charges Annuelles
           </Text>
-          <TouchableOpacity 
-            style={[styles.addButton, isDark && styles.darkAddButton]}
-            onPress={handleAddCharge}
-          >
-            <Ionicons name="add" size={24} color="#007AFF" />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            {/* Bouton charges islamiques */}
+            <TouchableOpacity 
+              style={[styles.islamicButton, isDark && styles.darkIslamicButton]}
+              onPress={handleIslamicCharges}
+            >
+              <Ionicons name="star" size={20} color="#FFD700" />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.addButton, isDark && styles.darkAddButton]}
+              onPress={handleAddCharge}
+            >
+              <Ionicons name="add" size={24} color="#007AFF" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <Text style={[styles.subtitle, isDark && styles.darkSubtext]}>
@@ -325,7 +354,7 @@ const AnnualChargesScreen = ({ navigation }: any) => {
           
           <View style={styles.statItem}>
             <Text style={[styles.statValue, { color: stats.pendingAmount > 0 ? '#FF9500' : '#34C759' }]}>
-              {formatCurrency(stats.pendingAmount)}
+              {formatAmount(stats.pendingAmount)}
             </Text>
             <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
               En attente
@@ -335,37 +364,55 @@ const AnnualChargesScreen = ({ navigation }: any) => {
           <View style={styles.statDivider} />
           
           <View style={styles.statItem}>
-            <Text style={[styles.statValue, { color: stats.overdueCharges.length > 0 ? '#FF3B30' : (isDark ? '#fff' : '#000') }]}>
-              {stats.overdueCharges.length}
+            <Text style={[styles.statValue, { color: stats.overdueCharges > 0 ? '#FF3B30' : (isDark ? '#fff' : '#000') }]}>
+              {stats.overdueCharges}
             </Text>
             <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
               En retard
             </Text>
           </View>
+
+          {/* Statistique islamique */}
+          {stats.islamicCharges > 0 && (
+            <>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={[styles.statValue, { color: '#FFD700' }]}>
+                  {stats.islamicCharges}
+                </Text>
+                <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+                  Islamiques
+                </Text>
+              </View>
+            </>
+          )}
         </View>
 
         {/* Filtres rapides */}
         <View style={styles.filtersContainer}>
-          {(['all', 'pending', 'upcoming', 'overdue', 'paid'] as const).map((filterType) => (
+          {(['all', 'pending', 'upcoming', 'overdue', 'paid', 'islamic'] as const).map((filterType) => (
             <TouchableOpacity
               key={filterType}
               style={[
                 styles.filterButton,
                 filter === filterType && styles.filterButtonActive,
-                isDark && styles.darkFilterButton
+                isDark && styles.darkFilterButton,
+                filterType === 'islamic' && styles.islamicFilterButton
               ]}
               onPress={() => setFilter(filterType)}
             >
               <Text style={[
                 styles.filterText,
                 filter === filterType && styles.filterTextActive,
-                isDark && styles.darkText
+                isDark && styles.darkText,
+                filterType === 'islamic' && styles.islamicFilterText
               ]}>
                 {filterType === 'all' && 'Toutes'}
                 {filterType === 'pending' && 'En attente'}
                 {filterType === 'upcoming' && 'À venir'}
                 {filterType === 'overdue' && 'En retard'}
                 {filterType === 'paid' && 'Payées'}
+                {filterType === 'islamic' && '⭐ Islamiques'}
               </Text>
             </TouchableOpacity>
           ))}
@@ -389,11 +436,15 @@ const AnnualChargesScreen = ({ navigation }: any) => {
               color={isDark ? '#555' : '#ccc'} 
             />
             <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
-              {filter === 'all' ? 'Aucune charge annuelle' : `Aucune charge ${filter}`}
+              {filter === 'all' ? 'Aucune charge annuelle' : 
+               filter === 'islamic' ? 'Aucune charge islamique' : 
+               `Aucune charge ${filter}`}
             </Text>
             <Text style={[styles.emptySubtext, isDark && styles.darkSubtext]}>
               {filter === 'all' 
                 ? 'Ajoutez vos premières charges annuelles' 
+                : filter === 'islamic'
+                ? 'Activez les charges islamiques dans les paramètres'
                 : 'Aucune charge ne correspond à ce filtre'
               }
             </Text>
@@ -403,6 +454,14 @@ const AnnualChargesScreen = ({ navigation }: any) => {
                 onPress={handleAddCharge}
               >
                 <Text style={styles.addEmptyButtonText}>Ajouter une charge</Text>
+              </TouchableOpacity>
+            )}
+            {filter === 'islamic' && !islamicSettings.isEnabled && (
+              <TouchableOpacity 
+                style={styles.islamicEmptyButton}
+                onPress={() => navigation.navigate('Settings')}
+              >
+                <Text style={styles.islamicEmptyButtonText}>Activer les charges islamiques</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -416,10 +475,21 @@ const AnnualChargesScreen = ({ navigation }: any) => {
       >
         <Ionicons name="add" size={24} color="#fff" />
       </TouchableOpacity>
+
+      {/* Bouton flottant pour charges islamiques */}
+      {islamicSettings.isEnabled && (
+        <TouchableOpacity 
+          style={styles.islamicFab}
+          onPress={handleIslamicCharges}
+        >
+          <Ionicons name="star" size={20} color="#fff" />
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
 
+// Les styles restent exactement les mêmes
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -448,10 +518,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#000',
+  },
+  islamicButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.3)',
+  },
+  darkIslamicButton: {
+    backgroundColor: 'rgba(255, 215, 0, 0.2)',
   },
   addButton: {
     width: 40,
@@ -517,6 +605,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#2c2c2e',
     borderColor: '#38383a',
   },
+  islamicFilterButton: {
+    borderColor: 'rgba(255, 215, 0, 0.3)',
+    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+  },
   filterButtonActive: {
     backgroundColor: '#007AFF',
     borderColor: '#007AFF',
@@ -528,6 +620,9 @@ const styles = StyleSheet.create({
   },
   filterTextActive: {
     color: '#fff',
+  },
+  islamicFilterText: {
+    color: '#B8860B',
   },
   listContent: {
     padding: 16,
@@ -549,6 +644,25 @@ const styles = StyleSheet.create({
   darkCard: {
     backgroundColor: '#2c2c2e',
   },
+  islamicBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.3)',
+  },
+  islamicBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#B8860B',
+    marginLeft: 4,
+  },
   chargeHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -562,6 +676,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#000',
+    marginBottom: 4,
+  },
+  arabicName: {
+    fontSize: 14,
+    color: '#666',
+    fontStyle: 'italic',
     marginBottom: 4,
   },
   chargeMeta: {
@@ -666,6 +786,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  islamicEmptyButton: {
+    backgroundColor: 'rgba(255, 215, 0, 0.2)',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.5)',
+  },
+  islamicEmptyButtonText: {
+    color: '#B8860B',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   fab: {
     position: 'absolute',
     bottom: 30,
@@ -674,6 +807,22 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 30,
     backgroundColor: '#007AFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  islamicFab: {
+    position: 'absolute',
+    bottom: 100,
+    right: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#FFD700',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',

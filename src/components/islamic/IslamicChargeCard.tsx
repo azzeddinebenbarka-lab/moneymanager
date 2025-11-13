@@ -1,9 +1,9 @@
 ﻿// src/components/islamic/IslamicChargeCard.tsx
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { IslamicCharge } from '../../types/IslamicCharge';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useTheme } from '../../context/ThemeContext';
+import { IslamicCharge } from '../../types/IslamicCharge';
 
 interface IslamicChargeCardProps {
   charge: IslamicCharge;
@@ -20,8 +20,24 @@ export const IslamicChargeCard: React.FC<IslamicChargeCardProps> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'obligatory': return '#EF4444';
+      case 'recommended': return '#F59E0B';
+      default: return '#6B7280';
+    }
+  };
+
+  const getTypeText = (type: string) => {
+    switch (type) {
+      case 'obligatory': return 'Obligatoire';
+      case 'recommended': return 'Recommandé';
+      default: return 'Personnalisé';
+    }
+  };
+
   return (
-    <View style={[styles.card, isDark && styles.darkCard]}> 
+    <View style={[styles.card, isDark && styles.darkCard]}>
       <View style={styles.header}>
         <View style={styles.titleContainer}>
           <Text style={[styles.name, isDark && styles.darkText]}>
@@ -33,10 +49,10 @@ export const IslamicChargeCard: React.FC<IslamicChargeCardProps> = ({
         </View>
         <View style={[
           styles.typeBadge,
-          charge.type === 'obligatory' ? styles.obligatoryBadge : styles.recommendedBadge
+          { backgroundColor: `${getTypeColor(charge.type)}20` }
         ]}>
-          <Text style={styles.typeText}>
-            {charge.type === 'obligatory' ? 'Obligatoire' : 'Recommandé'}
+          <Text style={[styles.typeText, { color: getTypeColor(charge.type) }]}>
+            {getTypeText(charge.type)}
           </Text>
         </View>
       </View>
@@ -46,9 +62,14 @@ export const IslamicChargeCard: React.FC<IslamicChargeCardProps> = ({
       </Text>
 
       <View style={styles.details}>
-        <Text style={[styles.date, isDark && styles.darkSubtext]}>
-          📅 {charge.calculatedDate.toLocaleDateString('fr-FR')}
-        </Text>
+        <View style={styles.dateContainer}>
+          <Text style={[styles.dateLabel, isDark && styles.darkSubtext]}>
+            Date calculée:
+          </Text>
+          <Text style={[styles.date, isDark && styles.darkText]}>
+            {charge.calculatedDate.toLocaleDateString('fr-FR')}
+          </Text>
+        </View>
         <Text style={[styles.amount, isDark && styles.darkText]}>
           {formatAmount(charge.amount)}
         </Text>
@@ -56,7 +77,11 @@ export const IslamicChargeCard: React.FC<IslamicChargeCardProps> = ({
 
       <View style={styles.actions}>
         <TouchableOpacity 
-          style={[styles.actionButton, styles.payButton]}
+          style={[
+            styles.actionButton, 
+            styles.payButton,
+            charge.isPaid && styles.disabledButton
+          ]}
           onPress={() => onMarkAsPaid(charge.id)}
           disabled={charge.isPaid}
         >
@@ -69,8 +94,9 @@ export const IslamicChargeCard: React.FC<IslamicChargeCardProps> = ({
           <TouchableOpacity 
             style={[styles.actionButton, styles.editButton]}
             onPress={() => {
-              // Ouvrir modal pour modifier le montant
-              // Implémentation à compléter
+              // TODO: Implémenter la modification du montant
+              const newAmount = charge.amount + 50;
+              onUpdateAmount(charge.id, newAmount);
             }}
           >
             <Text style={styles.actionText}>✏️ Modifier</Text>
@@ -120,18 +146,13 @@ const styles = StyleSheet.create({
   arabicName: {
     fontSize: 14,
     color: '#666',
-    fontFamily: 'System', // Utiliser une police supportant l'arabe si disponible
+    fontFamily: 'System',
   },
   typeBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
-  },
-  obligatoryBadge: {
-    backgroundColor: '#FFE5E5',
-  },
-  recommendedBadge: {
-    backgroundColor: '#E5F3FF',
+    marginLeft: 8,
   },
   typeText: {
     fontSize: 10,
@@ -149,9 +170,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  date: {
+  dateContainer: {
+    flex: 1,
+  },
+  dateLabel: {
     fontSize: 12,
     color: '#666',
+    marginBottom: 2,
+  },
+  date: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#000',
   },
   amount: {
     fontSize: 16,
@@ -173,6 +203,9 @@ const styles = StyleSheet.create({
   },
   editButton: {
     backgroundColor: '#3B82F6',
+  },
+  disabledButton: {
+    backgroundColor: '#6B7280',
   },
   actionText: {
     color: '#fff',

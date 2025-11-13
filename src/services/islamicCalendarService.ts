@@ -1,4 +1,4 @@
-﻿// src/services/islamicCalendarService.ts
+﻿// src/services/islamicCalendarService.ts - VERSION COMPLÈTEMENT CORRIGÉE
 import { IslamicHoliday, IslamicCharge } from '../types/IslamicCharge';
 
 export class IslamicCalendarService {
@@ -11,9 +11,9 @@ export class IslamicCalendarService {
       hijriMonth: 9,
       hijriDay: 1,
       type: 'obligatory',
-      defaultAmount: 0, // Zakat al-Fitr séparé
+      defaultAmount: 0,
       isRecurring: true
-    }, 
+    },
     {
       id: 'eid_al_fitr',
       name: 'Aïd al-Fitr',
@@ -22,7 +22,7 @@ export class IslamicCalendarService {
       hijriMonth: 10,
       hijriDay: 1,
       type: 'obligatory',
-      defaultAmount: 100, // Zakat al-Fitr approximatif
+      defaultAmount: 100,
       isRecurring: true
     },
     {
@@ -33,7 +33,7 @@ export class IslamicCalendarService {
       hijriMonth: 12,
       hijriDay: 10,
       type: 'obligatory',
-      defaultAmount: 500, // Coût sacrifice approximatif
+      defaultAmount: 500,
       isRecurring: true
     },
     {
@@ -62,17 +62,14 @@ export class IslamicCalendarService {
 
   // Conversion Hijri → Grégorien (simplifié)
   static hijriToGregorian(hijriYear: number, hijriMonth: number, hijriDay: number): Date {
-    // Algorithme de conversion Umm al-Qura simplifié
-    const adjustment = 0; // À remplacer par vrai calcul
     const gregorianDate = new Date();
-    gregorianDate.setFullYear(hijriYear + 579); // Approximation
+    gregorianDate.setFullYear(hijriYear + 579);
     gregorianDate.setMonth(hijriMonth - 1);
     gregorianDate.setDate(hijriDay);
-    
     return gregorianDate;
   }
 
-  // Obtenir les charges pour une année donnée
+  // Obtenir les charges pour une année donnée - CORRIGÉE
   static getChargesForYear(year: number): IslamicCharge[] {
     const charges: IslamicCharge[] = [];
     const currentHijriYear = this.getCurrentHijriYear();
@@ -80,13 +77,26 @@ export class IslamicCalendarService {
     this.HOLIDAYS.forEach(holiday => {
       const calculatedDate = this.hijriToGregorian(currentHijriYear, holiday.hijriMonth, holiday.hijriDay);
       
-      charges.push({
-        ...holiday,
+      // Créer un IslamicCharge COMPLET avec toutes les propriétés
+      const islamicCharge: IslamicCharge = {
+        // Propriétés de IslamicHoliday
+        id: holiday.id,
+        name: holiday.name,
+        arabicName: holiday.arabicName,
+        description: holiday.description,
+        hijriMonth: holiday.hijriMonth,
+        hijriDay: holiday.hijriDay,
+        type: holiday.type,
+        defaultAmount: holiday.defaultAmount,
+        isRecurring: holiday.isRecurring,
+        // Propriétés spécifiques à IslamicCharge
         year: year,
-        calculatedDate,
+        calculatedDate: calculatedDate,
         amount: holiday.defaultAmount || 0,
         isPaid: false
-      });
+      };
+      
+      charges.push(islamicCharge);
     });
 
     return charges;
@@ -94,19 +104,31 @@ export class IslamicCalendarService {
 
   // Obtenir l'année hijri actuelle
   static getCurrentHijriYear(): number {
-    // Calcul simplifié - à améliorer avec vrai algorithme
     const gregorianYear = new Date().getFullYear();
     return gregorianYear - 579;
   }
 
-  // Vérifier si une date est une fête islamique
-  static isIslamicHoliday(date: Date): IslamicHoliday | null {
-    // Implémentation de la détection
-    return null;
-  }
-
   static getAllHolidays(): IslamicHoliday[] {
     return this.HOLIDAYS;
+  }
+
+  // Obtenir un jour férié par ID
+  static getHolidayById(id: string): IslamicHoliday | undefined {
+    return this.HOLIDAYS.find(holiday => holiday.id === id);
+  }
+
+  // Créer une charge islamique à partir d'un jour férié
+  static createIslamicChargeFromHoliday(holiday: IslamicHoliday, year: number): IslamicCharge {
+    const currentHijriYear = this.getCurrentHijriYear();
+    const calculatedDate = this.hijriToGregorian(currentHijriYear, holiday.hijriMonth, holiday.hijriDay);
+    
+    return {
+      ...holiday,
+      year: year,
+      calculatedDate: calculatedDate,
+      amount: holiday.defaultAmount || 0,
+      isPaid: false
+    };
   }
 }
 

@@ -26,6 +26,7 @@ import EditAnnualChargeScreen from '../screens/EditAnnualChargeScreen';
 import EditBudgetScreen from '../screens/EditBudgetScreen';
 import EditRecurringTransactionScreen from '../screens/EditRecurringTransactionScreen';
 import EditTransactionScreen from '../screens/EditTransactionScreen';
+import IslamicChargesScreen from '../screens/islamic/IslamicChargesScreen';
 import MonthDetailScreen from '../screens/MonthDetailScreen';
 import MonthsOverviewScreen from '../screens/MonthsOverviewScreen';
 import ProfileScreen from '../screens/ProfileScreen';
@@ -37,7 +38,7 @@ import TransferScreen from '../screens/TransferScreen';
 import DebtStackNavigator from './DebtStackNavigator';
 import SavingsStackNavigator from './SavingsStackNavigator';
 
-// Types pour la navigation
+// ✅ CORRECTION : Types étendus pour inclure IslamicCharges
 type DrawerParamList = {
   // Navigation principale
   Dashboard: undefined;
@@ -74,6 +75,9 @@ type DrawerParamList = {
   EditSavingsGoal: { goalId: string };
   SavingsDetail: { goalId: string };
   
+  // ✅ CORRECTION : Ajout de IslamicCharges
+  IslamicCharges: undefined;
+  
   // Paramètres
   Profile: undefined;
   Settings: undefined;
@@ -82,7 +86,7 @@ type DrawerParamList = {
   // Autres
   AccountDetail: { accountId: string };
   
-  // ✅ NOUVELLES ROUTES POUR LA PHASE 8
+  // Vue par Mois
   MonthsOverview: undefined;
   MonthDetail: { year: number; month: number };
 };
@@ -135,7 +139,6 @@ const CategoriesStack = () => (
   </Stack.Navigator>
 );
 
-
 // Stack pour Analytics
 const AnalyticsStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -172,11 +175,18 @@ const RecurringTransactionsStack = () => (
   </Stack.Navigator>
 );
 
-// ✅ NOUVEAU : Stack pour Vue par Mois
+// Stack pour Vue par Mois
 const MonthsStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="MonthsOverview" component={MonthsOverviewScreen} />
     <Stack.Screen name="MonthDetail" component={MonthDetailScreen} />
+  </Stack.Navigator>
+);
+
+// ✅ NOUVEAU : Stack pour Charges Islamiques
+const IslamicChargesStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="IslamicChargesList" component={IslamicChargesScreen} />
   </Stack.Navigator>
 );
 
@@ -225,7 +235,7 @@ const ModernDrawerNavigator = () => {
         }}
       />
 
-      {/* ✅ NOUVELLE SECTION : VUE PAR MOIS */}
+      {/* VUE PAR MOIS */}
       <Drawer.Screen
         name="MonthsOverview"
         component={MonthsStack}
@@ -320,6 +330,20 @@ const ModernDrawerNavigator = () => {
         }}
       />
 
+      {/* ✅ NOUVEAU : SECTION CHARGES ISLAMIQUES */}
+      <Drawer.Screen
+        name="IslamicCharges"
+        component={IslamicChargesStack}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <View style={[styles.iconContainer, { backgroundColor: '#FFD700' }]}>
+              <Ionicons name="star" size={size-2} color="#000000" />
+            </View>
+          ),
+          drawerLabel: "⭐ Charges Islamiques",
+        }}
+      />
+
       {/* SECTION ÉPARGNE ET DETTES */}
       <Drawer.Screen
         name="Savings"
@@ -361,13 +385,13 @@ const ModernDrawerNavigator = () => {
         }}
       />
 
-      {/* ✅ AJOUTER AnalyticsDashboard COMME ROUTE DIRECTE POUR CORRIGER L'ERREUR */}
+      {/* AnalyticsDashboard comme route directe */}
       <Drawer.Screen 
         name="AnalyticsDashboard" 
         component={AnalyticsDashboardScreen} 
         options={{
           drawerLabel: "Dashboard Analytics",
-          drawerItemStyle: { display: 'none' } // Caché du menu
+          drawerItemStyle: { display: 'none' }
         }}
       />
 
@@ -446,18 +470,18 @@ const ModernDrawerNavigator = () => {
       />
 
       <Drawer.Screen 
-  name="AddMultipleCategories" 
-  component={AddMultipleCategoriesScreen}
-  options={{ 
-    title: 'Ajout Multiple Catégories',
-    drawerIcon: ({ color, size }) => (
-      <View style={[styles.iconContainer, { backgroundColor: '#FF6B35' }]}>
-        <Ionicons name="layers" size={size-2} color="#FFFFFF" />
-      </View>
-    ),
-    drawerLabel: "Ajout Multiple",
-  }}
-/>
+        name="AddMultipleCategories" 
+        component={AddMultipleCategoriesScreen}
+        options={{ 
+          title: 'Ajout Multiple Catégories',
+          drawerIcon: ({ color, size }) => (
+            <View style={[styles.iconContainer, { backgroundColor: '#FF6B35' }]}>
+              <Ionicons name="layers" size={size-2} color="#FFFFFF" />
+            </View>
+          ),
+          drawerLabel: "Ajout Multiple",
+        }}
+      />
 
       <Drawer.Screen 
         name="Transfer" 
@@ -513,7 +537,7 @@ const ModernDrawerNavigator = () => {
         }}
       />
 
-      {/* ✅ NOUVEAU : Écran de détail mois (caché) */}
+      {/* Écran de détail mois (caché) */}
       <Drawer.Screen 
         name="MonthDetail" 
         component={MonthDetailScreen} 

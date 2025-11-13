@@ -1,9 +1,9 @@
-// src/context/DatabaseContext.tsx - VERSION CORRIGÉE
+// src/context/DatabaseContext.tsx - LIGNE CORRIGÉE
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { categoryService } from '../services/categoryService';
 import { emergencyFixTransactionsTable } from '../services/database/repairDatabase';
 import { checkDatabaseStatus, initDatabase, resetDatabase } from '../services/database/sqlite';
-import migrateTransactionsTable from '../services/database/transactionMigration'; // ✅ Correction ici
+import migrateTransactionsTable from '../services/database/transactionMigration';
 import { emergencyFixSavingsTables } from '../utils/savingsEmergencyFix';
 
 interface DatabaseContextType {
@@ -53,11 +53,14 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({ children }) 
         console.warn('⚠️ [DB CONTEXT] Migration had issues, but continuing...', migrationError);
       }
       
-      // 4. Vérification de l'état
+      // 4. La réparation des charges annuelles est maintenant gérée par annualChargeService.ensureAnnualChargesTableExists()
+      // Cette fonction est appelée automatiquement dans chaque méthode du service
+      
+      // 5. Vérification de l'état
       const status = await checkDatabaseStatus();
       console.log('📋 [DB CONTEXT] Database status after repair:', status);
       
-      // 5. Initialisation des catégories
+      // 6. Initialisation des catégories
       console.log('🔄 [DB CONTEXT] Initializing default categories...');
       await categoryService.initializeDefaultCategories();
       

@@ -1,4 +1,4 @@
-// src/services/database/migrationService.ts - VERSION COMPLÈTE CORRIGÉE
+// src/services/database/migrationService.ts - VERSION COMPLÈTEMENT CORRIGÉE
 import { getDatabase } from './sqlite';
 
 export interface MySQLData {
@@ -11,6 +11,102 @@ export interface MySQLData {
   savings_goals: any[];
   transfers: any[];
 }
+
+export const migrationService = {
+  async addIslamicColumnsToAnnualCharges(): Promise<void> {
+    try {
+      const db = await getDatabase();
+      
+      console.log('🔄 Vérification/ajout des colonnes islamiques à annual_charges...');
+      
+      // Vérifier si la table existe
+      const tableExists = await db.getFirstAsync(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='annual_charges'"
+      );
+      
+      if (!tableExists) {
+        console.log('❌ Table annual_charges n\'existe pas');
+        return;
+      }
+
+      // Vérifier la structure actuelle
+      const tableInfo = await db.getAllAsync(`PRAGMA table_info(annual_charges)`) as any[];
+      const existingColumns = tableInfo.map(col => col.name);
+      
+      console.log('📋 Colonnes existantes:', existingColumns);
+
+      // Colonnes à ajouter
+      const islamicColumns = [
+        { name: 'is_islamic', type: 'INTEGER DEFAULT 0' },
+        { name: 'islamic_holiday_id', type: 'TEXT' },
+        { name: 'arabic_name', type: 'TEXT' },
+        { name: 'type', type: 'TEXT DEFAULT "normal"' }
+      ];
+
+      for (const column of islamicColumns) {
+        if (!existingColumns.includes(column.name)) {
+          console.log(`🔄 Ajout colonne ${column.name}...`);
+          try {
+            await db.execAsync(
+              `ALTER TABLE annual_charges ADD COLUMN ${column.name} ${column.type}`
+            );
+            console.log(`✅ Colonne ${column.name} ajoutée`);
+          } catch (alterError: any) {
+            if (alterError.message?.includes('duplicate column name')) {
+              console.log(`ℹ️ Colonne ${column.name} existe déjà`);
+            } else {
+              console.warn(`⚠️ Impossible d'ajouter ${column.name}:`, alterError);
+            }
+          }
+        } else {
+          console.log(`✅ Colonne ${column.name} existe déjà`);
+        }
+      }
+      
+      console.log('✅ Structure table annual_charges vérifiée et mise à jour');
+    } catch (error) {
+      console.error('❌ Erreur migration colonnes islamiques:', error);
+      throw error;
+    }
+  },
+
+  async addIslamicColumnsToTables(): Promise<{ success: boolean; errors: string[] }> {
+    const db = await getDatabase();
+    const errors: string[] = [];
+
+    try {
+      console.log('🔄 Ajout des colonnes islamiques aux tables...');
+
+      // Colonnes à ajouter à annual_charges
+      const islamicColumns = [
+        { name: 'is_islamic', type: 'INTEGER DEFAULT 0' },
+        { name: 'islamic_holiday_id', type: 'TEXT' },
+        { name: 'arabic_name', type: 'TEXT' },
+        { name: 'type', type: 'TEXT DEFAULT "normal"' }
+      ];
+
+      for (const column of islamicColumns) {
+        try {
+          await db.execAsync(
+            `ALTER TABLE annual_charges ADD COLUMN ${column.name} ${column.type}`
+          );
+          console.log(`✅ Colonne ${column.name} ajoutée à annual_charges`);
+        } catch (error: any) {
+          if (!error.message?.includes('duplicate column name')) {
+            errors.push(`Erreur colonne ${column.name}: ${error}`);
+          } else {
+            console.log(`ℹ️ Colonne ${column.name} existe déjà`);
+          }
+        }
+      }
+
+      return { success: errors.length === 0, errors };
+    } catch (error) {
+      errors.push(`Erreur migration islamique: ${error}`);
+      return { success: false, errors };
+    }
+  }
+};
 
 export class MigrationService {
   private static instance: MigrationService;
@@ -39,7 +135,7 @@ export class MigrationService {
     });
 
     // Validation des transactions
-    [...data.expenses, ...data.incomes].forEach((transaction, index) => {
+    [...(data.expenses || []), ...(data.incomes || [])].forEach((transaction, index) => {
       if (!transaction.amount) errors.push(`Transaction ${index}: montant manquant`);
       if (!transaction.date) errors.push(`Transaction ${index}: date manquant`);
     });
@@ -56,7 +152,7 @@ export class MigrationService {
     
     return {
       // Conversion des comptes
-      accounts: data.accounts?.map(account => ({
+      accounts: (data.accounts || []).map(account => ({
         id: `acc_${account.id}`,
         user_id: userId,
         name: account.name,
@@ -65,10 +161,10 @@ export class MigrationService {
         currency: 'EUR',
         color: account.color || '#007AFF',
         created_at: account.created_at || new Date().toISOString()
-      })) || [],
+      })),
 
       // Conversion des catégories
-      categories: data.categories?.map(category => ({
+      categories: (data.categories || []).map(category => ({
         id: `cat_${category.id}`,
         user_id: userId,
         name: category.name,
@@ -76,10 +172,10 @@ export class MigrationService {
         color: category.color || '#6B7280',
         icon: category.icon || 'receipt',
         created_at: category.created_at || new Date().toISOString()
-      })) || [],
+      })),
 
       // Conversion des dépenses
-      expenses: data.expenses?.map(expense => ({
+      expenses: (data.expenses || []).map(expense => ({
         id: `exp_${expense.id}`,
         user_id: userId,
         amount: Math.abs(parseFloat(expense.amount)) || 0,
@@ -89,10 +185,10 @@ export class MigrationService {
         description: expense.description || '',
         date: expense.date,
         created_at: expense.created_at || new Date().toISOString()
-      })) || [],
+      })),
 
       // Conversion des revenus
-      incomes: data.incomes?.map(income => ({
+      incomes: (data.incomes || []).map(income => ({
         id: `inc_${income.id}`,
         user_id: userId,
         amount: Math.abs(parseFloat(income.amount)) || 0,
@@ -102,10 +198,10 @@ export class MigrationService {
         description: income.description || '',
         date: income.date,
         created_at: income.created_at || new Date().toISOString()
-      })) || [],
+      })),
 
       // Conversion des dettes - ✅ CORRIGÉ : avec payment_account_id
-      debts: data.debts?.map(debt => ({
+      debts: (data.debts || []).map(debt => ({
         id: `debt_${debt.id}`,
         user_id: userId,
         name: debt.creditor,
@@ -120,10 +216,10 @@ export class MigrationService {
         created_at: debt.created_at || new Date().toISOString(),
         payment_account_id: debt.account_id ? `acc_${debt.account_id}` : null, // ✅ AJOUTÉ
         auto_pay: 0 // ✅ AJOUTÉ
-      })) || [],
+      })),
 
       // Conversion des charges annuelles - ✅ CORRIGÉ : avec account_id
-      annual_charges: data.annual_expenses?.map(charge => ({
+      annual_charges: (data.annual_expenses || []).map(charge => ({
         id: `annual_${charge.id}`,
         user_id: userId,
         name: charge.description,
@@ -135,10 +231,10 @@ export class MigrationService {
         created_at: charge.created_at || new Date().toISOString(),
         account_id: charge.account_id ? `acc_${charge.account_id}` : null, // ✅ AJOUTÉ
         auto_deduct: 0 // ✅ AJOUTÉ
-      })) || [],
+      })),
 
       // Conversion des objectifs d'épargne - ✅ CORRIGÉ : avec comptes associés
-      savings_goals: data.savings_goals?.map(goal => ({
+      savings_goals: (data.savings_goals || []).map(goal => ({
         id: `sav_${goal.id}`,
         user_id: userId,
         name: goal.name,
@@ -153,7 +249,7 @@ export class MigrationService {
         created_at: goal.created_at || new Date().toISOString(),
         savings_account_id: goal.account_id ? `acc_${goal.account_id}` : null, // ✅ AJOUTÉ
         contribution_account_id: goal.account_id ? `acc_${goal.account_id}` : null // ✅ AJOUTÉ
-      })) || []
+      }))
     };
   }
 
@@ -185,7 +281,7 @@ export class MigrationService {
     return `${year}-12-31`;
   }
 
-  // ✅ NOUVELLE MÉTHODE : Migration des colonnes account_id
+  // ✅ MÉTHODE : Migration des colonnes account_id
   public async migrateAccountIdColumns(): Promise<{ success: boolean; errors: string[] }> {
     const db = await getDatabase();
     const errors: string[] = [];
@@ -199,8 +295,12 @@ export class MigrationService {
           ALTER TABLE annual_charges ADD COLUMN account_id TEXT;
         `);
         console.log('✅ Colonne account_id ajoutée à annual_charges');
-      } catch (error) {
-        console.log('ℹ️ Colonne account_id existe déjà dans annual_charges');
+      } catch (error: any) {
+        if (error.message?.includes('duplicate column name')) {
+          console.log('ℹ️ Colonne account_id existe déjà dans annual_charges');
+        } else {
+          errors.push(`Erreur account_id annual_charges: ${error}`);
+        }
       }
 
       try {
@@ -208,8 +308,12 @@ export class MigrationService {
           ALTER TABLE annual_charges ADD COLUMN auto_deduct INTEGER DEFAULT 0;
         `);
         console.log('✅ Colonne auto_deduct ajoutée à annual_charges');
-      } catch (error) {
-        console.log('ℹ️ Colonne auto_deduct existe déjà dans annual_charges');
+      } catch (error: any) {
+        if (error.message?.includes('duplicate column name')) {
+          console.log('ℹ️ Colonne auto_deduct existe déjà dans annual_charges');
+        } else {
+          errors.push(`Erreur auto_deduct annual_charges: ${error}`);
+        }
       }
 
       // Migration pour debts
@@ -218,8 +322,12 @@ export class MigrationService {
           ALTER TABLE debts ADD COLUMN payment_account_id TEXT;
         `);
         console.log('✅ Colonne payment_account_id ajoutée à debts');
-      } catch (error) {
-        console.log('ℹ️ Colonne payment_account_id existe déjà dans debts');
+      } catch (error: any) {
+        if (error.message?.includes('duplicate column name')) {
+          console.log('ℹ️ Colonne payment_account_id existe déjà dans debts');
+        } else {
+          errors.push(`Erreur payment_account_id debts: ${error}`);
+        }
       }
 
       try {
@@ -227,8 +335,12 @@ export class MigrationService {
           ALTER TABLE debts ADD COLUMN auto_pay INTEGER DEFAULT 0;
         `);
         console.log('✅ Colonne auto_pay ajoutée à debts');
-      } catch (error) {
-        console.log('ℹ️ Colonne auto_pay existe déjà dans debts');
+      } catch (error: any) {
+        if (error.message?.includes('duplicate column name')) {
+          console.log('ℹ️ Colonne auto_pay existe déjà dans debts');
+        } else {
+          errors.push(`Erreur auto_pay debts: ${error}`);
+        }
       }
 
       // Migration pour savings_goals
@@ -237,8 +349,12 @@ export class MigrationService {
           ALTER TABLE savings_goals ADD COLUMN savings_account_id TEXT;
         `);
         console.log('✅ Colonne savings_account_id ajoutée à savings_goals');
-      } catch (error) {
-        console.log('ℹ️ Colonne savings_account_id existe déjà dans savings_goals');
+      } catch (error: any) {
+        if (error.message?.includes('duplicate column name')) {
+          console.log('ℹ️ Colonne savings_account_id existe déjà dans savings_goals');
+        } else {
+          errors.push(`Erreur savings_account_id savings_goals: ${error}`);
+        }
       }
 
       try {
@@ -246,12 +362,16 @@ export class MigrationService {
           ALTER TABLE savings_goals ADD COLUMN contribution_account_id TEXT;
         `);
         console.log('✅ Colonne contribution_account_id ajoutée à savings_goals');
-      } catch (error) {
-        console.log('ℹ️ Colonne contribution_account_id existe déjà dans savings_goals');
+      } catch (error: any) {
+        if (error.message?.includes('duplicate column name')) {
+          console.log('ℹ️ Colonne contribution_account_id existe déjà dans savings_goals');
+        } else {
+          errors.push(`Erreur contribution_account_id savings_goals: ${error}`);
+        }
       }
 
       console.log('✅ Migration des colonnes account_id terminée avec succès');
-      return { success: true, errors: [] };
+      return { success: errors.length === 0, errors };
 
     } catch (error) {
       const errorMessage = `Erreur lors de la migration: ${error}`;
@@ -261,7 +381,7 @@ export class MigrationService {
     }
   }
 
-  // ✅ NOUVELLE MÉTHODE : Mettre à jour les données existantes avec account_id
+  // ✅ MÉTHODE : Mettre à jour les données existantes avec account_id
   public async updateExistingDataWithAccountIds(): Promise<{ success: boolean; updated: number; errors: string[] }> {
     const db = await getDatabase();
     const errors: string[] = [];
@@ -492,7 +612,7 @@ export class MigrationService {
     return results;
   }
 
-  // ✅ NOUVELLE MÉTHODE : Vérifier la présence des colonnes account_id
+  // ✅ MÉTHODE : Vérifier la présence des colonnes account_id
   public async verifyAccountIdColumns(): Promise<{ 
     table: string; 
     hasAccountId: boolean; 
@@ -538,7 +658,7 @@ export class MigrationService {
     return results;
   }
 
-  // ✅ NOUVELLE MÉTHODE : Migration complète incluant account_id
+  // ✅ MÉTHODE : Migration complète incluant account_id
   public async completeMigration(mysqlData?: MySQLData): Promise<{ 
     success: boolean; 
     steps: {

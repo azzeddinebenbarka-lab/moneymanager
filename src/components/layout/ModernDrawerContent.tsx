@@ -1,4 +1,4 @@
-// src/components/layout/ModernDrawerContent.tsx - VERSION COMPLÈTEMENT CORRIGÉE
+// src/components/layout/ModernDrawerContent.tsx - VERSION AVEC MENU ISLAMIQUE
 import { Ionicons } from '@expo/vector-icons';
 import { DrawerContentComponentProps } from '@react-navigation/drawer';
 import React from 'react';
@@ -10,12 +10,14 @@ import {
   View,
 } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
+import { useIslamicCharges } from '../../hooks/useIslamicCharges'; // ✅ NOUVEAU
 
 const ModernDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
   const { theme, toggleTheme } = useTheme();
+  const { settings: islamicSettings } = useIslamicCharges(); // ✅ NOUVEAU
   const isDark = theme === 'dark';
 
-  // Structure COMPLÈTE avec tous les écrans fonctionnels
+  // Structure COMPLÈTE avec tous les écrans fonctionnels + section islamique
   const menuSections = [
     {
       title: 'TABLEAU DE BORD',
@@ -92,13 +94,24 @@ const ModernDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
         },
       ],
     },
+    // ✅ NOUVELLE SECTION : CHARGES ISLAMIQUES
+    ...(islamicSettings.isEnabled ? [{
+      title: 'CHARGES ISLAMIQUES',
+      items: [
+        {
+          label: '⭐ Charges Islamiques',
+          icon: 'star' as const,
+          screen: 'IslamicCharges',
+        },
+      ],
+    }] : []),
     {
       title: 'ANALYTICS ET RAPPORTS',
       items: [
         {
           label: 'Analytics & Rapports',
           icon: 'bar-chart' as const,
-          screen: 'AnalyticsDashboard', // ✅ CORRECTION : Utiliser le bon nom d'écran
+          screen: 'AnalyticsDashboard',
         },
         {
           label: 'Vue par Mois',
@@ -131,7 +144,7 @@ const ModernDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
           screen: 'Settings',
         },
         {
-          label: 'Devises', // ✅ MAINTENANT FONCTIONNEL
+          label: 'Devises',
           icon: 'cash' as const,
           screen: 'CurrencySettings',
         },
@@ -203,6 +216,13 @@ const ModernDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
         <View style={styles.userInfo}>
           <Text style={styles.userName}>MoneyManager</Text>
           <Text style={styles.userEmail}>Gestion Financière</Text>
+          {/* ✅ NOUVEAU : Indicateur mode islamique */}
+          {islamicSettings.isEnabled && (
+            <View style={styles.islamicIndicator}>
+              <Ionicons name="star" size={12} color="#FFD700" />
+              <Text style={styles.islamicIndicatorText}>Mode Islamique Activé</Text>
+            </View>
+          )}
         </View>
       </View>
 
@@ -215,7 +235,9 @@ const ModernDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
           <View key={section.title} style={styles.section}>
             <Text style={[
               styles.sectionTitle,
-              isDark && styles.darkSectionTitle
+              isDark && styles.darkSectionTitle,
+              // ✅ NOUVEAU : Style spécial pour section islamique
+              section.title.includes('ISLAMIQUES') && styles.islamicSectionTitle
             ]}>
               {section.title}
             </Text>
@@ -223,6 +245,8 @@ const ModernDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
             <View style={styles.sectionItems}>
               {section.items.map((item) => {
                 const isActive = isScreenActive(item.screen);
+                const isIslamic = item.label.includes('⭐');
+                
                 return (
                   <TouchableOpacity
                     key={item.screen}
@@ -230,6 +254,8 @@ const ModernDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
                       styles.menuItem,
                       isActive && styles.activeMenuItem,
                       isDark && styles.darkMenuItem,
+                      // ✅ NOUVEAU : Style spécial pour items islamiques
+                      isIslamic && styles.islamicMenuItem
                     ]}
                     onPress={() => handleNavigation(item.screen)}
                     activeOpacity={0.7}
@@ -238,13 +264,17 @@ const ModernDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
                       <View style={[
                         styles.iconWrapper,
                         isActive && styles.activeIconWrapper,
-                        isDark && styles.darkIconWrapper
+                        isDark && styles.darkIconWrapper,
+                        // ✅ NOUVEAU : Style spécial pour icônes islamiques
+                        isIslamic && styles.islamicIconWrapper
                       ]}>
                         <Ionicons 
                           name={item.icon} 
                           size={20} 
                           color={
-                            isActive ? '#007AFF' : (isDark ? '#FFFFFF' : '#000000')
+                            isActive ? '#007AFF' : 
+                            isIslamic ? '#FFD700' :
+                            (isDark ? '#FFFFFF' : '#000000')
                           } 
                         />
                       </View>
@@ -252,6 +282,8 @@ const ModernDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
                         styles.menuItemText,
                         isDark && styles.darkMenuItemText,
                         isActive && styles.activeMenuText,
+                        // ✅ NOUVEAU : Style spécial pour texte islamique
+                        isIslamic && styles.islamicMenuText
                       ]}>
                         {item.label}
                       </Text>
@@ -260,6 +292,13 @@ const ModernDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
                     {isActive && (
                       <View style={styles.activeIndicator}>
                         <Ionicons name="chevron-forward" size={16} color="#007AFF" />
+                      </View>
+                    )}
+
+                    {/* ✅ NOUVEAU : Badge "Nouveau" pour fonctionnalités islamiques */}
+                    {isIslamic && !isActive && (
+                      <View style={styles.newBadge}>
+                        <Text style={styles.newBadgeText}>Nouveau</Text>
                       </View>
                     )}
                   </TouchableOpacity>
@@ -320,6 +359,17 @@ const ModernDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
               isDark && styles.darkStatText
             ]}>Menu Fonctionnel</Text>
           </View>
+          
+          {/* ✅ NOUVEAU : Indicateur mode islamique */}
+          {islamicSettings.isEnabled && (
+            <View style={styles.statItem}>
+              <Ionicons name="star" size={16} color="#FFD700" />
+              <Text style={[
+                styles.statText,
+                isDark && styles.darkStatText
+              ]}>Mode Islamique</Text>
+            </View>
+          )}
         </View>
       </View>
     </View>
@@ -377,10 +427,23 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.8)',
     marginBottom: 2,
   },
-  versionText: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.6)',
-    fontStyle: 'italic',
+  // ✅ NOUVEAU : Indicateur islamique dans le header
+  islamicIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 215, 0, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginTop: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.4)',
+  },
+  islamicIndicatorText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#FFD700',
+    marginLeft: 4,
   },
   menuContainer: {
     flex: 1,
@@ -401,6 +464,15 @@ const styles = StyleSheet.create({
   },
   darkSectionTitle: {
     color: '#8E8E93',
+  },
+  // ✅ NOUVEAU : Style spécial pour section islamique
+  islamicSectionTitle: {
+    color: '#B8860B',
+    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
   },
   sectionItems: {
     paddingHorizontal: 8,
@@ -426,6 +498,12 @@ const styles = StyleSheet.create({
   darkMenuItem: {
     // Style spécifique sombre
   },
+  // ✅ NOUVEAU : Style spécial pour items islamiques
+  islamicMenuItem: {
+    backgroundColor: 'rgba(255, 215, 0, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.2)',
+  },
   activeMenuItem: {
     backgroundColor: 'rgba(0, 122, 255, 0.1)',
   },
@@ -449,6 +527,10 @@ const styles = StyleSheet.create({
   darkIconWrapper: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
+  // ✅ NOUVEAU : Style spécial pour icônes islamiques
+  islamicIconWrapper: {
+    backgroundColor: 'rgba(255, 215, 0, 0.2)',
+  },
   menuItemText: {
     fontSize: 16,
     fontWeight: '500',
@@ -462,8 +544,26 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontWeight: '600',
   },
+  // ✅ NOUVEAU : Style spécial pour texte islamique
+  islamicMenuText: {
+    color: '#B8860B',
+    fontWeight: '600',
+  },
   activeIndicator: {
     padding: 4,
+  },
+  // ✅ NOUVEAU : Badge "Nouveau"
+  newBadge: {
+    backgroundColor: '#FF3B30',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginLeft: 8,
+  },
+  newBadgeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
   },
   footer: {
     padding: 20,
