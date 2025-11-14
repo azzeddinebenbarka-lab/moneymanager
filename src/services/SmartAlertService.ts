@@ -8,7 +8,7 @@ export interface AlertRule {
   condition: (data: any) => boolean;
   priority: AlertPriority;
   type: AlertType;
-  generateAlert: (data: any) => Omit<Alert, 'id' | 'createdAt'>; // ✅ CORRIGÉ
+  generateAlert: (data: any) => Omit<Alert, 'id' | 'createdAt'>;
   isEnabled: boolean;
   cooldown?: number;
   lastTriggered?: number;
@@ -24,6 +24,7 @@ export class SmartAlertService {
   private static instance: SmartAlertService;
   private rules: AlertRule[] = [];
   private cooldownCache: Map<string, number> = new Map();
+  private fallbackMode: boolean = false;
 
   private constructor() {
     this.initializeRules();
@@ -60,10 +61,10 @@ export class SmartAlertService {
               ...alertData,
               id: `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
               createdAt: new Date().toISOString(),
-              userId, // ✅ AJOUTÉ
-              status: 'active', // ✅ AJOUTÉ
-              updatedAt: new Date().toISOString(), // ✅ AJOUTÉ
-              read: false // ✅ CORRIGÉ
+              userId,
+              status: 'active',
+              updatedAt: new Date().toISOString(),
+              read: false
             };
 
             alerts.push(alert);
@@ -118,7 +119,7 @@ export class SmartAlertService {
               userId,
               status: 'active',
               updatedAt: new Date().toISOString(),
-              read: false // ✅ CORRIGÉ
+              read: false
             };
 
             alerts.push(alert);
@@ -148,10 +149,9 @@ export class SmartAlertService {
       const analysisData = await this.gatherAnalysisData(userId);
       const scheduledAlerts: Alert[] = [];
 
-      // Alertes quotidiennes
       const dailyRules = this.rules.filter(rule => 
         rule.isEnabled && 
-        rule.type === 'summary' && // ✅ CORRIGÉ : 'summary' au lieu de 'daily'
+        rule.type === 'summary' &&
         !this.isInCooldown(rule.id)
       );
 
@@ -166,12 +166,11 @@ export class SmartAlertService {
               userId,
               status: 'active',
               updatedAt: new Date().toISOString(),
-              read: false // ✅ CORRIGÉ
+              read: false
             };
 
             scheduledAlerts.push(alert);
 
-            // Cooldown d'une journée
             this.cooldownCache.set(rule.id, Date.now() + (24 * 60 * 60 * 1000));
           }
         } catch (error) {
@@ -215,7 +214,7 @@ export class SmartAlertService {
               userId,
               status: 'active',
               updatedAt: new Date().toISOString(),
-              read: false // ✅ CORRIGÉ
+              read: false
             };
 
             alerts.push(alert);
@@ -265,7 +264,7 @@ export class SmartAlertService {
               userId,
               status: 'active',
               updatedAt: new Date().toISOString(),
-              read: false // ✅ CORRIGÉ
+              read: false
             };
 
             alerts.push(alert);
@@ -315,7 +314,7 @@ export class SmartAlertService {
               userId,
               status: 'active',
               updatedAt: new Date().toISOString(),
-              read: false // ✅ CORRIGÉ
+              read: false
             };
 
             alerts.push(alert);
@@ -371,46 +370,77 @@ export class SmartAlertService {
 
   private async gatherAnalysisData(userId: string): Promise<any> {
     try {
-      const { accountService } = await import('./accountService');
-      const { transactionService } = await import('./transactionService');
-      const { budgetService } = await import('./budgetService');
-      const { debtService } = await import('./debtService');
-      const { savingsService } = await import('./savingsService');
-      const { calculationService } = await import('./calculationService');
+      // Si en mode fallback, retourner données minimales
+      if (this.fallbackMode) {
+        console.log('🔄 [SmartAlertService] Mode fallback activé');
+        return this.getFallbackData(userId);
+      }
 
-      const [
-        accounts,
-        transactions,
-        budgets,
-        debts,
-        savingsGoals,
-        cashFlow,
-        netWorth
-      ] = await Promise.all([
-        accountService.getAllAccounts(userId),
-        transactionService.getRecentTransactions(30, userId),
-        budgetService.getAllBudgets(userId),
-        debtService.getAllDebts(userId),
-        savingsService.getAllSavingsGoals(userId),
-        calculationService.calculateCashFlow(userId),
-        calculationService.calculateNetWorth(userId)
-      ]);
+      // Tentative de chargement normal avec gestion d'erreurs
+      try {
+        const { accountService } = await import('./accountService');
+        const { transactionService } = await import('./transactionService');
+        const { budgetService } = await import('./budgetService');
+        const { debtService } = await import('./debtService');
+        const { savingsService } = await import('./savingsService');
+        const { calculationService } = await import('./calculationService');
 
-      return {
-        accounts,
-        transactions,
-        budgets,
-        debts,
-        savingsGoals,
-        cashFlow,
-        netWorth,
-        analysisTimestamp: Date.now(),
-        userId
-      };
+        const [
+          accounts,
+          transactions,
+          budgets,
+          debts,
+          savingsGoals,
+          cashFlow,
+          netWorth
+        ] = await Promise.all([
+          accountService.getAllAccounts(userId).catch(() => []),
+          transactionService.getRecentTransactions(30, userId).catch(() => []),
+          budgetService.getAllBudgets(userId).catch(() => []),
+          debtService.getAllDebts(userId).catch(() => []),
+          savingsService.getAllSavingsGoals(userId).catch(() => []),
+          calculationService.calculateCashFlow(userId).catch(() => ({ income: 0, expenses: 0, netFlow: 0 })),
+          calculationService.calculateNetWorth(userId).catch(() => 0)
+        ]);
+
+        return {
+          accounts,
+          transactions,
+          budgets,
+          debts,
+          savingsGoals,
+          cashFlow,
+          netWorth,
+          analysisTimestamp: Date.now(),
+          userId,
+          fallbackMode: false
+        };
+      } catch (error) {
+        console.warn('⚠️ [SmartAlertService] Fallback to minimal data due to error:', error);
+        this.fallbackMode = true;
+        return this.getFallbackData(userId);
+      }
+
     } catch (error) {
       console.error('❌ [SmartAlertService] Erreur collecte données analyse:', error);
-      throw error;
+      this.fallbackMode = true;
+      return this.getFallbackData(userId);
     }
+  }
+
+  private getFallbackData(userId: string): any {
+    return {
+      accounts: [],
+      transactions: [],
+      budgets: [],
+      debts: [],
+      savingsGoals: [],
+      cashFlow: { income: 0, expenses: 0, netFlow: 0 },
+      netWorth: 0,
+      analysisTimestamp: Date.now(),
+      userId,
+      fallbackMode: true
+    };
   }
 
   private isInCooldown(ruleId: string): boolean {
@@ -449,10 +479,10 @@ export class SmartAlertService {
         type: 'transaction',
         priority: 'medium',
         category: 'spending',
-        userId: data.userId, // ✅ AJOUTÉ
-        status: 'active', // ✅ AJOUTÉ
-        updatedAt: new Date().toISOString(), // ✅ AJOUTÉ
-        read: false, // ✅ CORRIGÉ
+        userId: data.userId,
+        status: 'active',
+        updatedAt: new Date().toISOString(),
+        read: false,
         data: {
           transactionId: data.recentTransaction.id,
           amount: Math.abs(data.recentTransaction.amount),
@@ -473,6 +503,7 @@ export class SmartAlertService {
       isEnabled: true,
       cooldown: 2 * 60 * 60 * 1000,
       condition: (data) => {
+        if (data.fallbackMode) return false;
         return data.budgets?.some((budget: any) => {
           const percentage = (budget.spent / budget.amount) * 100;
           return budget.isActive && percentage >= 90;
@@ -520,6 +551,7 @@ export class SmartAlertService {
       isEnabled: true,
       cooldown: 24 * 60 * 60 * 1000,
       condition: (data) => {
+        if (data.fallbackMode) return false;
         const today = new Date();
         return data.debts?.some((debt: any) => {
           if (debt.status !== 'active') return false;
@@ -574,6 +606,7 @@ export class SmartAlertService {
       isEnabled: true,
       cooldown: 7 * 24 * 60 * 60 * 1000,
       condition: (data) => {
+        if (data.fallbackMode) return false;
         return data.savingsGoals?.some((goal: any) => {
           const progress = (goal.currentAmount / goal.targetAmount) * 100;
           return !goal.isCompleted && progress >= 75 && progress < 100;
@@ -621,6 +654,7 @@ export class SmartAlertService {
       isEnabled: true,
       cooldown: 6 * 60 * 60 * 1000,
       condition: (data) => {
+        if (data.fallbackMode) return false;
         return data.accounts?.some((account: any) => 
           account.isActive && account.balance < 100 && account.balance > 0
         ) || false;
@@ -659,7 +693,7 @@ export class SmartAlertService {
       name: 'Résumé quotidien',
       description: 'Résumé financier quotidien',
       priority: 'low',
-      type: 'summary', // ✅ CORRIGÉ : 'summary' au lieu de 'daily'
+      type: 'summary',
       isEnabled: true,
       condition: (data) => true,
       generateAlert: (data) => {
@@ -700,13 +734,20 @@ export class SmartAlertService {
     totalRules: number;
     enabledRules: number;
     activeCooldowns: number;
-    lastAnalysis?: number;
+    fallbackMode: boolean;
   } {
     return {
       totalRules: this.rules.length,
       enabledRules: this.rules.filter(rule => rule.isEnabled).length,
-      activeCooldowns: this.cooldownCache.size
+      activeCooldowns: this.cooldownCache.size,
+      fallbackMode: this.fallbackMode
     };
+  }
+
+  // ✅ NOUVELLE MÉTHODE : Réinitialiser le mode fallback
+  resetFallbackMode(): void {
+    this.fallbackMode = false;
+    console.log('🔄 Mode fallback réinitialisé');
   }
 }
 

@@ -54,6 +54,61 @@ interface DatabaseAccount {
 }
 
 export const accountService = {
+  // ✅ NOUVELLE MÉTHODE : Valider un compte pour opération
+  async validateAccountForOperation(
+    accountId: string, 
+    amount: number = 0, 
+    operationType: 'debit' | 'credit' = 'debit'
+  ): Promise<{ isValid: boolean; message?: string; account?: Account }> {
+    try {
+      const account = await this.getAccountById(accountId);
+      
+      if (!account) {
+        return { isValid: false, message: 'Compte introuvable' };
+      }
+
+      if (!account.isActive) {
+        return { isValid: false, message: 'Le compte est désactivé', account };
+      }
+
+      if (operationType === 'debit' && account.balance < amount) {
+        return { 
+          isValid: false, 
+          message: `Solde insuffisant. Disponible: ${account.balance} MAD`, 
+          account 
+        };
+      }
+
+      return { isValid: true, account };
+    } catch (error) {
+      console.error('❌ [accountService] Erreur validation compte:', error);
+      return { isValid: false, message: 'Erreur lors de la validation du compte' };
+    }
+  },
+
+  // ✅ MÉTHODE : Trouver un compte valide pour opération
+  async findValidAccountForOperation(
+    amount: number = 0,
+    excludeAccountIds: string[] = [],
+    userId: string = 'default-user'
+  ): Promise<Account | null> {
+    try {
+      const accounts = await this.getAllAccounts(userId);
+      
+      const validAccounts = accounts.filter(account => 
+        account.isActive &&
+        account.balance >= amount &&
+        !excludeAccountIds.includes(account.id) &&
+        account.type !== 'savings'
+      );
+
+      return validAccounts.length > 0 ? validAccounts[0] : null;
+    } catch (error) {
+      console.error('❌ [accountService] Erreur recherche compte valide:', error);
+      return null;
+    }
+  },
+
   // ✅ MÉTHODE : Mapper les champs JavaScript vers les colonnes SQL
   mapFieldToColumn(field: string): string {
     const fieldMap: { [key: string]: string } = {
@@ -69,7 +124,6 @@ export const accountService = {
     try {
       const db = await getDatabase();
       
-      // Vérifier si la table existe
       const tableExists = await db.getFirstAsync(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='accounts'"
       );
@@ -96,7 +150,6 @@ export const accountService = {
       } else {
         console.log('🔍 [accountService] Checking accounts table structure...');
         
-        // Vérifier la structure de la table
         const tableInfo = await db.getAllAsync(`PRAGMA table_info(accounts)`) as any[];
         
         const requiredColumns = [
@@ -147,13 +200,11 @@ export const accountService = {
 
       console.log('🔄 [accountService] Creating account:', { id, ...accountData });
 
-      // Validation des données
       const validation = this.validateAccountData(accountData);
       if (!validation.isValid) {
         throw new Error(validation.errors.join(', '));
       }
 
-      // Utiliser MAD comme devise par défaut
       const currency = accountData.currency || 'MAD';
 
       await db.runAsync(
@@ -295,7 +346,6 @@ export const accountService = {
         return;
       }
 
-      // ✅ CORRECTION : Construction sécurisée de la requête
       const setParts: string[] = [];
       const values: any[] = [];
 
@@ -304,18 +354,16 @@ export const accountService = {
         setParts.push(`${dbField} = ?`);
         
         const value = (updates as any)[field];
-        // Convertir les booléens en integers pour SQLite
         values.push(field === 'isActive' ? (value ? 1 : 0) : value);
       });
 
       const setClause = setParts.join(', ');
       
-      // ✅ CORRECTION : Ajouter les conditions WHERE
       values.push(id, userId);
 
       console.log('🔄 [accountService] Executing update:', {
         setClause,
-        values: values.slice(0, -2), // Ne pas logger les IDs
+        values: values.slice(0, -2),
         id,
         userId
       });
@@ -601,6 +649,14 @@ export const accountService = {
         throw new Error('Compte destination non trouvé');
       }
 
+      if (!fromAccount.isActive) {
+        throw new Error('Le compte source est désactivé');
+      }
+
+      if (!toAccount.isActive) {
+        throw new Error('Le compte destination est désactivé');
+      }
+
       if (fromAccount.balance < amount) {
         throw new Error('Fonds insuffisants sur le compte source');
       }
@@ -614,15 +670,14 @@ export const accountService = {
       await db.execAsync('BEGIN TRANSACTION');
 
       try {
-        // Mettre à jour le compte source
         const newFromBalance = fromAccount.balance - amount;
+        const newToBalance = toAccount.balance + amount;
+        
         await db.runAsync(
           'UPDATE accounts SET balance = ? WHERE id = ? AND user_id = ?',
           [newFromBalance, fromAccountId, userId]
         );
 
-        // Mettre à jour le compte destination
-        const newToBalance = toAccount.balance + amount;
         await db.runAsync(
           'UPDATE accounts SET balance = ? WHERE id = ? AND user_id = ?',
           [newToBalance, toAccountId, userId]
@@ -782,7 +837,6 @@ export const accountService = {
       let migratedCount = 0;
       
       for (const account of accounts) {
-        // Si la devise n'est pas MAD, la migrer
         if (account.currency !== 'MAD') {
           await db.runAsync(
             'UPDATE accounts SET currency = ? WHERE id = ? AND user_id = ?',

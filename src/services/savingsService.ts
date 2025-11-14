@@ -1,4 +1,4 @@
-// src/services/savingsService.ts - VERSION COMPLÈTE AVEC SUPPRESSION DES TRANSACTIONS
+// src/services/savingsService.ts - VERSION COMPLÈTEMENT CORRIGÉE
 import {
   CreateSavingsGoalData,
   SavingsContribution,
@@ -8,7 +8,6 @@ import {
 } from '../types/Savings';
 import { accountService } from './accountService';
 import { getDatabase } from './database/sqlite';
-import { transactionService } from './transactionService';
 import { transferService } from './transferService';
 
 interface DatabaseSavingsGoal {
@@ -38,15 +37,6 @@ interface DatabaseSavingsContribution {
   from_account_id?: string;
 }
 
-interface ExtendedTransactionFilters {
-  year?: number;
-  month?: number;
-  accountId?: string;
-  type?: 'income' | 'expense';
-  category?: string;
-  description?: string; // ✅ AJOUT DE LA PROPRIÉTÉ MANQUANTE
-}
-
 export const savingsService = {
   // ✅ MÉTHODE AMÉLIORÉE : Supprimer un objectif d'épargne avec ses transactions
   async deleteSavingsGoalWithTransactions(
@@ -70,20 +60,17 @@ export const savingsService = {
       await db.execAsync('BEGIN TRANSACTION');
 
       try {
-        // 1. Supprimer toutes les contributions associées
         const contributionsDeleted = await db.runAsync(
           'DELETE FROM savings_contributions WHERE goal_id = ? AND user_id = ?',
           [goalId, userId]
         );
         console.log(`✅ [savingsService] ${contributionsDeleted.changes || 0} contributions supprimées`);
 
-        // 2. ✅ SUPPRESSION AMÉLIORÉE : Supprimer les transactions liées si demandé
         let transactionsDeleted = 0;
         if (deleteTransactions) {
           transactionsDeleted = await this.deleteRelatedTransactions(goalId, userId);
         }
 
-        // 3. Supprimer l'objectif d'épargne
         await db.runAsync(
           'DELETE FROM savings_goals WHERE id = ? AND user_id = ?',
           [goalId, userId]
@@ -118,7 +105,6 @@ export const savingsService = {
 
       let deletedCount = 0;
 
-      // ✅ STRATÉGIE 1 : Rechercher par nom de l'objectif dans la description
       const searchPatterns = [
         `%Épargne: ${goal.name}%`,
         `%épargne: ${goal.name}%`,
@@ -133,11 +119,11 @@ export const savingsService = {
 
       for (const pattern of searchPatterns) {
         try {
-          const transactions = await transactionService.getAllTransactions(userId).then(allTransactions => 
-  allTransactions.filter(tx => 
-    tx.description && tx.description.toLowerCase().includes(pattern.replace(/%/g, '').toLowerCase())
-  )
-);
+          const { transactionService } = await import('./transactionService');
+          const allTransactions = await transactionService.getAllTransactions(userId);
+          const transactions = allTransactions.filter(tx => 
+            tx.description && tx.description.toLowerCase().includes(pattern.replace(/%/g, '').toLowerCase())
+          );
 
           for (const transaction of transactions) {
             try {
@@ -153,9 +139,9 @@ export const savingsService = {
         }
       }
 
-      // ✅ STRATÉGIE 2 : Rechercher les transactions de transfert liées aux comptes d'épargne
       if (goal.savingsAccountId) {
         try {
+          const { transactionService } = await import('./transactionService');
           const savingsTransactions = await transactionService.getTransactionsByAccount(goal.savingsAccountId, userId);
           
           const relatedTransactions = savingsTransactions.filter(tx => 
@@ -185,7 +171,6 @@ export const savingsService = {
       
     } catch (error) {
       console.error('❌ [savingsService] Error deleting related transactions:', error);
-      // Ne pas bloquer la suppression de l'objectif si erreur sur les transactions
       return 0;
     }
   },
@@ -217,7 +202,6 @@ export const savingsService = {
         let totalRefunded = 0;
         let refundedContributions = 0;
 
-        // Rembourser les contributions seulement si demandé
         for (const contribution of contributions.reverse()) {
           if (contribution.fromAccountId && goal.savingsAccountId) {
             console.log('💰 [savingsService] Refunding contribution:', {
@@ -253,19 +237,16 @@ export const savingsService = {
           }
         }
 
-        // Supprimer les contributions
         await db.runAsync(
           'DELETE FROM savings_contributions WHERE goal_id = ? AND user_id = ?',
           [goalId, userId]
         );
 
-        // ✅ Supprimer les transactions liées si demandé
         let transactionsDeleted = 0;
         if (deleteTransactions) {
           transactionsDeleted = await this.deleteRelatedTransactions(goalId, userId);
         }
 
-        // Supprimer l'objectif
         await db.runAsync(
           'DELETE FROM savings_goals WHERE id = ? AND user_id = ?',
           [goalId, userId]
@@ -295,7 +276,6 @@ export const savingsService = {
 
       let totalCount = 0;
 
-      // Rechercher par nom de l'objectif
       const searchPatterns = [
         `%Épargne: ${goal.name}%`,
         `%épargne: ${goal.name}%`,
@@ -306,11 +286,11 @@ export const savingsService = {
 
       for (const pattern of searchPatterns) {
         try {
-          const transactions = await transactionService.getAllTransactions(userId).then(allTransactions => 
-  allTransactions.filter(tx => 
-    tx.description && tx.description.toLowerCase().includes(pattern.replace(/%/g, '').toLowerCase())
-  )
-);
+          const { transactionService } = await import('./transactionService');
+          const allTransactions = await transactionService.getAllTransactions(userId);
+          const transactions = allTransactions.filter(tx => 
+            tx.description && tx.description.toLowerCase().includes(pattern.replace(/%/g, '').toLowerCase())
+          );
           totalCount += transactions.length;
         } catch (error) {
           console.warn(`⚠️ [savingsService] Error counting transactions with pattern ${pattern}:`, error);
@@ -334,7 +314,6 @@ export const savingsService = {
 
       const allRelatedTransactions: any[] = [];
 
-      // Rechercher par nom de l'objectif
       const searchPatterns = [
         `%Épargne: ${goal.name}%`,
         `%épargne: ${goal.name}%`,
@@ -345,11 +324,11 @@ export const savingsService = {
 
       for (const pattern of searchPatterns) {
         try {
-          const transactions = await transactionService.getAllTransactions(userId).then(allTransactions => 
-  allTransactions.filter(tx => 
-    tx.description && tx.description.toLowerCase().includes(pattern.replace(/%/g, '').toLowerCase())
-  )
-);
+          const { transactionService } = await import('./transactionService');
+          const allTransactions = await transactionService.getAllTransactions(userId);
+          const transactions = allTransactions.filter(tx => 
+            tx.description && tx.description.toLowerCase().includes(pattern.replace(/%/g, '').toLowerCase())
+          );
           
           allRelatedTransactions.push(...transactions.map(tx => ({
             ...tx,
@@ -360,7 +339,6 @@ export const savingsService = {
         }
       }
 
-      // Éliminer les doublons
       const uniqueTransactions = allRelatedTransactions.filter((tx, index, self) =>
         index === self.findIndex(t => t.id === tx.id)
       );
@@ -374,7 +352,106 @@ export const savingsService = {
     }
   },
 
-  // MÉTHODES EXISTANTES
+  // ✅ MÉTHODE AMÉLIORÉE : Ajouter une contribution avec validation de compte
+  async addContribution(goalId: string, amount: number, fromAccountId?: string, userId: string = 'default-user'): Promise<string> {
+    try {
+      console.log('🔄 [savingsService] Ajout contribution avec validation...', { 
+        goalId, 
+        amount, 
+        fromAccountId 
+      });
+      
+      const goal = await this.getSavingsGoalById(goalId, userId);
+      if (!goal) {
+        throw new Error('Objectif d\'épargne non trouvé');
+      }
+
+      let effectiveFromAccountId = fromAccountId;
+      let effectiveSavingsAccountId = goal.savingsAccountId;
+
+      // ✅ VALIDATION COMPTE SOURCE
+      if (!effectiveFromAccountId) {
+        const validAccount = await accountService.findValidAccountForOperation(amount);
+        if (validAccount) {
+          effectiveFromAccountId = validAccount.id;
+          console.log('💰 [savingsService] Compte source auto-assigné:', effectiveFromAccountId);
+        } else {
+          throw new Error('Aucun compte source disponible avec suffisamment de fonds');
+        }
+      }
+
+      // ✅ VALIDATION COMPTE SOURCE
+      const sourceValidation = await accountService.validateAccountForOperation(effectiveFromAccountId, amount, 'debit');
+      if (!sourceValidation.isValid) {
+        throw new Error(sourceValidation.message || 'Compte source invalide');
+      }
+
+      // ✅ VALIDATION COMPTE ÉPARGNE
+      if (!effectiveSavingsAccountId) {
+        const savingsAccounts = await accountService.getAccountsByType('savings');
+        const activeSavingsAccounts = savingsAccounts.filter(acc => acc.isActive);
+        
+        if (activeSavingsAccounts.length > 0) {
+          effectiveSavingsAccountId = activeSavingsAccounts[0].id;
+          await this.updateSavingsGoal(goalId, { savingsAccountId: effectiveSavingsAccountId }, userId);
+          console.log('💰 [savingsService] Compte épargne auto-assigné:', effectiveSavingsAccountId);
+        } else {
+          throw new Error('Aucun compte d\'épargne actif disponible');
+        }
+      }
+
+      const savingsValidation = await accountService.validateAccountForOperation(effectiveSavingsAccountId);
+      if (!savingsValidation.isValid) {
+        throw new Error(savingsValidation.message || 'Compte épargne invalide');
+      }
+
+      console.log('💰 [savingsService] Création transfert épargne...', {
+        fromAccountId: effectiveFromAccountId,
+        toAccountId: effectiveSavingsAccountId,
+        amount
+      });
+
+      // ✅ UTILISER transferService CORRIGÉ
+      await transferService.executeSavingsTransfer({
+        fromAccountId: effectiveFromAccountId,
+        toAccountId: effectiveSavingsAccountId,
+        amount: amount,
+        description: `Épargne: ${goal.name}`,
+        date: new Date().toISOString().split('T')[0],
+      }, goal.name, userId);
+      
+      console.log('✅ [savingsService] Transfert créé avec succès');
+
+      const db = await getDatabase();
+      const id = `contrib_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const date = new Date().toISOString().split('T')[0];
+      const createdAt = new Date().toISOString();
+
+      await this.ensureContributionsTableExists();
+
+      await db.runAsync(
+        `INSERT INTO savings_contributions (id, goal_id, user_id, amount, date, created_at, from_account_id) 
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [id, goalId, userId, amount, date, createdAt, effectiveFromAccountId]
+      );
+
+      const newAmount = goal.currentAmount + amount;
+      const isCompleted = newAmount >= goal.targetAmount;
+
+      await db.runAsync(
+        `UPDATE savings_goals SET current_amount = ?, is_completed = ? WHERE id = ? AND user_id = ?`,
+        [newAmount, isCompleted ? 1 : 0, goalId, userId]
+      );
+
+      console.log('✅ [savingsService] Contribution ajoutée avec succès');
+      return id;
+    } catch (error) {
+      console.error('❌ [savingsService] Error in addContribution:', error);
+      throw error;
+    }
+  },
+
+  // MÉTHODES EXISTANTES (conservées pour compatibilité)
   async createSavingsGoal(goalData: CreateSavingsGoalData, userId: string = 'default-user'): Promise<string> {
     try {
       const db = await getDatabase();
@@ -544,102 +621,6 @@ export const savingsService = {
       console.log('✅ [savingsService] Savings goal deleted successfully');
     } catch (error) {
       console.error('❌ [savingsService] Error in deleteSavingsGoal:', error);
-      throw error;
-    }
-  },
-
-  async addContribution(goalId: string, amount: number, fromAccountId?: string, userId: string = 'default-user'): Promise<string> {
-    try {
-      const db = await getDatabase();
-      const id = `contrib_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const date = new Date().toISOString().split('T')[0];
-      const createdAt = new Date().toISOString();
-
-      console.log('🔄 [savingsService] Adding contribution:', { 
-        goalId, 
-        amount, 
-        fromAccountId,
-        userId 
-      });
-      
-      const goal = await this.getSavingsGoalById(goalId, userId);
-      if (!goal) {
-        throw new Error('Objectif d\'épargne non trouvé');
-      }
-
-      let effectiveFromAccountId = fromAccountId;
-      let effectiveSavingsAccountId = goal.savingsAccountId;
-
-      if (!effectiveFromAccountId) {
-        const allAccounts = await accountService.getAllAccounts();
-        const sourceAccounts = allAccounts.filter(acc => 
-          acc.type !== 'savings' && acc.balance > 0
-        );
-        
-        if (sourceAccounts.length > 0) {
-          effectiveFromAccountId = sourceAccounts[0].id;
-          console.log('💰 [savingsService] Auto-assigned from account:', effectiveFromAccountId);
-        } else {
-          throw new Error('Aucun compte source disponible pour le transfert');
-        }
-      }
-
-      if (!effectiveSavingsAccountId) {
-        const savingsAccounts = await accountService.getAccountsByType('savings');
-        if (savingsAccounts.length > 0) {
-          effectiveSavingsAccountId = savingsAccounts[0].id;
-          await this.updateSavingsGoal(goalId, { savingsAccountId: effectiveSavingsAccountId }, userId);
-          console.log('💰 [savingsService] Auto-assigned savings account:', effectiveSavingsAccountId);
-        } else {
-          throw new Error('Aucun compte d\'épargne disponible pour recevoir les fonds');
-        }
-      }
-
-      const fromAccount = await accountService.getAccountById(effectiveFromAccountId);
-      if (!fromAccount) {
-        throw new Error('Compte source non trouvé');
-      }
-
-      if (fromAccount.balance < amount) {
-        throw new Error(`Solde insuffisant sur ${fromAccount.name}. Solde disponible: ${fromAccount.balance}`);
-      }
-
-      console.log('💰 [savingsService] Creating transfer...', {
-        fromAccountId: effectiveFromAccountId,
-        toAccountId: effectiveSavingsAccountId,
-        amount
-      });
-
-      await transferService.executeSavingsTransfer({
-        fromAccountId: effectiveFromAccountId,
-        toAccountId: effectiveSavingsAccountId,
-        amount: amount,
-        description: `Épargne: ${goal.name}`,
-        date: date,
-      }, goal.name, userId);
-      
-      console.log('✅ [savingsService] Transfer created successfully');
-
-      await this.ensureContributionsTableExists();
-
-      await db.runAsync(
-        `INSERT INTO savings_contributions (id, goal_id, user_id, amount, date, created_at, from_account_id) 
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [id, goalId, userId, amount, date, createdAt, effectiveFromAccountId]
-      );
-
-      const newAmount = goal.currentAmount + amount;
-      const isCompleted = newAmount >= goal.targetAmount;
-
-      await db.runAsync(
-        `UPDATE savings_goals SET current_amount = ?, is_completed = ? WHERE id = ? AND user_id = ?`,
-        [newAmount, isCompleted ? 1 : 0, goalId, userId]
-      );
-
-      console.log('✅ [savingsService] Contribution added successfully');
-      return id;
-    } catch (error) {
-      console.error('❌ [savingsService] Error in addContribution:', error);
       throw error;
     }
   },

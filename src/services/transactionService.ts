@@ -1,4 +1,4 @@
-// src/services/transactionService.ts - VERSION SANS CYCLE
+// src/services/transactionService.ts - VERSION COMPLÈTEMENT CORRIGÉE
 import { Transaction } from '../types';
 import { generateId } from '../utils/numberUtils';
 import { getDatabase } from './database/sqlite';
@@ -141,41 +141,36 @@ const validateTransactionData = (transaction: Omit<Transaction, 'id' | 'createdA
   return true;
 };
 
-// ✅ FONCTION POUR METTRE À JOUR LES BUDGETS APRÈS UNE DÉPENSE (import dynamique)
+// ✅ FONCTION POUR METTRE À JOUR LES BUDGETS APRÈS UNE DÉPENSE
 const updateBudgetsAfterExpense = async (userId: string = 'default-user'): Promise<void> => {
   try {
-    // Import dynamique pour éviter le cycle
     const { budgetService } = await import('./budgetService');
     await budgetService.updateBudgetSpentFromTransactions(userId);
     console.log('💰 [transactionService] Budgets mis à jour après transaction de dépense');
   } catch (budgetError) {
     console.warn('⚠️ [transactionService] Erreur mise à jour budgets:', budgetError);
-    // Ne pas bloquer la création de transaction si erreur budgets
   }
 };
 
 export const transactionService = {
-  // ✅ CRÉATION AVEC LOGIQUE COHÉRENTE
-  async createTransaction(
+  // ✅ FONCTION MANQUANTE AJOUTÉE
+  async createTransactionWithoutBalanceUpdate(
     transactionData: Omit<Transaction, 'id' | 'createdAt'>, 
     userId: string = 'default-user'
   ): Promise<string> {
     try {
-      console.log('🔄 [transactionService] Création transaction...', {
+      console.log('🔄 [transactionService] Création transaction sans mise à jour solde...', {
         type: transactionData.type,
         montant: transactionData.amount,
-        compte: transactionData.accountId,
-        catégorie: transactionData.category
+        compte: transactionData.accountId
       });
       
-      // Validation des données
       validateTransactionData(transactionData);
       
       const db = await getDatabase();
       const transactionId = generateId();
       const createdAt = new Date().toISOString();
       
-      // ✅ 1. CRÉER LA TRANSACTION
       await db.runAsync(
         `INSERT INTO transactions (id, user_id, amount, type, category, account_id, description, date, created_at) 
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -192,10 +187,51 @@ export const transactionService = {
         ]
       );
 
-      // ✅ 2. METTRE À JOUR LE SOLDE DU COMPTE
+      console.log('✅ [transactionService] Transaction créée sans mise à jour solde:', transactionId);
+      return transactionId;
+    } catch (error) {
+      console.error('❌ [transactionService] Erreur création transaction sans solde:', error);
+      throw error;
+    }
+  },
+
+  // ✅ CRÉATION AVEC LOGIQUE COHÉRENTE
+  async createTransaction(
+    transactionData: Omit<Transaction, 'id' | 'createdAt'>, 
+    userId: string = 'default-user'
+  ): Promise<string> {
+    try {
+      console.log('🔄 [transactionService] Création transaction...', {
+        type: transactionData.type,
+        montant: transactionData.amount,
+        compte: transactionData.accountId,
+        catégorie: transactionData.category
+      });
+      
+      validateTransactionData(transactionData);
+      
+      const db = await getDatabase();
+      const transactionId = generateId();
+      const createdAt = new Date().toISOString();
+      
+      await db.runAsync(
+        `INSERT INTO transactions (id, user_id, amount, type, category, account_id, description, date, created_at) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          transactionId,
+          userId,
+          transactionData.amount,
+          transactionData.type,
+          transactionData.category,
+          transactionData.accountId,
+          transactionData.description || '',
+          transactionData.date,
+          createdAt
+        ]
+      );
+
       await updateAccountBalanceFromTransaction(transactionData);
 
-      // ✅ 3. METTRE À JOUR LES BUDGETS SI C'EST UNE DÉPENSE
       if (transactionData.type === 'expense') {
         await updateBudgetsAfterExpense(userId);
       }
@@ -219,18 +255,15 @@ export const transactionService = {
       
       const db = await getDatabase();
       
-      // Récupérer l'ancienne transaction
       const oldTransaction = await this.getTransactionById(id, userId);
       if (!oldTransaction) {
         throw new Error('Transaction non trouvée');
       }
 
-      // Annuler l'effet de l'ancienne transaction
       if (oldTransaction.accountId) {
         await revertTransactionEffect(oldTransaction);
       }
 
-      // Mettre à jour la transaction
       const setParts: string[] = [];
       const values: any[] = [];
 
@@ -252,13 +285,11 @@ export const transactionService = {
         );
       }
 
-      // Appliquer la nouvelle transaction
       const updatedTransaction = { ...oldTransaction, ...updates };
       if (updatedTransaction.accountId) {
         await applyTransactionEffect(updatedTransaction);
       }
 
-      // Mettre à jour les budgets si c'est une dépense
       if (updatedTransaction.type === 'expense') {
         await updateBudgetsAfterExpense(userId);
       }
@@ -277,24 +308,20 @@ export const transactionService = {
       
       const db = await getDatabase();
       
-      // Récupérer la transaction avant suppression
       const transaction = await this.getTransactionById(id, userId);
       if (!transaction) {
         throw new Error('Transaction non trouvée');
       }
 
-      // Annuler l'effet de la transaction
       if (transaction.accountId) {
         await revertTransactionEffect(transaction);
       }
 
-      // Supprimer la transaction
       await db.runAsync(
         'DELETE FROM transactions WHERE id = ? AND user_id = ?',
         [id, userId]
       );
 
-      // Mettre à jour les budgets si c'était une dépense
       if (transaction.type === 'expense') {
         await updateBudgetsAfterExpense(userId);
       }
@@ -354,7 +381,6 @@ export const transactionService = {
       
       const params: any[] = [userId];
       
-      // Appliquer les filtres
       if (filters.year && filters.month) {
         query += ` AND strftime('%Y', date) = ? AND strftime('%m', date) = ?`;
         params.push(filters.year.toString(), filters.month.toString().padStart(2, '0'));

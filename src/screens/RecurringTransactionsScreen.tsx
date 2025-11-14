@@ -139,12 +139,6 @@ const RecurringTransactionsScreen = ({ navigation }: any) => {
         </TouchableOpacity>
 
         <View style={styles.actionButtons}>
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.editButton]}
-            onPress={() => navigation.navigate('EditRecurringTransaction', { transactionId: item.id })}
-          >
-            <Ionicons name="create-outline" size={16} color="#007AFF" />
-          </TouchableOpacity>
           
           <TouchableOpacity 
             style={[styles.actionButton, styles.deleteButton]}

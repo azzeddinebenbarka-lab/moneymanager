@@ -50,7 +50,6 @@ export const debtService = {
     try {
       const db = await getDatabase();
       
-      // Vérifier si la table existe
       const tableExists = await db.getFirstAsync(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='debts'"
       );
@@ -87,11 +86,9 @@ export const debtService = {
       } else {
         console.log('🔍 [debtService] Checking debts table structure...');
         
-        // Vérifier la structure de la table
         const tableInfo = await db.getAllAsync(`PRAGMA table_info(debts)`) as any[];
         console.log('📋 [debtService] Table structure:', tableInfo);
         
-        // ✅ AJOUTER TOUTES LES COLONNES MANQUANTES
         const requiredColumns = [
           { name: 'notes', type: 'TEXT' },
           { name: 'start_date', type: 'TEXT' },
@@ -131,7 +128,6 @@ export const debtService = {
    */
   async createDebt(debtData: CreateDebtData, userId: string = 'default-user'): Promise<string> {
     try {
-      // ✅ S'ASSURER QUE LA TABLE EXISTE AVANT TOUTE OPÉRATION
       await this.ensureDebtsTableExists();
 
       const db = await getDatabase();
@@ -140,9 +136,8 @@ export const debtService = {
 
       console.log('🔄 [debtService] Creating debt:', { id, ...debtData });
 
-      // ✅ CALCUL AUTOMATIQUE DU STATUT ET DU MOIS D'ÉCHÉANCE
       const dueDate = new Date(debtData.dueDate);
-      const dueMonth = dueDate.toISOString().slice(0, 7); // Format "YYYY-MM"
+      const dueMonth = dueDate.toISOString().slice(0, 7);
       const now = new Date();
       
       let status: Debt['status'] = 'active';
@@ -164,12 +159,12 @@ export const debtService = {
           debtData.name,
           debtData.creditor,
           debtData.initialAmount,
-          debtData.initialAmount, // current_amount = initial_amount au début
+          debtData.initialAmount,
           debtData.interestRate,
           debtData.monthlyPayment,
           debtData.startDate,
           debtData.dueDate,
-          dueMonth, // ✅ NOUVEAU CHAMP
+          dueMonth,
           status,
           debtData.category,
           debtData.color,
@@ -194,7 +189,6 @@ export const debtService = {
    */
   async getAllDebts(userId: string = 'default-user'): Promise<Debt[]> {
     try {
-      // ✅ S'ASSURER QUE LA TABLE EXISTE AVANT TOUTE OPÉRATION
       await this.ensureDebtsTableExists();
 
       const db = await getDatabase();
@@ -261,9 +255,8 @@ export const debtService = {
   }): PaymentEligibility {
     const now = new Date();
     const dueDate = new Date(params.dueDate);
-    const currentMonth = now.toISOString().slice(0, 7); // "YYYY-MM" actuel
+    const currentMonth = now.toISOString().slice(0, 7);
     
-    // ✅ VÉRIFICATIONS DE BASE
     if (params.currentAmount <= 0 || params.status === 'paid') {
       return { 
         isEligible: false, 
@@ -275,12 +268,10 @@ export const debtService = {
       };
     }
 
-    // ✅ RÈGLE PRINCIPALE : Paiement uniquement pendant le mois d'échéance
     const isCurrentMonth = params.dueMonth === currentMonth;
     const isPastDue = dueDate < now && !isCurrentMonth;
     const isFutureDue = dueDate > now && !isCurrentMonth;
 
-    // ✅ DETTE DU MOIS EN COURS : Sera traitée normalement
     if (isCurrentMonth) {
       return { 
         isEligible: true,
@@ -292,7 +283,6 @@ export const debtService = {
       };
     }
 
-    // ✅ DETTE ANCIENNE : Ne sera PAS traitée avant son mois d'échéance
     if (isPastDue) {
       return { 
         isEligible: false, 
@@ -304,7 +294,6 @@ export const debtService = {
       };
     }
 
-    // ✅ DETTE FUTURE : Attend son mois d'échéance
     if (isFutureDue) {
       const nextEligibleDate = new Date(params.dueMonth + '-01');
       return { 
@@ -329,7 +318,7 @@ export const debtService = {
   },
 
   /**
-   * ✅ AJOUT DE PAIEMENT AVEC VÉRIFICATION STRICTE D'ÉLIGIBILITÉ
+   * ✅ AJOUT DE PAIEMENT AVEC VÉRIFICATION STRICTE D'ÉLIGIBILITÉ ET DE COMPTE
    */
   async addPayment(
     debtId: string, 
@@ -341,14 +330,13 @@ export const debtService = {
       const db = await getDatabase();
       const id = `payment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const paymentDate = new Date().toISOString().split('T')[0];
-      const paymentMonth = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+      const paymentMonth = new Date().toISOString().slice(0, 7);
       const createdAt = new Date().toISOString();
 
-      console.log('🔄 [debtService] Adding payment:', { 
+      console.log('🔄 [debtService] Adding payment with validation:', { 
         debtId, 
         amount, 
-        fromAccountId,
-        paymentMonth 
+        fromAccountId 
       });
 
       const debt = await this.getDebtById(debtId, userId);
@@ -361,34 +349,32 @@ export const debtService = {
         throw new Error(debt.paymentEligibility.reason || 'Paiement non autorisé');
       }
 
-      // ✅ PAIMENT MANUEL : Impossible si hors période
-      if (!debt.paymentEligibility.isCurrentMonth) {
-        throw new Error('Paiement manuel non autorisé hors période d\'échéance');
+      let effectiveFromAccountId = fromAccountId;
+
+      // ✅ SI AUCUN COMPTE SPÉCIFIÉ, UTILISER CELUI DE LA DETTE
+      if (!effectiveFromAccountId && debt.paymentAccountId) {
+        effectiveFromAccountId = debt.paymentAccountId;
+        console.log('💰 [debtService] Utilisation compte paiement dette:', effectiveFromAccountId);
       }
 
-      let effectiveFromAccountId = fromAccountId;
+      // ✅ FALLBACK : TROUVER UN COMPTE VALIDE
       if (!effectiveFromAccountId) {
-        const allAccounts = await accountService.getAllAccounts();
-        const sourceAccounts = allAccounts.filter(acc => 
-          acc.type !== 'savings' && acc.balance >= amount
-        );
-        
-        if (sourceAccounts.length > 0) {
-          effectiveFromAccountId = sourceAccounts[0].id;
-          console.log('💰 [debtService] Auto-assigned from account:', effectiveFromAccountId);
+        const validAccount = await accountService.findValidAccountForOperation(amount);
+        if (validAccount) {
+          effectiveFromAccountId = validAccount.id;
+          console.log('💰 [debtService] Compte auto-assigné:', effectiveFromAccountId);
         } else {
           throw new Error('Aucun compte source disponible avec suffisamment de fonds');
         }
       }
 
-      const fromAccount = await accountService.getAccountById(effectiveFromAccountId);
-      if (!fromAccount) {
-        throw new Error('Compte source non trouvé');
+      // ✅ VALIDATION FINALE DU COMPTE
+      const validation = await accountService.validateAccountForOperation(effectiveFromAccountId, amount, 'debit');
+      if (!validation.isValid) {
+        throw new Error(validation.message || 'Compte source invalide');
       }
 
-      if (fromAccount.balance < amount) {
-        throw new Error(`Solde insuffisant sur ${fromAccount.name}. Solde disponible: ${fromAccount.balance}€`);
-      }
+      const fromAccount = validation.account!;
 
       // Calculer la répartition principal/intérêts
       const monthlyInterest = (debt.currentAmount * debt.interestRate) / 100 / 12;
@@ -402,7 +388,7 @@ export const debtService = {
 
       try {
         // ✅ TRANSFERT VERS LE COMPTE VIRTUEL DES DETTES
-        await transferService.executeTransfer({
+        await transferService.executeTransferWithoutTransaction({
           fromAccountId: effectiveFromAccountId,
           toAccountId: 'debt_account', // Compte virtuel pour les dettes
           amount: amount,
@@ -430,7 +416,7 @@ export const debtService = {
             principal,
             interest,
             newBalance,
-            paymentMonth // ✅ NOUVEAU CHAMP
+            paymentMonth
           ]
         );
 
@@ -472,7 +458,6 @@ export const debtService = {
 
       for (const debt of debts) {
         if (debt.currentAmount <= 0) {
-          // Dette payée
           if (debt.status !== 'paid') {
             await this.updateDebt(debt.id, { status: 'paid' }, userId);
             changes++;
@@ -484,15 +469,12 @@ export const debtService = {
         const dueMonth = debt.dueMonth;
         let newStatus = debt.status;
 
-        // ✅ DETTE FUTURE → ACTIVE si le mois d'échéance est arrivé
         if (debt.status === 'future' && dueMonth === currentMonth) {
           newStatus = 'active';
         }
-        // ✅ DETTE ACTIVE → OVERDUE si la date est passée
         else if (debt.status === 'active' && dueDate < now && dueMonth !== currentMonth) {
           newStatus = 'overdue';
         }
-        // ✅ DETTE OVERDUE → ACTIVE si on est dans le mois d'échéance
         else if (debt.status === 'overdue' && dueMonth === currentMonth) {
           newStatus = 'active';
         }
@@ -575,7 +557,6 @@ export const debtService = {
       const fields = Object.keys(updates);
       if (fields.length === 0) return;
 
-      // ✅ GESTION DES CHAMPS SPÉCIAUX
       const dbFields = fields.map(field => {
         const mapping: { [key: string]: string } = {
           'initialAmount': 'initial_amount',
@@ -595,7 +576,6 @@ export const debtService = {
 
       const values = fields.map(field => {
         const value = (updates as any)[field];
-        // Conversion booléenne pour autoPay
         if (field === 'autoPay') {
           return value ? 1 : 0;
         }
@@ -759,7 +739,6 @@ export const debtService = {
         return sum + monthlyInterest;
       }, 0);
 
-      // ✅ DETTES DU MOIS EN COURS
       const dueThisMonth = debts.filter(debt => 
         debt.dueMonth === currentMonth && 
         (debt.status === 'active' || debt.status === 'overdue')
@@ -781,7 +760,6 @@ export const debtService = {
       const progressPercentage = totalPaid > 0 ? 
         (totalPaid / (totalPaid + totalRemaining)) * 100 : 0;
 
-      // Calcul simplifié de la date de libération
       const activeDebtsList = debts.filter(debt => 
         debt.status === 'active' || debt.status === 'overdue'
       );

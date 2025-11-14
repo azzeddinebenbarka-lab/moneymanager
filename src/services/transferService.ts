@@ -27,15 +27,23 @@ export const transferService = {
       const toAccount = await accountService.getAccountById(transferData.toAccountId);
 
       if (!fromAccount) {
-        throw new Error('Compte source introuvable');
+        throw new Error(`Compte source introuvable: ${transferData.fromAccountId}`);
       }
 
       if (!toAccount) {
-        throw new Error('Compte destination introuvable');
+        throw new Error(`Compte destination introuvable: ${transferData.toAccountId}`);
+      }
+
+      if (!fromAccount.isActive) {
+        throw new Error('Le compte source est désactivé');
+      }
+
+      if (!toAccount.isActive) {
+        throw new Error('Le compte destination est désactivé');
       }
 
       if (fromAccount.balance < transferData.amount) {
-        throw new Error('Fonds insuffisants sur le compte source');
+        throw new Error(`Fonds insuffisants sur ${fromAccount.name}. Solde disponible: ${fromAccount.balance} MAD`);
       }
 
       if (transferData.amount <= 0) {
@@ -46,7 +54,7 @@ export const transferService = {
       await transactionService.createTransactionWithoutBalanceUpdate({
         amount: -transferData.amount,
         type: 'expense',
-        category: 'transfert', // ✅ Catégorie spéciale pour exclusion des calculs
+        category: 'transfert',
         accountId: transferData.fromAccountId,
         description: `Transfert vers ${toAccount.name}${transferData.description ? ` - ${transferData.description}` : ''}`,
         date: transferData.date,
@@ -55,7 +63,7 @@ export const transferService = {
       await transactionService.createTransactionWithoutBalanceUpdate({
         amount: transferData.amount,
         type: 'income',
-        category: 'transfert', // ✅ Même catégorie pour exclusion
+        category: 'transfert',
         accountId: transferData.toAccountId,
         description: `Transfert depuis ${fromAccount.name}${transferData.description ? ` - ${transferData.description}` : ''}`,
         date: transferData.date,
@@ -87,21 +95,29 @@ export const transferService = {
     const db = await getDatabase();
     
     try {
-      console.log('🔄 [transferService] Début du transfert avec transaction:', transferData);
+      console.log('🔄 [transferService] Début du transfert avec validation renforcée:', transferData);
 
       const fromAccount = await accountService.getAccountById(transferData.fromAccountId);
       const toAccount = await accountService.getAccountById(transferData.toAccountId);
 
       if (!fromAccount) {
-        throw new Error('Compte source introuvable');
+        throw new Error(`Compte source introuvable: ${transferData.fromAccountId}`);
       }
 
       if (!toAccount) {
-        throw new Error('Compte destination introuvable');
+        throw new Error(`Compte destination introuvable: ${transferData.toAccountId}`);
+      }
+
+      if (!fromAccount.isActive) {
+        throw new Error('Le compte source est désactivé');
+      }
+
+      if (!toAccount.isActive) {
+        throw new Error('Le compte destination est désactivé');
       }
 
       if (fromAccount.balance < transferData.amount) {
-        throw new Error('Fonds insuffisants sur le compte source');
+        throw new Error(`Fonds insuffisants sur ${fromAccount.name}. Solde disponible: ${fromAccount.balance} MAD`);
       }
 
       if (transferData.amount <= 0) {
@@ -115,7 +131,7 @@ export const transferService = {
         await transactionService.createTransactionWithoutBalanceUpdate({
           amount: -transferData.amount,
           type: 'expense',
-          category: 'transfert', // ✅ Exclu des calculs de flux
+          category: 'transfert',
           accountId: transferData.fromAccountId,
           description: `Transfert vers ${toAccount.name}${transferData.description ? ` - ${transferData.description}` : ''}`,
           date: transferData.date,
@@ -124,7 +140,7 @@ export const transferService = {
         await transactionService.createTransactionWithoutBalanceUpdate({
           amount: transferData.amount,
           type: 'income',
-          category: 'transfert', // ✅ Exclu des calculs de flux
+          category: 'transfert',
           accountId: transferData.toAccountId,
           description: `Transfert depuis ${fromAccount.name}${transferData.description ? ` - ${transferData.description}` : ''}`,
           date: transferData.date,
@@ -170,6 +186,10 @@ export const transferService = {
         return { isValid: false, message: 'Compte source introuvable' };
       }
 
+      if (!fromAccount.isActive) {
+        return { isValid: false, message: 'Le compte source est désactivé' };
+      }
+
       if (amount <= 0) {
         return { isValid: false, message: 'Le montant doit être positif' };
       }
@@ -207,8 +227,16 @@ export const transferService = {
         throw new Error('Compte épargne introuvable');
       }
 
+      if (!fromAccount.isActive) {
+        throw new Error('Le compte source est désactivé');
+      }
+
+      if (!toAccount.isActive) {
+        throw new Error('Le compte épargne est désactivé');
+      }
+
       if (fromAccount.balance < transferData.amount) {
-        throw new Error('Fonds insuffisants sur le compte source');
+        throw new Error(`Fonds insuffisants sur ${fromAccount.name}. Solde disponible: ${fromAccount.balance} MAD`);
       }
 
       if (transferData.amount <= 0) {
@@ -222,7 +250,7 @@ export const transferService = {
         await transactionService.createTransactionWithoutBalanceUpdate({
           amount: -transferData.amount,
           type: 'expense',
-          category: 'épargne', // ✅ Exclu des calculs de flux
+          category: 'épargne',
           accountId: transferData.fromAccountId,
           description: `Épargne: ${goalName}`,
           date: transferData.date,
@@ -231,7 +259,7 @@ export const transferService = {
         await transactionService.createTransactionWithoutBalanceUpdate({
           amount: transferData.amount,
           type: 'income',
-          category: 'épargne', // ✅ Exclu des calculs de flux
+          category: 'épargne',
           accountId: transferData.toAccountId,
           description: `Épargne: ${goalName}`,
           date: transferData.date,
@@ -283,8 +311,16 @@ export const transferService = {
         throw new Error('Compte destination introuvable');
       }
 
+      if (!fromAccount.isActive) {
+        throw new Error('Le compte épargne est désactivé');
+      }
+
+      if (!toAccount.isActive) {
+        throw new Error('Le compte destination est désactivé');
+      }
+
       if (fromAccount.balance < transferData.amount) {
-        throw new Error('Fonds insuffisants sur le compte épargne');
+        throw new Error(`Fonds insuffisants sur le compte épargne. Solde disponible: ${fromAccount.balance} MAD`);
       }
 
       if (transferData.amount <= 0) {
@@ -298,7 +334,7 @@ export const transferService = {
         await transactionService.createTransactionWithoutBalanceUpdate({
           amount: -transferData.amount,
           type: 'expense',
-          category: 'remboursement épargne', // ✅ Exclu des calculs de flux
+          category: 'remboursement épargne',
           accountId: transferData.fromAccountId,
           description: `Remboursement: ${goalName}`,
           date: transferData.date,
@@ -307,7 +343,7 @@ export const transferService = {
         await transactionService.createTransactionWithoutBalanceUpdate({
           amount: transferData.amount,
           type: 'income',
-          category: 'remboursement épargne', // ✅ Exclu des calculs de flux
+          category: 'remboursement épargne',
           accountId: transferData.toAccountId,
           description: `Remboursement: ${goalName}`,
           date: transferData.date,
@@ -341,3 +377,5 @@ export const transferService = {
     }
   }
 };
+
+export default transferService;

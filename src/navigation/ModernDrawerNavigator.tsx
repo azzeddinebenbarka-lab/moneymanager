@@ -1,7 +1,7 @@
 // src/navigation/ModernDrawerNavigator.tsx - VERSION COMPLÈTEMENT CORRIGÉE
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createStackNavigator, StackNavigationOptions } from '@react-navigation/stack';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import ModernDrawerContent from '../components/layout/ModernDrawerContent';
@@ -78,6 +78,7 @@ type DrawerParamList = {
   // ✅ CORRECTION : Ajout de IslamicCharges
   IslamicCharges: undefined;
   IslamicSettings: undefined;
+  
   // Paramètres
   Profile: undefined;
   Settings: undefined;
@@ -94,9 +95,17 @@ type DrawerParamList = {
 const Drawer = createDrawerNavigator<DrawerParamList>();
 const Stack = createStackNavigator();
 
+// ✅ CORRECTION : Options de navigation avec ID
+const stackScreenOptions: StackNavigationOptions = {
+  headerShown: false
+};
+
 // Stack pour Tableau de Bord
 const DashboardStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
+  <Stack.Navigator 
+    screenOptions={stackScreenOptions}
+id="DashboardStack"
+  >
     <Stack.Screen name="DashboardMain" component={DashboardScreen} />
     <Stack.Screen name="AccountDetail" component={AccountDetailScreen} />
     <Stack.Screen name="Transfer" component={TransferScreen} />
@@ -105,7 +114,10 @@ const DashboardStack = () => (
 
 // Stack pour Transactions
 const TransactionStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
+  <Stack.Navigator 
+    screenOptions={stackScreenOptions}
+    id="TransactionStack"
+  >
     <Stack.Screen name="TransactionsList" component={TransactionsScreen} />
     <Stack.Screen name="AddTransaction" component={AddTransactionScreen} />
     <Stack.Screen name="EditTransaction" component={EditTransactionScreen} />
@@ -116,7 +128,10 @@ const TransactionStack = () => (
 
 // Stack pour Comptes
 const AccountsStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
+  <Stack.Navigator 
+    screenOptions={stackScreenOptions}
+    id="AccountsStack"
+  >
     <Stack.Screen name="AccountsList" component={AccountsScreen} />
     <Stack.Screen name="AccountDetail" component={AccountDetailScreen} />
     <Stack.Screen name="Transfer" component={TransferScreen} />
@@ -126,7 +141,10 @@ const AccountsStack = () => (
 
 // Stack pour Budgets
 const BudgetsStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
+  <Stack.Navigator 
+    screenOptions={stackScreenOptions}
+    id="BudgetsStack"
+  >
     <Stack.Screen name="BudgetsList" component={BudgetsScreen} />
     <Stack.Screen name="EditBudget" component={EditBudgetScreen} />
   </Stack.Navigator>
@@ -134,14 +152,20 @@ const BudgetsStack = () => (
 
 // Stack pour Catégories
 const CategoriesStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
+  <Stack.Navigator 
+    screenOptions={stackScreenOptions}
+    id="CategoriesStack"
+  >
     <Stack.Screen name="CategoriesList" component={CategoriesScreen} />
   </Stack.Navigator>
 );
 
 // Stack pour Analytics
 const AnalyticsStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
+  <Stack.Navigator 
+    screenOptions={stackScreenOptions}
+    id="AnalyticsStack"
+  >
     <Stack.Screen name="AnalyticsDashboard" component={AnalyticsDashboardScreen} />
     <Stack.Screen name="ReportsList" component={ReportsScreen} />
     <Stack.Screen name="CategoryAnalysis" component={CategoryAnalysisScreen} />
@@ -150,7 +174,10 @@ const AnalyticsStack = () => (
 
 // Stack pour Paramètres
 const SettingsStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
+  <Stack.Navigator 
+    screenOptions={stackScreenOptions}
+    id="SettingsStack"
+  >
     <Stack.Screen name="SettingsList" component={SettingsScreen} />
     <Stack.Screen name="Profile" component={ProfileScreen} />
     <Stack.Screen name="CurrencySettings" component={CurrencySettingsScreen} />
@@ -159,7 +186,10 @@ const SettingsStack = () => (
 
 // Stack pour Charges Annuelles
 const AnnualChargesStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
+  <Stack.Navigator 
+    screenOptions={stackScreenOptions}
+    id="AnnualChargesStack"
+  >
     <Stack.Screen name="AnnualChargesList" component={AnnualChargesScreen} />
     <Stack.Screen name="AddAnnualCharge" component={AddAnnualChargeScreen} />
     <Stack.Screen name="EditAnnualCharge" component={EditAnnualChargeScreen} />
@@ -168,16 +198,23 @@ const AnnualChargesStack = () => (
 
 // Stack pour Transactions Récurrentes
 const RecurringTransactionsStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
+  <Stack.Navigator 
+    screenOptions={stackScreenOptions}
+    id="RecurringTransactionsStack"
+  >
     <Stack.Screen name="RecurringTransactionsList" component={RecurringTransactionsScreen} />
     <Stack.Screen name="AddRecurringTransaction" component={AddRecurringTransactionScreen} />
-    <Stack.Screen name="EditRecurringTransaction" component={EditRecurringTransactionScreen} />
+    <Stack.Screen name="EditRecurringTransactionScreen" 
+  component={EditRecurringTransactionScreen} options={{ title: 'Modifier Transaction Récurrente' }} />
   </Stack.Navigator>
 );
 
 // Stack pour Vue par Mois
 const MonthsStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
+  <Stack.Navigator 
+    screenOptions={stackScreenOptions}
+    id="MonthsStack"
+  >
     <Stack.Screen name="MonthsOverview" component={MonthsOverviewScreen} />
     <Stack.Screen name="MonthDetail" component={MonthDetailScreen} />
   </Stack.Navigator>
@@ -185,7 +222,10 @@ const MonthsStack = () => (
 
 // ✅ NOUVEAU : Stack pour Charges Islamiques
 const IslamicChargesStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
+  <Stack.Navigator 
+    screenOptions={stackScreenOptions}
+    id="IslamicChargesStack"
+  >
     <Stack.Screen name="IslamicChargesList" component={IslamicChargesScreen} />
   </Stack.Navigator>
 );
@@ -220,6 +260,8 @@ const ModernDrawerNavigator = () => {
       drawerContent={(props) => <ModernDrawerContent {...props} />}
       screenOptions={drawerScreenOptions}
       initialRouteName="Dashboard"
+      // ✅ CORRECTION : Ajout de l'ID pour le Drawer
+      id="MainDrawer"
     >
       {/* SECTION PRINCIPALE */}
       <Drawer.Screen
@@ -433,6 +475,19 @@ const ModernDrawerNavigator = () => {
             </View>
           ),
           drawerLabel: "Paramètres",
+        }}
+      />
+
+      <Drawer.Screen 
+        name="CurrencySettings" 
+        component={CurrencySettingsScreen}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <View style={[styles.iconContainer, { backgroundColor: '#FFD60A' }]}>
+              <Ionicons name="cash" size={size-2} color="#000000" />
+            </View>
+          ),
+          drawerLabel: "Paramètres Devises",
         }}
       />
 
