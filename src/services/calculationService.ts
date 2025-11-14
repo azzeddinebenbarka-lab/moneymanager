@@ -1,4 +1,4 @@
-// src/services/calculationService.ts - VERSION COMPLÈTEMENT CORRIGÉE
+// src/services/calculationService.ts - VERSION CORRIGÉE POUR TRANSACTIONS UNIFIÉES
 import { Account, Debt, SavingsGoal, Transaction } from '../types';
 import { accountService } from './accountService';
 import { annualChargeService } from './annualChargeService';
@@ -63,7 +63,6 @@ export const calculationService = {
       const savingsGoals: SavingsGoal[] = await savingsService.getAllSavingsGoals(userId);
 
       // ✅ CORRECTION : Le patrimoine = solde des comptes - dettes
-      // L'épargne est déjà incluse dans les comptes d'épargne
       const totalAssets = accounts.reduce((sum: number, acc: Account) => sum + acc.balance, 0);
       
       const totalLiabilities = debts
@@ -72,7 +71,7 @@ export const calculationService = {
 
       const netWorth = totalAssets - totalLiabilities;
 
-      console.log('💰 [calculationService] Patrimoine calculé CORRECTEMENT:', {
+      console.log('💰 [calculationService] Patrimoine calculé:', {
         totalAssets,
         totalLiabilities,
         netWorth,
@@ -118,15 +117,16 @@ export const calculationService = {
         endDate = now;
       }
 
+      // ✅ CORRECTION : Utiliser le service unifié
       const allTransactions: Transaction[] = await transactionService.getAllTransactions(userId);
       
-      // ✅ CORRECTION CRITIQUE : Exclure TOUTES les transactions liées à l'épargne
+      // ✅ CORRECTION CRITIQUE : Exclure TOUTES les transactions liées à l'épargne et les récurrentes parent
       const periodTransactions = allTransactions.filter((t: Transaction) => {
         const transactionDate = new Date(t.date);
         const matchesDate = transactionDate >= startDate && transactionDate <= endDate;
         const matchesAccount = !accountId || t.accountId === accountId;
         
-        // ❌ EXCLURE : Toutes les transactions d'épargne et transferts
+        // ❌ EXCLURE : Transactions d'épargne, transferts et récurrentes parent
         const isTransfer = t.category === 'transfert';
         const isSavingsRelated = [
           'épargne',
@@ -137,7 +137,9 @@ export const calculationService = {
           'savings_cancel'
         ].includes(t.category || '');
         
-        return matchesDate && matchesAccount && !isTransfer && !isSavingsRelated;
+        const isRecurringParent = t.isRecurring && !t.parentTransactionId;
+        
+        return matchesDate && matchesAccount && !isTransfer && !isSavingsRelated && !isRecurringParent;
       });
 
       const income = periodTransactions
@@ -151,15 +153,14 @@ export const calculationService = {
       const netFlow = income - expenses;
       const savingsRate = income > 0 ? (netFlow / income) * 100 : 0;
       
-      console.log('💰 [calculationService] Flux financiers CORRECTS:', {
+      console.log('💰 [calculationService] Flux financiers:', {
         income,
         expenses,
         netFlow,
         savingsRate,
         periode: period,
         filters,
-        transactionsCount: periodTransactions.length,
-        excludedCategories: ['transfert', 'épargne', 'remboursement épargne', 'annulation épargne']
+        transactionsCount: periodTransactions.length
       });
       
       return { income, expenses, netFlow, savingsRate };
@@ -197,6 +198,7 @@ export const calculationService = {
       
       const totalSavings = savingsGoals.reduce((sum: number, goal: SavingsGoal) => sum + goal.currentAmount, 0);
 
+      // ✅ CORRECTION : Calcul des charges mensuelles
       const monthlyCharges = charges
         .filter((charge: any) => !charge.isPaid)
         .reduce((sum: number, charge: any) => {
@@ -217,13 +219,34 @@ export const calculationService = {
           return sum + monthlyAmount;
         }, 0);
 
+      // ✅ CORRECTION : Calcul des transactions récurrentes mensuelles
+      const recurringTransactions = await transactionService.getActiveRecurringTransactions(userId);
+      const monthlyRecurring = recurringTransactions.reduce((sum: number, tx: Transaction) => {
+        if (tx.type === 'expense') {
+          switch (tx.recurrenceType) {
+            case 'monthly':
+              return sum + Math.abs(tx.amount);
+            case 'yearly':
+              return sum + (Math.abs(tx.amount) / 12);
+            case 'weekly':
+              return sum + (Math.abs(tx.amount) * 4.33); // moyenne hebdomadaire en mensuel
+            case 'daily':
+              return sum + (Math.abs(tx.amount) * 30.44); // moyenne journalière en mensuel
+            default:
+              return sum + Math.abs(tx.amount);
+          }
+        }
+        return sum;
+      }, 0);
+
       const realBalance = accountsBalance - totalDebts;
-      const availableBalance = Math.max(0, realBalance - monthlyCharges);
+      const availableBalance = Math.max(0, realBalance - monthlyCharges - monthlyRecurring);
 
       console.log('💰 [calculationService] Solde réel calculé:', {
         accountsBalance,
         totalDebts,
         monthlyCharges,
+        monthlyRecurring,
         totalSavings,
         realBalance,
         availableBalance,
@@ -235,7 +258,7 @@ export const calculationService = {
         totalDebts,
         monthlyCharges,
         totalSavings,
-        monthlyRecurring: 0,
+        monthlyRecurring,
         realBalance,
         availableBalance,
         mainAccountBalance: mainAccount?.balance || 0
@@ -285,6 +308,7 @@ export const calculationService = {
     filters: CalculationFilters = {}
   ): Promise<RecentActivity[]> {
     try {
+      // ✅ CORRECTION : Utiliser le service unifié
       const [
         transactions,
         charges,
@@ -306,7 +330,11 @@ export const calculationService = {
           const matchesYear = transactionDate.getFullYear() === year;
           const matchesMonth = transactionDate.getMonth() + 1 === month;
           const matchesAccount = !accountId || transaction.accountId === accountId;
-          return matchesYear && matchesMonth && matchesAccount;
+          
+          // Exclure les transactions récurrentes parent
+          const isRecurringParent = transaction.isRecurring && !transaction.parentTransactionId;
+          
+          return matchesYear && matchesMonth && matchesAccount && !isRecurringParent;
         }
         return true;
       });
@@ -315,7 +343,7 @@ export const calculationService = {
         allActivities.push({
           id: transaction.id,
           type: 'transaction',
-          transactionType: transaction.type === 'transfer' ? 'expense' : transaction.type,
+          transactionType: transaction.type,
           description: transaction.description,
           amount: transaction.amount,
           date: transaction.date,

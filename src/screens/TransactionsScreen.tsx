@@ -1,4 +1,4 @@
-﻿// src/screens/TransactionsScreen.tsx - VERSION COMPLÈTEMENT CORRIGÉE
+﻿// src/screens/TransactionsScreen.tsx - VERSION UNIFIÉE AVEC ONGLETS
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
@@ -11,10 +11,13 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
+import TransactionCard from '../components/transaction/TransactionCard';
 import { useCurrency } from '../context/CurrencyContext';
 import { useTheme } from '../context/ThemeContext';
 import { useTransactions } from '../hooks/useTransactions';
 import { Transaction } from '../types';
+
+type TabType = 'all' | 'normal' | 'recurring';
 
 const TransactionsScreen = ({ navigation }: any) => {
   const { formatAmount } = useCurrency();
@@ -23,12 +26,15 @@ const TransactionsScreen = ({ navigation }: any) => {
     transactions, 
     loading, 
     error,
-    refreshTransactions 
+    refreshTransactions,
+    getStats
   } = useTransactions();
   
+  const [activeTab, setActiveTab] = useState<TabType>('all');
   const [refreshing, setRefreshing] = useState(false);
 
   const isDark = theme === 'dark';
+  const stats = getStats();
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -41,7 +47,6 @@ const TransactionsScreen = ({ navigation }: any) => {
     const unsubscribe = navigation.addListener('focus', () => {
       refreshTransactions();
     });
-
     return unsubscribe;
   }, [navigation, refreshTransactions]);
 
@@ -51,58 +56,47 @@ const TransactionsScreen = ({ navigation }: any) => {
     navigation.navigate('EditTransaction', { transactionId });
   };
 
+  // Filtrage des transactions par onglet
+  const getFilteredTransactions = (): Transaction[] => {
+    switch (activeTab) {
+      case 'normal':
+        return transactions.filter(transaction => !transaction.isRecurring);
+      case 'recurring':
+        return transactions.filter(transaction => transaction.isRecurring);
+      case 'all':
+      default:
+        return transactions;
+    }
+  };
+
+  const filteredTransactions = getFilteredTransactions();
+
   const renderTransactionItem = ({ item }: { item: Transaction }) => (
-    <TouchableOpacity 
+    <TransactionCard 
+      transaction={item}
+      onPress={() => handleTransactionPress(item.id)}
+    />
+  );
+
+  // Composant Onglets
+  const TabButton = ({ tab, label, count }: { tab: TabType; label: string; count: number }) => (
+    <TouchableOpacity
       style={[
-        styles.transactionItem,
-        isDark && styles.darkTransactionItem
+        styles.tabButton,
+        activeTab === tab && styles.tabButtonActive,
+        isDark && styles.darkTabButton,
+        activeTab === tab && isDark && styles.darkTabButtonActive,
       ]}
-      onPress={() => handleTransactionPress(item.id)} // ✅ CORRECTION : Appel de fonction
+      onPress={() => setActiveTab(tab)}
     >
-      <View style={styles.transactionLeft}>
-        <View style={[
-          styles.iconContainer,
-          { backgroundColor: item.type === 'income' ? '#34C75920' : '#FF3B3020' }
-        ]}>
-          <Ionicons 
-            name={item.type === 'income' ? 'arrow-down' : 'arrow-up'} 
-            size={20} 
-            color={item.type === 'income' ? '#34C759' : '#FF3B30'} 
-          />
-        </View>
-        <View style={styles.transactionInfo}>
-          <Text style={[
-            styles.transactionDescription,
-            isDark && styles.darkText
-          ]}>
-            {item.description || 'Sans description'}
-          </Text>
-          <Text style={[
-            styles.transactionCategory,
-            isDark && styles.darkSubtext
-          ]}>
-            {item.category}
-          </Text>
-          <Text style={[
-            styles.transactionDate,
-            isDark && styles.darkSubtext
-          ]}>
-            {new Date(item.date).toLocaleDateString('fr-FR', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric'
-            })}
-          </Text>
-        </View>
-      </View>
-      <View style={styles.transactionRight}>
-        <Text style={[
-          styles.transactionAmount,
-          { color: item.type === 'income' ? '#34C759' : '#FF3B30' }
-        ]}>
-          {item.type === 'income' ? '+' : '-'}{formatAmount(Math.abs(item.amount))} {/* ✅ CORRECTION : Syntaxe corrigée */}
-        </Text>
-      </View>
+      <Text style={[
+        styles.tabButtonText,
+        activeTab === tab && styles.tabButtonTextActive,
+        isDark && styles.darkTabButtonText,
+        activeTab === tab && isDark && styles.darkTabButtonTextActive,
+      ]}>
+        {label} ({count})
+      </Text>
     </TouchableOpacity>
   );
 
@@ -126,17 +120,92 @@ const TransactionsScreen = ({ navigation }: any) => {
         <Text style={[styles.title, isDark && styles.darkText]}>
           Transactions
         </Text>
-        <TouchableOpacity 
-          style={[styles.addButton, isDark && styles.darkAddButton]}
-          onPress={() => navigation.navigate('AddTransaction')}
-        >
-          <Ionicons name="add" size={24} color="#007AFF" />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity 
+            style={[styles.addButton, isDark && styles.darkAddButton]}
+            onPress={() => navigation.navigate('AddTransaction')}
+          >
+            <Ionicons name="add" size={20} color="#007AFF" />
+            <Text style={styles.addButtonText}>Normale</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.addButton, isDark && styles.darkAddButton]}
+            onPress={() => navigation.navigate('AddTransaction', { isRecurring: true })}
+          >
+            <Ionicons name="repeat" size={16} color="#007AFF" />
+            <Text style={styles.addButtonText}>Récurrente</Text>
+          </TouchableOpacity>
+        </View>
       </View>
+
+      {/* Onglets */}
+      <View style={[styles.tabsContainer, isDark && styles.darkTabsContainer]}>
+        <TabButton tab="all" label="Toutes" count={stats.total} />
+        <TabButton tab="normal" label="Normales" count={stats.normal} />
+        <TabButton tab="recurring" label="Récurrentes" count={stats.recurring} />
+      </View>
+
+      {/* Résumé statistique */}
+      {filteredTransactions.length > 0 && (
+        <View style={[styles.statsContainer, isDark && styles.darkStatsContainer]}>
+          <Text style={[styles.statsTitle, isDark && styles.darkText]}>
+            {activeTab === 'all' && 'Résumé global'}
+            {activeTab === 'normal' && 'Résumé transactions normales'}
+            {activeTab === 'recurring' && 'Résumé transactions récurrentes'}
+          </Text>
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+                Revenus
+              </Text>
+              <Text style={[styles.statValue, { color: '#34C759' }]}>
+                {formatAmount(
+                  filteredTransactions
+                    .filter(t => t.type === 'income')
+                    .reduce((sum, t) => sum + t.amount, 0)
+                )}
+              </Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+                Dépenses
+              </Text>
+              <Text style={[styles.statValue, { color: '#FF3B30' }]}>
+                {formatAmount(
+                  filteredTransactions
+                    .filter(t => t.type === 'expense')
+                    .reduce((sum, t) => sum + Math.abs(t.amount), 0)
+                )}
+              </Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+                Solde
+              </Text>
+              <Text style={[
+                styles.statValue, 
+                { 
+                  color: filteredTransactions.reduce((sum, t) => 
+                    t.type === 'income' ? sum + t.amount : sum - Math.abs(t.amount), 0
+                  ) >= 0 ? '#34C759' : '#FF3B30'
+                }
+              ]}>
+                {formatAmount(
+                  filteredTransactions.reduce((sum, t) => 
+                    t.type === 'income' ? sum + t.amount : sum - Math.abs(t.amount), 0
+                  )
+                )}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
 
       {/* Liste des transactions */}
       <FlatList
-        data={transactions}
+        data={filteredTransactions}
         renderItem={renderTransactionItem}
         keyExtractor={(item) => item.id}
         refreshControl={
@@ -151,89 +220,43 @@ const TransactionsScreen = ({ navigation }: any) => {
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Ionicons 
-              name="receipt-outline" 
+              name={activeTab === 'recurring' ? "repeat-outline" : "receipt-outline"}
               size={64} 
               color={isDark ? '#555' : '#ccc'} 
             />
             <Text style={[styles.emptyText, isDark && styles.darkText]}>
-              Aucune transaction
+              {activeTab === 'all' && 'Aucune transaction'}
+              {activeTab === 'normal' && 'Aucune transaction normale'}
+              {activeTab === 'recurring' && 'Aucune transaction récurrente'}
             </Text>
             <Text style={[styles.emptySubtext, isDark && styles.darkSubtext]}>
-              Ajoutez votre première transaction pour commencer
+              {activeTab === 'all' && 'Ajoutez votre première transaction pour commencer'}
+              {activeTab === 'normal' && 'Créez une transaction normale'}
+              {activeTab === 'recurring' && 'Créez une transaction récurrente'}
             </Text>
             <TouchableOpacity 
               style={styles.addEmptyButton}
-              onPress={() => navigation.navigate('AddTransaction')}
+              onPress={() => navigation.navigate('AddTransaction', { 
+                isRecurring: activeTab === 'recurring' 
+              })}
             >
-              <Text style={styles.addEmptyButtonText}>Ajouter une transaction</Text>
+              <Text style={styles.addEmptyButtonText}>
+                {activeTab === 'recurring' ? 'Créer une transaction récurrente' : 'Ajouter une transaction'}
+              </Text>
             </TouchableOpacity>
           </View>
-        }
-        ListHeaderComponent={
-          transactions.length > 0 ? (
-            <View style={[styles.statsContainer, isDark && styles.darkStatsContainer]}>
-              <Text style={[styles.statsTitle, isDark && styles.darkText]}>
-                Résumé du mois
-              </Text>
-              <View style={styles.statsRow}>
-                <View style={styles.statItem}>
-                  <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
-                    Revenus
-                  </Text>
-                  <Text style={[styles.statValue, { color: '#34C759' }]}>
-                    {formatAmount(
-                      transactions
-                        .filter(t => t.type === 'income')
-                        .reduce((sum, t) => sum + t.amount, 0)
-                    )}
-                  </Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
-                    Dépenses
-                  </Text>
-                  <Text style={[styles.statValue, { color: '#FF3B30' }]}>
-                    {formatAmount(
-                      transactions
-                        .filter(t => t.type === 'expense')
-                        .reduce((sum, t) => sum + t.amount, 0)
-                    )}
-                  </Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
-                    Solde
-                  </Text>
-                  <Text style={[
-                    styles.statValue, 
-                    { 
-                      color: transactions.reduce((sum, t) => 
-                        t.type === 'income' ? sum + t.amount : sum - t.amount, 0
-                      ) >= 0 ? '#34C759' : '#FF3B30'
-                    }
-                  ]}>
-                    {formatAmount(
-                      transactions.reduce((sum, t) => 
-                        t.type === 'income' ? sum + t.amount : sum - t.amount, 0
-                      )
-                    )}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          ) : null
         }
       />
 
       {/* Bouton d'ajout flottant */}
-      <TouchableOpacity 
-        style={styles.fab}
-        onPress={() => navigation.navigate('AddTransaction')}
-      >
-        <Ionicons name="add" size={24} color="#fff" />
-      </TouchableOpacity>
+      <View style={styles.fabContainer}>
+        <TouchableOpacity 
+          style={styles.fab}
+          onPress={() => navigation.navigate('AddTransaction')}
+        >
+          <Ionicons name="add" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };
@@ -275,19 +298,69 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000',
   },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
   addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f8f9fa',
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#f8f9fa',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 4,
   },
   darkAddButton: {
     backgroundColor: '#2c2c2e',
   },
-  listContent: {
-    paddingBottom: 100,
+  addButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#007AFF',
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  darkTabsContainer: {
+    backgroundColor: '#2c2c2e',
+    borderBottomColor: '#38383a',
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    borderRadius: 8,
+    marginHorizontal: 4,
+  },
+  tabButtonActive: {
+    backgroundColor: '#007AFF',
+  },
+  darkTabButton: {
+    backgroundColor: 'transparent',
+  },
+  darkTabButtonActive: {
+    backgroundColor: '#007AFF',
+  },
+  tabButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+  },
+  tabButtonTextActive: {
+    color: '#fff',
+  },
+  darkTabButtonText: {
+    color: '#888',
+  },
+  darkTabButtonTextActive: {
+    color: '#fff',
   },
   statsContainer: {
     backgroundColor: '#fff',
@@ -332,67 +405,16 @@ const styles = StyleSheet.create({
     height: 30,
     backgroundColor: '#e0e0e0',
   },
-  transactionItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    marginHorizontal: 16,
-    marginBottom: 8,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  darkTransactionItem: {
-    backgroundColor: '#2c2c2e',
-  },
-  transactionLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  transactionInfo: {
-    flex: 1,
-  },
-  transactionDescription: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-    marginBottom: 2,
-  },
-  transactionCategory: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 2,
-  },
-  transactionDate: {
-    fontSize: 12,
-    color: '#999',
-  },
-  transactionRight: {
-    alignItems: 'flex-end',
-  },
-  transactionAmount: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  listContent: {
+    paddingBottom: 100,
+    flexGrow: 1,
   },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 60,
     paddingHorizontal: 40,
+    flex: 1,
   },
   emptyText: {
     fontSize: 18,
@@ -400,6 +422,7 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 16,
     marginBottom: 8,
+    textAlign: 'center',
   },
   emptySubtext: {
     fontSize: 14,
@@ -418,10 +441,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  fab: {
+  fabContainer: {
     position: 'absolute',
     bottom: 30,
     right: 30,
+  },
+  fab: {
     width: 60,
     height: 60,
     borderRadius: 30,
