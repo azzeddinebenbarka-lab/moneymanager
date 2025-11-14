@@ -1,4 +1,4 @@
-// src/screens/AddTransactionScreen.tsx - VERSION COMPLÈTEMENT CORRIGÉE AVEC MAD
+// src/screens/AddTransactionScreen.tsx - VERSION UNIFIÉE COMPLÈTE
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useEffect, useState } from 'react';
@@ -13,21 +13,22 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
-import { useCurrency } from '../context/CurrencyContext'; // ✅ AJOUT
+import { useCurrency } from '../context/CurrencyContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useCategories } from '../hooks/useCategories';
 import { useTransactions } from '../hooks/useTransactions';
-import { Account, Category } from '../types';
+import { Account, Category, CreateTransactionData } from '../types';
 
 const AddTransactionScreen = ({ navigation, route }: any) => {
   const { theme } = useTheme();
-  const { formatAmount } = useCurrency(); // ✅ AJOUT
-  const { accounts, loading: accountsLoading, error: accountsError, refreshAccounts, createAccount } = useAccounts();
+  const { formatAmount } = useCurrency();
+  const { accounts, loading: accountsLoading, error: accountsError, refreshAccounts } = useAccounts();
   const { categories, loading: categoriesLoading } = useCategories();
   const { createTransaction } = useTransactions();
   
   const initialType = route.params?.initialType || 'expense';
+  const isRecurringInitial = route.params?.isRecurring || false;
   
   const [form, setForm] = useState({
     amount: '',
@@ -36,27 +37,34 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
     accountId: '',
     description: '',
     date: new Date(),
+    
+    // Champs de récurrence
+    isRecurring: isRecurringInitial,
+    recurrenceType: 'monthly' as 'daily' | 'weekly' | 'monthly' | 'yearly',
+    recurrenceEndDate: undefined as Date | undefined,
   });
+  
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [hasEndDate, setHasEndDate] = useState(false);
 
   const isDark = theme === 'dark';
 
-  // ✅ CORRECTION : Charger au focus de l'écran
+  const frequencyOptions = [
+    { value: 'daily', label: 'Quotidienne' },
+    { value: 'weekly', label: 'Hebdomadaire' },
+    { value: 'monthly', label: 'Mensuelle' },
+    { value: 'yearly', label: 'Annuelle' },
+  ];
+
+  // ✅ CORRECTION : Charger au focus
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      console.log('🎯 [AddTransactionScreen] Screen focused, loading accounts...');
       refreshAccounts();
     });
-
     return unsubscribe;
-  }, [navigation]);
-
-  // ✅ CORRECTION : Charger au montage
-  useEffect(() => {
-    console.log('🔍 [AddTransactionScreen] Component mounted');
-    refreshAccounts();
-  }, []);
+  }, [navigation, refreshAccounts]);
 
   // ✅ CORRECTION : Réinitialiser la catégorie quand le type change
   useEffect(() => {
@@ -86,18 +94,25 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
     try {
       const amount = form.type === 'expense' ? -Math.abs(parseFloat(form.amount)) : Math.abs(parseFloat(form.amount));
       
-      await createTransaction({
+      const transactionData: CreateTransactionData = {
         amount: amount,
         type: form.type,
         category: form.category,
         accountId: form.accountId,
         description: form.description,
         date: form.date.toISOString().split('T')[0],
-      });
+        isRecurring: form.isRecurring,
+        recurrenceType: form.isRecurring ? form.recurrenceType : undefined,
+        recurrenceEndDate: form.isRecurring && hasEndDate && form.recurrenceEndDate 
+          ? form.recurrenceEndDate.toISOString().split('T')[0] 
+          : undefined,
+      };
+
+      await createTransaction(transactionData);
 
       Alert.alert(
         'Succès',
-        'Transaction ajoutée avec succès',
+        `Transaction ${form.isRecurring ? 'récurrente ' : ''}ajoutée avec succès`,
         [{ 
           text: 'OK', 
           onPress: () => navigation.navigate('Transactions')
@@ -118,18 +133,19 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
     }
   };
 
+  const handleEndDateChange = (event: any, selectedDate?: Date) => {
+    setShowEndDatePicker(false);
+    if (selectedDate) {
+      setForm(prev => ({ ...prev, recurrenceEndDate: selectedDate }));
+    }
+  };
+
   // ✅ CORRECTION : Debug des comptes
   useEffect(() => {
     console.log('📊 [AddTransactionScreen] Accounts state:', {
       loading: accountsLoading,
       error: accountsError,
       count: accounts.length,
-      accounts: accounts.map((acc: Account) => ({ 
-        id: acc.id, 
-        name: acc.name, 
-        balance: acc.balance,
-        type: acc.type 
-      }))
     });
   }, [accounts, accountsLoading, accountsError]);
 
@@ -147,7 +163,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
             <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#000"} />
           </TouchableOpacity>
           <Text style={[styles.title, isDark && styles.darkText]}>
-            Nouvelle Transaction
+            {form.isRecurring ? 'Nouvelle Transaction Récurrente' : 'Nouvelle Transaction'}
           </Text>
         </View>
 
@@ -200,7 +216,6 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
             Montant *
           </Text>
           <View style={styles.amountContainer}>
-            {/* ✅ CORRECTION : Utiliser le symbole de devise dynamique */}
             <TextInput
               style={[
                 styles.input, 
@@ -214,6 +229,11 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
               keyboardType="decimal-pad"
             />
           </View>
+          {form.amount && (
+            <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+              {formatAmount(Math.abs(parseFloat(form.amount) || 0))}
+            </Text>
+          )}
         </View>
 
         {/* Catégorie */}
@@ -325,7 +345,6 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
                     ]}>
                       {account.name}
                     </Text>
-                    {/* ✅ CORRECTION : Utiliser formatAmount pour le solde */}
                     <Text style={[
                       styles.accountBalance,
                       form.accountId === account.id && styles.accountBalanceSelected,
@@ -376,6 +395,114 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
               display="default"
               onChange={handleDateChange}
             />
+          )}
+        </View>
+
+        {/* Section Récurrence */}
+        <View style={styles.inputGroup}>
+          <View style={styles.switchContainer}>
+            <Text style={[styles.label, isDark && styles.darkText]}>
+              Transaction récurrente
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.switch,
+                form.isRecurring && styles.switchActive,
+                isDark && styles.darkSwitch,
+              ]}
+              onPress={() => setForm(prev => ({ ...prev, isRecurring: !prev.isRecurring }))}
+            >
+              <View style={[
+                styles.switchThumb,
+                form.isRecurring && styles.switchThumbActive,
+              ]} />
+            </TouchableOpacity>
+          </View>
+          
+          {form.isRecurring && (
+            <>
+              <Text style={[styles.helperText, isDark && styles.darkSubtext]}>
+                Cette transaction se répétera automatiquement
+              </Text>
+
+              {/* Fréquence */}
+              <View style={styles.recurrenceSection}>
+                <Text style={[styles.subLabel, isDark && styles.darkText]}>Fréquence *</Text>
+                <View style={styles.frequencyContainer}>
+                  {frequencyOptions.map((freq) => (
+                    <TouchableOpacity
+                      key={freq.value}
+                      style={[
+                        styles.frequencyButton,
+                        form.recurrenceType === freq.value && styles.frequencyButtonSelected,
+                        isDark && styles.darkFrequencyButton
+                      ]}
+                      onPress={() => setForm(prev => ({ ...prev, recurrenceType: freq.value as any }))}
+                    >
+                      <Text style={[
+                        styles.frequencyText,
+                        form.recurrenceType === freq.value && styles.frequencyTextSelected,
+                      ]}>
+                        {freq.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Date de fin */}
+              <View style={styles.recurrenceSection}>
+                <View style={styles.endDateHeader}>
+                  <Text style={[styles.subLabel, isDark && styles.darkText]}>
+                    Date de fin
+                  </Text>
+                  <TouchableOpacity 
+                    style={styles.toggleButton}
+                    onPress={() => {
+                      setHasEndDate(!hasEndDate);
+                      if (!hasEndDate) {
+                        setForm(prev => ({ 
+                          ...prev, 
+                          recurrenceEndDate: new Date() 
+                        }));
+                      } else {
+                        setForm(prev => ({ 
+                          ...prev, 
+                          recurrenceEndDate: undefined 
+                        }));
+                      }
+                    }}
+                  >
+                    <Text style={styles.toggleButtonText}>
+                      {hasEndDate ? 'Désactiver' : 'Activer'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                
+                {hasEndDate && (
+                  <TouchableOpacity 
+                    style={[styles.dateButton, isDark && styles.darkInput]}
+                    onPress={() => setShowEndDatePicker(true)}
+                  >
+                    <Text style={[styles.dateText, isDark && styles.darkText]}>
+                      {form.recurrenceEndDate 
+                        ? form.recurrenceEndDate.toLocaleDateString('fr-FR')
+                        : 'Sélectionner une date'
+                      }
+                    </Text>
+                    <Ionicons name="calendar" size={20} color={isDark ? "#fff" : "#666"} />
+                  </TouchableOpacity>
+                )}
+                {showEndDatePicker && (
+                  <DateTimePicker
+                    value={form.recurrenceEndDate || new Date()}
+                    mode="date"
+                    display="default"
+                    onChange={handleEndDateChange}
+                  />
+                )}
+              </View>
+            </>
           )}
         </View>
 
@@ -471,6 +598,12 @@ const styles = StyleSheet.create({
     color: '#000',
     marginBottom: 12,
   },
+  subLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#000',
+    marginBottom: 8,
+  },
   input: {
     backgroundColor: '#fff',
     borderWidth: 1,
@@ -488,18 +621,15 @@ const styles = StyleSheet.create({
   amountContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    position: 'relative',
-  },
-  currencySymbol: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000',
-    position: 'absolute',
-    left: 16,
-    zIndex: 1,
   },
   amountInput: {
     paddingLeft: 10,
+  },
+  hint: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+    fontStyle: 'italic',
   },
   categoriesContainer: {
     flexDirection: 'row',
@@ -594,6 +724,90 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 16,
     color: '#000',
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  switch: {
+    width: 50,
+    height: 28,
+    backgroundColor: '#ccc',
+    borderRadius: 14,
+    padding: 2,
+    justifyContent: 'center',
+  },
+  darkSwitch: {
+    backgroundColor: '#38383a',
+  },
+  switchActive: {
+    backgroundColor: '#34C759',
+  },
+  switchThumb: {
+    width: 24,
+    height: 24,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    transform: [{ translateX: 0 }],
+  },
+  switchThumbActive: {
+    transform: [{ translateX: 22 }],
+  },
+  helperText: {
+    fontSize: 14,
+    color: '#666',
+    fontStyle: 'italic',
+    marginBottom: 16,
+  },
+  recurrenceSection: {
+    marginTop: 16,
+  },
+  frequencyContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  frequencyButton: {
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    minWidth: 100,
+  },
+  darkFrequencyButton: {
+    backgroundColor: '#333',
+    borderColor: '#555',
+  },
+  frequencyButtonSelected: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
+  },
+  frequencyText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  frequencyTextSelected: {
+    color: '#fff',
+  },
+  endDateHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  toggleButton: {
+    padding: 8,
+  },
+  toggleButtonText: {
+    fontSize: 14,
+    color: '#007AFF',
+    fontWeight: '500',
   },
   buttonsContainer: {
     flexDirection: 'row',

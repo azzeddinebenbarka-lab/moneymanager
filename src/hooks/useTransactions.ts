@@ -1,7 +1,7 @@
-// src/hooks/useTransactions.ts - VERSION OPTIMISÉE POUR LA NAVIGATION
+// src/hooks/useTransactions.ts - VERSION UNIFIÉE COMPLÈTE
 import { useCallback, useEffect, useState } from 'react';
 import { transactionService } from '../services/transactionService';
-import { Transaction } from '../types';
+import { CreateTransactionData, Transaction } from '../types';
 
 export const useTransactions = (userId: string = 'default-user') => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -9,170 +9,134 @@ export const useTransactions = (userId: string = 'default-user') => {
   const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
-  // ✅ CORRECTION : Charger toutes les transactions - OPTIMISÉ
-  const loadTransactions = useCallback(async (forceRefresh: boolean = false) => {
+  // ✅ CHARGEMENT UNIFIÉ
+  const loadTransactions = useCallback(async (filters: any = {}, forceRefresh: boolean = false) => {
     // Éviter les rechargements trop fréquents
     const now = new Date();
     const timeSinceLastRefresh = now.getTime() - lastRefresh.getTime();
     
-    if (!forceRefresh && timeSinceLastRefresh < 5000) { // 5 secondes
-      console.log('⏱️ [useTransactions] Rechargement trop rapide, ignoré');
+    if (!forceRefresh && timeSinceLastRefresh < 5000) {
       return;
     }
 
     try {
       setLoading(true);
       setError(null);
-      console.log('🔍 [useTransactions] Loading transactions...');
       
-      const transactionsData = await transactionService.getAllTransactions(userId);
-      console.log('✅ [useTransactions] Loaded', transactionsData.length, 'transactions');
-      
+      const transactionsData = await transactionService.getAllTransactions(userId, filters);
       setTransactions(transactionsData);
       setLastRefresh(new Date());
+      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement des transactions';
-      console.error('❌ [useTransactions] Error loading transactions:', errorMessage);
       setError(errorMessage);
     } finally {
       setLoading(false);
     }
   }, [userId, lastRefresh]);
 
-  // ✅ NOUVELLE MÉTHODE : Rechargement forcé
-  const forceRefresh = useCallback(async () => {
-    console.log('🔄 [useTransactions] Forced refresh requested');
-    await loadTransactions(true);
-  }, [loadTransactions]);
-
-  // Créer une transaction
-  const createTransaction = async (transactionData: Omit<Transaction, 'id' | 'createdAt'>): Promise<string> => {
+  // ✅ CRÉATION UNIFIÉE
+  const createTransaction = async (transactionData: CreateTransactionData): Promise<string> => {
     try {
       setError(null);
-      console.log('🔄 [useTransactions] Creating transaction...');
       
       const transactionId = await transactionService.createTransaction(transactionData, userId);
+      await loadTransactions({}, true); // Recharger après création
       
-      // Recharger après création
-      await forceRefresh();
-      
-      console.log('✅ [useTransactions] Transaction created successfully');
       return transactionId;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la création de la transaction';
-      console.error('❌ [useTransactions] Error creating transaction:', errorMessage);
       setError(errorMessage);
       throw err;
     }
   };
 
-  // Mettre à jour une transaction
+  // ✅ MISE À JOUR UNIFIÉE
   const updateTransaction = async (id: string, updates: Partial<Transaction>): Promise<void> => {
     try {
       setError(null);
-      console.log('🔄 [useTransactions] Updating transaction:', id);
       
       await transactionService.updateTransaction(id, updates, userId);
-      await forceRefresh();
+      await loadTransactions({}, true);
       
-      console.log('✅ [useTransactions] Transaction updated successfully');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la mise à jour de la transaction';
-      console.error('❌ [useTransactions] Error updating transaction:', errorMessage);
       setError(errorMessage);
       throw err;
     }
   };
 
-  // Supprimer une transaction
+  // ✅ SUPPRESSION UNIFIÉE
   const deleteTransaction = async (id: string): Promise<void> => {
     try {
       setError(null);
-      console.log('🗑️ [useTransactions] Deleting transaction:', id);
       
       await transactionService.deleteTransaction(id, userId);
-      await forceRefresh();
+      await loadTransactions({}, true);
       
-      console.log('✅ [useTransactions] Transaction deleted successfully');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la suppression de la transaction';
-      console.error('❌ [useTransactions] Error deleting transaction:', errorMessage);
       setError(errorMessage);
       throw err;
     }
   };
 
-  // Obtenir une transaction par ID
-  const getTransactionById = async (id: string): Promise<Transaction | null> => {
+  // ✅ TRAITEMENT DES RÉCURRENTES
+  const processRecurringTransactions = async (): Promise<{ processed: number; errors: string[] }> => {
     try {
-      console.log('🔍 [useTransactions] Getting transaction by ID:', id);
-      return await transactionService.getTransactionById(id, userId);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la récupération de la transaction';
-      console.error('❌ [useTransactions] Error getting transaction by ID:', errorMessage);
-      setError(errorMessage);
-      throw err;
-    }
-  };
-
-  // Obtenir les transactions par compte
-  const getTransactionsByAccount = async (accountId: string): Promise<Transaction[]> => {
-    try {
-      console.log('🔍 [useTransactions] Getting transactions by account:', accountId);
-      return await transactionService.getTransactionsByAccount(accountId, userId);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la récupération des transactions par compte';
-      console.error('❌ [useTransactions] Error getting transactions by account:', errorMessage);
-      setError(errorMessage);
-      throw err;
-    }
-  };
-
-  // Obtenir les transactions par date (optimisé)
-  const getTransactionsByDateRange = useCallback(async (startDate: string, endDate: string): Promise<Transaction[]> => {
-    try {
-      // Si on a déjà les données, filtrer en mémoire
-      if (transactions.length > 0) {
-        const filtered = transactions.filter(transaction => 
-          transaction.date >= startDate && transaction.date <= endDate
-        );
-        if (filtered.length > 0) {
-          console.log('⚡ [useTransactions] Using cached data for date range');
-          return filtered;
-        }
-      }
+      setError(null);
       
-      console.log('🔍 [useTransactions] Getting transactions by date range from DB');
-      return await transactionService.getTransactionsByDateRange(startDate, endDate, userId);
+      const result = await transactionService.processRecurringTransactions(userId);
+      await loadTransactions({}, true); // Recharger après traitement
+      
+      return result;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la récupération des transactions par date';
-      console.error('❌ [useTransactions] Error getting transactions by date range:', errorMessage);
+      const errorMessage = err instanceof Error ? err.message : 'Erreur lors du traitement des transactions récurrentes';
       setError(errorMessage);
       throw err;
     }
-  }, [transactions, userId]);
+  };
 
-  // Rafraîchir les transactions
-  const refreshTransactions = useCallback(async (): Promise<void> => {
-    await forceRefresh();
-  }, [forceRefresh]);
+  // ✅ MÉTHODES UTILITAIRES
+  const getTransactionById = (id: string): Transaction | undefined => {
+    return transactions.find(transaction => transaction.id === id);
+  };
 
-  // Effet pour charger les transactions au montage
+  const getRecurringTransactions = (): Transaction[] => {
+    return transactions.filter(transaction => transaction.isRecurring);
+  };
+
+  const getNormalTransactions = (): Transaction[] => {
+    return transactions.filter(transaction => !transaction.isRecurring);
+  };
+
+  const getTransactionsByAccount = (accountId: string): Transaction[] => {
+    return transactions.filter(transaction => transaction.accountId === accountId);
+  };
+
+  const getTransactionsByType = (type: 'income' | 'expense'): Transaction[] => {
+    return transactions.filter(transaction => transaction.type === type);
+  };
+
+  const refreshTransactions = useCallback(async (filters: any = {}): Promise<void> => {
+    await loadTransactions(filters, true);
+  }, [loadTransactions]);
+
+  // EFFET : CHARGEMENT INITIAL ET TRAITEMENT AUTO
   useEffect(() => {
-    let mounted = true;
+    loadTransactions();
     
-    const initialize = async () => {
-      if (mounted) {
-        await loadTransactions();
+    // Traitement automatique au démarrage
+    const processOnStartup = async () => {
+      try {
+        await processRecurringTransactions();
+      } catch (error) {
+        console.error('Erreur traitement automatique:', error);
       }
     };
-
-    initialize();
-
-    return () => {
-      mounted = false;
-    };
-  }, [loadTransactions]);
+    
+    processOnStartup();
+  }, []);
 
   return {
     // État
@@ -185,28 +149,24 @@ export const useTransactions = (userId: string = 'default-user') => {
     createTransaction,
     updateTransaction,
     deleteTransaction,
+    processRecurringTransactions,
     refreshTransactions,
-    forceRefresh,
     
-    // Actions de recherche
+    // Méthodes de filtrage
     getTransactionById,
-    getTransactionsByDateRange,
+    getRecurringTransactions,
+    getNormalTransactions,
     getTransactionsByAccount,
+    getTransactionsByType,
     
-    // Méthodes utilitaires
-    getTransactionsByCategory: (categoryId: string) => 
-      transactions.filter(t => t.category === categoryId),
-    getTransactionsByType: (type: 'income' | 'expense') => 
-      transactions.filter(t => t.type === type),
-    
-    // Statistiques rapides
+    // Statistiques
     getStats: () => ({
       total: transactions.length,
+      recurring: transactions.filter(t => t.isRecurring).length,
+      normal: transactions.filter(t => !t.isRecurring).length,
       income: transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0),
       expenses: transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + Math.abs(t.amount), 0),
       balance: transactions.reduce((sum, t) => t.type === 'income' ? sum + t.amount : sum - t.amount, 0)
     })
   };
 };
-
-export type UseTransactionsReturn = ReturnType<typeof useTransactions>;
