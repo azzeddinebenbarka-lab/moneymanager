@@ -13,6 +13,50 @@ export interface TransactionFilters {
 }
 
 export const transactionService = {
+  // ✅ NOUVELLE MÉTHODE : Créer transaction sans mise à jour du solde
+  async createTransactionWithoutBalanceUpdate(
+    transactionData: {
+      amount: number;
+      type: 'expense' | 'income';
+      category: string;
+      accountId: string;
+      description: string;
+      date: string;
+    }, 
+    userId: string = 'default-user'
+  ): Promise<string> {
+    try {
+      const db = await getDatabase();
+      const id = `transaction_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const createdAt = new Date().toISOString();
+
+      console.log('🔄 [transactionService] Creating transaction without balance update:', transactionData);
+
+      await db.runAsync(
+        `INSERT INTO transactions (
+          id, user_id, amount, type, category, account_id, description, date, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          userId,
+          transactionData.amount,
+          transactionData.type,
+          transactionData.category,
+          transactionData.accountId,
+          transactionData.description,
+          transactionData.date,
+          createdAt
+        ]
+      );
+
+      console.log('✅ [transactionService] Transaction created successfully (without balance update)');
+      return id;
+    } catch (error) {
+      console.error('❌ [transactionService] Error creating transaction without balance update:', error);
+      throw error;
+    }
+  },
+
   // ✅ CRÉATION UNIFIÉE
   async createTransaction(
     transactionData: CreateTransactionData, 

@@ -1,8 +1,7 @@
-// src/services/debtService.ts - VERSION CORRIGÉE
+// src/services/debtService.ts - VERSION FINALE COMPLÈTEMENT CORRIGÉE
 import { CreateDebtData, Debt, DebtPayment, PaymentEligibility, UpdateDebtData } from '../types/Debt';
 import { accountService } from './accountService';
 import { getDatabase } from './database/sqlite';
-import { transferService } from './transferService';
 
 interface DatabaseDebt {
   id: string;
@@ -87,7 +86,6 @@ export const debtService = {
         console.log('🔍 [debtService] Checking debts table structure...');
         
         const tableInfo = await db.getAllAsync(`PRAGMA table_info(debts)`) as any[];
-        console.log('📋 [debtService] Table structure:', tableInfo);
         
         const requiredColumns = [
           { name: 'notes', type: 'TEXT' },
@@ -124,62 +122,244 @@ export const debtService = {
   },
 
   /**
-   * ✅ CRÉATION DE DETTE AVEC GESTION AUTOMATIQUE DU STATUT
+   * ✅ CRÉATION DE LA TABLE DES PAIEMENTS AVEC TOUTES LES COLONNES
    */
-  async createDebt(debtData: CreateDebtData, userId: string = 'default-user'): Promise<string> {
+  async ensurePaymentsTableExists(): Promise<void> {
     try {
-      await this.ensureDebtsTableExists();
-
       const db = await getDatabase();
-      const id = `debt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      const tableExists = await db.getFirstAsync(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='debt_payments'"
+      );
+      
+      if (!tableExists) {
+        console.log('🛠️ [debtService] Creating debt_payments table...');
+        
+        await db.execAsync(`
+          CREATE TABLE IF NOT EXISTS debt_payments (
+            id TEXT PRIMARY KEY NOT NULL,
+            debt_id TEXT NOT NULL,
+            user_id TEXT NOT NULL,
+            amount REAL NOT NULL,
+            payment_date TEXT NOT NULL,
+            payment_status TEXT NOT NULL DEFAULT 'completed',
+            created_at TEXT NOT NULL,
+            from_account_id TEXT,
+            principal REAL NOT NULL DEFAULT 0,
+            interest REAL NOT NULL DEFAULT 0,
+            remaining_balance REAL NOT NULL DEFAULT 0,
+            payment_month TEXT NOT NULL,
+            FOREIGN KEY (debt_id) REFERENCES debts (id) ON DELETE CASCADE
+          );
+        `);
+        
+        console.log('✅ [debtService] debt_payments table created successfully');
+      } else {
+        console.log('🔍 [debtService] Checking debt_payments table structure...');
+        
+        const tableInfo = await db.getAllAsync(`PRAGMA table_info(debt_payments)`) as any[];
+        
+        const requiredColumns = [
+          { name: 'payment_status', type: 'TEXT' },
+          { name: 'principal', type: 'REAL' },
+          { name: 'interest', type: 'REAL' },
+          { name: 'remaining_balance', type: 'REAL' },
+          { name: 'payment_month', type: 'TEXT' }
+        ];
+        
+        for (const requiredColumn of requiredColumns) {
+          const columnExists = tableInfo.some(col => col.name === requiredColumn.name);
+          if (!columnExists) {
+            console.log(`🛠️ [debtService] Adding ${requiredColumn.name} column to debt_payments...`);
+            
+            try {
+              await db.execAsync(`
+                ALTER TABLE debt_payments ADD COLUMN ${requiredColumn.name} ${requiredColumn.type};
+              `);
+              console.log(`✅ [debtService] ${requiredColumn.name} column added successfully`);
+            } catch (alterError) {
+              console.warn(`⚠️ [debtService] Could not add column ${requiredColumn.name}:`, alterError);
+            }
+          }
+        }
+        
+        console.log('✅ [debtService] debt_payments table structure verified');
+      }
+    } catch (error) {
+      console.error('❌ [debtService] Error ensuring payments table exists:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * ✅ AJOUT DE PAIEMENT CORRIGÉ - SOUSTRACTION DU COMPTE
+   */
+  async addPayment(
+    debtId: string, 
+    amount: number, 
+    fromAccountId?: string, 
+    userId: string = 'default-user'
+  ): Promise<string> {
+    try {
+      const db = await getDatabase();
+      const id = `payment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const paymentDate = new Date().toISOString().split('T')[0];
+      const paymentMonth = new Date().toISOString().slice(0, 7);
       const createdAt = new Date().toISOString();
 
-      console.log('🔄 [debtService] Creating debt:', { id, ...debtData });
+      console.log('🔄 [debtService] Adding payment:', { 
+        debtId, 
+        amount, 
+        fromAccountId 
+      });
 
-      const dueDate = new Date(debtData.dueDate);
-      const dueMonth = dueDate.toISOString().slice(0, 7);
-      const now = new Date();
-      
-      let status: Debt['status'] = 'active';
-      if (dueDate > now) {
-        status = 'future';
-      } else if (dueDate < now) {
-        status = 'overdue';
+      const debt = await this.getDebtById(debtId, userId);
+      if (!debt) {
+        throw new Error('Dette non trouvée');
       }
 
+      // ✅ VÉRIFICATION STRICTE DE L'ÉLIGIBILITÉ
+      if (!debt.paymentEligibility.isEligible) {
+        throw new Error(debt.paymentEligibility.reason || 'Paiement non autorisé');
+      }
+
+      let effectiveFromAccountId = fromAccountId;
+
+      // ✅ SI AUCUN COMPTE SPÉCIFIÉ, UTILISER CELUI DE LA DETTE
+      if (!effectiveFromAccountId && debt.paymentAccountId) {
+        effectiveFromAccountId = debt.paymentAccountId;
+        console.log('💰 [debtService] Utilisation compte paiement dette:', effectiveFromAccountId);
+      }
+
+      // ✅ FALLBACK : TROUVER UN COMPTE VALIDE
+      if (!effectiveFromAccountId) {
+        const validAccount = await accountService.findValidAccountForOperation(amount);
+        if (validAccount) {
+          effectiveFromAccountId = validAccount.id;
+          console.log('💰 [debtService] Compte auto-assigné:', effectiveFromAccountId);
+        } else {
+          throw new Error('Aucun compte source disponible avec suffisamment de fonds');
+        }
+      }
+
+      // ✅ VALIDATION FINALE DU COMPTE
+      const validation = await accountService.validateAccountForOperation(effectiveFromAccountId, amount, 'debit');
+      if (!validation.isValid) {
+        throw new Error(validation.message || 'Compte source invalide');
+      }
+
+      const fromAccount = validation.account!;
+
+      // Calculer la répartition principal/intérêts
+      const monthlyInterest = (debt.currentAmount * debt.interestRate) / 100 / 12;
+      const principal = Math.max(0, amount - monthlyInterest);
+      const interest = Math.min(amount, monthlyInterest);
+
+      const newBalance = Math.max(0, debt.currentAmount - principal);
+      const isPaid = newBalance <= 0;
+
+      await db.execAsync('BEGIN TRANSACTION');
+
+      try {
+        // ✅ S'ASSURER QUE LA TABLE DE PAIEMENTS A LES BONNES COLONNES
+        await this.ensurePaymentsTableExists();
+
+        // ✅ CORRECTION : SOUSTRAIRE le montant du compte
+        const newFromBalance = fromAccount.balance - amount;
+        await accountService.updateAccountBalance(effectiveFromAccountId, newFromBalance, userId);
+
+        // ✅ CRÉER UNE TRANSACTION DE DÉPENSE POUR LE PAIEMENT
+        await this.createPaymentTransaction({
+          amount: amount,
+          accountId: effectiveFromAccountId,
+          description: `Paiement dette: ${debt.name} - ${debt.creditor}`,
+          date: paymentDate,
+        }, userId);
+
+        // ✅ ENREGISTREMENT DU PAIEMENT
+        await db.runAsync(
+          `INSERT INTO debt_payments (
+            id, debt_id, user_id, amount, payment_date, payment_status, 
+            created_at, from_account_id, principal, interest, remaining_balance, payment_month
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            id,
+            debtId,
+            userId,
+            amount,
+            paymentDate,
+            'completed',
+            createdAt,
+            effectiveFromAccountId,
+            principal,
+            interest,
+            newBalance,
+            paymentMonth
+          ]
+        );
+
+        // ✅ MISE À JOUR DE LA DETTE
+        const newStatus = isPaid ? 'paid' : debt.status;
+        await db.runAsync(
+          `UPDATE debts SET current_amount = ?, status = ? WHERE id = ? AND user_id = ?`,
+          [newBalance, newStatus, debtId, userId]
+        );
+
+        await db.execAsync('COMMIT');
+        
+        console.log('✅ [debtService] Payment added successfully');
+        return id;
+
+      } catch (error) {
+        await db.execAsync('ROLLBACK');
+        console.error('❌ [debtService] Transaction failed, rolling back:', error);
+        throw error;
+      }
+
+    } catch (error) {
+      console.error('❌ [debtService] Error in addPayment:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * ✅ CRÉER UNE TRANSACTION DE PAIEMENT
+   */
+  async createPaymentTransaction(
+    transactionData: {
+      amount: number;
+      accountId: string;
+      description: string;
+      date: string;
+    },
+    userId: string = 'default-user'
+  ): Promise<string> {
+    try {
+      const db = await getDatabase();
+      const id = `payment_tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const createdAt = new Date().toISOString();
+
       await db.runAsync(
-        `INSERT INTO debts (
-          id, user_id, name, creditor, initial_amount, current_amount, 
-          interest_rate, monthly_payment, start_date, due_date, due_month, status, 
-          category, color, notes, created_at, type, auto_pay, payment_account_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO transactions (
+          id, user_id, amount, type, category, account_id, description, date, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id,
           userId,
-          debtData.name,
-          debtData.creditor,
-          debtData.initialAmount,
-          debtData.initialAmount,
-          debtData.interestRate,
-          debtData.monthlyPayment,
-          debtData.startDate,
-          debtData.dueDate,
-          dueMonth,
-          status,
-          debtData.category,
-          debtData.color,
-          debtData.notes || null,
-          createdAt,
-          debtData.type,
-          debtData.autoPay ? 1 : 0,
-          debtData.paymentAccountId || null
+          -transactionData.amount, // Montant négatif pour dépense
+          'expense',
+          'dette',
+          transactionData.accountId,
+          transactionData.description,
+          transactionData.date,
+          createdAt
         ]
       );
 
-      console.log('✅ [debtService] Debt created with status:', status);
+      console.log('✅ [debtService] Transaction de paiement créée:', id);
       return id;
     } catch (error) {
-      console.error('❌ [debtService] Error in createDebt:', error);
+      console.error('❌ [debtService] Erreur création transaction paiement:', error);
       throw error;
     }
   },
@@ -318,179 +498,62 @@ export const debtService = {
   },
 
   /**
-   * ✅ AJOUT DE PAIEMENT AVEC VÉRIFICATION STRICTE D'ÉLIGIBILITÉ ET DE COMPTE
+   * ✅ CRÉATION DE DETTE AVEC GESTION AUTOMATIQUE DU STATUT
    */
-  async addPayment(
-    debtId: string, 
-    amount: number, 
-    fromAccountId?: string, 
-    userId: string = 'default-user'
-  ): Promise<string> {
+  async createDebt(debtData: CreateDebtData, userId: string = 'default-user'): Promise<string> {
     try {
-      const db = await getDatabase();
-      const id = `payment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const paymentDate = new Date().toISOString().split('T')[0];
-      const paymentMonth = new Date().toISOString().slice(0, 7);
-      const createdAt = new Date().toISOString();
-
-      console.log('🔄 [debtService] Adding payment with validation:', { 
-        debtId, 
-        amount, 
-        fromAccountId 
-      });
-
-      const debt = await this.getDebtById(debtId, userId);
-      if (!debt) {
-        throw new Error('Dette non trouvée');
-      }
-
-      // ✅ VÉRIFICATION STRICTE DE L'ÉLIGIBILITÉ
-      if (!debt.paymentEligibility.isEligible) {
-        throw new Error(debt.paymentEligibility.reason || 'Paiement non autorisé');
-      }
-
-      let effectiveFromAccountId = fromAccountId;
-
-      // ✅ SI AUCUN COMPTE SPÉCIFIÉ, UTILISER CELUI DE LA DETTE
-      if (!effectiveFromAccountId && debt.paymentAccountId) {
-        effectiveFromAccountId = debt.paymentAccountId;
-        console.log('💰 [debtService] Utilisation compte paiement dette:', effectiveFromAccountId);
-      }
-
-      // ✅ FALLBACK : TROUVER UN COMPTE VALIDE
-      if (!effectiveFromAccountId) {
-        const validAccount = await accountService.findValidAccountForOperation(amount);
-        if (validAccount) {
-          effectiveFromAccountId = validAccount.id;
-          console.log('💰 [debtService] Compte auto-assigné:', effectiveFromAccountId);
-        } else {
-          throw new Error('Aucun compte source disponible avec suffisamment de fonds');
-        }
-      }
-
-      // ✅ VALIDATION FINALE DU COMPTE
-      const validation = await accountService.validateAccountForOperation(effectiveFromAccountId, amount, 'debit');
-      if (!validation.isValid) {
-        throw new Error(validation.message || 'Compte source invalide');
-      }
-
-      const fromAccount = validation.account!;
-
-      // Calculer la répartition principal/intérêts
-      const monthlyInterest = (debt.currentAmount * debt.interestRate) / 100 / 12;
-      const principal = Math.max(0, amount - monthlyInterest);
-      const interest = Math.min(amount, monthlyInterest);
-
-      const newBalance = Math.max(0, debt.currentAmount - principal);
-      const isPaid = newBalance <= 0;
-
-      await db.execAsync('BEGIN TRANSACTION');
-
-      try {
-        // ✅ CORRECTION : Utiliser la méthode correcte pour le transfert
-        await this.executeDebtPaymentTransfer({
-          fromAccountId: effectiveFromAccountId,
-          amount: amount,
-          description: `Paiement dette: ${debt.name}`,
-          date: paymentDate,
-        }, userId);
-
-        // ✅ ENREGISTREMENT DU PAIEMENT
-        await this.ensurePaymentsTableExists();
-
-        await db.runAsync(
-          `INSERT INTO debt_payments (
-            id, debt_id, user_id, amount, payment_date, payment_status, 
-            created_at, from_account_id, principal, interest, remaining_balance, payment_month
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            id,
-            debtId,
-            userId,
-            amount,
-            paymentDate,
-            'completed',
-            createdAt,
-            effectiveFromAccountId,
-            principal,
-            interest,
-            newBalance,
-            paymentMonth
-          ]
-        );
-
-        // ✅ MISE À JOUR DE LA DETTE
-        const newStatus = isPaid ? 'paid' : debt.status;
-        await db.runAsync(
-          `UPDATE debts SET current_amount = ?, status = ? WHERE id = ? AND user_id = ?`,
-          [newBalance, newStatus, debtId, userId]
-        );
-
-        await db.execAsync('COMMIT');
-        
-        console.log('✅ [debtService] Payment added successfully');
-        return id;
-
-      } catch (error) {
-        await db.execAsync('ROLLBACK');
-        console.error('❌ [debtService] Transaction failed, rolling back:', error);
-        throw error;
-      }
-
-    } catch (error) {
-      console.error('❌ [debtService] Error in addPayment:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * ✅ NOUVELLE MÉTHODE : Exécuter un transfert pour paiement de dette
-   */
-  async executeDebtPaymentTransfer(
-    transferData: {
-      fromAccountId: string;
-      amount: number;
-      description: string;
-      date: string;
-    },
-    userId: string = 'default-user'
-  ): Promise<void> {
-    try {
-      console.log('💰 [debtService] Executing debt payment transfer...', transferData);
-
-      // ✅ CRÉER UNE TRANSACTION DE DÉPENSE POUR LE PAIEMENT DE DETTE
-      const transactionId = `tx_debt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const createdAt = new Date().toISOString();
+      await this.ensureDebtsTableExists();
 
       const db = await getDatabase();
+      const id = `debt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const createdAt = new Date().toISOString();
 
-      // ✅ DÉBITER LE COMPTE SOURCE
-      await accountService.updateAccountBalance(
-        transferData.fromAccountId, 
-        -transferData.amount
-      );
+      console.log('🔄 [debtService] Creating debt:', { id, ...debtData });
 
-      // ✅ ENREGISTRER LA TRANSACTION COMME DÉPENSE
+      const dueDate = new Date(debtData.dueDate);
+      const dueMonth = dueDate.toISOString().slice(0, 7);
+      const now = new Date();
+      
+      let status: Debt['status'] = 'active';
+      if (dueDate > now) {
+        status = 'future';
+      } else if (dueDate < now) {
+        status = 'overdue';
+      }
+
       await db.runAsync(
-        `INSERT INTO transactions (
-          id, user_id, amount, type, category, account_id, description, date, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO debts (
+          id, user_id, name, creditor, initial_amount, current_amount, 
+          interest_rate, monthly_payment, start_date, due_date, due_month, status, 
+          category, color, notes, created_at, type, auto_pay, payment_account_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          transactionId,
+          id,
           userId,
-          transferData.amount,
-          'expense',
-          'dettes',
-          transferData.fromAccountId,
-          transferData.description,
-          transferData.date,
-          createdAt
+          debtData.name,
+          debtData.creditor,
+          debtData.initialAmount,
+          debtData.initialAmount,
+          debtData.interestRate,
+          debtData.monthlyPayment,
+          debtData.startDate,
+          debtData.dueDate,
+          dueMonth,
+          status,
+          debtData.category,
+          debtData.color,
+          debtData.notes || null,
+          createdAt,
+          debtData.type,
+          debtData.autoPay ? 1 : 0,
+          debtData.paymentAccountId || null
         ]
       );
 
-      console.log('✅ [debtService] Debt payment transfer executed successfully');
+      console.log('✅ [debtService] Debt created with status:', status);
+      return id;
     } catch (error) {
-      console.error('❌ [debtService] Error executing debt payment transfer:', error);
+      console.error('❌ [debtService] Error in createDebt:', error);
       throw error;
     }
   },
@@ -700,46 +763,6 @@ export const debtService = {
       return payments;
     } catch (error) {
       console.error('❌ [debtService] Error in getPaymentHistory:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * ✅ CRÉATION DE LA TABLE DES PAIEMENTS SI ELLE N'EXISTE PAS
-   */
-  async ensurePaymentsTableExists(): Promise<void> {
-    try {
-      const db = await getDatabase();
-      
-      const tableExists = await db.getFirstAsync(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='debt_payments'"
-      );
-      
-      if (!tableExists) {
-        console.log('🛠️ [debtService] Creating debt_payments table...');
-        
-        await db.execAsync(`
-          CREATE TABLE IF NOT EXISTS debt_payments (
-            id TEXT PRIMARY KEY NOT NULL,
-            debt_id TEXT NOT NULL,
-            user_id TEXT NOT NULL,
-            amount REAL NOT NULL,
-            payment_date TEXT NOT NULL,
-            payment_status TEXT NOT NULL DEFAULT 'completed',
-            created_at TEXT NOT NULL,
-            from_account_id TEXT,
-            principal REAL NOT NULL,
-            interest REAL NOT NULL,
-            remaining_balance REAL NOT NULL,
-            payment_month TEXT NOT NULL,
-            FOREIGN KEY (debt_id) REFERENCES debts (id) ON DELETE CASCADE
-          );
-        `);
-        
-        console.log('✅ [debtService] debt_payments table created successfully');
-      }
-    } catch (error) {
-      console.error('❌ [debtService] Error ensuring payments table exists:', error);
       throw error;
     }
   },

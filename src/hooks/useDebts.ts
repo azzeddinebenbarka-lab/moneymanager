@@ -1,4 +1,4 @@
-// src/hooks/useDebts.ts - VERSION CORRIGÉE POUR SYSTÈME D'ÉCHÉANCES
+// src/hooks/useDebts.ts - VERSION COMPLÈTEMENT CORRIGÉE
 import { useCallback, useEffect, useState } from 'react';
 import { debtService } from '../services/debtService';
 import { CreateDebtData, Debt, DebtPayment, DebtStats } from '../types/Debt';
@@ -28,7 +28,7 @@ export const useDebts = (userId: string = 'default-user') => {
   });
 
   /**
-   * ✅ CHARGEMENT DES DETTES AVEC MISE À JOUR DES STATUTS
+   * ✅ CHARGEMENT DES DETTES SIMPLIFIÉ
    */
   const loadDebts = useCallback(async () => {
     try {
@@ -122,7 +122,7 @@ export const useDebts = (userId: string = 'default-user') => {
   }, [userId, loadDebts]);
 
   /**
-   * ✅ PAIEMENT D'UNE DETTE AVEC VÉRIFICATION D'ÉLIGIBILITÉ
+   * ✅ PAIEMENT D'UNE DETTE - SIMPLIFIÉ
    */
   const makePayment = useCallback(async (
     debtId: string, 
@@ -133,21 +133,6 @@ export const useDebts = (userId: string = 'default-user') => {
       setError(null);
       console.log('💰 [useDebts] Making payment:', { debtId, amount, accountId });
       
-      // ✅ VÉRIFICATION DE L'ÉLIGIBILITÉ AVANT PAIEMENT
-      const debt = await debtService.getDebtById(debtId, userId);
-      if (!debt) {
-        throw new Error('Dette non trouvée');
-      }
-
-      if (!debt.paymentEligibility.isEligible) {
-        throw new Error(debt.paymentEligibility.reason || 'Paiement non autorisé');
-      }
-
-      // ✅ PAIMENT MANUEL : Impossible si hors période
-      if (!debt.paymentEligibility.isCurrentMonth) {
-        throw new Error('Paiement manuel non autorisé hors période d\'échéance');
-      }
-
       await debtService.addPayment(debtId, amount, accountId, userId);
       await loadDebts();
       

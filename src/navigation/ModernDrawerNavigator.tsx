@@ -6,6 +6,7 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import ModernDrawerContent from '../components/layout/ModernDrawerContent';
 import { useTheme } from '../context/ThemeContext';
+import TransactionDetailScreen from '../screens/TransactionDetailScreen';
 
 // Import des écrans
 import AccountDetailScreen from '../screens/AccountDetailScreen';
@@ -101,6 +102,7 @@ const TransactionStack = () => (
     <Stack.Screen name="EditTransaction" component={EditTransactionScreen} />
     <Stack.Screen name="AccountDetail" component={AccountDetailScreen} />
     <Stack.Screen name="Transfer" component={TransferScreen} />
+    <Stack.Screen name="TransactionDetail" component={TransactionDetailScreen} />
   </Stack.Navigator>
 );
 

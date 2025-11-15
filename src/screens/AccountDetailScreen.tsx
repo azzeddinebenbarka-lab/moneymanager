@@ -1,4 +1,4 @@
-// src/screens/AccountDetailScreen.tsx - VERSION COMPLÈTEMENT CORRIGÉE AVEC NAVIGATION
+// src/screens/AccountDetailScreen.tsx - VERSION AVEC NOMS DE CATÉGORIES
 import { Ionicons } from '@expo/vector-icons';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useCallback, useMemo, useState } from 'react';
@@ -15,6 +15,7 @@ import AccountForm from '../components/account/AccountForm';
 import { useCurrency } from '../context/CurrencyContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
+import { useCategories } from '../hooks/useCategories'; // ✅ AJOUT DE L'IMPORT
 import { useTransactions } from '../hooks/useTransactions';
 import { Account, Transaction } from '../types';
 
@@ -33,13 +34,15 @@ const TransactionItem = React.memo(({
   isDark, 
   navigation, 
   formatAmount, 
-  isProcessing 
+  isProcessing,
+  getCategoryName // ✅ AJOUT DE LA FONCTION POUR NOM DE CATÉGORIE
 }: { 
   transaction: Transaction;
   isDark: boolean;
   navigation: AccountDetailScreenNavigationProp;
   formatAmount: (amount: number) => string;
   isProcessing: boolean;
+  getCategoryName: (categoryId: string) => string; // ✅ NOUVEAU PROP
 }) => (
   <TouchableOpacity
     style={[styles.transactionItem, isDark && styles.darkCard]}
@@ -63,7 +66,7 @@ const TransactionItem = React.memo(({
           {transaction.description || 'Sans description'}
         </Text>
         <Text style={[styles.transactionCategory, isDark && styles.darkSubtext]}>
-          {transaction.category}
+          {getCategoryName(transaction.category)} {/* ✅ UTILISATION DU NOM DE CATÉGORIE */}
         </Text>
         <Text style={[styles.transactionDate, isDark && styles.darkSubtext]}>
           {new Date(transaction.date).toLocaleDateString('fr-FR')}
@@ -88,7 +91,8 @@ const TransactionsSection = React.memo(({
   isDark,
   navigation,
   formatAmount,
-  isProcessing
+  isProcessing,
+  getCategoryName // ✅ AJOUT DE LA FONCTION POUR NOM DE CATÉGORIE
 }: {
   accountTransactions: Transaction[];
   transactionStats: { totalIncome: number; totalExpenses: number; transactionCount: number };
@@ -98,6 +102,7 @@ const TransactionsSection = React.memo(({
   navigation: AccountDetailScreenNavigationProp;
   formatAmount: (amount: number) => string;
   isProcessing: boolean;
+  getCategoryName: (categoryId: string) => string; // ✅ NOUVEAU PROP
 }) => {
   if (accountTransactions.length === 0) {
     return (
@@ -178,6 +183,7 @@ const TransactionsSection = React.memo(({
             navigation={navigation}
             formatAmount={formatAmount}
             isProcessing={isProcessing}
+            getCategoryName={getCategoryName} // ✅ PASSAGE DE LA FONCTION
           />
         ))}
         
@@ -210,11 +216,22 @@ const AccountDetailScreen = () => {
   const { formatAmount } = useCurrency();
   const { accounts, updateAccount, deleteAccount, refreshAccounts } = useAccounts();
   const { transactions, refreshTransactions } = useTransactions();
+  const { categories } = useCategories(); // ✅ AJOUT DU HOOK CATEGORIES
   const { accountId } = route.params;
   const isDark = theme === 'dark';
 
   const [showAccountForm, setShowAccountForm] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // ✅ FONCTION POUR OBTENIR LE NOM DE LA CATÉGORIE
+  const getCategoryName = useCallback((categoryId: string): string => {
+    if (!categories || categories.length === 0) {
+      return 'Catégorie inconnue';
+    }
+    
+    const category = categories.find(cat => cat.id === categoryId);
+    return category?.name || 'Catégorie inconnue';
+  }, [categories]);
 
   // ✅ CORRECTION : Navigation sécurisée pour les actions
   const handleAddTransaction = useCallback((type: 'income' | 'expense') => {
@@ -460,6 +477,7 @@ const AccountDetailScreen = () => {
           navigation={navigation}
           formatAmount={formatAmount}
           isProcessing={isProcessing}
+          getCategoryName={getCategoryName} // ✅ PASSAGE DE LA FONCTION
         />
 
         {/* Informations détaillées */}
