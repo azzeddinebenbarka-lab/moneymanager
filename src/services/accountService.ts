@@ -1,4 +1,4 @@
-// src/services/accountService.ts - VERSION COMPLÈTEMENT CORRIGÉE
+// src/services/accountService.ts - VERSION COMPLÈTEMENT CORRIGÉE AVEC NOUVELLES MÉTHODES
 import { Account } from '../types';
 import { getDatabase } from './database/sqlite';
 
@@ -86,7 +86,7 @@ export const accountService = {
     }
   },
 
-  // ✅ MÉTHODE : Trouver un compte valide pour opération
+  // ✅ NOUVELLE MÉTHODE : Trouver un compte valide pour opération
   async findValidAccountForOperation(
     amount: number = 0,
     excludeAccountIds: string[] = [],
@@ -106,6 +106,23 @@ export const accountService = {
     } catch (error) {
       console.error('❌ [accountService] Erreur recherche compte valide:', error);
       return null;
+    }
+  },
+
+  // ✅ NOUVELLE MÉTHODE : Mise à jour simplifiée du solde
+  async updateAccountBalanceDirect(accountId: string, amount: number): Promise<void> {
+    try {
+      const db = await getDatabase();
+      
+      await db.runAsync(
+        `UPDATE accounts SET balance = balance + ? WHERE id = ?`,
+        [amount, accountId]
+      );
+      
+      console.log(`✅ [accountService] Account ${accountId} balance updated by ${amount}`);
+    } catch (error) {
+      console.error('❌ [accountService] Error updating account balance:', error);
+      throw error;
     }
   },
 
@@ -417,28 +434,6 @@ export const accountService = {
       });
     } catch (error) {
       console.error('❌ [accountService] Error updating account balance:', error);
-      throw error;
-    }
-  },
-
-  // ✅ MISE À JOUR DIRECTE DU SOLDE
-  async updateAccountBalanceDirect(accountId: string, newBalance: number): Promise<void> {
-    try {
-      await this.ensureAccountsTableExists();
-
-      const db = await getDatabase();
-      
-      await db.runAsync(
-        'UPDATE accounts SET balance = ? WHERE id = ?',
-        [newBalance, accountId]
-      );
-      
-      console.log('💰 [accountService] Solde mis à jour directement:', {
-        compte: accountId,
-        nouveauSolde: newBalance
-      });
-    } catch (error) {
-      console.error('❌ [accountService] Erreur mise à jour solde direct:', error);
       throw error;
     }
   },

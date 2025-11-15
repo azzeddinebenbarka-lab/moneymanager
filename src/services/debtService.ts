@@ -1,4 +1,4 @@
-// src/services/debtService.ts - VERSION COMPLÈTEMENT CORRIGÉE
+// src/services/debtService.ts - VERSION CORRIGÉE
 import { CreateDebtData, Debt, DebtPayment, PaymentEligibility, UpdateDebtData } from '../types/Debt';
 import { accountService } from './accountService';
 import { getDatabase } from './database/sqlite';
@@ -387,10 +387,9 @@ export const debtService = {
       await db.execAsync('BEGIN TRANSACTION');
 
       try {
-        // ✅ TRANSFERT VERS LE COMPTE VIRTUEL DES DETTES
-        await transferService.executeTransferWithoutTransaction({
+        // ✅ CORRECTION : Utiliser la méthode correcte pour le transfert
+        await this.executeDebtPaymentTransfer({
           fromAccountId: effectiveFromAccountId,
-          toAccountId: 'debt_account', // Compte virtuel pour les dettes
           amount: amount,
           description: `Paiement dette: ${debt.name}`,
           date: paymentDate,
@@ -440,6 +439,58 @@ export const debtService = {
 
     } catch (error) {
       console.error('❌ [debtService] Error in addPayment:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * ✅ NOUVELLE MÉTHODE : Exécuter un transfert pour paiement de dette
+   */
+  async executeDebtPaymentTransfer(
+    transferData: {
+      fromAccountId: string;
+      amount: number;
+      description: string;
+      date: string;
+    },
+    userId: string = 'default-user'
+  ): Promise<void> {
+    try {
+      console.log('💰 [debtService] Executing debt payment transfer...', transferData);
+
+      // ✅ CRÉER UNE TRANSACTION DE DÉPENSE POUR LE PAIEMENT DE DETTE
+      const transactionId = `tx_debt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const createdAt = new Date().toISOString();
+
+      const db = await getDatabase();
+
+      // ✅ DÉBITER LE COMPTE SOURCE
+      await accountService.updateAccountBalance(
+        transferData.fromAccountId, 
+        -transferData.amount
+      );
+
+      // ✅ ENREGISTRER LA TRANSACTION COMME DÉPENSE
+      await db.runAsync(
+        `INSERT INTO transactions (
+          id, user_id, amount, type, category, account_id, description, date, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          transactionId,
+          userId,
+          transferData.amount,
+          'expense',
+          'dettes',
+          transferData.fromAccountId,
+          transferData.description,
+          transferData.date,
+          createdAt
+        ]
+      );
+
+      console.log('✅ [debtService] Debt payment transfer executed successfully');
+    } catch (error) {
+      console.error('❌ [debtService] Error executing debt payment transfer:', error);
       throw error;
     }
   },

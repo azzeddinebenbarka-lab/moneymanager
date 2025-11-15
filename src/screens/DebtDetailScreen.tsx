@@ -461,9 +461,6 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
                   Montant à payer
                 </Text>
                 <View style={styles.amountContainer}>
-                  <Text style={[styles.currencySymbol, isDark && styles.darkText]}>
-                    {getCurrencySymbol()} {/* ✅ CORRECTION: Symbole devise dynamique */}
-                  </Text>
                   <TextInput
                     style={[styles.input, styles.amountInput, isDark && styles.darkInput]}
                     value={paymentAmount}
@@ -950,7 +947,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   amountInput: {
-    paddingLeft: 40,
+    paddingLeft: 10,
   },
   input: {
     backgroundColor: '#f8f9fa',
