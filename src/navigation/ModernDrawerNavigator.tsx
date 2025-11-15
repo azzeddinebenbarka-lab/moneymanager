@@ -1,7 +1,7 @@
 // src/navigation/ModernDrawerNavigator.tsx - VERSION COMPLÈTEMENT CORRIGÉE
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import { createStackNavigator, StackNavigationOptions } from '@react-navigation/stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import ModernDrawerContent from '../components/layout/ModernDrawerContent';
@@ -24,7 +24,6 @@ import DashboardScreen from '../screens/DashboardScreen';
 import EditAnnualChargeScreen from '../screens/EditAnnualChargeScreen';
 import EditBudgetScreen from '../screens/EditBudgetScreen';
 import EditTransactionScreen from '../screens/EditTransactionScreen';
-import IslamicChargesScreen from '../screens/islamic/IslamicChargesScreen';
 import MonthDetailScreen from '../screens/MonthDetailScreen';
 import MonthsOverviewScreen from '../screens/MonthsOverviewScreen';
 import ProfileScreen from '../screens/ProfileScreen';
@@ -35,15 +34,14 @@ import TransferScreen from '../screens/TransferScreen';
 import DebtStackNavigator from './DebtStackNavigator';
 import SavingsStackNavigator from './SavingsStackNavigator';
 
-// ✅ CORRECTION : Types étendus pour inclure les paramètres unifiés
+// Types pour la navigation
 type DrawerParamList = {
   // Navigation principale
   Dashboard: undefined;
   Accounts: undefined;
   Transactions: undefined;
-  AddTransaction: { isRecurring?: boolean };
-  EditTransaction: { transactionId: string; isRecurring?: boolean };
-  RecurringTransactions: undefined;
+  AddTransaction: undefined;
+  EditTransaction: { transactionId: string };
   Transfer: undefined;
   Categories: undefined;
   Budgets: undefined;
@@ -62,17 +60,7 @@ type DrawerParamList = {
   AddAnnualCharge: undefined;
   EditAnnualCharge: { chargeId: string };
   Debts: undefined;
-  AddDebt: undefined;
-  EditDebt: { debtId: string };
-  DebtDetail: { debtId: string };
   Savings: undefined;
-  AddSavingsGoal: undefined;
-  EditSavingsGoal: { goalId: string };
-  SavingsDetail: { goalId: string };
-  
-  // ✅ CORRECTION : Ajout de IslamicCharges
-  IslamicCharges: undefined;
-  IslamicSettings: undefined;
   
   // Paramètres
   Profile: undefined;
@@ -82,7 +70,7 @@ type DrawerParamList = {
   // Autres
   AccountDetail: { accountId: string };
   
-  // Vue par Mois
+  // ✅ NOUVELLES ROUTES POUR LA PHASE 8
   MonthsOverview: undefined;
   MonthDetail: { year: number; month: number };
 };
@@ -90,23 +78,24 @@ type DrawerParamList = {
 const Drawer = createDrawerNavigator<DrawerParamList>();
 const Stack = createStackNavigator();
 
-// ✅ CORRECTION : Options de navigation corrigées
-const stackScreenOptions: StackNavigationOptions = {
-  headerShown: false
-};
-
-// ✅ CORRECTION : Stack pour Tableau de Bord avec ID
+// Stack pour Tableau de Bord
 const DashboardStack = () => (
-  <Stack.Navigator screenOptions={stackScreenOptions}>
+  <Stack.Navigator 
+    screenOptions={{ headerShown: false }}
+    id="DashboardStack" // ✅ AJOUT DE L'ID
+  >
     <Stack.Screen name="DashboardMain" component={DashboardScreen} />
     <Stack.Screen name="AccountDetail" component={AccountDetailScreen} />
     <Stack.Screen name="Transfer" component={TransferScreen} />
   </Stack.Navigator>
 );
 
-// ✅ CORRECTION : Stack pour Transactions avec ID
+// Stack pour Transactions (UNIFIÉES)
 const TransactionStack = () => (
-  <Stack.Navigator screenOptions={stackScreenOptions}>
+  <Stack.Navigator 
+    screenOptions={{ headerShown: false }}
+    id="TransactionStack" // ✅ AJOUT DE L'ID
+  >
     <Stack.Screen name="TransactionsList" component={TransactionsScreen} />
     <Stack.Screen name="AddTransaction" component={AddTransactionScreen} />
     <Stack.Screen name="EditTransaction" component={EditTransactionScreen} />
@@ -115,9 +104,12 @@ const TransactionStack = () => (
   </Stack.Navigator>
 );
 
-// ✅ CORRECTION : Stack pour Comptes avec ID
+// Stack pour Comptes
 const AccountsStack = () => (
-  <Stack.Navigator screenOptions={stackScreenOptions}>
+  <Stack.Navigator 
+    screenOptions={{ headerShown: false }}
+    id="AccountsStack" // ✅ AJOUT DE L'ID
+  >
     <Stack.Screen name="AccountsList" component={AccountsScreen} />
     <Stack.Screen name="AccountDetail" component={AccountDetailScreen} />
     <Stack.Screen name="Transfer" component={TransferScreen} />
@@ -125,81 +117,71 @@ const AccountsStack = () => (
   </Stack.Navigator>
 );
 
-// ✅ CORRECTION : Stack pour Budgets avec ID
+// Stack pour Budgets
 const BudgetsStack = () => (
-  <Stack.Navigator screenOptions={stackScreenOptions}>
+  <Stack.Navigator 
+    screenOptions={{ headerShown: false }}
+    id="BudgetsStack" // ✅ AJOUT DE L'ID
+  >
     <Stack.Screen name="BudgetsList" component={BudgetsScreen} />
     <Stack.Screen name="EditBudget" component={EditBudgetScreen} />
   </Stack.Navigator>
 );
 
-// ✅ CORRECTION : Stack pour Catégories avec ID
+// Stack pour Catégories (AVEC SOUS-CATÉGORIES)
 const CategoriesStack = () => (
-  <Stack.Navigator screenOptions={stackScreenOptions}>
+  <Stack.Navigator 
+    screenOptions={{ headerShown: false }}
+    id="CategoriesStack" // ✅ AJOUT DE L'ID
+  >
     <Stack.Screen name="CategoriesList" component={CategoriesScreen} />
   </Stack.Navigator>
 );
 
-// ✅ CORRECTION : Stack pour Analytics avec ID
+// Stack pour Analytics
 const AnalyticsStack = () => (
-  <Stack.Navigator screenOptions={stackScreenOptions}>
+  <Stack.Navigator 
+    screenOptions={{ headerShown: false }}
+    id="AnalyticsStack" // ✅ AJOUT DE L'ID
+  >
     <Stack.Screen name="AnalyticsDashboard" component={AnalyticsDashboardScreen} />
     <Stack.Screen name="ReportsList" component={ReportsScreen} />
     <Stack.Screen name="CategoryAnalysis" component={CategoryAnalysisScreen} />
   </Stack.Navigator>
 );
 
-// ✅ CORRECTION : Stack pour Paramètres avec ID
+// Stack pour Paramètres
 const SettingsStack = () => (
-  <Stack.Navigator screenOptions={stackScreenOptions}>
+  <Stack.Navigator 
+    screenOptions={{ headerShown: false }}
+    id="SettingsStack" // ✅ AJOUT DE L'ID
+  >
     <Stack.Screen name="SettingsList" component={SettingsScreen} />
     <Stack.Screen name="Profile" component={ProfileScreen} />
     <Stack.Screen name="CurrencySettings" component={CurrencySettingsScreen} />
   </Stack.Navigator>
 );
 
-// ✅ CORRECTION : Stack pour Charges Annuelles avec ID
+// Stack pour Charges Annuelles
 const AnnualChargesStack = () => (
-  <Stack.Navigator screenOptions={stackScreenOptions}>
+  <Stack.Navigator 
+    screenOptions={{ headerShown: false }}
+    id="AnnualChargesStack" // ✅ AJOUT DE L'ID
+  >
     <Stack.Screen name="AnnualChargesList" component={AnnualChargesScreen} />
     <Stack.Screen name="AddAnnualCharge" component={AddAnnualChargeScreen} />
     <Stack.Screen name="EditAnnualCharge" component={EditAnnualChargeScreen} />
   </Stack.Navigator>
 );
 
-// ✅ CORRECTION : Stack pour Transactions Récurrentes UNIFIÉES
-const RecurringTransactionsStack = () => (
-  <Stack.Navigator screenOptions={stackScreenOptions}>
-    <Stack.Screen 
-      name="RecurringTransactionsList" 
-      component={TransactionsScreen}
-      initialParams={{ showRecurringOnly: true }}
-    />
-    <Stack.Screen 
-      name="AddRecurringTransaction" 
-      component={AddTransactionScreen}
-      initialParams={{ isRecurring: true }}
-    />
-    <Stack.Screen 
-      name="EditRecurringTransaction" 
-      component={EditTransactionScreen}
-      initialParams={{ isRecurring: true }}
-    />
-  </Stack.Navigator>
-);
-
-// ✅ CORRECTION : Stack pour Vue par Mois avec ID
+// ✅ NOUVEAU : Stack pour Vue par Mois
 const MonthsStack = () => (
-  <Stack.Navigator screenOptions={stackScreenOptions}>
+  <Stack.Navigator 
+    screenOptions={{ headerShown: false }}
+    id="MonthsStack" // ✅ AJOUT DE L'ID
+  >
     <Stack.Screen name="MonthsOverview" component={MonthsOverviewScreen} />
     <Stack.Screen name="MonthDetail" component={MonthDetailScreen} />
-  </Stack.Navigator>
-);
-
-// ✅ CORRECTION : Stack pour Charges Islamiques avec ID
-const IslamicChargesStack = () => (
-  <Stack.Navigator screenOptions={stackScreenOptions}>
-    <Stack.Screen name="IslamicChargesList" component={IslamicChargesScreen} />
   </Stack.Navigator>
 );
 
@@ -233,6 +215,7 @@ const ModernDrawerNavigator = () => {
       drawerContent={(props) => <ModernDrawerContent {...props} />}
       screenOptions={drawerScreenOptions}
       initialRouteName="Dashboard"
+      id="MainDrawer" // ✅ AJOUT DE L'ID
     >
       {/* SECTION PRINCIPALE */}
       <Drawer.Screen
@@ -248,7 +231,7 @@ const ModernDrawerNavigator = () => {
         }}
       />
 
-      {/* VUE PAR MOIS */}
+      {/* ✅ NOUVELLE SECTION : VUE PAR MOIS */}
       <Drawer.Screen
         name="MonthsOverview"
         component={MonthsStack}
@@ -262,7 +245,7 @@ const ModernDrawerNavigator = () => {
         }}
       />
 
-      {/* SECTION TRANSACTIONS */}
+      {/* SECTION TRANSACTIONS (UNIFIÉES) */}
       <Drawer.Screen
         name="Transactions"
         component={TransactionStack}
@@ -330,20 +313,6 @@ const ModernDrawerNavigator = () => {
         }}
       />
 
-      {/* ✅ NOUVEAU : SECTION CHARGES ISLAMIQUES */}
-      <Drawer.Screen
-        name="IslamicCharges"
-        component={IslamicChargesStack}
-        options={{
-          drawerIcon: ({ color, size }) => (
-            <View style={[styles.iconContainer, { backgroundColor: '#FFD700' }]}>
-              <Ionicons name="star" size={size-2} color="#000000" />
-            </View>
-          ),
-          drawerLabel: "⭐ Charges Islamiques",
-        }}
-      />
-
       {/* SECTION ÉPARGNE ET DETTES */}
       <Drawer.Screen
         name="Savings"
@@ -385,29 +354,6 @@ const ModernDrawerNavigator = () => {
         }}
       />
 
-      {/* AnalyticsDashboard comme route directe */}
-      <Drawer.Screen 
-        name="AnalyticsDashboard" 
-        component={AnalyticsDashboardScreen} 
-        options={{
-          drawerLabel: "Dashboard Analytics",
-          drawerItemStyle: { display: 'none' }
-        }}
-      />
-
-      <Drawer.Screen
-        name="CategoryAnalysis"
-        component={CategoryAnalysisScreen}
-        options={{
-          drawerIcon: ({ color, size }) => (
-            <View style={[styles.iconContainer, { backgroundColor: '#BF5AF2' }]}>
-              <Ionicons name="analytics" size={size-2} color="#FFFFFF" />
-            </View>
-          ),
-          drawerLabel: "Analyse par Catégorie",
-        }}
-      />
-
       {/* SECTION ALERTES */}
       <Drawer.Screen
         name="Alerts"
@@ -433,19 +379,6 @@ const ModernDrawerNavigator = () => {
             </View>
           ),
           drawerLabel: "Paramètres",
-        }}
-      />
-
-      <Drawer.Screen 
-        name="CurrencySettings" 
-        component={CurrencySettingsScreen}
-        options={{
-          drawerIcon: ({ color, size }) => (
-            <View style={[styles.iconContainer, { backgroundColor: '#FFD60A' }]}>
-              <Ionicons name="cash" size={size-2} color="#000000" />
-            </View>
-          ),
-          drawerLabel: "Paramètres Devises",
         }}
       />
 
@@ -532,7 +465,7 @@ const ModernDrawerNavigator = () => {
         }}
       />
 
-      {/* Écran de détail mois (caché) */}
+      {/* ✅ NOUVEAU : Écran de détail mois (caché) */}
       <Drawer.Screen 
         name="MonthDetail" 
         component={MonthDetailScreen} 
@@ -542,12 +475,24 @@ const ModernDrawerNavigator = () => {
         }}
       />
 
-      {/* ✅ CORRECTION : Écrans obsolètes à supprimer */}
-      {/* 
-        LES ÉCRANS SUIVANTS SONT OBSOLÈTES AVEC L'UNIFICATION :
-        - AddRecurringTransaction (remplacé par AddTransaction avec paramètre)
-        - EditRecurringTransaction (remplacé par EditTransaction avec paramètre)
-      */}
+      {/* ✅ AJOUTER AnalyticsDashboard COMME ROUTE DIRECTE */}
+      <Drawer.Screen 
+        name="AnalyticsDashboard" 
+        component={AnalyticsDashboardScreen} 
+        options={{
+          drawerLabel: "Dashboard Analytics",
+          drawerItemStyle: { display: 'none' }
+        }}
+      />
+
+      <Drawer.Screen 
+        name="CategoryAnalysis" 
+        component={CategoryAnalysisScreen} 
+        options={{
+          drawerLabel: "Analyse Catégorie",
+          drawerItemStyle: { display: 'none' }
+        }}
+      />
 
     </Drawer.Navigator>
   );

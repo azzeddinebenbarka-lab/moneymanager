@@ -1,8 +1,8 @@
-// src/services/categoryService.ts - VERSION COMPLÈTEMENT CORRIGÉE
+// src/services/categoryService.ts - VERSION AVEC SOUS-CATÉGORIES CORRIGÉE
 import { Category } from '../types';
 import { getDatabase } from './database/sqlite';
 
-// ✅ INTERFACES TYPÉES
+// ✅ INTERFACES TYPÉES AVEC SOUS-CATÉGORIES
 interface DatabaseCategory {
   id: string;
   user_id: string;
@@ -10,6 +10,11 @@ interface DatabaseCategory {
   type: string;
   color: string;
   icon: string;
+  parent_id: string | null;
+  level: number;
+  sort_order: number;
+  is_active: number;
+  budget: number;
   created_at: string;
 }
 
@@ -18,6 +23,9 @@ interface CreateCategoryData {
   type: 'expense' | 'income';
   color: string;
   icon: string;
+  parentId?: string | null;
+  level?: number;
+  sortOrder?: number;
   budget?: number;
   isActive?: boolean;
 }
@@ -27,6 +35,7 @@ interface CategoryStats {
   expenseCategories: number;
   incomeCategories: number;
   categoriesByType: Record<string, number>;
+  subcategoriesCount: number;
 }
 
 interface TableDiagnosis {
@@ -36,37 +45,53 @@ interface TableDiagnosis {
   sampleData: any[];
 }
 
-// ✅ SERVICE PRINCIPAL
+interface CategoryTree {
+  category: Category;
+  subcategories: Category[];
+}
+
+// ✅ SERVICE PRINCIPAL AVEC SOUS-CATÉGORIES
 export const categoryService = {
   // ===== OPÉRATIONS CRUD =====
 
-  // CREATE - Créer une catégorie
+  // CREATE - Créer une catégorie (avec support sous-catégories)
   async createCategory(categoryData: CreateCategoryData, userId: string = 'default-user'): Promise<string> {
     const db = await getDatabase();
     
     try {
-      // Vérifier que la table existe
       await checkAndRepairCategoriesTable();
 
       const id = `cat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const createdAt = new Date().toISOString();
+      
+      const level = categoryData.parentId ? 1 : 0;
+      const sortOrder = categoryData.sortOrder || 0;
+      const isActive = categoryData.isActive !== false ? 1 : 0;
+      const budget = categoryData.budget || 0;
 
       console.log('🔄 [categoryService] Creating category:', { 
         id, 
         name: categoryData.name, 
-        type: categoryData.type 
+        type: categoryData.type,
+        parentId: categoryData.parentId,
+        level
       });
 
       await db.runAsync(
-        `INSERT INTO categories (id, user_id, name, type, color, icon, created_at) 
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO categories (id, user_id, name, type, color, icon, parent_id, level, sort_order, is_active, budget, created_at) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id, 
           userId, 
           categoryData.name, 
           categoryData.type, 
           categoryData.color, 
-          categoryData.icon, 
+          categoryData.icon,
+          categoryData.parentId || null,
+          level,
+          sortOrder,
+          isActive,
+          budget,
           createdAt
         ]
       );
@@ -77,7 +102,6 @@ export const categoryService = {
     } catch (error) {
       console.error('❌ [categoryService] Error in createCategory:', error);
       
-      // Réparer et réessayer en cas d'erreur de structure
       if (error instanceof Error && (
         error.message.includes('no such table') ||
         error.message.includes('no column named')
@@ -85,7 +109,6 @@ export const categoryService = {
         console.log('🛠️ [categoryService] Table issue detected, repairing...');
         await repairCategoriesTable();
         
-        // Réessayer après réparation
         return await categoryService.createCategory(categoryData, userId);
       }
       
@@ -93,7 +116,7 @@ export const categoryService = {
     }
   },
 
-  // READ - Récupérer toutes les catégories
+  // READ - Récupérer toutes les catégories (avec hiérarchie)
   async getAllCategories(userId: string = 'default-user'): Promise<Category[]> {
     try {
       const db = await getDatabase();
@@ -103,7 +126,7 @@ export const categoryService = {
       console.log('🔍 [categoryService] Fetching all categories...');
       
       const result = await db.getAllAsync(
-        `SELECT * FROM categories WHERE user_id = ? ORDER BY type, name`,
+        `SELECT * FROM categories WHERE user_id = ? ORDER BY level, sort_order, name`,
         [userId]
       ) as DatabaseCategory[];
       
@@ -115,12 +138,120 @@ export const categoryService = {
         type: item.type as 'expense' | 'income',
         color: item.color,
         icon: item.icon,
+        parentId: item.parent_id || undefined,
+        level: item.level || 0,
+        sortOrder: item.sort_order || 0,
+        isActive: item.is_active !== 0,
+        budget: item.budget || 0,
         createdAt: item.created_at,
       }));
       
       return categories;
     } catch (error) {
       console.error('❌ [categoryService] Error in getAllCategories:', error);
+      
+      if (error instanceof Error && error.message.includes('no such table')) {
+        await repairCategoriesTable();
+        return [];
+      }
+      
+      throw error;
+    }
+  },
+
+  // ✅ NOUVELLE MÉTHODE : Obtenir l'arbre des catégories
+  async getCategoryTree(userId: string = 'default-user'): Promise<CategoryTree[]> {
+    try {
+      const allCategories = await this.getAllCategories(userId);
+      const mainCategories = allCategories.filter(cat => cat.level === 0);
+      
+      const categoryTree: CategoryTree[] = mainCategories.map(mainCategory => ({
+        category: mainCategory,
+        subcategories: allCategories.filter(cat => cat.parentId === mainCategory.id)
+      }));
+      
+      console.log('🌳 [categoryService] Category tree built:', categoryTree.length, 'main categories');
+      return categoryTree;
+    } catch (error) {
+      console.error('❌ [categoryService] Error building category tree:', error);
+      return [];
+    }
+  },
+
+  // READ - Récupérer les catégories principales (niveau 0)
+  async getMainCategories(userId: string = 'default-user'): Promise<Category[]> {
+    try {
+      const db = await getDatabase();
+      
+      await checkAndRepairCategoriesTable();
+      
+      console.log('🔍 [categoryService] Fetching main categories...');
+      
+      const result = await db.getAllAsync(
+        `SELECT * FROM categories WHERE user_id = ? AND level = 0 ORDER BY sort_order, name`,
+        [userId]
+      ) as DatabaseCategory[];
+      
+      const categories: Category[] = result.map((item) => ({
+        id: item.id,
+        name: item.name,
+        type: item.type as 'expense' | 'income',
+        color: item.color,
+        icon: item.icon,
+        parentId: item.parent_id || undefined,
+        level: item.level || 0,
+        sortOrder: item.sort_order || 0,
+        isActive: item.is_active !== 0,
+        budget: item.budget || 0,
+        createdAt: item.created_at,
+      }));
+      
+      console.log('✅ [categoryService] Found', categories.length, 'main categories');
+      return categories;
+    } catch (error) {
+      console.error('❌ [categoryService] Error in getMainCategories:', error);
+      
+      if (error instanceof Error && error.message.includes('no such table')) {
+        await repairCategoriesTable();
+        return [];
+      }
+      
+      throw error;
+    }
+  },
+
+  // READ - Récupérer les sous-catégories d'une catégorie parent
+  async getSubcategories(parentId: string, userId: string = 'default-user'): Promise<Category[]> {
+    try {
+      const db = await getDatabase();
+      
+      await checkAndRepairCategoriesTable();
+      
+      console.log('🔍 [categoryService] Fetching subcategories for parent:', parentId);
+      
+      const result = await db.getAllAsync(
+        `SELECT * FROM categories WHERE user_id = ? AND parent_id = ? ORDER BY sort_order, name`,
+        [userId, parentId]
+      ) as DatabaseCategory[];
+      
+      const categories: Category[] = result.map((item) => ({
+        id: item.id,
+        name: item.name,
+        type: item.type as 'expense' | 'income',
+        color: item.color,
+        icon: item.icon,
+        parentId: item.parent_id || undefined,
+        level: item.level || 0,
+        sortOrder: item.sort_order || 0,
+        isActive: item.is_active !== 0,
+        budget: item.budget || 0,
+        createdAt: item.created_at,
+      }));
+      
+      console.log('✅ [categoryService] Found', categories.length, 'subcategories');
+      return categories;
+    } catch (error) {
+      console.error('❌ [categoryService] Error in getSubcategories:', error);
       
       if (error instanceof Error && error.message.includes('no such table')) {
         await repairCategoriesTable();
@@ -152,6 +283,11 @@ export const categoryService = {
           type: result.type as 'expense' | 'income',
           color: result.color,
           icon: result.icon,
+          parentId: result.parent_id || undefined,
+          level: result.level || 0,
+          sortOrder: result.sort_order || 0,
+          isActive: result.is_active !== 0,
+          budget: result.budget || 0,
           createdAt: result.created_at,
         };
         console.log('✅ [categoryService] Category found:', category.name);
@@ -182,7 +318,7 @@ export const categoryService = {
       console.log('🔍 [categoryService] Fetching categories by type:', type);
       
       const result = await db.getAllAsync(
-        `SELECT * FROM categories WHERE type = ? AND user_id = ? ORDER BY name`,
+        `SELECT * FROM categories WHERE type = ? AND user_id = ? ORDER BY level, sort_order, name`,
         [type, userId]
       ) as DatabaseCategory[];
       
@@ -194,6 +330,11 @@ export const categoryService = {
         type: item.type as 'expense' | 'income',
         color: item.color,
         icon: item.icon,
+        parentId: item.parent_id || undefined,
+        level: item.level || 0,
+        sortOrder: item.sort_order || 0,
+        isActive: item.is_active !== 0,
+        budget: item.budget || 0,
         createdAt: item.created_at,
       }));
       
@@ -213,7 +354,7 @@ export const categoryService = {
   // UPDATE - Mettre à jour une catégorie
   async updateCategory(
     id: string, 
-    categoryData: Omit<Category, 'id' | 'createdAt'>, 
+    categoryData: Partial<Omit<Category, 'id' | 'createdAt'>>, 
     userId: string = 'default-user'
   ): Promise<void> {
     const db = await getDatabase();
@@ -223,11 +364,56 @@ export const categoryService = {
     try {
       console.log('🔄 [categoryService] Updating category:', id);
       
+      const updates: string[] = [];
+      const values: any[] = [];
+      
+      if (categoryData.name !== undefined) {
+        updates.push('name = ?');
+        values.push(categoryData.name);
+      }
+      if (categoryData.type !== undefined) {
+        updates.push('type = ?');
+        values.push(categoryData.type);
+      }
+      if (categoryData.color !== undefined) {
+        updates.push('color = ?');
+        values.push(categoryData.color);
+      }
+      if (categoryData.icon !== undefined) {
+        updates.push('icon = ?');
+        values.push(categoryData.icon);
+      }
+      if (categoryData.parentId !== undefined) {
+        updates.push('parent_id = ?');
+        values.push(categoryData.parentId);
+      }
+      if (categoryData.level !== undefined) {
+        updates.push('level = ?');
+        values.push(categoryData.level);
+      }
+      if (categoryData.sortOrder !== undefined) {
+        updates.push('sort_order = ?');
+        values.push(categoryData.sortOrder);
+      }
+      if (categoryData.isActive !== undefined) {
+        updates.push('is_active = ?');
+        values.push(categoryData.isActive ? 1 : 0);
+      }
+      if (categoryData.budget !== undefined) {
+        updates.push('budget = ?');
+        values.push(categoryData.budget);
+      }
+      
+      if (updates.length === 0) {
+        console.log('ℹ️ [categoryService] No updates provided for category:', id);
+        return;
+      }
+      
+      values.push(id, userId);
+      
       await db.runAsync(
-        `UPDATE categories 
-         SET name = ?, type = ?, color = ?, icon = ?
-         WHERE id = ? AND user_id = ?`,
-        [categoryData.name, categoryData.type, categoryData.color, categoryData.icon, id, userId]
+        `UPDATE categories SET ${updates.join(', ')} WHERE id = ? AND user_id = ?`,
+        values
       );
       
       console.log('✅ [categoryService] Category updated successfully');
@@ -245,6 +431,12 @@ export const categoryService = {
     
     try {
       console.log('🗑️ [categoryService] Deleting category:', id);
+      
+      // Vérifier si la catégorie a des sous-catégories
+      const subcategories = await this.getSubcategories(id, userId);
+      if (subcategories.length > 0) {
+        throw new Error('Impossible de supprimer une catégorie qui a des sous-catégories');
+      }
       
       await db.runAsync(
         `DELETE FROM categories WHERE id = ? AND user_id = ?`,
@@ -270,7 +462,7 @@ export const categoryService = {
       console.log('🔍 [categoryService] Searching categories for:', searchTerm);
       
       const result = await db.getAllAsync(
-        `SELECT * FROM categories WHERE name LIKE ? AND user_id = ? ORDER BY name`,
+        `SELECT * FROM categories WHERE name LIKE ? AND user_id = ? ORDER BY level, sort_order, name`,
         [`%${searchTerm}%`, userId]
       ) as DatabaseCategory[];
       
@@ -280,6 +472,11 @@ export const categoryService = {
         type: item.type as 'expense' | 'income',
         color: item.color,
         icon: item.icon,
+        parentId: item.parent_id || undefined,
+        level: item.level || 0,
+        sortOrder: item.sort_order || 0,
+        isActive: item.is_active !== 0,
+        budget: item.budget || 0,
         createdAt: item.created_at,
       }));
       
@@ -297,7 +494,7 @@ export const categoryService = {
     }
   },
 
-  // ===== UTILITAIRES =====
+  // ===== UTILITAIRES AVEC SOUS-CATÉGORIES =====
 
   // Vérifier si une catégorie est utilisée dans des transactions
   async isCategoryUsed(categoryId: string, userId: string = 'default-user'): Promise<boolean> {
@@ -341,6 +538,13 @@ export const categoryService = {
       ) as { count: number } | null;
       const totalCategories = countResult?.count || 0;
       
+      // Sous-catégories
+      const subcategoriesResult = await db.getFirstAsync(
+        `SELECT COUNT(*) as count FROM categories WHERE user_id = ? AND level > 0`,
+        [userId]
+      ) as { count: number } | null;
+      const subcategoriesCount = subcategoriesResult?.count || 0;
+      
       // Catégories par type
       const typeResult = await db.getAllAsync(
         `SELECT type, COUNT(*) as count FROM categories WHERE user_id = ? GROUP BY type`,
@@ -360,7 +564,8 @@ export const categoryService = {
       console.log('📊 [categoryService] Category stats:', { 
         totalCategories, 
         expenseCategories, 
-        incomeCategories, 
+        incomeCategories,
+        subcategoriesCount,
         categoriesByType 
       });
       
@@ -368,7 +573,8 @@ export const categoryService = {
         totalCategories,
         expenseCategories,
         incomeCategories,
-        categoriesByType
+        categoriesByType,
+        subcategoriesCount
       };
     } catch (error) {
       console.error('❌ [categoryService] Error in getCategoryStats:', error);
@@ -379,7 +585,8 @@ export const categoryService = {
           totalCategories: 0,
           expenseCategories: 0,
           incomeCategories: 0,
-          categoriesByType: {}
+          categoriesByType: {},
+          subcategoriesCount: 0
         };
       }
       
@@ -387,7 +594,7 @@ export const categoryService = {
     }
   },
 
-  // Initialiser les catégories par défaut
+  // Initialiser les catégories par défaut avec hiérarchie
   async initializeDefaultCategories(userId: string = 'default-user'): Promise<void> {
     try {
       const db = await getDatabase();
@@ -401,37 +608,61 @@ export const categoryService = {
       ) as DatabaseCategory[];
       
       if (existingCategories.length === 0) {
-        console.log('🔄 [categoryService] Initializing default categories...');
+        console.log('🔄 [categoryService] Initializing default categories with hierarchy...');
         
         const defaultCategories = [
-          // Dépenses
-          { id: 'cat_1', name: 'Alimentation', type: 'expense', color: '#FF6B6B', icon: 'restaurant' },
-          { id: 'cat_2', name: 'Transport', type: 'expense', color: '#4ECDC4', icon: 'car' },
-          { id: 'cat_3', name: 'Logement', type: 'expense', color: '#45B7D1', icon: 'home' },
-          { id: 'cat_4', name: 'Loisirs', type: 'expense', color: '#96CEB4', icon: 'game-controller' },
-          { id: 'cat_5', name: 'Santé', type: 'expense', color: '#FFEAA7', icon: 'medical' },
-          { id: 'cat_6', name: 'Shopping', type: 'expense', color: '#DDA0DD', icon: 'cart' },
-          { id: 'cat_7', name: 'Éducation', type: 'expense', color: '#98D8C8', icon: 'school' },
-          { id: 'cat_8', name: 'Voyages', type: 'expense', color: '#F7DC6F', icon: 'airplane' },
-          { id: 'cat_9', name: 'Autres dépenses', type: 'expense', color: '#778899', icon: 'ellipsis-horizontal' },
+          // Catégories principales Dépenses
+          { id: 'cat_main_food', name: 'Alimentation', type: 'expense', color: '#FF6B6B', icon: 'restaurant', level: 0, sortOrder: 1 },
+          { id: 'cat_main_transport', name: 'Transport', type: 'expense', color: '#4ECDC4', icon: 'car', level: 0, sortOrder: 2 },
+          { id: 'cat_main_housing', name: 'Logement', type: 'expense', color: '#45B7D1', icon: 'home', level: 0, sortOrder: 3 },
+          { id: 'cat_main_entertainment', name: 'Loisirs', type: 'expense', color: '#96CEB4', icon: 'game-controller', level: 0, sortOrder: 4 },
+          { id: 'cat_main_health', name: 'Santé', type: 'expense', color: '#FFEAA7', icon: 'medical', level: 0, sortOrder: 5 },
+          { id: 'cat_main_shopping', name: 'Shopping', type: 'expense', color: '#DDA0DD', icon: 'cart', level: 0, sortOrder: 6 },
           
-          // Revenus
-          { id: 'cat_10', name: 'Salaire', type: 'income', color: '#52C41A', icon: 'cash' },
-          { id: 'cat_11', name: 'Investissements', type: 'income', color: '#FAAD14', icon: 'trending-up' },
-          { id: 'cat_12', name: 'Cadeaux', type: 'income', color: '#722ED1', icon: 'gift' },
-          { id: 'cat_13', name: 'Prime', type: 'income', color: '#13C2C2', icon: 'trophy' },
-          { id: 'cat_14', name: 'Autres revenus', type: 'income', color: '#20B2AA', icon: 'add-circle' },
+          // Catégories principales Revenus
+          { id: 'cat_main_salary', name: 'Salaire', type: 'income', color: '#52C41A', icon: 'cash', level: 0, sortOrder: 7 },
+          { id: 'cat_main_investments', name: 'Investissements', type: 'income', color: '#FAAD14', icon: 'trending-up', level: 0, sortOrder: 8 },
+          { id: 'cat_main_other_income', name: 'Autres revenus', type: 'income', color: '#20B2AA', icon: 'add-circle', level: 0, sortOrder: 9 },
         ];
 
-        for (const category of defaultCategories) {
+        // Sous-catégories
+        const subcategories = [
+          // Sous-catégories Alimentation
+          { id: 'cat_sub_groceries', name: 'Épicerie', type: 'expense', color: '#FF6B6B', icon: 'basket', parentId: 'cat_main_food', level: 1, sortOrder: 1 },
+          { id: 'cat_sub_restaurants', name: 'Restaurants', type: 'expense', color: '#FF6B6B', icon: 'restaurant', parentId: 'cat_main_food', level: 1, sortOrder: 2 },
+          
+          // Sous-catégories Transport
+          { id: 'cat_sub_fuel', name: 'Carburant', type: 'expense', color: '#4ECDC4', icon: 'car', parentId: 'cat_main_transport', level: 1, sortOrder: 1 },
+          { id: 'cat_sub_public_transport', name: 'Transport public', type: 'expense', color: '#4ECDC4', icon: 'bus', parentId: 'cat_main_transport', level: 1, sortOrder: 2 },
+          
+          // Sous-catégories Logement
+          { id: 'cat_sub_rent', name: 'Loyer', type: 'expense', color: '#45B7D1', icon: 'home', parentId: 'cat_main_housing', level: 1, sortOrder: 1 },
+          { id: 'cat_sub_utilities', name: 'Services publics', type: 'expense', color: '#45B7D1', icon: 'flash', parentId: 'cat_main_housing', level: 1, sortOrder: 2 },
+        ];
+
+        for (const category of [...defaultCategories, ...subcategories]) {
           const createdAt = new Date().toISOString();
           await db.runAsync(
-            `INSERT INTO categories (id, user_id, name, type, color, icon, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [category.id, userId, category.name, category.type, category.color, category.icon, createdAt]
+            `INSERT INTO categories (id, user_id, name, type, color, icon, parent_id, level, sort_order, is_active, budget, created_at) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              category.id, 
+              userId, 
+              category.name, 
+              category.type, 
+              category.color, 
+              category.icon,
+              category.parentId || null,
+              category.level,
+              category.sortOrder,
+              1, // is_active
+              0, // budget
+              createdAt
+            ]
           );
         }
         
-        console.log('✅ [categoryService] Default categories initialized successfully');
+        console.log('✅ [categoryService] Default categories with hierarchy initialized successfully');
       } else {
         console.log('ℹ️ [categoryService] Categories already exist, skipping initialization');
       }
@@ -449,7 +680,6 @@ export const categoryService = {
       const db = await getDatabase();
       console.log('🔧 [categoryService] Comprehensive table diagnosis...');
       
-      // Vérifier si la table existe
       const tableExists = await db.getFirstAsync(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='categories'"
       );
@@ -464,15 +694,12 @@ export const categoryService = {
         };
       }
       
-      // Structure de la table
       const structure = await db.getAllAsync(`PRAGMA table_info(categories)`) as any[];
       console.log('🔧 [categoryService] Table structure:', structure);
       
-      // Nombre de lignes
       const countResult = await db.getFirstAsync(`SELECT COUNT(*) as count FROM categories`) as { count: number } | null;
       const rowCount = countResult?.count || 0;
       
-      // Données d'exemple
       const sampleData = rowCount > 0 ? 
         await db.getAllAsync(`SELECT * FROM categories LIMIT 3`) as any[] : [];
       
@@ -547,11 +774,28 @@ export const categoryService = {
 
           const id = `cat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
           const createdAt = new Date().toISOString();
+          const level = categoryData.parentId ? 1 : 0;
+          const sortOrder = categoryData.sortOrder || 0;
+          const isActive = categoryData.isActive !== false ? 1 : 0;
+          const budget = categoryData.budget || 0;
 
           await db.runAsync(
-            `INSERT INTO categories (id, user_id, name, type, color, icon, created_at) 
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [id, userId, categoryData.name.trim(), categoryData.type, categoryData.color, categoryData.icon, createdAt]
+            `INSERT INTO categories (id, user_id, name, type, color, icon, parent_id, level, sort_order, is_active, budget, created_at) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              id, 
+              userId, 
+              categoryData.name.trim(), 
+              categoryData.type, 
+              categoryData.color, 
+              categoryData.icon,
+              categoryData.parentId || null,
+              level,
+              sortOrder,
+              isActive,
+              budget,
+              createdAt
+            ]
           );
 
           results.created++;
@@ -593,7 +837,6 @@ const checkAndRepairCategoriesTable = async (): Promise<void> => {
   try {
     const db = await getDatabase();
     
-    // Vérifier si la table existe
     const tableExists = await db.getFirstAsync(
       "SELECT name FROM sqlite_master WHERE type='table' AND name='categories'"
     );
@@ -604,9 +847,11 @@ const checkAndRepairCategoriesTable = async (): Promise<void> => {
       return;
     }
     
-    // Vérifier la structure
     const tableInfo = await db.getAllAsync(`PRAGMA table_info(categories)`) as any[];
-    const requiredColumns = ['id', 'user_id', 'name', 'type', 'color', 'icon', 'created_at'];
+    const requiredColumns = [
+      'id', 'user_id', 'name', 'type', 'color', 'icon', 
+      'parent_id', 'level', 'sort_order', 'is_active', 'budget', 'created_at'
+    ];
     const missingColumns = requiredColumns.filter(col => 
       !tableInfo.some(column => column.name === col)
     );
@@ -618,18 +863,16 @@ const checkAndRepairCategoriesTable = async (): Promise<void> => {
     
   } catch (error) {
     console.error('❌ [categoryService] Error checking table structure:', error);
-    // En cas d'erreur, recréer la table
     await repairCategoriesTable();
   }
 };
 
-// Fonction de réparation de la table categories
+// Fonction de réparation de la table categories AVEC SOUS-CATÉGORIES
 const repairCategoriesTable = async (): Promise<void> => {
   try {
     const db = await getDatabase();
-    console.log('🛠️ [categoryService] Repairing categories table...');
+    console.log('🛠️ [categoryService] Repairing categories table with subcategories support...');
     
-    // Sauvegarder les données existantes
     let existingData: DatabaseCategory[] = [];
     try {
       existingData = await db.getAllAsync(`SELECT * FROM categories`) as DatabaseCategory[];
@@ -638,7 +881,6 @@ const repairCategoriesTable = async (): Promise<void> => {
       console.log('🔧 [categoryService] No existing data to backup');
     }
     
-    // Supprimer et recréer la table
     await db.execAsync('DROP TABLE IF EXISTS categories');
     
     await db.execAsync(`
@@ -649,20 +891,25 @@ const repairCategoriesTable = async (): Promise<void> => {
         type TEXT NOT NULL,
         color TEXT NOT NULL,
         icon TEXT NOT NULL,
-        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        parent_id TEXT,
+        level INTEGER NOT NULL DEFAULT 0,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        budget REAL NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (parent_id) REFERENCES categories (id) ON DELETE SET NULL
       );
     `);
     
-    console.log('✅ [categoryService] Categories table recreated');
+    console.log('✅ [categoryService] Categories table with subcategories recreated');
     
-    // Réinsérer les données sauvegardées
     if (existingData.length > 0) {
       let restoredCount = 0;
       for (const category of existingData) {
         try {
           await db.runAsync(
-            `INSERT INTO categories (id, user_id, name, type, color, icon, created_at) 
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO categories (id, user_id, name, type, color, icon, parent_id, level, sort_order, is_active, budget, created_at) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               category.id,
               category.user_id,
@@ -670,6 +917,11 @@ const repairCategoriesTable = async (): Promise<void> => {
               category.type,
               category.color,
               category.icon,
+              category.parent_id || null, // ✅ CORRECTION : parent_id au lieu de parentId
+              category.level || 0,
+              category.sort_order || 0,
+              category.is_active !== undefined ? category.is_active : 1,
+              category.budget || 0,
               category.created_at || new Date().toISOString()
             ]
           );

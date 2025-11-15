@@ -72,7 +72,7 @@ export interface Transaction {
 export interface Category {
   id: string;
   name: string;
-  type: 'income' | 'expense' | 'both';
+  type: 'income' | 'expense';
   color: string;
   icon: string;
   parentId?: string; // ✅ NOUVEAU : Référence à la catégorie parente
@@ -83,11 +83,12 @@ export interface Category {
   budget?: number; // ✅ NOUVEAU : Budget optionnel pour la catégorie
   createdAt: string;
   updatedAt?: string;
+  isSubCategory?: boolean;
 }
 
 export interface CreateCategoryData {
   name: string;
-  type: 'income' | 'expense' | 'both';
+  type: 'income' | 'expense';
   color: string;
   icon: string;
   parentId?: string;
@@ -96,6 +97,12 @@ export interface CreateCategoryData {
   description?: string;
   budget?: number;
   isActive?: boolean;
+  isSubCategory?: boolean; // ✅ AJOUTÉ
+}
+
+export interface CategoryTree {
+  category: Category;
+  subCategories: Category[];
 }
 
 export interface Budget {
@@ -220,6 +227,19 @@ export interface CreateTransactionData {
   isRecurring?: boolean;
   recurrenceType?: 'daily' | 'weekly' | 'monthly' | 'yearly';
   recurrenceEndDate?: string;
+}
+
+export interface SubCategory {
+  id: string;
+  name: string;
+  type: 'expense' | 'income' | 'both';
+  color: string;
+  icon: string;
+  parentId: string;
+  isSubCategory: boolean;
+  budget?: number;
+  isActive?: boolean;
+  createdAt: string;
 }
 
 export interface CategoryHierarchy {

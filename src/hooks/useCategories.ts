@@ -1,206 +1,206 @@
-// src/hooks/useCategories.ts - VERSION CORRIGÉE AVEC CRÉATION MULTIPLE
+// src/hooks/useCategories.ts - VERSION CORRIGÉE
 import { useCallback, useEffect, useState } from 'react';
 import categoryService from '../services/categoryService';
-import { Category } from '../types';
+import { Category, CreateCategoryData } from '../types';
 
-// ✅ INTERFACE POUR LA CRÉATION MULTIPLE
-interface MultipleCreateResult {
-  success: boolean;
-  created: number;
-  errors: string[];
+interface UseCategoriesReturn {
+  categories: Category[];
+  loading: boolean;
+  error: string | null;
+  createCategory: (categoryData: Omit<CreateCategoryData, 'type'> & { type: 'income' | 'expense' }) => Promise<string>;
+  updateCategory: (id: string, categoryData: Partial<Omit<Category, 'id' | 'createdAt'>>) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
+  getCategoriesByType: (type: 'expense' | 'income') => Promise<Category[]>;
+  getCategoryById: (id: string) => Promise<Category | null>;
+  initializeDefaultCategories: () => Promise<void>;
+  refreshCategories: () => Promise<void>;
+  getMainCategories: () => Promise<Category[]>;
+  getSubcategories: (parentId: string) => Promise<Category[]>;
+  getCategoryTree: () => Promise<Array<{ category: Category; subcategories: Category[] }>>;
+  createMultipleCategories: (categoriesData: Array<Omit<CreateCategoryData, 'type'> & { type: 'income' | 'expense' }>) => Promise<{ success: boolean; created: number; errors: string[] }>;
 }
 
-export const useCategories = () => {
+export const useCategories = (userId: string = 'default-user'): UseCategoriesReturn => {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadCategories = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const categoriesData = await categoryService.getAllCategories();
-      setCategories(categoriesData);
+      const allCategories = await categoryService.getAllCategories(userId);
+      setCategories(allCategories);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      setError(`Erreur lors du chargement des catégories: ${errorMessage}`);
-      console.error('Error loading categories:', err);
+      setError(errorMessage);
+      console.error('❌ [useCategories] Error loading categories:', err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userId]);
 
-  const createCategory = useCallback(async (categoryData: Omit<Category, 'id' | 'createdAt'>) => {
-    try {
-      setError(null);
-      await categoryService.createCategory(categoryData);
-      await loadCategories(); // Recharger après création
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      setError(`Erreur lors de la création de la catégorie: ${errorMessage}`);
-      console.error('Error creating category:', err);
-      throw err;
-    }
-  }, [loadCategories]);
-
-  // ✅ NOUVELLE MÉTHODE : Création multiple
-  const createMultipleCategories = useCallback(async (
-    categoriesData: Omit<Category, 'id' | 'createdAt'>[]
-  ): Promise<MultipleCreateResult> => {
-    try {
-      setError(null);
-      setLoading(true);
-      
-      const result = await categoryService.createMultipleCategories(categoriesData);
-      
-      // Recharger les catégories après création
-      if (result.created > 0) {
-        await loadCategories();
-      }
-      
-      return result;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      setError(`Erreur lors de la création multiple: ${errorMessage}`);
-      console.error('Error creating multiple categories:', err);
-      
-      return {
-        success: false,
-        created: 0,
-        errors: [errorMessage]
-      };
-    } finally {
-      setLoading(false);
-    }
-  }, [loadCategories]);
-
-  const updateCategory = useCallback(async (id: string, categoryData: Omit<Category, 'id' | 'createdAt'>) => {
-    try {
-      setError(null);
-      await categoryService.updateCategory(id, categoryData);
-      await loadCategories(); // Recharger après mise à jour
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      setError(`Erreur lors de la mise à jour de la catégorie: ${errorMessage}`);
-      console.error('Error updating category:', err);
-      throw err;
-    }
-  }, [loadCategories]);
-
-  const deleteCategory = useCallback(async (id: string) => {
-    try {
-      setError(null);
-      await categoryService.deleteCategory(id);
-      await loadCategories(); // Recharger après suppression
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      setError(`Erreur lors de la suppression de la catégorie: ${errorMessage}`);
-      console.error('Error deleting category:', err);
-      throw err;
-    }
-  }, [loadCategories]);
-
-  const getCategoryById = useCallback(async (id: string): Promise<Category | null> => {
-    try {
-      setError(null);
-      return await categoryService.getCategoryById(id);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      setError(`Erreur lors de la récupération de la catégorie: ${errorMessage}`);
-      console.error('Error getting category by id:', err);
-      return null;
-    }
-  }, []);
-
-  const getCategoriesByType = useCallback(async (type: 'expense' | 'income'): Promise<Category[]> => {
-    try {
-      setError(null);
-      return await categoryService.getCategoriesByType(type);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      setError(`Erreur lors de la récupération des catégories: ${errorMessage}`);
-      console.error('Error getting categories by type:', err);
-      return [];
-    }
-  }, []);
-
-  const initializeDefaultCategories = useCallback(async () => {
-    try {
-      setError(null);
-      await categoryService.initializeDefaultCategories();
-      await loadCategories(); // Recharger après initialisation
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      setError(`Erreur lors de l'initialisation des catégories: ${errorMessage}`);
-      console.error('Error initializing default categories:', err);
-      throw err;
-    }
-  }, [loadCategories]);
-
-  const searchCategories = useCallback(async (searchTerm: string): Promise<Category[]> => {
-    try {
-      setError(null);
-      return await categoryService.searchCategories(searchTerm);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      setError(`Erreur lors de la recherche des catégories: ${errorMessage}`);
-      console.error('Error searching categories:', err);
-      return [];
-    }
-  }, []);
-
-  const getCategoryStats = useCallback(async () => {
-    try {
-      setError(null);
-      return await categoryService.getCategoryStats();
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      setError(`Erreur lors de la récupération des statistiques: ${errorMessage}`);
-      console.error('Error getting category stats:', err);
-      throw err;
-    }
-  }, []);
-
-  const isCategoryUsed = useCallback(async (categoryId: string): Promise<boolean> => {
-    try {
-      setError(null);
-      return await categoryService.isCategoryUsed(categoryId);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      setError(`Erreur lors de la vérification de la catégorie: ${errorMessage}`);
-      console.error('Error checking if category is used:', err);
-      return false;
-    }
-  }, []);
-
-  // Charger les catégories au démarrage
   useEffect(() => {
     loadCategories();
   }, [loadCategories]);
 
+  const createCategory = useCallback(async (categoryData: Omit<CreateCategoryData, 'type'> & { type: 'income' | 'expense' }): Promise<string> => {
+    try {
+      setError(null);
+      const id = await categoryService.createCategory(categoryData, userId);
+      await loadCategories();
+      return id;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+      setError(errorMessage);
+      throw err;
+    }
+  }, [userId, loadCategories]);
+
+  const createSubCategory = useCallback(async (parentId: string, categoryData: {
+    name: string;
+    type: 'income' | 'expense';
+    color: string;
+    icon: string;
+    budget?: number;
+  }): Promise<string> => {
+    try {
+      setError(null);
+      const subCategoryData: CreateCategoryData = {
+        ...categoryData,
+        parentId,
+        level: 1,
+        sortOrder: 0
+      };
+      const id = await categoryService.createCategory(subCategoryData, userId);
+      await loadCategories();
+      return id;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+      setError(errorMessage);
+      throw err;
+    }
+  }, [userId, loadCategories]);
+
+  const updateCategory = useCallback(async (id: string, categoryData: Partial<Omit<Category, 'id' | 'createdAt'>>): Promise<void> => {
+    try {
+      setError(null);
+      await categoryService.updateCategory(id, categoryData, userId);
+      await loadCategories();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+      setError(errorMessage);
+      throw err;
+    }
+  }, [userId, loadCategories]);
+
+  const deleteCategory = useCallback(async (id: string): Promise<void> => {
+    try {
+      setError(null);
+      await categoryService.deleteCategory(id, userId);
+      await loadCategories();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+      setError(errorMessage);
+      throw err;
+    }
+  }, [userId, loadCategories]);
+
+  const getCategoriesByType = useCallback(async (type: 'expense' | 'income'): Promise<Category[]> => {
+    try {
+      return await categoryService.getCategoriesByType(type, userId);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+      console.error('❌ [useCategories] Error getting categories by type:', err);
+      throw err;
+    }
+  }, [userId]);
+
+  const getCategoryById = useCallback(async (id: string): Promise<Category | null> => {
+    try {
+      return await categoryService.getCategoryById(id, userId);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+      console.error('❌ [useCategories] Error getting category by id:', err);
+      throw err;
+    }
+  }, [userId]);
+
+  const initializeDefaultCategories = useCallback(async (): Promise<void> => {
+    try {
+      setError(null);
+      await categoryService.initializeDefaultCategories(userId);
+      await loadCategories();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+      setError(errorMessage);
+      throw err;
+    }
+  }, [userId, loadCategories]);
+
+  const refreshCategories = useCallback(async (): Promise<void> => {
+    await loadCategories();
+  }, [loadCategories]);
+
+  const getMainCategories = useCallback(async (): Promise<Category[]> => {
+    try {
+      return await categoryService.getMainCategories(userId);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+      console.error('❌ [useCategories] Error getting main categories:', err);
+      throw err;
+    }
+  }, [userId]);
+
+  const getSubcategories = useCallback(async (parentId: string): Promise<Category[]> => {
+    try {
+      return await categoryService.getSubcategories(parentId, userId);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+      console.error('❌ [useCategories] Error getting subcategories:', err);
+      throw err;
+    }
+  }, [userId]);
+
+  const getCategoryTree = useCallback(async (): Promise<Array<{ category: Category; subcategories: Category[] }>> => {
+    try {
+      return await categoryService.getCategoryTree(userId);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+      console.error('❌ [useCategories] Error getting category tree:', err);
+      throw err;
+    }
+  }, [userId]);
+
+  const createMultipleCategories = useCallback(async (categoriesData: Array<Omit<CreateCategoryData, 'type'> & { type: 'income' | 'expense' }>): Promise<{ success: boolean; created: number; errors: string[] }> => {
+    try {
+      setError(null);
+      const result = await categoryService.createMultipleCategories(categoriesData, userId);
+      await loadCategories();
+      return result;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+      setError(errorMessage);
+      throw err;
+    }
+  }, [userId, loadCategories]);
+
   return {
-    // État
     categories,
     loading,
     error,
-    
-    // Actions CRUD
     createCategory,
-    createMultipleCategories, // ✅ NOUVEAU
     updateCategory,
     deleteCategory,
-    getCategoryById,
-    
-    // Recherche et filtres
     getCategoriesByType,
-    searchCategories,
-    
-    // Utilitaires
+    getCategoryById,
     initializeDefaultCategories,
-    getCategoryStats,
-    isCategoryUsed,
-    
-    // Rafraîchissement
-    refreshCategories: loadCategories,
+    refreshCategories,
+    getMainCategories,
+    getSubcategories,
+    getCategoryTree,
+    createMultipleCategories,
   };
 };
+
+export default useCategories;

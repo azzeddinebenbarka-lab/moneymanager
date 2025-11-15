@@ -1,14 +1,14 @@
-// src/screens/AddMultipleCategoriesScreen.tsx - VERSION SANS TEMPLATES PRÉDÉFINIS
+// src/screens/AddMultipleCategoriesScreen.tsx - VERSION AVEC SOUS-CATÉGORIES
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useTheme } from '../context/ThemeContext';
@@ -16,69 +16,170 @@ import { useCategories } from '../hooks/useCategories';
 
 interface CategoryTemplate {
   name: string;
-  type: 'expense' | 'income';
+  type: 'expense' | 'income' | 'both';
   icon: string;
   color: string;
+  parentId?: string;
+  isSubCategory?: boolean;
+}
+
+interface CategoryHierarchy {
+  id: string;
+  name: string;
+  type: 'expense' | 'income' | 'both';
+  icon: string;
+  color: string;
+  subCategories?: CategoryTemplate[];
 }
 
 const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { theme } = useTheme();
-  const { createMultipleCategories } = useCategories();
+  const { createMultipleCategories, categories: existingCategories } = useCategories();
   const isDark = theme === 'dark';
 
   const [customCategories, setCustomCategories] = useState<CategoryTemplate[]>([
-    { name: '', type: 'expense', icon: 'receipt', color: '#007AFF' }
+    { name: '', type: 'expense', icon: 'receipt', color: '#007AFF', isSubCategory: false }
   ]);
   const [loading, setLoading] = useState(false);
+  const [showSubCategoryInput, setShowSubCategoryInput] = useState<number | null>(null);
 
+  // Options pour les icônes
   const iconOptions = [
     'cart', 'home', 'car', 'medical', 'restaurant', 'cafe', 'airplane', 
     'game-controller', 'book', 'school', 'shirt', 'gift', 'heart', 'star',
     'call', 'wifi', 'tv', 'musical-notes', 'basketball', 'fitness',
     'bed', 'cut', 'color-palette', 'construct', 'hammer', 'flash',
     'water', 'train', 'bus', 'bicycle', 'walk', 'pizza', 'beer', 
-    'wine', 'ice-cream', 'fast-food', 'nutrition'
+    'wine', 'ice-cream', 'fast-food', 'nutrition', 'card', 'cash',
+    'wallet', 'bag', 'basket', 'bulb', 'camera', 'gift', 'key',
+    'lock-closed', 'mail', 'map', 'megaphone', 'phone-portrait',
+    'print', 'rocket', 'shield-checkmark', 'trophy', 'videocam'
   ];
 
+  // Options pour les couleurs
   const colorOptions = [
     '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899',
     '#06B6D4', '#84CC16', '#EAB308', '#DC2626', '#EA580C', '#16A34A',
     '#2563EB', '#7C3AED', '#DB2777', '#0891B2', '#65A30D', '#CA8A04',
-    '#991B1B', '#9A3412', '#3F6212', '#0F766E', '#1D4ED8', '#5B21B6'
+    '#991B1B', '#9A3412', '#3F6212', '#0F766E', '#1D4ED8', '#5B21B6',
+    '#6B7280', '#374151', '#111827', '#7DD3FC', '#FDE68A', '#D8B4FE'
   ];
 
-  const addCategoryField = () => {
-    setCustomCategories(prev => [
-      ...prev,
-      { name: '', type: 'expense', icon: 'receipt', color: '#007AFF' }
-    ]);
-  };
+  // Catégories principales existantes pour les sous-catégories
+  const mainCategories = existingCategories.filter(cat => !cat.parentId);
 
-  const removeCategoryField = (index: number) => {
-    if (customCategories.length > 1) {
-      setCustomCategories(prev => prev.filter((_, i) => i !== index));
+  // Ajouter un nouveau champ de catégorie
+  const addCategoryField = (isSubCategory: boolean = false, parentIndex?: number) => {
+    if (isSubCategory && parentIndex !== undefined) {
+      // Ajouter une sous-catégorie à une catégorie parente
+      const newCategories = [...customCategories];
+      newCategories.splice(parentIndex + 1, 0, {
+        name: '',
+        type: newCategories[parentIndex].type,
+        icon: 'ellipsis-horizontal',
+        color: newCategories[parentIndex].color,
+        isSubCategory: true,
+        parentId: `parent_${parentIndex}`
+      });
+      setCustomCategories(newCategories);
+    } else {
+      // Ajouter une nouvelle catégorie principale
+      setCustomCategories(prev => [
+        ...prev,
+        { name: '', type: 'expense', icon: 'receipt', color: '#007AFF', isSubCategory: false }
+      ]);
     }
   };
 
-  const updateCategoryField = (index: number, field: keyof CategoryTemplate, value: string) => {
-    setCustomCategories(prev => prev.map((cat, i) => 
-      i === index ? { ...cat, [field]: value } : cat
-    ));
+  // Supprimer un champ de catégorie
+  const removeCategoryField = (index: number) => {
+    if (customCategories.length > 1) {
+      // Si c'est une catégorie principale, supprimer aussi ses sous-catégories
+      const categoryToRemove = customCategories[index];
+      if (!categoryToRemove.isSubCategory) {
+        const parentId = `parent_${index}`;
+        const newCategories = customCategories.filter((cat, i) => 
+          i !== index && cat.parentId !== parentId
+        );
+        setCustomCategories(newCategories);
+      } else {
+        setCustomCategories(prev => prev.filter((_, i) => i !== index));
+      }
+    }
   };
 
-  const handleCreateCategories = async () => {
-    const validCategories = customCategories.filter(cat => 
-      cat.name.trim() && cat.icon && cat.color
-    );
+  // Mettre à jour un champ de catégorie
+  const updateCategoryField = (index: number, field: keyof CategoryTemplate, value: string) => {
+    setCustomCategories(prev => {
+      const newCategories = [...prev];
+      const updatedCategory = { ...newCategories[index], [field]: value };
+      
+      // Si on change le type d'une catégorie principale, mettre à jour ses sous-catégories
+      if (field === 'type' && !updatedCategory.isSubCategory) {
+        const parentId = `parent_${index}`;
+        newCategories.forEach((cat, i) => {
+          if (cat.parentId === parentId) {
+            newCategories[i] = { ...cat, type: value as any };
+          }
+        });
+      }
+      
+      newCategories[index] = updatedCategory;
+      return newCategories;
+    });
+  };
 
-    if (validCategories.length === 0) {
-      Alert.alert('Erreur', 'Veuillez remplir au moins une catégorie valide');
+  // Basculer l'affichage des sous-catégories
+  const toggleSubCategoryInput = (index: number) => {
+    setShowSubCategoryInput(showSubCategoryInput === index ? null : index);
+  };
+
+  // Obtenir les sous-catégories d'une catégorie principale
+  const getSubCategories = (parentIndex: number): CategoryTemplate[] => {
+    const parentId = `parent_${parentIndex}`;
+    return customCategories.filter((cat, index) => 
+      cat.parentId === parentId && index > parentIndex
+    );
+  };
+
+  // Valider et créer les catégories
+  const handleCreateCategories = async () => {
+    // Valider les catégories
+    const validationErrors: string[] = [];
+    
+    customCategories.forEach((cat, index) => {
+      if (!cat.name.trim()) {
+        validationErrors.push(`La catégorie #${index + 1} n'a pas de nom`);
+      }
+      if (!cat.icon) {
+        validationErrors.push(`La catégorie "${cat.name || `#${index + 1}`}" n'a pas d'icône`);
+      }
+      if (!cat.color) {
+        validationErrors.push(`La catégorie "${cat.name || `#${index + 1}`}" n'a pas de couleur`);
+      }
+    });
+
+    if (validationErrors.length > 0) {
+      Alert.alert(
+        'Erreurs de validation',
+        validationErrors.join('\n'),
+        [{ text: 'OK' }]
+      );
       return;
     }
 
     setLoading(true);
     try {
-      const result = await createMultipleCategories(validCategories);
+      // Préparer les données pour la création
+      const categoriesToCreate = customCategories.map(cat => ({
+        name: cat.name.trim(),
+        type: cat.type,
+        color: cat.color,
+        icon: cat.icon,
+        parentId: cat.isSubCategory ? cat.parentId : undefined
+      }));
+
+      const result = await createMultipleCategories(categoriesToCreate);
       
       if (result.success) {
         Alert.alert(
@@ -101,10 +202,13 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
     }
   };
 
+  // Effacer toutes les catégories
   const clearAll = () => {
-    setCustomCategories([{ name: '', type: 'expense', icon: 'receipt', color: '#007AFF' }]);
+    setCustomCategories([{ name: '', type: 'expense', icon: 'receipt', color: '#007AFF', isSubCategory: false }]);
+    setShowSubCategoryInput(null);
   };
 
+  // Compter les catégories remplies
   const filledCategoriesCount = customCategories.filter(cat => 
     cat.name.trim() && cat.icon && cat.color
   ).length;
@@ -116,7 +220,7 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
       <ScrollView 
         style={[styles.container, isDark && styles.darkContainer]}
         contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={true}
+        showsVerticalScrollIndicator={false}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -136,6 +240,21 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
           >
             <Text style={styles.clearButtonText}>Tout effacer</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Instructions */}
+        <View style={[styles.infoCard, isDark && styles.darkCard]}>
+          <Ionicons name="information-circle" size={24} color="#007AFF" />
+          <View style={styles.infoContent}>
+            <Text style={[styles.infoTitle, isDark && styles.darkText]}>
+              Système de sous-catégories
+            </Text>
+            <Text style={[styles.infoText, isDark && styles.darkSubtext]}>
+              • Créez des catégories principales et leurs sous-catégories{'\n'}
+              • Les sous-catégories héritent du type de leur parent{'\n'}
+              • Organisez vos dépenses et revenus de manière hiérarchique
+            </Text>
+          </View>
         </View>
 
         {/* Compteur et statistiques */}
@@ -158,163 +277,201 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
           </View>
           <View style={styles.statItem}>
             <Text style={[styles.statNumber, isDark && styles.darkText]}>
-              {totalCategoriesCount - filledCategoriesCount}
+              {customCategories.filter(cat => !cat.isSubCategory).length}
             </Text>
             <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
-              Incomplets
+              Principales
             </Text>
           </View>
         </View>
 
-        {/* Formulaire catégories personnalisées */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
-              Créer vos catégories
-            </Text>
-            <TouchableOpacity 
-              style={styles.addButton}
-              onPress={addCategoryField}
-              disabled={loading}
-            >
-              <Ionicons name="add" size={20} color="#007AFF" />
-              <Text style={styles.addButtonText}>Nouveau</Text>
-            </TouchableOpacity>
-          </View>
-
-          <Text style={[styles.sectionSubtitle, isDark && styles.darkSubtext]}>
-            Remplissez les champs pour chaque catégorie
-          </Text>
-
+        {/* Liste des catégories */}
+        <View style={styles.categoriesList}>
           {customCategories.map((category, index) => (
-            <View key={index} style={[styles.categoryCard, isDark && styles.darkCard]}>
-              <View style={styles.cardHeader}>
-                <View style={styles.cardTitle}>
-                  <Text style={[styles.cardNumber, isDark && styles.darkSubtext]}>
-                    Catégorie #{index + 1}
-                  </Text>
-                  {category.name && (
-                    <Text style={[styles.cardPreview, isDark && styles.darkText]}>
-                      {category.name}
-                    </Text>
-                  )}
-                </View>
-                {customCategories.length > 1 && (
-                  <TouchableOpacity 
-                    style={styles.removeButton}
-                    onPress={() => removeCategoryField(index)}
-                    disabled={loading}
-                  >
-                    <Ionicons name="close-circle" size={24} color="#EF4444" />
-                  </TouchableOpacity>
-                )}
-              </View>
-
-              {/* Nom de la catégorie */}
-              <View style={styles.inputGroup}>
-                <Text style={[styles.label, isDark && styles.darkText]}>
-                  Nom de la catégorie *
-                </Text>
-                <TextInput
-                  style={[styles.input, isDark && styles.darkInput]}
-                  value={category.name}
-                  onChangeText={(text) => updateCategoryField(index, 'name', text)}
-                  placeholder="Ex: Loyer, Épicerie, Salaire..."
-                  placeholderTextColor={isDark ? "#888" : "#999"}
-                />
-              </View>
-
-              {/* Type */}
-              <View style={styles.inputGroup}>
-                <Text style={[styles.label, isDark && styles.darkText]}>
-                  Type *
-                </Text>
-                <View style={styles.typeContainer}>
-                  <TouchableOpacity
-                    style={[
-                      styles.typeButton,
-                      category.type === 'expense' && styles.typeButtonSelected,
-                      isDark && styles.darkTypeButton,
-                    ]}
-                    onPress={() => updateCategoryField(index, 'type', 'expense')}
-                  >
-                    <Ionicons 
-                      name="arrow-up" 
-                      size={16} 
-                      color={category.type === 'expense' ? '#fff' : '#EF4444'} 
-                    />
-                    <Text style={[
-                      styles.typeButtonText,
-                      category.type === 'expense' && styles.typeButtonTextSelected,
-                    ]}>
-                      Dépense
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[
-                      styles.typeButton,
-                      category.type === 'income' && styles.typeButtonSelected,
-                      isDark && styles.darkTypeButton,
-                    ]}
-                    onPress={() => updateCategoryField(index, 'type', 'income')}
-                  >
-                    <Ionicons 
-                      name="arrow-down" 
-                      size={16} 
-                      color={category.type === 'income' ? '#fff' : '#10B981'} 
-                    />
-                    <Text style={[
-                      styles.typeButtonText,
-                      category.type === 'income' && styles.typeButtonTextSelected,
-                    ]}>
-                      Revenu
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* Icône */}
-              <View style={styles.inputGroup}>
-                <Text style={[styles.label, isDark && styles.darkText]}>
-                  Icône *
-                </Text>
-                <ScrollView 
-                  horizontal 
-                  showsHorizontalScrollIndicator={true}
-                  contentContainerStyle={styles.iconsContainer}
-                >
-                  {iconOptions.map((icon) => (
-                    <TouchableOpacity
-                      key={icon}
-                      style={[
-                        styles.iconButton,
-                        category.icon === icon && styles.iconButtonSelected,
-                        isDark && styles.darkIconButton,
-                      ]}
-                      onPress={() => updateCategoryField(index, 'icon', icon)}
-                    >
+            <View key={index}>
+              {/* Carte de catégorie */}
+              <View 
+                style={[
+                  styles.categoryCard, 
+                  isDark && styles.darkCard,
+                  category.isSubCategory && styles.subCategoryCard
+                ]}
+              >
+                {/* En-tête de la carte */}
+                <View style={styles.cardHeader}>
+                  <View style={styles.cardTitle}>
+                    <View style={styles.categoryTypeIndicator}>
                       <Ionicons 
-                        name={icon as any} 
-                        size={20} 
-                        color={category.icon === icon ? '#fff' : (isDark ? '#fff' : '#666')} 
+                        name={category.type === 'income' ? 'arrow-down' : 
+                              category.type === 'expense' ? 'arrow-up' : 'swap-horizontal'} 
+                        size={14} 
+                        color={category.type === 'income' ? '#10B981' : 
+                               category.type === 'expense' ? '#EF4444' : '#007AFF'} 
                       />
+                      <Text style={[styles.categoryTypeText, isDark && styles.darkSubtext]}>
+                        {category.isSubCategory ? 'Sous-catégorie' : 'Catégorie principale'}
+                      </Text>
+                    </View>
+                    {category.name && (
+                      <Text style={[styles.cardPreview, isDark && styles.darkText]}>
+                        {category.name}
+                      </Text>
+                    )}
+                  </View>
+                  
+                  <View style={styles.cardActions}>
+                    {!category.isSubCategory && (
+                      <TouchableOpacity 
+                        style={styles.subCategoryToggle}
+                        onPress={() => toggleSubCategoryInput(index)}
+                        disabled={loading}
+                      >
+                        <Ionicons 
+                          name="layers" 
+                          size={20} 
+                          color={showSubCategoryInput === index ? '#007AFF' : (isDark ? '#888' : '#666')} 
+                        />
+                      </TouchableOpacity>
+                    )}
+                    <TouchableOpacity 
+                      style={styles.removeButton}
+                      onPress={() => removeCategoryField(index)}
+                      disabled={loading}
+                    >
+                      <Ionicons name="close-circle" size={24} color="#EF4444" />
                     </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
+                  </View>
+                </View>
 
-              {/* Couleur */}
-              <View style={styles.inputGroup}>
-                <Text style={[styles.label, isDark && styles.darkText]}>
-                  Couleur *
-                </Text>
-                <ScrollView 
-                  horizontal 
-                  showsHorizontalScrollIndicator={true}
-                  contentContainerStyle={styles.colorsScrollContainer}
-                >
-                  <View style={styles.colorsContainer}>
+                {/* Nom de la catégorie */}
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.label, isDark && styles.darkText]}>
+                    Nom {category.isSubCategory ? 'de la sous-catégorie' : 'de la catégorie'} *
+                  </Text>
+                  <TextInput
+                    style={[styles.input, isDark && styles.darkInput]}
+                    value={category.name}
+                    onChangeText={(text) => updateCategoryField(index, 'name', text)}
+                    placeholder={category.isSubCategory ? 
+                      "Ex: Loyer, Électricité, Internet..." : 
+                      "Ex: Logement, Transport, Alimentation..."}
+                    placeholderTextColor={isDark ? "#888" : "#999"}
+                  />
+                </View>
+
+                {/* Type (uniquement pour les catégories principales) */}
+                {!category.isSubCategory && (
+                  <View style={styles.inputGroup}>
+                    <Text style={[styles.label, isDark && styles.darkText]}>
+                      Type *
+                    </Text>
+                    <View style={styles.typeContainer}>
+                      <TouchableOpacity
+                        style={[
+                          styles.typeButton,
+                          category.type === 'expense' && styles.typeButtonSelected,
+                          isDark && styles.darkTypeButton,
+                        ]}
+                        onPress={() => updateCategoryField(index, 'type', 'expense')}
+                      >
+                        <Ionicons 
+                          name="arrow-up" 
+                          size={16} 
+                          color={category.type === 'expense' ? '#fff' : '#EF4444'} 
+                        />
+                        <Text style={[
+                          styles.typeButtonText,
+                          category.type === 'expense' && styles.typeButtonTextSelected,
+                        ]}>
+                          Dépense
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[
+                          styles.typeButton,
+                          category.type === 'income' && styles.typeButtonSelected,
+                          isDark && styles.darkTypeButton,
+                        ]}
+                        onPress={() => updateCategoryField(index, 'type', 'income')}
+                      >
+                        <Ionicons 
+                          name="arrow-down" 
+                          size={16} 
+                          color={category.type === 'income' ? '#fff' : '#10B981'} 
+                        />
+                        <Text style={[
+                          styles.typeButtonText,
+                          category.type === 'income' && styles.typeButtonTextSelected,
+                        ]}>
+                          Revenu
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[
+                          styles.typeButton,
+                          category.type === 'both' && styles.typeButtonSelected,
+                          isDark && styles.darkTypeButton,
+                        ]}
+                        onPress={() => updateCategoryField(index, 'type', 'both')}
+                      >
+                        <Ionicons 
+                          name="swap-horizontal" 
+                          size={16} 
+                          color={category.type === 'both' ? '#fff' : '#007AFF'} 
+                        />
+                        <Text style={[
+                          styles.typeButtonText,
+                          category.type === 'both' && styles.typeButtonTextSelected,
+                        ]}>
+                          Les deux
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+
+                {/* Icône */}
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.label, isDark && styles.darkText]}>
+                    Icône *
+                  </Text>
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.iconsContainer}
+                  >
+                    {iconOptions.map((icon) => (
+                      <TouchableOpacity
+                        key={icon}
+                        style={[
+                          styles.iconButton,
+                          category.icon === icon && styles.iconButtonSelected,
+                          isDark && styles.darkIconButton,
+                        ]}
+                        onPress={() => updateCategoryField(index, 'icon', icon)}
+                      >
+                        <Ionicons 
+                          name={icon as any} 
+                          size={20} 
+                          color={category.icon === icon ? '#fff' : (isDark ? '#fff' : '#666')} 
+                        />
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+
+                {/* Couleur */}
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.label, isDark && styles.darkText]}>
+                    Couleur *
+                  </Text>
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.colorsContainer}
+                  >
                     {colorOptions.map((color) => (
                       <TouchableOpacity
                         key={color}
@@ -330,64 +487,109 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
                         )}
                       </TouchableOpacity>
                     ))}
+                  </ScrollView>
+                </View>
+
+                {/* Aperçu */}
+                {category.name && (
+                  <View style={[styles.previewContainer, isDark && styles.darkPreview]}>
+                    <Text style={[styles.previewLabel, isDark && styles.darkSubtext]}>
+                      Aperçu:
+                    </Text>
+                    <View style={styles.previewContent}>
+                      <View style={[styles.previewIcon, { backgroundColor: category.color }]}>
+                        <Ionicons name={category.icon as any} size={16} color="#fff" />
+                      </View>
+                      <Text style={[styles.previewText, isDark && styles.darkText]}>
+                        {category.name}
+                      </Text>
+                      <View style={[
+                        styles.previewType,
+                        { 
+                          backgroundColor: category.type === 'income' ? '#10B98120' : 
+                                          category.type === 'expense' ? '#EF444420' : '#007AFF20'
+                        }
+                      ]}>
+                        <Text style={[
+                          styles.previewTypeText,
+                          { 
+                            color: category.type === 'income' ? '#10B981' : 
+                                   category.type === 'expense' ? '#EF4444' : '#007AFF'
+                          }
+                        ]}>
+                          {category.type === 'income' ? 'Revenu' : 
+                           category.type === 'expense' ? 'Dépense' : 'Les deux'}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
-                </ScrollView>
+                )}
               </View>
 
-              {/* Aperçu */}
-              {category.name && (
-                <View style={[styles.previewContainer, isDark && styles.darkPreview]}>
-                  <Text style={[styles.previewLabel, isDark && styles.darkSubtext]}>
-                    Aperçu:
-                  </Text>
-                  <View style={styles.previewContent}>
-                    <View style={[styles.previewIcon, { backgroundColor: category.color }]}>
-                      <Ionicons name={category.icon as any} size={16} color="#fff" />
-                    </View>
-                    <Text style={[styles.previewText, isDark && styles.darkText]}>
-                      {category.name}
+              {/* Bouton pour ajouter une sous-catégorie */}
+              {!category.isSubCategory && showSubCategoryInput === index && (
+                <View style={styles.subCategoryActions}>
+                  <TouchableOpacity 
+                    style={styles.addSubCategoryButton}
+                    onPress={() => addCategoryField(true, index)}
+                    disabled={loading}
+                  >
+                    <Ionicons name="add-circle" size={20} color="#007AFF" />
+                    <Text style={styles.addSubCategoryText}>
+                      Ajouter une sous-catégorie
                     </Text>
-                    <View style={[
-                      styles.previewType,
-                      { backgroundColor: category.type === 'income' ? '#10B98120' : '#EF444420' }
-                    ]}>
-                      <Text style={[
-                        styles.previewTypeText,
-                        { color: category.type === 'income' ? '#10B981' : '#EF4444' }
-                      ]}>
-                        {category.type === 'income' ? 'Revenu' : 'Dépense'}
+                  </TouchableOpacity>
+                  
+                  {/* Affichage des sous-catégories existantes */}
+                  {getSubCategories(index).length > 0 && (
+                    <View style={styles.subCategoriesList}>
+                      <Text style={[styles.subCategoriesTitle, isDark && styles.darkSubtext]}>
+                        Sous-catégories ({getSubCategories(index).length})
                       </Text>
                     </View>
-                  </View>
+                  )}
                 </View>
               )}
             </View>
           ))}
         </View>
 
-        {/* Bouton de création */}
+        {/* Boutons d'action */}
         <View style={styles.actionsContainer}>
           <TouchableOpacity 
-            style={[styles.cancelButton, isDark && styles.darkCancelButton]}
-            onPress={() => navigation.goBack()}
+            style={[styles.addMainCategoryButton, isDark && styles.darkAddButton]}
+            onPress={() => addCategoryField(false)}
             disabled={loading}
           >
-            <Text style={styles.cancelButtonText}>Annuler</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[
-              styles.createButton, 
-              (loading || filledCategoriesCount === 0) && styles.createButtonDisabled
-            ]}
-            onPress={handleCreateCategories}
-            disabled={loading || filledCategoriesCount === 0}
-          >
-            <Ionicons name="layers" size={20} color="#fff" />
-            <Text style={styles.createButtonText}>
-              {loading ? 'Création...' : `Créer ${filledCategoriesCount} catégorie(s)`}
+            <Ionicons name="add" size={20} color="#007AFF" />
+            <Text style={styles.addMainCategoryText}>
+              Nouvelle catégorie principale
             </Text>
           </TouchableOpacity>
+
+          <View style={styles.mainActions}>
+            <TouchableOpacity 
+              style={[styles.cancelButton, isDark && styles.darkCancelButton]}
+              onPress={() => navigation.goBack()}
+              disabled={loading}
+            >
+              <Text style={styles.cancelButtonText}>Annuler</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[
+                styles.createButton, 
+                (loading || filledCategoriesCount === 0) && styles.createButtonDisabled
+              ]}
+              onPress={handleCreateCategories}
+              disabled={loading || filledCategoriesCount === 0}
+            >
+              <Ionicons name="layers" size={20} color="#fff" />
+              <Text style={styles.createButtonText}>
+                {loading ? 'Création...' : `Créer ${filledCategoriesCount} catégorie(s)`}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.spacer} />
@@ -396,7 +598,6 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
   );
 };
 
-// Les styles restent identiques à la version précédente
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -412,7 +613,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   backButton: {
     padding: 8,
@@ -432,21 +633,46 @@ const styles = StyleSheet.create({
     color: '#EF4444',
     fontWeight: '500',
   },
+  infoCard: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: '#007AFF',
+  },
+  darkCard: {
+    backgroundColor: '#2c2c2e',
+  },
+  infoContent: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  infoTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 4,
+  },
+  infoText: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 18,
+  },
   statsCard: {
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 24,
+    marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
-  },
-  darkCard: {
-    backgroundColor: '#2c2c2e',
   },
   statItem: {
     alignItems: 'center',
@@ -463,49 +689,25 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
   },
-  section: {
-    marginBottom: 24,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000',
-  },
-  sectionSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 16,
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#007AFF15',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    gap: 6,
-  },
-  addButtonText: {
-    fontSize: 14,
-    color: '#007AFF',
-    fontWeight: '600',
+  categoriesList: {
+    marginBottom: 20,
   },
   categoryCard: {
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 16,
-    marginBottom: 16,
+    marginBottom: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+  },
+  subCategoryCard: {
+    marginLeft: 20,
+    borderLeftWidth: 3,
+    borderLeftColor: '#007AFF',
+    backgroundColor: '#f8f9fa',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -516,25 +718,38 @@ const styles = StyleSheet.create({
   cardTitle: {
     flex: 1,
   },
-  cardNumber: {
-    fontSize: 14,
+  categoryTypeIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+    gap: 6,
+  },
+  categoryTypeText: {
+    fontSize: 12,
     color: '#666',
     fontWeight: '500',
-    marginBottom: 4,
   },
   cardPreview: {
     fontSize: 16,
     fontWeight: '600',
     color: '#000',
   },
+  cardActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  subCategoryToggle: {
+    padding: 4,
+  },
   removeButton: {
     padding: 4,
   },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#000',
     marginBottom: 8,
@@ -555,19 +770,19 @@ const styles = StyleSheet.create({
   },
   typeContainer: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
   },
   typeButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16,
-    borderRadius: 12,
+    padding: 12,
+    borderRadius: 8,
     backgroundColor: '#f8f9fa',
     borderWidth: 2,
     borderColor: '#e0e0e0',
-    gap: 8,
+    gap: 6,
   },
   darkTypeButton: {
     backgroundColor: '#38383a',
@@ -578,7 +793,7 @@ const styles = StyleSheet.create({
     borderColor: '#007AFF',
   },
   typeButtonText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#666',
   },
@@ -590,9 +805,9 @@ const styles = StyleSheet.create({
     paddingRight: 16,
   },
   iconButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 8,
     backgroundColor: '#f8f9fa',
     alignItems: 'center',
     justifyContent: 'center',
@@ -607,18 +822,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#007AFF',
     borderColor: '#007AFF',
   },
-  colorsScrollContainer: {
+  colorsContainer: {
+    gap: 8,
     paddingRight: 16,
   },
-  colorsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
   colorButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
@@ -669,16 +880,62 @@ const styles = StyleSheet.create({
   previewType: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: 6,
   },
   previewTypeText: {
     fontSize: 12,
     fontWeight: '600',
   },
+  subCategoryActions: {
+    marginBottom: 12,
+  },
+  addSubCategoryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#007AFF15',
+    padding: 12,
+    borderRadius: 8,
+    gap: 8,
+    marginBottom: 8,
+  },
+  addSubCategoryText: {
+    fontSize: 14,
+    color: '#007AFF',
+    fontWeight: '600',
+  },
+  subCategoriesList: {
+    paddingLeft: 20,
+  },
+  subCategoriesTitle: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+    marginBottom: 4,
+  },
   actionsContainer: {
+    gap: 12,
+  },
+  addMainCategoryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f0f0f0',
+    padding: 16,
+    borderRadius: 12,
+    gap: 8,
+  },
+  darkAddButton: {
+    backgroundColor: '#38383a',
+  },
+  addMainCategoryText: {
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '600',
+  },
+  mainActions: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 24,
   },
   cancelButton: {
     flex: 1,

@@ -1,11 +1,11 @@
-// src/components/analytics/MonthCard.tsx - NOUVEAU COMPOSANT
+// src/components/analytics/MonthCard.tsx - COMPOSANT CORRIGÉ
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import {
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -19,6 +19,7 @@ export interface MonthCardProps {
   transactionCount: number;
   onPress: (year: number, month: number) => void;
   isCurrentMonth?: boolean;
+  highlightMetric?: 'income' | 'expenses' | 'netFlow'; // ✅ CORRIGÉ
 }
 
 const MonthCard: React.FC<MonthCardProps> = ({
@@ -29,7 +30,8 @@ const MonthCard: React.FC<MonthCardProps> = ({
   netFlow,
   transactionCount,
   onPress,
-  isCurrentMonth = false
+  isCurrentMonth = false,
+  highlightMetric = 'netFlow' // ✅ VALEUR PAR DÉFAUT
 }) => {
   const { theme } = useTheme();
   const { formatAmount } = useCurrency();
@@ -142,7 +144,7 @@ const MonthCard: React.FC<MonthCardProps> = ({
       </View>
 
       {/* Pied de carte */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, isDark && styles.darkFooter]}>
         <View style={styles.transactionInfo}>
           <Ionicons 
             name="list" 

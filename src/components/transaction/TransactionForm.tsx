@@ -1,4 +1,4 @@
-// src/components/transaction/TransactionForm.tsx - VERSION CORRIGÉE
+// src/components/transaction/TransactionForm.tsx - VERSION AVEC SOUS-CATÉGORIES
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useEffect, useState } from 'react';
@@ -15,7 +15,7 @@ import { useCurrency } from '../../context/CurrencyContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useAccounts } from '../../hooks/useAccounts';
 import { useCategories } from '../../hooks/useCategories';
-import { CreateTransactionData, Transaction } from '../../types';
+import { Category, CreateTransactionData, Transaction } from '../../types';
 
 interface TransactionFormProps {
   visible: boolean;
@@ -31,8 +31,7 @@ const FREQUENCY_OPTIONS = [
   { value: 'yearly', label: 'Annuelle' },
 ];
 
-type TransactionType = 'expense' | 'income' | 'transfer';
-type CategoryType = 'expense' | 'income' | 'both';
+type TransactionType = 'expense' | 'income';
 
 const TransactionForm: React.FC<TransactionFormProps> = ({
   visible,
@@ -51,6 +50,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     amount: '',
     type: 'expense' as TransactionType,
     category: '',
+    subCategory: '', // NOUVEAU: Sous-catégorie
     accountId: '',
     date: new Date().toISOString().split('T')[0],
     isRecurring: false,
@@ -60,72 +60,81 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-  const [filteredCategories, setFilteredCategories] = useState(categories);
+  const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
+  const [subCategories, setSubCategories] = useState<Category[]>([]); // NOUVEAU: Sous-catégories filtrées
 
-  // ✅ CORRECTION : Fonction utilitaire pour vérifier la compatibilité des catégories
-  const isCategoryCompatible = (categoryType: string, transactionType: TransactionType): boolean => {
-    if (categoryType === 'both') return true;
-    if (transactionType === 'transfer') return categoryType === 'both';
-    return categoryType === transactionType;
+  // ✅ FONCTION POUR FILTRER LES CATÉGORIES
+  const filterCategories = (type: TransactionType, selectedCategory?: string) => {
+    // Catégories principales (sans parentId)
+    const mainCategories = categories.filter(cat => 
+      !cat.parentId && (cat.type === type)
+    );
+    setFilteredCategories(mainCategories);
+
+    // Sous-catégories (si une catégorie principale est sélectionnée)
+    if (selectedCategory) {
+      const childCategories = categories.filter(cat => 
+        cat.parentId === selectedCategory
+      );
+      setSubCategories(childCategories);
+    } else {
+      setSubCategories([]);
+    }
   };
 
   // Initialisation du formulaire
   useEffect(() => {
     if (editingTransaction) {
-      setFormData({
+      const editingData = {
         description: editingTransaction.description,
         amount: Math.abs(editingTransaction.amount).toString(),
         type: editingTransaction.type as TransactionType,
         category: editingTransaction.category,
+        subCategory: editingTransaction.subCategory || '', // NOUVEAU
         accountId: editingTransaction.accountId,
         date: editingTransaction.date,
         isRecurring: editingTransaction.isRecurring || false,
         recurrenceType: editingTransaction.recurrenceType || 'monthly',
         recurrenceEndDate: editingTransaction.recurrenceEndDate || '',
-      });
+      };
+      
+      setFormData(editingData);
+      
+      // Filtrer les catégories et sous-catégories pour l'édition
+      filterCategories(editingTransaction.type as TransactionType, editingTransaction.category);
     } else {
       setFormData({
         description: '',
         amount: '',
         type: 'expense',
         category: '',
+        subCategory: '', // NOUVEAU
         accountId: '',
         date: new Date().toISOString().split('T')[0],
         isRecurring: false,
         recurrenceType: 'monthly',
         recurrenceEndDate: '',
       });
+      setSubCategories([]);
     }
   }, [editingTransaction, visible]);
 
-  // ✅ CORRECTION : Filtrage des catégories avec gestion sécurisée
+  // Filtrer les catégories quand le type change
   useEffect(() => {
-    let filtered = categories;
+    filterCategories(formData.type, formData.category);
+  }, [formData.type, categories]);
+
+  // Gérer le changement de catégorie principale
+  const handleCategoryChange = (categoryId: string) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      category: categoryId,
+      subCategory: '' // Réinitialiser la sous-catégorie quand on change de catégorie principale
+    }));
     
-    if (formData.type === 'expense') {
-      filtered = categories.filter(cat => 
-        cat.type === 'expense' || cat.type === 'both'
-      );
-    } else if (formData.type === 'income') {
-      filtered = categories.filter(cat => 
-        cat.type === 'income' || cat.type === 'both'
-      );
-    } else if (formData.type === 'transfer') {
-      filtered = categories.filter(cat => 
-        cat.type === 'both' || cat.name.toLowerCase().includes('transfert')
-      );
-    }
-    
-    setFilteredCategories(filtered);
-    
-    // ✅ CORRECTION : Vérification sécurisée de la catégorie actuelle
-    if (formData.category) {
-      const currentCategory = categories.find(cat => cat.id === formData.category);
-      if (currentCategory && !isCategoryCompatible(currentCategory.type, formData.type)) {
-        setFormData(prev => ({ ...prev, category: '' }));
-      }
-    }
-  }, [formData.type, categories, formData.category]); // ✅ AJOUT: Dépendance à formData.category
+    // Mettre à jour les sous-catégories
+    filterCategories(formData.type, categoryId);
+  };
 
   const handleSubmit = () => {
     if (!formData.description.trim()) {
@@ -138,7 +147,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       return;
     }
 
-    if (!formData.category && formData.type !== 'transfer') {
+    if (!formData.category) {
       alert('Veuillez sélectionner une catégorie');
       return;
     }
@@ -148,19 +157,12 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       return;
     }
 
-    // Gestion spéciale pour les transferts
-    const amount = formData.type === 'transfer' 
-      ? Math.abs(parseFloat(formData.amount))
-      : formData.type === 'expense' 
-        ? -Math.abs(parseFloat(formData.amount)) 
-        : Math.abs(parseFloat(formData.amount));
+    // Calcul du montant avec signe
+    const amount = formData.type === 'expense' 
+      ? -Math.abs(parseFloat(formData.amount)) 
+      : Math.abs(parseFloat(formData.amount));
 
-    // Pour les transferts, on peut utiliser une catégorie par défaut
-    const category = formData.type === 'transfer' 
-      ? (formData.category || 'Transfert')
-      : formData.category;
-
-    // ✅ CORRECTION : Vérification que recurrenceType est défini si isRecurring est true
+    // Vérification récurrence
     const recurrenceType = formData.isRecurring ? formData.recurrenceType : undefined;
     
     if (formData.isRecurring && !recurrenceType) {
@@ -168,12 +170,13 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       return;
     }
 
-    // Préparer les données pour la soumission
+    // Préparer les données
     const transactionData: CreateTransactionData = {
       description: formData.description.trim(),
       amount: amount,
       type: formData.type,
-      category: category,
+      category: formData.category,
+      subCategory: formData.subCategory || undefined, // NOUVEAU
       accountId: formData.accountId,
       date: formData.date,
       isRecurring: formData.isRecurring,
@@ -206,29 +209,17 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     return formatAmount(num, false);
   };
 
-  // ✅ CORRECTION : Fonction pour calculer la prochaine occurrence (sécurisée)
-  const calculateNextOccurrence = (recurrenceType: string, baseDate: string): string => {
-    const date = new Date(baseDate);
+  // ✅ FONCTION POUR OBTENIR LE NOM COMPLET DE LA CATÉGORIE
+  const getCategoryFullName = (categoryId: string, subCategoryId?: string): string => {
+    const mainCategory = categories.find(cat => cat.id === categoryId);
+    if (!mainCategory) return '';
     
-    switch (recurrenceType) {
-      case 'daily':
-        date.setDate(date.getDate() + 1);
-        break;
-      case 'weekly':
-        date.setDate(date.getDate() + 7);
-        break;
-      case 'monthly':
-        date.setMonth(date.getMonth() + 1);
-        break;
-      case 'yearly':
-        date.setFullYear(date.getFullYear() + 1);
-        break;
-      default:
-        // Type non reconnu, on retourne la date actuelle
-        console.warn('Type de récurrence non reconnu:', recurrenceType);
+    if (subCategoryId) {
+      const subCategory = categories.find(cat => cat.id === subCategoryId);
+      return subCategory ? `${mainCategory.name} › ${subCategory.name}` : mainCategory.name;
     }
     
-    return date.toISOString().split('T')[0];
+    return mainCategory.name;
   };
 
   if (accountsLoading || categoriesLoading) {
@@ -257,7 +248,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           <Text style={[styles.title, isDark && styles.darkText]}>
             {editingTransaction ? 'Modifier' : 'Nouvelle'} Transaction
             {formData.isRecurring && ' Récurrente'}
-            {formData.type === 'transfer' && ' de Transfert'}
           </Text>
           <View style={styles.closeButton} />
         </View>
@@ -285,7 +275,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                   formData.type === 'expense' && styles.typeButtonSelected,
                   isDark && styles.darkTypeButton,
                 ]}
-                onPress={() => setFormData({ ...formData, type: 'expense', category: '' })}
+                onPress={() => setFormData({ ...formData, type: 'expense', category: '', subCategory: '' })}
               >
                 <Ionicons 
                   name="arrow-up" 
@@ -306,7 +296,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                   formData.type === 'income' && styles.typeButtonSelected,
                   isDark && styles.darkTypeButton,
                 ]}
-                onPress={() => setFormData({ ...formData, type: 'income', category: '' })}
+                onPress={() => setFormData({ ...formData, type: 'income', category: '', subCategory: '' })}
               >
                 <Ionicons 
                   name="arrow-down" 
@@ -318,28 +308,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                   formData.type === 'income' && styles.typeButtonTextSelected,
                 ]}>
                   Revenu
-                </Text>
-              </TouchableOpacity>
-
-              {/* Bouton pour les transferts */}
-              <TouchableOpacity
-                style={[
-                  styles.typeButton,
-                  formData.type === 'transfer' && styles.typeButtonSelected,
-                  isDark && styles.darkTypeButton,
-                ]}
-                onPress={() => setFormData({ ...formData, type: 'transfer', category: '' })}
-              >
-                <Ionicons 
-                  name="swap-horizontal" 
-                  size={20} 
-                  color={formData.type === 'transfer' ? '#fff' : '#007AFF'} 
-                />
-                <Text style={[
-                  styles.typeButtonText,
-                  formData.type === 'transfer' && styles.typeButtonTextSelected,
-                ]}>
-                  Transfert
                 </Text>
               </TouchableOpacity>
             </View>
@@ -361,87 +329,125 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             {formData.amount && (
               <Text style={[styles.hint, isDark && styles.darkSubtext]}>
                 {formatDisplayAmount(formData.amount)}
-                {formData.type === 'transfer' && ' (transfert)'}
               </Text>
             )}
           </View>
 
-          {/* Catégorie - Masquer pour les transferts ou montrer des catégories spécifiques */}
-          {(formData.type !== 'transfer' || filteredCategories.length > 0) && (
+          {/* Catégorie Principale */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, isDark && styles.darkText]}>
+              Catégorie Principale *
+            </Text>
+            {filteredCategories.length === 0 ? (
+              <Text style={[styles.noCategoriesText, isDark && styles.darkSubtext]}>
+                Aucune catégorie disponible pour {formData.type === 'expense' ? 'les dépenses' : 'les revenus'}
+              </Text>
+            ) : (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesContainer}>
+                {filteredCategories.map((category) => (
+                  <TouchableOpacity
+                    key={category.id}
+                    style={[
+                      styles.categoryButton,
+                      formData.category === category.id && styles.categoryButtonSelected,
+                      isDark && styles.darkCategoryButton,
+                      { borderLeftColor: category.color }
+                    ]}
+                    onPress={() => handleCategoryChange(category.id)}
+                  >
+                    <Ionicons 
+                      name={category.icon as any} 
+                      size={16} 
+                      color={formData.category === category.id ? '#fff' : category.color} 
+                    />
+                    <Text style={[
+                      styles.categoryButtonText,
+                      formData.category === category.id && styles.categoryButtonTextSelected,
+                    ]}>
+                      {category.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+
+          {/* Sous-Catégorie (conditionnelle) */}
+          {formData.category && subCategories.length > 0 && (
             <View style={styles.inputGroup}>
               <Text style={[styles.label, isDark && styles.darkText]}>
-                Catégorie {formData.type === 'transfer' && '(optionnel)'}
+                Sous-Catégorie (optionnelle)
               </Text>
-              {filteredCategories.length === 0 ? (
-                <Text style={[styles.noCategoriesText, isDark && styles.darkSubtext]}>
-                  Aucune catégorie disponible pour {formData.type === 'expense' ? 'les dépenses' : 'les revenus'}
-                </Text>
-              ) : (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesContainer}>
-                  {filteredCategories.map((category) => (
-                    <TouchableOpacity
-                      key={category.id}
-                      style={[
-                        styles.categoryButton,
-                        formData.category === category.id && styles.categoryButtonSelected,
-                        isDark && styles.darkCategoryButton,
-                        { borderLeftColor: category.color }
-                      ]}
-                      onPress={() => setFormData({ ...formData, category: category.id })}
-                    >
-                      <Ionicons 
-                        name={category.icon as any} 
-                        size={16} 
-                        color={formData.category === category.id ? '#fff' : category.color} 
-                      />
-                      <Text style={[
-                        styles.categoryButtonText,
-                        formData.category === category.id && styles.categoryButtonTextSelected,
-                      ]}>
-                        {category.name}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              )}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesContainer}>
+                {subCategories.map((subCategory) => (
+                  <TouchableOpacity
+                    key={subCategory.id}
+                    style={[
+                      styles.subCategoryButton, // NOUVEAU STYLE
+                      formData.subCategory === subCategory.id && styles.subCategoryButtonSelected,
+                      isDark && styles.darkSubCategoryButton,
+                      { borderLeftColor: subCategory.color }
+                    ]}
+                    onPress={() => setFormData({ ...formData, subCategory: subCategory.id })}
+                  >
+                    <Ionicons 
+                      name={subCategory.icon as any} 
+                      size={14} 
+                      color={formData.subCategory === subCategory.id ? '#fff' : subCategory.color} 
+                    />
+                    <Text style={[
+                      styles.subCategoryButtonText,
+                      formData.subCategory === subCategory.id && styles.subCategoryButtonTextSelected,
+                    ]}>
+                      {subCategory.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
+          {/* Affichage de la catégorie sélectionnée */}
+          {(formData.category || formData.subCategory) && (
+            <View style={[styles.selectedCategoryContainer, isDark && styles.darkSelectedCategory]}>
+              <Text style={[styles.selectedCategoryLabel, isDark && styles.darkSubtext]}>
+                Catégorie sélectionnée:
+              </Text>
+              <Text style={[styles.selectedCategoryText, isDark && styles.darkText]}>
+                {getCategoryFullName(formData.category, formData.subCategory)}
+              </Text>
             </View>
           )}
 
           {/* Compte */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, isDark && styles.darkText]}>Compte</Text>
-            {accounts.length === 0 ? (
-              <Text style={[styles.noAccountsText, isDark && styles.darkSubtext]}>
-                Aucun compte disponible
-              </Text>
-            ) : (
-              accounts.map((account) => (
-                <TouchableOpacity
-                  key={account.id}
-                  style={[
-                    styles.accountButton,
-                    formData.accountId === account.id && styles.accountButtonSelected,
-                    isDark && styles.darkAccountButton,
-                  ]}
-                  onPress={() => setFormData({ ...formData, accountId: account.id })}
-                >
-                  <View style={[styles.colorIndicator, { backgroundColor: account.color }]} />
-                  <Text style={[
-                    styles.accountButtonText,
-                    formData.accountId === account.id && styles.accountButtonTextSelected,
-                    isDark && styles.darkText,
-                  ]}>
-                    {account.name}
-                  </Text>
-                  <Text style={[
-                    styles.accountBalance,
-                    isDark && styles.darkSubtext,
-                  ]}>
-                    {formatAmount(account.balance, false)}
-                  </Text>
-                </TouchableOpacity>
-              ))
-            )}
+            <Text style={[styles.label, isDark && styles.darkText]}>Compte *</Text>
+            {accounts.map((account) => (
+              <TouchableOpacity
+                key={account.id}
+                style={[
+                  styles.accountButton,
+                  formData.accountId === account.id && styles.accountButtonSelected,
+                  isDark && styles.darkAccountButton,
+                ]}
+                onPress={() => setFormData({ ...formData, accountId: account.id })}
+              >
+                <View style={[styles.colorIndicator, { backgroundColor: account.color }]} />
+                <Text style={[
+                  styles.accountButtonText,
+                  formData.accountId === account.id && styles.accountButtonTextSelected,
+                  isDark && styles.darkText,
+                ]}>
+                  {account.name}
+                </Text>
+                <Text style={[
+                  styles.accountBalance,
+                  isDark && styles.darkSubtext,
+                ]}>
+                  {formatAmount(account.balance, false)}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
 
           {/* Date */}
@@ -466,105 +472,100 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             )}
           </View>
 
-          {/* Section Récurrence - Désactivée pour les transferts */}
-          {formData.type !== 'transfer' && (
-            <View style={styles.inputGroup}>
-              <View style={styles.switchContainer}>
-                <Text style={[styles.label, isDark && styles.darkText]}>Transaction récurrente</Text>
-                <TouchableOpacity
-                  style={[
-                    styles.switch,
-                    formData.isRecurring && styles.switchActive,
-                    isDark && styles.darkSwitch,
-                  ]}
-                  onPress={() => setFormData({ ...formData, isRecurring: !formData.isRecurring })}
-                >
-                  <View style={[
-                    styles.switchThumb,
-                    formData.isRecurring && styles.switchThumbActive,
-                  ]} />
-                </TouchableOpacity>
-              </View>
-              
-              {formData.isRecurring && (
-                <>
-                  <Text style={[styles.helperText, isDark && styles.darkSubtext]}>
-                    Cette transaction se répétera automatiquement
-                  </Text>
-
-                  {/* Fréquence */}
-                  <View style={styles.recurrenceSection}>
-                    <Text style={[styles.subLabel, isDark && styles.darkText]}>Fréquence</Text>
-                    <View style={styles.frequencyGrid}>
-                      {FREQUENCY_OPTIONS.map((frequency) => (
-                        <TouchableOpacity
-                          key={frequency.value}
-                          style={[
-                            styles.frequencyButton,
-                            formData.recurrenceType === frequency.value && styles.frequencyButtonSelected,
-                            isDark && styles.darkFrequencyButton,
-                          ]}
-                          onPress={() => setFormData({ ...formData, recurrenceType: frequency.value as any })}
-                        >
-                          <Text style={[
-                            styles.frequencyButtonText,
-                            formData.recurrenceType === frequency.value && styles.frequencyButtonTextSelected,
-                            isDark && styles.darkText,
-                          ]}>
-                            {frequency.label}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </View>
-
-                  {/* Date de fin */}
-                  <View style={styles.recurrenceSection}>
-                    <Text style={[styles.subLabel, isDark && styles.darkText]}>
-                      Date de fin (optionnelle)
-                    </Text>
-                    <TouchableOpacity 
-                      style={[styles.dateButton, isDark && styles.darkInput]}
-                      onPress={() => setShowEndDatePicker(true)}
-                    >
-                      <Text style={[styles.dateText, isDark && styles.darkText]}>
-                        {formData.recurrenceEndDate 
-                          ? new Date(formData.recurrenceEndDate).toLocaleDateString('fr-FR')
-                          : 'Sélectionner une date'
-                        }
-                      </Text>
-                      <Ionicons name="calendar" size={20} color={isDark ? "#fff" : "#666"} />
-                    </TouchableOpacity>
-                    {showEndDatePicker && (
-                      <DateTimePicker
-                        value={formData.recurrenceEndDate ? new Date(formData.recurrenceEndDate) : new Date()}
-                        mode="date"
-                        display="default"
-                        onChange={handleEndDateChange}
-                      />
-                    )}
-                  </View>
-                </>
-              )}
+          {/* Section Récurrence */}
+          <View style={styles.inputGroup}>
+            <View style={styles.switchContainer}>
+              <Text style={[styles.label, isDark && styles.darkText]}>Transaction récurrente</Text>
+              <TouchableOpacity
+                style={[
+                  styles.switch,
+                  formData.isRecurring && styles.switchActive,
+                  isDark && styles.darkSwitch,
+                ]}
+                onPress={() => setFormData({ ...formData, isRecurring: !formData.isRecurring })}
+              >
+                <View style={[
+                  styles.switchThumb,
+                  formData.isRecurring && styles.switchThumbActive,
+                ]} />
+              </TouchableOpacity>
             </View>
-          )}
+            
+            {formData.isRecurring && (
+              <>
+                <Text style={[styles.helperText, isDark && styles.darkSubtext]}>
+                  Cette transaction se répétera automatiquement
+                </Text>
+
+                {/* Fréquence */}
+                <View style={styles.recurrenceSection}>
+                  <Text style={[styles.subLabel, isDark && styles.darkText]}>Fréquence</Text>
+                  <View style={styles.frequencyGrid}>
+                    {FREQUENCY_OPTIONS.map((frequency) => (
+                      <TouchableOpacity
+                        key={frequency.value}
+                        style={[
+                          styles.frequencyButton,
+                          formData.recurrenceType === frequency.value && styles.frequencyButtonSelected,
+                          isDark && styles.darkFrequencyButton,
+                        ]}
+                        onPress={() => setFormData({ ...formData, recurrenceType: frequency.value as any })}
+                      >
+                        <Text style={[
+                          styles.frequencyButtonText,
+                          formData.recurrenceType === frequency.value && styles.frequencyButtonTextSelected,
+                          isDark && styles.darkText,
+                        ]}>
+                          {frequency.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                {/* Date de fin */}
+                <View style={styles.recurrenceSection}>
+                  <Text style={[styles.subLabel, isDark && styles.darkText]}>
+                    Date de fin (optionnelle)
+                  </Text>
+                  <TouchableOpacity 
+                    style={[styles.dateButton, isDark && styles.darkInput]}
+                    onPress={() => setShowEndDatePicker(true)}
+                  >
+                    <Text style={[styles.dateText, isDark && styles.darkText]}>
+                      {formData.recurrenceEndDate 
+                        ? new Date(formData.recurrenceEndDate).toLocaleDateString('fr-FR')
+                        : 'Sélectionner une date'
+                      }
+                    </Text>
+                    <Ionicons name="calendar" size={20} color={isDark ? "#fff" : "#666"} />
+                  </TouchableOpacity>
+                  {showEndDatePicker && (
+                    <DateTimePicker
+                      value={formData.recurrenceEndDate ? new Date(formData.recurrenceEndDate) : new Date()}
+                      mode="date"
+                      display="default"
+                      onChange={handleEndDateChange}
+                    />
+                  )}
+                </View>
+              </>
+            )}
+          </View>
 
           {/* Bouton de soumission */}
           <TouchableOpacity
             style={[
               styles.submitButton,
-              (!formData.description || !formData.amount || !formData.accountId || 
-               (formData.type !== 'transfer' && !formData.category)) && 
+              (!formData.description || !formData.amount || !formData.category || !formData.accountId) && 
               styles.submitButtonDisabled
             ]}
             onPress={handleSubmit}
-            disabled={!formData.description || !formData.amount || !formData.accountId || 
-                     (formData.type !== 'transfer' && !formData.category)}
+            disabled={!formData.description || !formData.amount || !formData.category || !formData.accountId}
           >
             <Text style={styles.submitButtonText}>
               {editingTransaction ? 'Modifier' : 'Créer'} la transaction
               {formData.isRecurring && ' récurrente'}
-              {formData.type === 'transfer' && ' de transfert'}
             </Text>
           </TouchableOpacity>
 
@@ -575,7 +576,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   );
 };
 
-// Les styles restent identiques à la version précédente
+// STYLES AVEC SOUS-CATÉGORIES
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -658,19 +659,19 @@ const styles = StyleSheet.create({
   },
   typeContainer: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 12,
   },
   typeButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
+    padding: 16,
     borderRadius: 12,
     backgroundColor: '#f8f9fa',
     borderWidth: 2,
     borderColor: '#e0e0e0',
-    gap: 6,
+    gap: 8,
   },
   darkTypeButton: {
     backgroundColor: '#2c2c2e',
@@ -681,7 +682,7 @@ const styles = StyleSheet.create({
     borderColor: '#007AFF',
   },
   typeButtonText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
     color: '#000',
   },
@@ -720,14 +721,55 @@ const styles = StyleSheet.create({
   categoryButtonTextSelected: {
     color: '#fff',
   },
-  noCategoriesText: {
-    fontSize: 14,
-    fontStyle: 'italic',
-    textAlign: 'center',
-    padding: 16,
-    color: '#666',
+  // NOUVEAUX STYLES POUR SOUS-CATÉGORIES
+  subCategoryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#f0f0f0',
+    borderWidth: 1,
+    borderColor: '#d0d0d0',
+    borderLeftWidth: 3,
+    gap: 6,
   },
-  noAccountsText: {
+  darkSubCategoryButton: {
+    backgroundColor: '#38383a',
+    borderColor: '#444',
+  },
+  subCategoryButtonSelected: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
+  },
+  subCategoryButtonText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#000',
+  },
+  subCategoryButtonTextSelected: {
+    color: '#fff',
+  },
+  selectedCategoryContainer: {
+    backgroundColor: '#f8f9fa',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  darkSelectedCategory: {
+    backgroundColor: '#2c2c2e',
+  },
+  selectedCategoryLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
+  },
+  selectedCategoryText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#000',
+  },
+  noCategoriesText: {
     fontSize: 14,
     fontStyle: 'italic',
     textAlign: 'center',
