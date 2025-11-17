@@ -25,7 +25,38 @@ export const useAnnualCharges = (userId: string = 'default-user') => {
     }
   }, [userId]);
 
+  const generateRecurringCharges = useCallback(async (): Promise<{ generated: number; errors: string[] }> => {
+  try {
+    setError(null);
+    console.log('🔄 Génération manuelle des charges récurrentes...');
+    
+    const result = await annualChargeService.generateRecurringCharges();
+    
+    // Recharger les charges après génération
+    await loadCharges();
+    
+    console.log(`✅ ${result.generated} charges récurrentes générées`);
+    return result;
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Erreur génération charges récurrentes';
+    console.error('❌ Erreur génération:', errorMessage);
+    setError(errorMessage);
+    throw err;
+  }
+}, [loadCharges]);
+
+// ✅ Vérifier et générer automatiquement
+const checkAndGenerateRecurringCharges = useCallback(async (): Promise<void> => {
+  try {
+    await annualChargeService.checkAndGenerateRecurringCharges(userId);
+  } catch (error) {
+    console.error('❌ Erreur vérification charges récurrentes:', error);
+  }
+}, [userId]);
+
+
   // Créer une charge annuelle
+
   const createCharge = useCallback(async (chargeData: CreateAnnualChargeData): Promise<string> => {
     try {
       setError(null);

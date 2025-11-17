@@ -53,27 +53,41 @@ export const IslamicChargeCard: React.FC<IslamicChargeCardProps> = ({
     setShowAccountModal(false);
   };
 
+  // ✅ CORRECTION : Gestion améliorée du paiement avec validation
   const handlePayCharge = async () => {
     if (isPaying) return;
     
     setIsPaying(true);
     try {
-      // ✅ Vérifier si la charge peut être payée
+      // ✅ VALIDATION CRITIQUE : Vérifier si la charge peut être payée
+      let canPayResult: { canPay: boolean; reason?: string };
+      
       if (onCanPayCharge) {
-        const validation = await onCanPayCharge(charge.id);
-        if (!validation.canPay) {
-          Alert.alert('Impossible de payer', validation.reason || 'Cette charge ne peut pas être payée pour le moment');
-          return;
-        }
+        canPayResult = await onCanPayCharge(charge.id);
+      } else {
+        // Fallback si onCanPayCharge n'est pas fourni
+        canPayResult = { canPay: true };
       }
 
+      if (!canPayResult.canPay) {
+        Alert.alert('Impossible de payer', canPayResult.reason || 'Cette charge ne peut pas être payée pour le moment');
+        return;
+      }
+
+      // Si un compte est déjà assigné, payer directement
       if (charge.accountId) {
-        // Payer avec le compte assigné
         await onMarkAsPaid(charge.id, charge.accountId);
         Alert.alert('Succès', 'Charge payée avec succès');
       } else {
         // Demander de sélectionner un compte
-        setShowAccountModal(true);
+        Alert.alert(
+          'Compte requis',
+          'Veuillez d\'abord assigner un compte à cette charge pour effectuer le paiement',
+          [
+            { text: 'Annuler', style: 'cancel' },
+            { text: 'Assigner un compte', onPress: () => setShowAccountModal(true) }
+          ]
+        );
       }
     } catch (error) {
       console.error('Erreur paiement:', error);
@@ -102,7 +116,36 @@ export const IslamicChargeCard: React.FC<IslamicChargeCardProps> = ({
     const dueDate = new Date(charge.calculatedDate);
     const today = new Date();
     if (dueDate < today) return '⏰ En retard';
+    
+    // ✅ AJOUT : Indiquer si la charge peut être payée
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const dueMonth = dueDate.getMonth();
+    const dueYear = dueDate.getFullYear();
+    
+    const isDueThisMonth = (dueYear === currentYear && dueMonth === currentMonth);
+    if (isDueThisMonth) return '💰 À payer ce mois';
+    
     return '📅 À venir';
+  };
+
+  // ✅ NOUVELLE FONCTION : Vérifier si le bouton payer doit être désactivé
+  const isPayButtonDisabled = () => {
+    if (charge.isPaid) return true;
+    
+    const dueDate = new Date(charge.calculatedDate);
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const dueMonth = dueDate.getMonth();
+    const dueYear = dueDate.getFullYear();
+    
+    // Désactiver si la date est dans le futur d'un autre mois
+    const isDueThisMonth = (dueYear === currentYear && dueMonth === currentMonth);
+    const isPastDue = dueDate < today;
+    const isFutureMonth = dueDate > today && !isDueThisMonth;
+    
+    return isFutureMonth;
   };
 
   return (
@@ -159,10 +202,10 @@ export const IslamicChargeCard: React.FC<IslamicChargeCardProps> = ({
               style={[
                 styles.actionButton, 
                 styles.payButton,
-                isPaying && styles.disabledButton
+                (isPaying || isPayButtonDisabled()) && styles.disabledButton
               ]}
               onPress={handlePayCharge}
-              disabled={isPaying}
+              disabled={isPaying || isPayButtonDisabled()}
             >
               <Text style={styles.actionText}>
                 {isPaying ? '⏳' : '💰'} {isPaying ? 'Paiement...' : 'Payer'}

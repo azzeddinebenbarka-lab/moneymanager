@@ -1,11 +1,12 @@
-// src/navigation/ModernDrawerNavigator.tsx - VERSION COMPLÈTEMENT CORRIGÉE
+// src/navigation/ModernDrawerNavigator.tsx - VERSION AVEC RAFRAÎCHISSEMENT AUTOMATIQUE
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createStackNavigator } from '@react-navigation/stack';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import ModernDrawerContent from '../components/layout/ModernDrawerContent';
 import { useTheme } from '../context/ThemeContext';
+import { useIslamicCharges } from '../hooks/useIslamicCharges';
 import TransactionDetailScreen from '../screens/TransactionDetailScreen';
 
 // Import des écrans
@@ -25,6 +26,7 @@ import DashboardScreen from '../screens/DashboardScreen';
 import EditAnnualChargeScreen from '../screens/EditAnnualChargeScreen';
 import EditBudgetScreen from '../screens/EditBudgetScreen';
 import EditTransactionScreen from '../screens/EditTransactionScreen';
+import IslamicChargesScreen from '../screens/islamic/IslamicChargesScreen';
 import MonthDetailScreen from '../screens/MonthDetailScreen';
 import MonthsOverviewScreen from '../screens/MonthsOverviewScreen';
 import ProfileScreen from '../screens/ProfileScreen';
@@ -63,6 +65,9 @@ type DrawerParamList = {
   Debts: undefined;
   Savings: undefined;
   
+  // ✅ CORRECTION : AJOUT DES CHARGES ISLAMIQUES
+  IslamicCharges: undefined;
+  
   // Paramètres
   Profile: undefined;
   Settings: undefined;
@@ -83,7 +88,7 @@ const Stack = createStackNavigator();
 const DashboardStack = () => (
   <Stack.Navigator 
     screenOptions={{ headerShown: false }}
-    id="DashboardStack" // ✅ AJOUT DE L'ID
+    id="DashboardStack"
   >
     <Stack.Screen name="DashboardMain" component={DashboardScreen} />
     <Stack.Screen name="AccountDetail" component={AccountDetailScreen} />
@@ -95,7 +100,7 @@ const DashboardStack = () => (
 const TransactionStack = () => (
   <Stack.Navigator 
     screenOptions={{ headerShown: false }}
-    id="TransactionStack" // ✅ AJOUT DE L'ID
+    id="TransactionStack"
   >
     <Stack.Screen name="TransactionsList" component={TransactionsScreen} />
     <Stack.Screen name="AddTransaction" component={AddTransactionScreen} />
@@ -110,7 +115,7 @@ const TransactionStack = () => (
 const AccountsStack = () => (
   <Stack.Navigator 
     screenOptions={{ headerShown: false }}
-    id="AccountsStack" // ✅ AJOUT DE L'ID
+    id="AccountsStack"
   >
     <Stack.Screen name="AccountsList" component={AccountsScreen} />
     <Stack.Screen name="AccountDetail" component={AccountDetailScreen} />
@@ -123,18 +128,18 @@ const AccountsStack = () => (
 const BudgetsStack = () => (
   <Stack.Navigator 
     screenOptions={{ headerShown: false }}
-    id="BudgetsStack" // ✅ AJOUT DE L'ID
+    id="BudgetsStack"
   >
     <Stack.Screen name="BudgetsList" component={BudgetsScreen} />
     <Stack.Screen name="EditBudget" component={EditBudgetScreen} />
   </Stack.Navigator>
 );
 
-// Stack pour Catégories (AVEC SOUS-CATÉGORIES)
+// Stack pour Catégories
 const CategoriesStack = () => (
   <Stack.Navigator 
     screenOptions={{ headerShown: false }}
-    id="CategoriesStack" // ✅ AJOUT DE L'ID
+    id="CategoriesStack"
   >
     <Stack.Screen name="CategoriesList" component={CategoriesScreen} />
   </Stack.Navigator>
@@ -144,7 +149,7 @@ const CategoriesStack = () => (
 const AnalyticsStack = () => (
   <Stack.Navigator 
     screenOptions={{ headerShown: false }}
-    id="AnalyticsStack" // ✅ AJOUT DE L'ID
+    id="AnalyticsStack"
   >
     <Stack.Screen name="AnalyticsDashboard" component={AnalyticsDashboardScreen} />
     <Stack.Screen name="ReportsList" component={ReportsScreen} />
@@ -156,7 +161,7 @@ const AnalyticsStack = () => (
 const SettingsStack = () => (
   <Stack.Navigator 
     screenOptions={{ headerShown: false }}
-    id="SettingsStack" // ✅ AJOUT DE L'ID
+    id="SettingsStack"
   >
     <Stack.Screen name="SettingsList" component={SettingsScreen} />
     <Stack.Screen name="Profile" component={ProfileScreen} />
@@ -168,7 +173,7 @@ const SettingsStack = () => (
 const AnnualChargesStack = () => (
   <Stack.Navigator 
     screenOptions={{ headerShown: false }}
-    id="AnnualChargesStack" // ✅ AJOUT DE L'ID
+    id="AnnualChargesStack"
   >
     <Stack.Screen name="AnnualChargesList" component={AnnualChargesScreen} />
     <Stack.Screen name="AddAnnualCharge" component={AddAnnualChargeScreen} />
@@ -176,11 +181,21 @@ const AnnualChargesStack = () => (
   </Stack.Navigator>
 );
 
-// ✅ NOUVEAU : Stack pour Vue par Mois
+// ✅ CORRECTION : Stack pour Charges Islamiques
+const IslamicChargesStack = () => (
+  <Stack.Navigator 
+    screenOptions={{ headerShown: false }}
+    id="IslamicChargesStack"
+  >
+    <Stack.Screen name="IslamicChargesList" component={IslamicChargesScreen} />
+  </Stack.Navigator>
+);
+
+// Stack pour Vue par Mois
 const MonthsStack = () => (
   <Stack.Navigator 
     screenOptions={{ headerShown: false }}
-    id="MonthsStack" // ✅ AJOUT DE L'ID
+    id="MonthsStack"
   >
     <Stack.Screen name="MonthsOverview" component={MonthsOverviewScreen} />
     <Stack.Screen name="MonthDetail" component={MonthDetailScreen} />
@@ -189,7 +204,17 @@ const MonthsStack = () => (
 
 const ModernDrawerNavigator = () => {
   const { theme } = useTheme();
+  const { settings, refreshCharges } = useIslamicCharges();
+  
+  const [refreshKey, setRefreshKey] = useState(0); // ✅ État pour forcer le re-rendu
   const isDark = theme === 'dark';
+  const isIslamicChargesEnabled = settings.isEnabled;
+
+  // ✅ FORCER LE RE-RENDU QUAND LES SETTINGS CHANGENT
+  useEffect(() => {
+    console.log('🔄 Settings islamiques mis à jour:', settings.isEnabled);
+    setRefreshKey(prev => prev + 1); // Force le re-rendu du navigator
+  }, [settings.isEnabled]);
 
   const drawerScreenOptions = {
     headerShown: false,
@@ -214,10 +239,11 @@ const ModernDrawerNavigator = () => {
 
   return (
     <Drawer.Navigator
+      key={refreshKey} // ✅ FORCE LE RE-RENDU QUAND refreshKey CHANGE
       drawerContent={(props) => <ModernDrawerContent {...props} />}
       screenOptions={drawerScreenOptions}
       initialRouteName="Dashboard"
-      id="MainDrawer" // ✅ AJOUT DE L'ID
+      id="MainDrawer"
     >
       {/* SECTION PRINCIPALE */}
       <Drawer.Screen
@@ -233,7 +259,7 @@ const ModernDrawerNavigator = () => {
         }}
       />
 
-      {/* ✅ NOUVELLE SECTION : VUE PAR MOIS */}
+      {/* SECTION VUE PAR MOIS */}
       <Drawer.Screen
         name="MonthsOverview"
         component={MonthsStack}
@@ -246,6 +272,22 @@ const ModernDrawerNavigator = () => {
           drawerLabel: "Vue par Mois",
         }}
       />
+
+      {/* ✅ CORRECTION : SECTION CHARGES ISLAMIQUES - CONDITIONNELLE */}
+      {isIslamicChargesEnabled && (
+        <Drawer.Screen
+          name="IslamicCharges"
+          component={IslamicChargesStack}
+          options={{
+            drawerIcon: ({ color, size }) => (
+              <View style={[styles.iconContainer, { backgroundColor: '#FF6B35' }]}>
+                <Ionicons name="star" size={size-2} color="#FFFFFF" />
+              </View>
+            ),
+            drawerLabel: "Charges Islamiques",
+          }}
+        />
+      )}
 
       {/* SECTION TRANSACTIONS (UNIFIÉES) */}
       <Drawer.Screen
@@ -467,7 +509,7 @@ const ModernDrawerNavigator = () => {
         }}
       />
 
-      {/* ✅ NOUVEAU : Écran de détail mois (caché) */}
+      {/* Écran de détail mois (caché) */}
       <Drawer.Screen 
         name="MonthDetail" 
         component={MonthDetailScreen} 
@@ -477,7 +519,7 @@ const ModernDrawerNavigator = () => {
         }}
       />
 
-      {/* ✅ AJOUTER AnalyticsDashboard COMME ROUTE DIRECTE */}
+      {/* AnalyticsDashboard COMME ROUTE DIRECTE */}
       <Drawer.Screen 
         name="AnalyticsDashboard" 
         component={AnalyticsDashboardScreen} 

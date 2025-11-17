@@ -13,6 +13,7 @@ import { SafeAreaView } from './src/components/SafeAreaView';
 
 // Context Providers
 import { DatabaseProvider } from './src/context/DatabaseContext';
+import { IslamicSettingsProvider } from './src/context/IslamicSettingsContext'; // ✅ AJOUT
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 
 // Navigation 
@@ -205,16 +206,20 @@ const AppWithProviders = () => {
       </SafeAreaProvider>
     );
   }
+  
 
-  // APPLICATION PRINCIPALE AVEC CURRENCYPROVIDER
+  // ✅ CORRECTION : APPLICATION PRINCIPALE AVEC TOUS LES PROVIDERS
   return (
     <SafeAreaProvider>
       <ThemeProvider>
         <CurrencyProvider>
           <DatabaseProvider>
-            <DatabaseLoader>
-              <AppNavigation />
-            </DatabaseLoader>
+            {/* ✅ AJOUT : IslamicSettingsProvider */}
+            <IslamicSettingsProvider>
+              <DatabaseLoader>
+                <AppNavigation />
+              </DatabaseLoader>
+            </IslamicSettingsProvider>
           </DatabaseProvider>
         </CurrencyProvider>
       </ThemeProvider>

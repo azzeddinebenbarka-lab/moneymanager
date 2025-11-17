@@ -1,7 +1,7 @@
-﻿// src/screens/islamic/IslamicChargesScreen.tsx - VERSION COMPLÈTEMENT CORRIGÉE
+﻿// src/screens/islamic/IslamicChargesScreen.tsx - VERSION AMÉLIORÉE
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import IslamicChargeCard from '../../components/islamic/IslamicChargeCard';
 import { SafeAreaView } from '../../components/SafeAreaView';
@@ -18,12 +18,22 @@ export const IslamicChargesScreen: React.FC = () => {
     error,
     updateChargeAmount,
     markAsPaid,
-    generateChargesForCurrentYear
+    generateChargesForCurrentYear,
+    refreshCharges
   } = useIslamicCharges();
   
   const { theme } = useTheme();
   const { formatAmount } = useCurrency();
   const isDark = theme === 'dark';
+
+  // ✅ RAFRAÎCHIR LES CHARGES QUAND L'ÉCRAN EST FOCUS
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      refreshCharges();
+    });
+
+    return unsubscribe;
+  }, [navigation, refreshCharges]);
 
   const totalAmount = islamicCharges.reduce((sum, charge) => sum + charge.amount, 0);
   const paidAmount = islamicCharges
@@ -32,6 +42,7 @@ export const IslamicChargesScreen: React.FC = () => {
   const pendingCharges = islamicCharges.filter(charge => !charge.isPaid);
   const paidCharges = islamicCharges.filter(charge => charge.isPaid);
 
+  // ✅ ÉCRAN QUAND FONCTIONNALITÉ DÉSACTIVÉE
   if (!settings.isEnabled) {
     return (
       <SafeAreaView>
@@ -97,7 +108,7 @@ export const IslamicChargesScreen: React.FC = () => {
           </Text>
           <TouchableOpacity 
             style={styles.refreshButton}
-            onPress={generateChargesForCurrentYear}
+            onPress={refreshCharges}
           >
             <Ionicons name="refresh" size={20} color="#007AFF" />
           </TouchableOpacity>
@@ -169,8 +180,12 @@ export const IslamicChargesScreen: React.FC = () => {
                 onUpdateAmount={updateChargeAmount}
                 onMarkAsPaid={markAsPaid}
                 onAssignAccount={(chargeId: string, accountId: string, autoDeduct: boolean) => {
-                  // Implémentation temporaire - à compléter dans useIslamicCharges
+                  // Implémentation temporaire
                   console.log('Assign account to charge:', { chargeId, accountId, autoDeduct });
+                }}
+                onCanPayCharge={async (chargeId: string) => {
+                  // Vérifier si la charge peut être payée
+                  return { canPay: true }; // Simplifié pour l'exemple
                 }}
               />
             ))

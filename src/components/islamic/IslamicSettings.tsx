@@ -1,4 +1,4 @@
-// src/components/islamic/IslamicSettings.tsx
+// src/components/islamic/IslamicSettings.tsx - VERSION CORRIGÉE
 import React, { useState } from 'react';
 import {
   Alert,
@@ -39,11 +39,17 @@ export const IslamicSettings: React.FC<IslamicSettingsProps> = ({
         await generateChargesForCurrentYear();
       }
       
-      Alert.alert('Succès', 'Paramètres islamiques sauvegardés avec succès');
+      Alert.alert(
+        '✅ Paramètres Sauvegardés', 
+        'Les paramètres islamiques ont été sauvegardés avec succès.\n\n' +
+        (localSettings.isEnabled ? 
+          'Les charges islamiques sont maintenant activées et disponibles dans le menu.' : 
+          'Les charges islamiques ont été désactivées.')
+      );
       onClose();
     } catch (error) {
       console.error('Error saving islamic settings:', error);
-      Alert.alert('Erreur', 'Impossible de sauvegarder les paramètres');
+      Alert.alert('❌ Erreur', 'Impossible de sauvegarder les paramètres');
     } finally {
       setIsLoading(false);
     }
@@ -62,7 +68,7 @@ export const IslamicSettings: React.FC<IslamicSettingsProps> = ({
     <View style={[styles.container, isDark && styles.darkContainer]}>
       <View style={styles.header}>
         <Text style={[styles.title, isDark && styles.darkText]}>
-          Paramètres Islamiques
+          ⚙️ Paramètres Islamiques
         </Text>
         <TouchableOpacity onPress={onClose}>
           <Text style={styles.closeButton}>✕</Text>
@@ -77,7 +83,7 @@ export const IslamicSettings: React.FC<IslamicSettingsProps> = ({
               Activer les charges islamiques
             </Text>
             <Text style={[styles.settingDescription, isDark && styles.darkSubtext]}>
-              Gérer les charges liées aux fêtes musulmanes
+              Active la gestion des charges liées aux fêtes musulmanes
             </Text>
           </View>
           <Switch
@@ -153,6 +159,25 @@ export const IslamicSettings: React.FC<IslamicSettingsProps> = ({
           />
         </View>
 
+        {/* Inclure les charges recommandées */}
+        <View style={styles.settingRow}>
+          <View style={styles.settingInfo}>
+            <Text style={[styles.settingLabel, isDark && styles.darkText]}>
+              Inclure les charges recommandées
+            </Text>
+            <Text style={[styles.settingDescription, isDark && styles.darkSubtext]}>
+              Inclure les charges recommandées (non obligatoires)
+            </Text>
+          </View>
+          <Switch
+            value={localSettings.includeRecommended}
+            onValueChange={(value) => handleToggle('includeRecommended', value)}
+            trackColor={{ false: '#767577', true: '#81b0ff' }}
+            thumbColor={localSettings.includeRecommended ? '#007AFF' : '#f4f3f4'}
+            disabled={!localSettings.isEnabled}
+          />
+        </View>
+
         {/* Informations */}
         <View style={styles.infoBox}>
           <Text style={[styles.infoTitle, isDark && styles.darkText]}>
@@ -162,7 +187,20 @@ export const IslamicSettings: React.FC<IslamicSettingsProps> = ({
             • Gestion des charges liées aux fêtes musulmanes{'\n'}
             • Calcul automatique des dates selon le calendrier hégirien{'\n'}
             • Possibilité de définir des montants par défaut{'\n'}
-            • Intégration avec les comptes pour prélèvement automatique
+            • Intégration avec les comptes pour prélèvement automatique{'\n'}
+            • ✅ Une fois activé, l'option "Charges Islamiques" apparaît dans le menu
+          </Text>
+        </View>
+
+        {/* État actuel */}
+        <View style={[styles.statusBox, localSettings.isEnabled ? styles.statusEnabled : styles.statusDisabled]}>
+          <Text style={[styles.statusTitle, isDark && styles.darkText]}>
+            {localSettings.isEnabled ? '✅ Activé' : '❌ Désactivé'}
+          </Text>
+          <Text style={[styles.statusText, isDark && styles.darkSubtext]}>
+            {localSettings.isEnabled ? 
+              'Les charges islamiques sont activées et disponibles dans le menu.' : 
+              'Les charges islamiques sont désactivées.'}
           </Text>
         </View>
       </ScrollView>
@@ -283,6 +321,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginTop: 24,
+    marginBottom: 16,
   },
   infoTitle: {
     fontSize: 16,
@@ -294,6 +333,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     lineHeight: 20,
+  },
+  statusBox: {
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  statusEnabled: {
+    backgroundColor: '#E8F5E8',
+    borderColor: '#4CAF50',
+    borderWidth: 1,
+  },
+  statusDisabled: {
+    backgroundColor: '#FFEBEE',
+    borderColor: '#F44336',
+    borderWidth: 1,
+  },
+  statusTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 4,
+  },
+  statusText: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 18,
   },
   footer: {
     flexDirection: 'row',

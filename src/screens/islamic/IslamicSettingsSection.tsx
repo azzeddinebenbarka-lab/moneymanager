@@ -17,57 +17,70 @@ import { IslamicSettings } from '../../types/IslamicCharge';
 export const IslamicSettingsSection: React.FC = () => {
   const { theme } = useTheme();
   const { 
-  settings, 
-  saveSettings, 
-  generateChargesForCurrentYear
-} = useIslamicCharges();
+    settings, 
+    saveSettings, 
+    generateChargesForCurrentYear,
+    loading 
+  } = useIslamicCharges();
   
-  const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const isDark = theme === 'dark';
 
   const handleToggleSetting = async (key: keyof IslamicSettings, value: any) => {
-  try {
-    const newSettings = {
-      ...settings,
-      [key]: value
-    };
-    
-    await saveSettings(newSettings);
-    
-    // ✅ SI ON DÉSACTIVE, LES CHARGES NE SERONT PLUS AFFICHÉES
-    if (key === 'isEnabled' && value === false) {
-      Alert.alert('Succès', 'Charges islamiques désactivées');
+    try {
+      const newSettings = {
+        ...settings,
+        [key]: value
+      };
+      
+      await saveSettings(newSettings);
+      
+      // ✅ SI ON DÉSACTIVE, LES CHARGES NE SERONT PLUS AFFICHÉES
+      if (key === 'isEnabled' && value === false) {
+        Alert.alert('✅ Succès', 'Charges islamiques désactivées');
+      }
+      
+      // ✅ SI ON ACTIVE, GÉNÉRER IMMÉDIATEMENT LES CHARGES
+      if (key === 'isEnabled' && value === true) {
+        try {
+          setIsGenerating(true);
+          await generateChargesForCurrentYear();
+          Alert.alert('✅ Succès', 'Charges islamiques activées et générées avec succès');
+        } catch (error) {
+          Alert.alert('❌ Erreur', 'Charges activées mais erreur lors de la génération');
+        } finally {
+          setIsGenerating(false);
+        }
+      }
+      
+    } catch (error) {
+      console.error('Error updating settings:', error);
+      Alert.alert('❌ Erreur', 'Impossible de mettre à jour les paramètres');
     }
-    
-    // ✅ SI ON ACTIVE, GÉNÉRER IMMÉDIATEMENT LES CHARGES
-    if (key === 'isEnabled' && value === true) {
-      await generateChargesForCurrentYear();
-      Alert.alert('Succès', 'Charges islamiques activées et générées');
-    }
-    
-  } catch (error) {
-    console.error('Error updating settings:', error);
-    Alert.alert('Erreur', 'Impossible de mettre à jour les paramètres');
-  }
-};
+  };
 
   const handleGenerateCharges = async () => {
-    setIsLoading(true);
+    if (!settings.isEnabled) {
+      Alert.alert('Information', 'Veuillez d\'abord activer les charges islamiques');
+      return;
+    }
+
+    setIsGenerating(true);
     try {
       await generateChargesForCurrentYear();
-      Alert.alert('Succès', 'Charges islamiques générées avec succès');
+      Alert.alert('✅ Succès', 'Charges islamiques générées avec succès');
     } catch (error) {
       console.error('Error generating charges:', error);
-      Alert.alert('Erreur', 'Impossible de générer les charges islamiques');
+      Alert.alert('❌ Erreur', 'Impossible de générer les charges islamiques');
     } finally {
-      setIsLoading(false);
+      setIsGenerating(false);
     }
   };
 
   const handleResetSettings = () => {
     Alert.alert(
-      'Réinitialiser',
+      '🔄 Réinitialiser',
       'Êtes-vous sûr de vouloir réinitialiser les paramètres islamiques ?',
       [
         { text: 'Annuler', style: 'cancel' },
@@ -88,9 +101,9 @@ export const IslamicSettingsSection: React.FC = () => {
                 }
               };
               await saveSettings(defaultSettings);
-              Alert.alert('Succès', 'Paramètres réinitialisés');
+              Alert.alert('✅ Succès', 'Paramètres réinitialisés avec succès');
             } catch (error) {
-              Alert.alert('Erreur', 'Impossible de réinitialiser les paramètres');
+              Alert.alert('❌ Erreur', 'Impossible de réinitialiser les paramètres');
             }
           }
         }
@@ -105,7 +118,7 @@ export const IslamicSettingsSection: React.FC = () => {
         contentContainerStyle={styles.content}
       >
         <Text style={[styles.title, isDark && styles.darkText]}>
-          Paramètres Islamiques
+          ⚙️ Paramètres Islamiques
         </Text>
 
         {/* Activation des charges islamiques */}
@@ -118,12 +131,16 @@ export const IslamicSettingsSection: React.FC = () => {
               <Text style={[styles.settingDescription, isDark && styles.darkSubtext]}>
                 Activez cette fonctionnalité pour gérer les charges liées aux fêtes musulmanes
               </Text>
+              <Text style={[styles.statusText, settings.isEnabled ? styles.statusEnabled : styles.statusDisabled]}>
+                {settings.isEnabled ? '✅ Activé' : '❌ Désactivé'}
+              </Text>
             </View>
             <Switch
               value={settings.isEnabled}
               onValueChange={(value) => handleToggleSetting('isEnabled', value)}
               trackColor={{ false: '#767577', true: '#81b0ff' }}
               thumbColor={settings.isEnabled ? '#007AFF' : '#f4f3f4'}
+              disabled={loading || isGenerating}
             />
           </View>
         </View>
@@ -147,6 +164,7 @@ export const IslamicSettingsSection: React.FC = () => {
                     isDark && styles.darkMethodButton
                   ]}
                   onPress={() => handleToggleSetting('calculationMethod', 'UmmAlQura')}
+                  disabled={loading}
                 >
                   <Text style={[
                     styles.methodText,
@@ -166,6 +184,7 @@ export const IslamicSettingsSection: React.FC = () => {
                     isDark && styles.darkMethodButton
                   ]}
                   onPress={() => handleToggleSetting('calculationMethod', 'Fixed')}
+                  disabled={loading}
                 >
                   <Text style={[
                     styles.methodText,
@@ -196,6 +215,7 @@ export const IslamicSettingsSection: React.FC = () => {
                   onValueChange={(value) => handleToggleSetting('autoCreateCharges', value)}
                   trackColor={{ false: '#767577', true: '#81b0ff' }}
                   thumbColor={settings.autoCreateCharges ? '#007AFF' : '#f4f3f4'}
+                  disabled={loading || !settings.isEnabled}
                 />
               </View>
             </View>
@@ -216,6 +236,7 @@ export const IslamicSettingsSection: React.FC = () => {
                   onValueChange={(value) => handleToggleSetting('includeRecommended', value)}
                   trackColor={{ false: '#767577', true: '#81b0ff' }}
                   thumbColor={settings.includeRecommended ? '#007AFF' : '#f4f3f4'}
+                  disabled={loading || !settings.isEnabled}
                 />
               </View>
             </View>
@@ -256,10 +277,10 @@ export const IslamicSettingsSection: React.FC = () => {
               <TouchableOpacity
                 style={[styles.actionButton, isDark && styles.darkActionButton]}
                 onPress={handleGenerateCharges}
-                disabled={isLoading}
+                disabled={loading || isGenerating}
               >
                 <Text style={[styles.actionButtonText, isDark && styles.darkText]}>
-                  {isLoading ? 'Génération...' : '🔄 Générer les Charges'}
+                  {isGenerating ? '⏳ Génération...' : '🔄 Générer les Charges'}
                 </Text>
                 <Text style={[styles.actionDescription, isDark && styles.darkSubtext]}>
                   Créer toutes les charges islamiques pour cette année
@@ -269,6 +290,7 @@ export const IslamicSettingsSection: React.FC = () => {
               <TouchableOpacity
                 style={[styles.actionButton, styles.dangerButton, isDark && styles.darkDangerButton]}
                 onPress={handleResetSettings}
+                disabled={loading}
               >
                 <Text style={styles.dangerButtonText}>
                   🗑️ Réinitialiser les Paramètres
@@ -287,10 +309,10 @@ export const IslamicSettingsSection: React.FC = () => {
               
               <View style={styles.infoItem}>
                 <Text style={[styles.infoLabel, isDark && styles.darkSubtext]}>
-                  Fêtes gérées
+                  Statut
                 </Text>
                 <Text style={[styles.infoValue, isDark && styles.darkText]}>
-                  5 fêtes principales
+                  {settings.isEnabled ? '✅ Activé' : '❌ Désactivé'}
                 </Text>
               </View>
               
@@ -308,7 +330,7 @@ export const IslamicSettingsSection: React.FC = () => {
                   Création auto
                 </Text>
                 <Text style={[styles.infoValue, isDark && styles.darkText]}>
-                  {settings.autoCreateCharges ? 'Activée' : 'Désactivée'}
+                  {settings.autoCreateCharges ? '✅ Activée' : '❌ Désactivée'}
                 </Text>
               </View>
 
@@ -317,7 +339,7 @@ export const IslamicSettingsSection: React.FC = () => {
                   Charges recommandées
                 </Text>
                 <Text style={[styles.infoValue, isDark && styles.darkText]}>
-                  {settings.includeRecommended ? 'Inclues' : 'Exclues'}
+                  {settings.includeRecommended ? '✅ Inclues' : '❌ Exclues'}
                 </Text>
               </View>
             </View>
@@ -390,6 +412,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     lineHeight: 18,
+    marginBottom: 8,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+  },
+  statusEnabled: {
+    backgroundColor: '#E8F5E8',
+    color: '#2E7D32',
+  },
+  statusDisabled: {
+    backgroundColor: '#FFEBEE',
+    color: '#C62828',
   },
   methodsContainer: {
     flexDirection: 'row',

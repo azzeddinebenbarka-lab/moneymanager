@@ -1,50 +1,56 @@
-﻿// src/hooks/useIslamicCharges.ts - VERSION COMPLÈTEMENT CORRIGÉE
+﻿// src/hooks/useIslamicCharges.ts - VERSION SANS CONTEXTE
 import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { annualChargeService } from '../services/annualChargeService';
 import { IslamicCalendarService } from '../services/islamicCalendarService';
+import { secureStorage } from '../services/storage/secureStorage'; // ✅ AJOUT
 import { CreateAnnualChargeData } from '../types/AnnualCharge';
-import { IslamicCharge, IslamicSettings } from '../types/IslamicCharge';
+import { DEFAULT_ISLAMIC_SETTINGS, IslamicCharge, IslamicSettings } from '../types/IslamicCharge';
 
 export const useIslamicCharges = (userId: string = 'default-user') => {
   const [islamicCharges, setIslamicCharges] = useState<IslamicCharge[]>([]);
-  const [settings, setSettings] = useState<IslamicSettings>({
-    isEnabled: false,
-    calculationMethod: 'UmmAlQura',
-    customCharges: [],
-    autoCreateCharges: true,
-    includeRecommended: true,
-    defaultAmounts: {
-      obligatory: 100,
-      recommended: 50
-    }
-  });
+  const [settings, setSettings] = useState<IslamicSettings>(DEFAULT_ISLAMIC_SETTINGS);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ CORRECTION : Charger les paramètres au démarrage
+  // ✅ CHARGER LES PARAMÈTRES DEPUIS LE STOCKAGE
   const loadSettings = useCallback(async () => {
     try {
-      // Pour l'instant, on utilise des paramètres par défaut
-      // Plus tard, on pourra les charger depuis la base de données
-      console.log('⚙️ [useIslamicCharges] Chargement des paramètres islamiques');
+      setLoading(true);
+      const savedSettings = await secureStorage.getItem('islamic_settings');
+      if (savedSettings) {
+        const parsedSettings = JSON.parse(savedSettings);
+        setSettings(parsedSettings);
+        console.log('✅ Paramètres islamiques chargés:', parsedSettings.isEnabled);
+      } else {
+        // Utiliser les paramètres par défaut
+        setSettings(DEFAULT_ISLAMIC_SETTINGS);
+        console.log('✅ Paramètres islamiques par défaut chargés');
+      }
     } catch (error) {
       console.error('❌ Erreur chargement paramètres islamiques:', error);
+      setSettings(DEFAULT_ISLAMIC_SETTINGS);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
-  // ✅ CORRECTION : Sauvegarder les paramètres
+  // ✅ SAUVEGARDER LES PARAMÈTRES DANS LE STOCKAGE
   const saveSettings = useCallback(async (newSettings: IslamicSettings): Promise<void> => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log('💾 [useIslamicCharges] Sauvegarde paramètres islamiques:', {
+      console.log('💾 Sauvegarde paramètres islamiques:', {
         enabled: newSettings.isEnabled,
         autoCreate: newSettings.autoCreateCharges
       });
 
+      // Sauvegarder dans le state local
       setSettings(newSettings);
+
+      // Sauvegarder dans le stockage sécurisé
+      await secureStorage.setItem('islamic_settings', JSON.stringify(newSettings));
 
       // ✅ CRITIQUE : Générer immédiatement les charges si activation
       if (newSettings.isEnabled && newSettings.autoCreateCharges) {
@@ -60,7 +66,7 @@ export const useIslamicCharges = (userId: string = 'default-user') => {
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur sauvegarde paramètres';
-      console.error('❌ [useIslamicCharges] Erreur sauvegarde:', errorMessage);
+      console.error('❌ Erreur sauvegarde:', errorMessage);
       setError(errorMessage);
       throw err;
     } finally {
@@ -93,13 +99,14 @@ export const useIslamicCharges = (userId: string = 'default-user') => {
     try {
       if (!settings.isEnabled) {
         console.log('⏸️ Génération ignorée - fonctionnalité désactivée');
+        Alert.alert('Information', 'Veuillez d\'abord activer les charges islamiques dans les paramètres');
         return;
       }
 
       setLoading(true);
       setError(null);
 
-      console.log('🔄 [useIslamicCharges] Génération charges islamiques...');
+      console.log('🔄 Génération charges islamiques...');
 
       const currentYear = new Date().getFullYear();
       const charges = IslamicCalendarService.getChargesForYear(currentYear);
@@ -115,22 +122,32 @@ export const useIslamicCharges = (userId: string = 'default-user') => {
       console.log(`📋 ${filteredCharges.length} charges à créer`);
 
       const createdCharges: IslamicCharge[] = [];
+      const skippedCharges: string[] = [];
 
       for (const islamicCharge of filteredCharges) {
         try {
-          // Vérifier si la charge existe déjà
-          const exists = await annualChargeService.checkIfIslamicChargeExists(
+          // Vérification robuste contre les doublons
+          const existsById = await annualChargeService.checkIfIslamicChargeExists(
             islamicCharge.id,
             currentYear,
             userId
           );
 
-          if (!exists) {
+          // Vérifier aussi par nom + année
+          const existingCharges = await annualChargeService.getAllAnnualCharges(userId);
+          const existsByNameAndYear = existingCharges.some(charge => 
+            charge.name === islamicCharge.name && 
+            new Date(charge.dueDate).getFullYear() === currentYear &&
+            charge.isIslamic
+          );
+
+          if (!existsById && !existsByNameAndYear) {
             const chargeData = convertToAnnualChargeData(islamicCharge);
             await annualChargeService.createAnnualCharge(chargeData, userId);
             createdCharges.push(islamicCharge);
             console.log(`✅ Charge créée: ${islamicCharge.name}`);
           } else {
+            skippedCharges.push(islamicCharge.name);
             console.log(`ℹ️ Charge déjà existante: ${islamicCharge.name}`);
           }
         } catch (chargeError) {
@@ -141,18 +158,23 @@ export const useIslamicCharges = (userId: string = 'default-user') => {
       // Mettre à jour l'état local
       setIslamicCharges(prev => [...prev, ...createdCharges]);
 
-      console.log(`✅ ${createdCharges.length} charges islamiques générées`);
+      console.log(`✅ ${createdCharges.length} charges islamiques générées, ${skippedCharges.length} ignorées (doublons)`);
 
       if (createdCharges.length > 0) {
         Alert.alert(
           '✅ Charges Générées',
           `${createdCharges.length} charges islamiques ont été créées pour cette année`
         );
+      } else if (skippedCharges.length > 0) {
+        Alert.alert(
+          'ℹ️ Aucune nouvelle charge',
+          `Toutes les charges islamiques pour ${currentYear} existent déjà`
+        );
       }
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur génération charges';
-      console.error('❌ [useIslamicCharges] Erreur génération:', errorMessage);
+      console.error('❌ Erreur génération:', errorMessage);
       setError(errorMessage);
       Alert.alert('Erreur', 'Impossible de générer les charges islamiques');
       throw err;
@@ -161,7 +183,7 @@ export const useIslamicCharges = (userId: string = 'default-user') => {
     }
   }, [settings.isEnabled, settings.includeRecommended, userId]);
 
-  // ✅ CORRECTION : Charger les charges existantes
+  // ✅ CHARGER LES CHARGES EXISTANTES
   const loadIslamicCharges = useCallback(async (): Promise<void> => {
     try {
       if (!settings.isEnabled) {
@@ -173,7 +195,7 @@ export const useIslamicCharges = (userId: string = 'default-user') => {
       setLoading(true);
       setError(null);
 
-      console.log('🔍 [useIslamicCharges] Chargement charges islamiques...');
+      console.log('🔍 Chargement charges islamiques...');
 
       const annualCharges = await annualChargeService.getIslamicAnnualCharges(userId);
       
@@ -206,14 +228,14 @@ export const useIslamicCharges = (userId: string = 'default-user') => {
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur chargement charges';
-      console.error('❌ [useIslamicCharges] Erreur chargement:', errorMessage);
+      console.error('❌ Erreur chargement:', errorMessage);
       setError(errorMessage);
     } finally {
       setLoading(false);
     }
   }, [settings.isEnabled, userId]);
 
-  // ✅ NOUVELLE MÉTHODE : Mettre à jour le montant d'une charge
+  // ✅ MÉTHODE : Mettre à jour le montant d'une charge
   const updateChargeAmount = useCallback(async (chargeId: string, newAmount: number): Promise<void> => {
     try {
       setError(null);
@@ -230,18 +252,24 @@ export const useIslamicCharges = (userId: string = 'default-user') => {
       console.log(`💰 Montant mis à jour: ${chargeId} -> ${newAmount} MAD`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur mise à jour montant';
-      console.error('❌ [useIslamicCharges] Erreur mise à jour montant:', errorMessage);
+      console.error('❌ Erreur mise à jour montant:', errorMessage);
       setError(errorMessage);
       throw err;
     }
   }, [userId]);
 
-  // ✅ NOUVELLE MÉTHODE : Marquer comme payé
+  // ✅ MÉTHODE : Marquer comme payé avec validation
   const markAsPaid = useCallback(async (chargeId: string, accountId?: string): Promise<void> => {
     try {
       setError(null);
       
       console.log(`💰 Paiement charge islamique: ${chargeId}`, { accountId });
+
+      // Vérifier d'abord si la charge peut être payée
+      const canPay = await annualChargeService.canPayCharge(chargeId, userId);
+      if (!canPay.canPay) {
+        throw new Error(canPay.reason || 'Cette charge ne peut pas être payée pour le moment');
+      }
 
       // Utiliser le service annualCharge pour le paiement
       await annualChargeService.payCharge(chargeId, accountId, userId);
@@ -260,13 +288,13 @@ export const useIslamicCharges = (userId: string = 'default-user') => {
       console.log(`✅ Charge marquée comme payée: ${chargeId}`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur paiement charge';
-      console.error('❌ [useIslamicCharges] Erreur paiement:', errorMessage);
+      console.error('❌ Erreur paiement:', errorMessage);
       setError(errorMessage);
       throw err;
     }
   }, [userId]);
 
-  // ✅ NOUVELLE MÉTHODE : Assigner un compte
+  // ✅ MÉTHODE : Assigner un compte
   const assignAccount = useCallback(async (chargeId: string, accountId: string, autoDeduct: boolean = false): Promise<void> => {
     try {
       setError(null);
@@ -291,13 +319,13 @@ export const useIslamicCharges = (userId: string = 'default-user') => {
       console.log(`🏦 Compte assigné: ${chargeId} -> ${accountId} (auto: ${autoDeduct})`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur assignation compte';
-      console.error('❌ [useIslamicCharges] Erreur assignation compte:', errorMessage);
+      console.error('❌ Erreur assignation compte:', errorMessage);
       setError(errorMessage);
       throw err;
     }
   }, [userId]);
 
-  // ✅ NOUVELLE MÉTHODE : Supprimer une charge
+  // ✅ MÉTHODE : Supprimer une charge
   const deleteCharge = useCallback(async (chargeId: string): Promise<void> => {
     try {
       setError(null);
@@ -310,18 +338,18 @@ export const useIslamicCharges = (userId: string = 'default-user') => {
       console.log(`🗑️ Charge supprimée: ${chargeId}`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur suppression charge';
-      console.error('❌ [useIslamicCharges] Erreur suppression:', errorMessage);
+      console.error('❌ Erreur suppression:', errorMessage);
       setError(errorMessage);
       throw err;
     }
   }, [userId]);
 
-  // ✅ NOUVELLE MÉTHODE : Vérifier si une charge peut être payée
+  // ✅ MÉTHODE : Vérifier si une charge peut être payée
   const canPayCharge = useCallback(async (chargeId: string): Promise<{ canPay: boolean; reason?: string }> => {
     try {
       return await annualChargeService.canPayCharge(chargeId, userId);
     } catch (err) {
-      console.error('❌ [useIslamicCharges] Erreur vérification paiement:', err);
+      console.error('❌ Erreur vérification paiement:', err);
       return { canPay: false, reason: 'Erreur de vérification' };
     }
   }, [userId]);
