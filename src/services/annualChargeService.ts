@@ -1,4 +1,4 @@
-// src/services/annualChargeService.ts - VERSION COMPLÈTEMENT CORRIGÉE SANS ERREURS TYPESCRIPT
+// src/services/annualChargeService.ts - VERSION COMPLÈTE AVEC PRÉLÈVEMENT AUTOMATIQUE
 import { AnnualCharge, AnnualChargeStats, CreateAnnualChargeData, UpdateAnnualChargeData } from '../types/AnnualCharge';
 import { generateId } from '../utils/numberUtils';
 import { accountService } from './accountService';
@@ -30,15 +30,7 @@ interface DatabaseAnnualCharge {
   recurrence?: string;
 }
 
-// ✅ CORRECTION : Déclarer la propriété static en dehors de l'objet
-class AnnualChargeServiceClass {
-  private static futureGenerationLock = false;
-}
-
 export const annualChargeService = {
-  // ✅ CORRECTION : Utiliser une propriété d'instance au lieu de static
-  _futureGenerationLock: false,
-
   // ✅ GARANTIR QUE LA TABLE A TOUTES LES COLONNES
   async ensureAnnualChargesTableExists(): Promise<void> {
     try {
@@ -134,7 +126,7 @@ export const annualChargeService = {
     }
   },
 
-  // ✅ CRÉER UNE CHARGE ANNUELLE AVEC MISE À JOUR DU SOLDE SI PAYÉE
+  // ✅ CRÉER UNE CHARGE ANNUELLE
   async createAnnualCharge(chargeData: CreateAnnualChargeData, userId: string = 'default-user'): Promise<string> {
     try {
       await this.ensureAnnualChargesTableExists();
@@ -150,7 +142,9 @@ export const annualChargeService = {
         dueDate: chargeData.dueDate,
         recurrence: chargeData.recurrence,
         isRecurring: chargeData.isRecurring,
-        isPaid: chargeData.isPaid
+        isPaid: chargeData.isPaid,
+        autoDeduct: chargeData.autoDeduct,
+        accountId: chargeData.accountId
       });
 
       // ✅ CORRECTION : Calculer is_recurring basé sur recurrence
@@ -239,31 +233,21 @@ export const annualChargeService = {
         return { canPay: false, reason: 'Charge déjà payée' };
       }
 
-      // ✅ VALIDATION CRITIQUE : Validation stricte des dates
+      // ✅ VALIDATION CRITIQUE : Validation des dates
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
       const dueDate = new Date(charge.dueDate);
       dueDate.setHours(0, 0, 0, 0);
       
-      const currentMonth = today.getMonth();
-      const currentYear = today.getFullYear();
-      const dueMonth = dueDate.getMonth();
-      const dueYear = dueDate.getFullYear();
-      
-      // ✅ LOGIQUE : La charge peut être payée seulement si :
-      // 1. Elle est dans le mois courant ET année courante
-      // 2. OU elle est dans un mois antérieur (échéance dépassée)
-      const isDueThisMonth = (dueYear === currentYear && dueMonth === currentMonth);
+      // ✅ CORRECTION : La charge peut être payée si la date d'échéance est aujourd'hui ou passée
+      const isDueToday = dueDate.getTime() === today.getTime();
       const isPastDue = dueDate < today;
       
-      // ❌ CORRECTION : Empêcher le paiement si la date est dans le futur d'un autre mois
-      const isFutureMonth = dueDate > today && !isDueThisMonth;
-      
-      if (isFutureMonth) {
+      if (!isDueToday && !isPastDue) {
         return { 
           canPay: false, 
-          reason: `La charge ne peut être payée qu'à partir du ${dueDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}` 
+          reason: `La charge ne peut être payée qu'à partir du ${dueDate.toLocaleDateString('fr-FR')}` 
         };
       }
 
@@ -358,7 +342,7 @@ export const annualChargeService = {
         throw new Error(accountValidation.message || 'Compte invalide');
       }
 
-      // ✅ CORRECTION : Créer une transaction sans les propriétés isAnnualCharge et annualChargeId
+      // ✅ CRITIQUE : Créer une transaction de dépense qui mettra à jour le solde
       await transactionService.createTransaction({
         amount: charge.amount,
         type: 'expense',
@@ -367,9 +351,9 @@ export const annualChargeService = {
         description: `Charge annuelle: ${charge.name}`,
         date: new Date().toISOString().split('T')[0],
         userId: userId,
-        // ❌ SUPPRESSION : Propriétés qui n'existent pas dans le type Transaction
-        // isAnnualCharge: true,
-        // annualChargeId: charge.id
+        // ✅ AJOUT : Spécifier que c'est une charge annuelle pour le tracking
+        isAnnualCharge: true,
+        annualChargeId: charge.id
       }, userId);
 
       console.log('✅ Déduction automatique effectuée avec succès - solde mis à jour');
@@ -379,18 +363,17 @@ export const annualChargeService = {
     }
   },
 
-  // ✅ CORRIGÉ : TRAITER LES CHARGES DUES AUTOMATIQUEMENT
-  async processDueCharges(userId: string = 'default-user'): Promise<{ processed: number; errors: string[] }> {
+  // ✅ NOUVEAU : TRAITER LES CHARGES AUTOMATIQUEMENT À LA DATE D'ÉCHÉANCE
+  async processAutoDeductCharges(userId: string = 'default-user'): Promise<{ processed: number; errors: string[] }> {
     try {
       await this.ensureAnnualChargesTableExists();
 
-      const today = new Date();
-      const currentMonth = today.getMonth();
-      const currentYear = today.getFullYear();
-      
-      // ✅ CORRECTION CRITIQUE : Ne traiter que les charges DU MOIS COURANT
       const db = await getDatabase();
+      const today = new Date().toISOString().split('T')[0];
       
+      console.log(`🔍 Recherche des charges à prélever automatiquement pour le ${today}...`);
+
+      // ✅ CORRECTION CRITIQUE : Récupérer les charges dont la date d'échéance est aujourd'hui
       const dueCharges = await db.getAllAsync(
         `SELECT * FROM annual_charges 
          WHERE user_id = ? 
@@ -398,12 +381,11 @@ export const annualChargeService = {
          AND auto_deduct = 1 
          AND account_id IS NOT NULL 
          AND is_active = 1
-         AND strftime('%Y', due_date) = ?
-         AND strftime('%m', due_date) = ?`,
-        [userId, currentYear.toString(), (currentMonth + 1).toString().padStart(2, '0')]
+         AND due_date = ?`,
+        [userId, today]
       ) as DatabaseAnnualCharge[];
 
-      console.log(`🔄 Traitement de ${dueCharges.length} charges dues ce mois (${currentMonth + 1}/${currentYear})`);
+      console.log(`🔄 Traitement de ${dueCharges.length} charges à prélever automatiquement aujourd'hui`);
 
       const results = {
         processed: 0,
@@ -412,6 +394,8 @@ export const annualChargeService = {
 
       for (const charge of dueCharges) {
         try {
+          console.log(`💰 Traitement automatique de la charge: ${charge.name}`);
+
           // Vérifier que la charge peut être payée (date valide)
           const validation = await this.canPayCharge(charge.id, userId);
           if (!validation.canPay) {
@@ -419,6 +403,7 @@ export const annualChargeService = {
             continue;
           }
 
+          // Effectuer le paiement automatique
           await this.payCharge(charge.id, charge.account_id, userId);
           results.processed++;
           console.log(`✅ Charge traitée automatiquement: ${charge.name}`);
@@ -429,7 +414,7 @@ export const annualChargeService = {
         }
       }
 
-      console.log(`✅ Traitement automatique terminé: ${results.processed} charges traitées, ${results.errors.length} erreurs`);
+      console.log(`✅ Prélèvement automatique terminé: ${results.processed} charges traitées, ${results.errors.length} erreurs`);
       return results;
     } catch (error) {
       console.error('❌ Erreur lors du traitement automatique des charges:', error);
@@ -437,286 +422,12 @@ export const annualChargeService = {
     }
   },
 
-  // ✅ NOUVELLE MÉTHODE : NETTOYER LES DOUBLONS
-  async cleanupDuplicateCharges(userId: string = 'default-user'): Promise<number> {
-    try {
-      await this.ensureAnnualChargesTableExists();
-      const db = await getDatabase();
-
-      console.log('🧹 Nettoyage des charges en double...');
-
-      // Identifier et supprimer les doublons (même nom, même année, même récurrence)
-      const result = await db.runAsync(`
-        DELETE FROM annual_charges 
-        WHERE id NOT IN (
-          SELECT MIN(id) 
-          FROM annual_charges 
-          WHERE user_id = ?
-          GROUP BY name, strftime('%Y', due_date), recurrence, is_islamic, islamic_holiday_id
-        ) AND user_id = ?
-      `, [userId, userId]);
-
-      const deletedCount = result.changes || 0;
-      console.log(`✅ ${deletedCount} charges en double supprimées`);
-      return deletedCount;
-    } catch (error) {
-      console.error('❌ Erreur nettoyage doublons:', error);
-      throw error;
-    }
+  // ✅ CORRIGÉ : TRAITER LES CHARGES DUES AUTOMATIQUEMENT (pour rétrocompatibilité)
+  async processDueCharges(userId: string = 'default-user'): Promise<{ processed: number; errors: string[] }> {
+    return this.processAutoDeductCharges(userId);
   },
 
-  // ✅ CORRIGÉ : GÉNÉRER LES CHARGES RÉCURRENTES POUR L'ANNÉE SUIVANTE
-  async generateRecurringChargesForNextYear(userId: string = 'default-user'): Promise<{ generated: number; skipped: number }> {
-    try {
-      await this.ensureAnnualChargesTableExists();
-
-      const db = await getDatabase();
-      const currentYear = new Date().getFullYear();
-      const nextYear = currentYear + 1;
-      
-      // ✅ CORRECTION : Récupérer les charges récurrentes actives
-      const recurringCharges = await db.getAllAsync(
-        `SELECT * FROM annual_charges 
-         WHERE user_id = ? 
-         AND is_active = 1 
-         AND (is_recurring = 1 OR recurrence IS NOT NULL)`,
-        [userId]
-      ) as DatabaseAnnualCharge[];
-
-      console.log(`🔄 Génération des charges récurrentes pour ${nextYear}...`);
-      console.log(`📋 ${recurringCharges.length} charges récurrentes trouvées`);
-
-      let generated = 0;
-      let skipped = 0;
-
-      for (const charge of recurringCharges) {
-        try {
-          // ✅ CORRECTION : Calculer la nouvelle date d'échéance selon la récurrence
-          let nextYearDueDate: Date;
-
-          if (charge.recurrence === 'monthly') {
-            // Récurrence mensuelle : ajouter 1 mois à la date originale
-            const originalDate = new Date(charge.due_date);
-            nextYearDueDate = new Date(originalDate);
-            nextYearDueDate.setMonth(originalDate.getMonth() + 12); // 12 mois = 1 an en mensuel
-          } else if (charge.recurrence === 'quarterly') {
-            // Récurrence trimestrielle : ajouter 3 mois à la date originale
-            const originalDate = new Date(charge.due_date);
-            nextYearDueDate = new Date(originalDate);
-            nextYearDueDate.setMonth(originalDate.getMonth() + 4); // 4 trimestres = 1 an
-          } else {
-            // Récurrence annuelle (défaut) : même jour/mois, année suivante
-            const originalDate = new Date(charge.due_date);
-            nextYearDueDate = new Date(nextYear, originalDate.getMonth(), originalDate.getDate());
-          }
-
-          // ✅ VÉRIFICATION ROBUSTE CONTRE LES DOUBLONS
-          const existingCharge = await db.getFirstAsync(
-            `SELECT id FROM annual_charges 
-             WHERE user_id = ? 
-             AND name = ? 
-             AND strftime('%Y', due_date) = ? 
-             AND recurrence = ?
-             AND is_islamic = ?`,
-            [userId, charge.name, nextYear.toString(), charge.recurrence, charge.is_islamic || 0]
-          );
-
-          if (!existingCharge) {
-            // Créer la nouvelle charge récurrente
-            const newChargeId = generateId();
-            const createdAt = new Date().toISOString();
-
-            await db.runAsync(
-              `INSERT INTO annual_charges (
-                id, user_id, name, amount, due_date, category, description, 
-                is_recurring, is_active, created_at, is_islamic, islamic_holiday_id, 
-                arabic_name, type, is_paid, paid_date, reminder_days,
-                account_id, auto_deduct, payment_method, recurrence
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-              [
-                newChargeId,
-                userId,
-                charge.name,
-                charge.amount,
-                nextYearDueDate.toISOString().split('T')[0],
-                charge.category,
-                charge.description || '',
-                1, // is_recurring
-                1, // is_active
-                createdAt,
-                charge.is_islamic || 0,
-                charge.islamic_holiday_id || null,
-                charge.arabic_name || null,
-                charge.type || 'normal',
-                0, // is_paid (non payée)
-                null, // paid_date
-                charge.reminder_days || 7,
-                charge.account_id || null,
-                charge.auto_deduct || 0,
-                charge.payment_method || null,
-                charge.recurrence || null
-              ]
-            );
-
-            generated++;
-            console.log(`✅ Charge récurrente créée: ${charge.name} pour ${nextYear}`);
-          } else {
-            skipped++;
-            console.log(`ℹ️ Charge récurrente déjà existante: ${charge.name} pour ${nextYear}`);
-          }
-        } catch (error) {
-          console.error(`❌ Erreur génération charge ${charge.name}:`, error);
-          skipped++;
-        }
-      }
-
-      console.log(`✅ Génération récurrente terminée: ${generated} charges créées, ${skipped} ignorées`);
-      return { generated, skipped };
-    } catch (error) {
-      console.error('❌ Error generating recurring charges:', error);
-      throw error;
-    }
-  },
-
-  // ✅ CORRIGÉ : GÉNÉRER AUTOMATIQUEMENT LES CHARGES RÉCURRENTES POUR LES ANNÉES FUTURES
-  async generateFutureRecurringCharges(userId: string = 'default-user'): Promise<{ generated: number; skipped: number }> {
-    // ✅ VERROU POUR ÉVITER LES GÉNÉRATIONS MULTIPLES
-    if (annualChargeService._futureGenerationLock) {
-      console.log('⏸️ Génération future déjà en cours - ignorée');
-      return { generated: 0, skipped: 0 };
-    }
-
-    try {
-      annualChargeService._futureGenerationLock = true;
-      await this.ensureAnnualChargesTableExists();
-
-      const db = await getDatabase();
-      const currentYear = new Date().getFullYear();
-      
-      // Générer pour les 3 prochaines années
-      const yearsToGenerate = [currentYear + 1, currentYear + 2, currentYear + 3];
-      
-      console.log(`🔄 Génération charges récurrentes pour les années: ${yearsToGenerate.join(', ')}`);
-
-      let totalGenerated = 0;
-      let totalSkipped = 0;
-
-      for (const targetYear of yearsToGenerate) {
-        // Récupérer les charges récurrentes actives
-        const recurringCharges = await db.getAllAsync(
-          `SELECT * FROM annual_charges 
-           WHERE user_id = ? 
-           AND is_active = 1 
-           AND (is_recurring = 1 OR recurrence IS NOT NULL)`,
-          [userId]
-        ) as DatabaseAnnualCharge[];
-
-        let yearGenerated = 0;
-        let yearSkipped = 0;
-
-        for (const charge of recurringCharges) {
-          try {
-            let targetDueDate: Date;
-
-            if (charge.recurrence === 'monthly') {
-              const originalDate = new Date(charge.due_date);
-              const monthsDifference = (targetYear - originalDate.getFullYear()) * 12;
-              targetDueDate = new Date(originalDate);
-              targetDueDate.setMonth(originalDate.getMonth() + monthsDifference);
-            } else if (charge.recurrence === 'quarterly') {
-              const originalDate = new Date(charge.due_date);
-              const quartersDifference = (targetYear - originalDate.getFullYear()) * 4;
-              targetDueDate = new Date(originalDate);
-              targetDueDate.setMonth(originalDate.getMonth() + (quartersDifference * 3));
-            } else {
-              // Récurrence annuelle
-              const originalDate = new Date(charge.due_date);
-              targetDueDate = new Date(targetYear, originalDate.getMonth(), originalDate.getDate());
-            }
-
-            // ✅ VÉRIFICATION ROBUSTE CONTRE LES DOUBLONS
-            const existingCharge = await db.getFirstAsync(
-              `SELECT id FROM annual_charges 
-               WHERE user_id = ? 
-               AND name = ? 
-               AND strftime('%Y', due_date) = ? 
-               AND recurrence = ?
-               AND is_islamic = ?
-               AND islamic_holiday_id = ?`,
-              [
-                userId, 
-                charge.name, 
-                targetYear.toString(), 
-                charge.recurrence,
-                charge.is_islamic || 0,
-                charge.islamic_holiday_id || null
-              ]
-            );
-
-            if (!existingCharge) {
-              const newChargeId = generateId();
-              const createdAt = new Date().toISOString();
-
-              await db.runAsync(
-                `INSERT INTO annual_charges (
-                  id, user_id, name, amount, due_date, category, description, 
-                  is_recurring, is_active, created_at, is_islamic, islamic_holiday_id, 
-                  arabic_name, type, is_paid, paid_date, reminder_days,
-                  account_id, auto_deduct, payment_method, recurrence
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [
-                  newChargeId,
-                  userId,
-                  charge.name,
-                  charge.amount,
-                  targetDueDate.toISOString().split('T')[0],
-                  charge.category,
-                  charge.description || '',
-                  1,
-                  1,
-                  createdAt,
-                  charge.is_islamic || 0,
-                  charge.islamic_holiday_id || null,
-                  charge.arabic_name || null,
-                  charge.type || 'normal',
-                  0,
-                  null,
-                  charge.reminder_days || 7,
-                  charge.account_id || null,
-                  charge.auto_deduct || 0,
-                  charge.payment_method || null,
-                  charge.recurrence || null
-                ]
-              );
-
-              yearGenerated++;
-              console.log(`✅ Charge récurrente créée: ${charge.name} pour ${targetYear}`);
-            } else {
-              yearSkipped++;
-              console.log(`ℹ️ Charge déjà existante: ${charge.name} pour ${targetYear}`);
-            }
-          } catch (error) {
-            console.error(`❌ Erreur génération charge ${charge.name} pour ${targetYear}:`, error);
-            yearSkipped++;
-          }
-        }
-
-        totalGenerated += yearGenerated;
-        totalSkipped += yearSkipped;
-        console.log(`✅ Année ${targetYear}: ${yearGenerated} créées, ${yearSkipped} ignorées`);
-      }
-
-      console.log(`✅ Génération future terminée: ${totalGenerated} charges créées, ${totalSkipped} ignorées`);
-      return { generated: totalGenerated, skipped: totalSkipped };
-    } catch (error) {
-      console.error('❌ Erreur génération charges futures:', error);
-      throw error;
-    } finally {
-      annualChargeService._futureGenerationLock = false;
-    }
-  },
-
-  // Reste des méthodes inchangées...
+  // Reste des méthodes inchangées mais corrigées pour TypeScript...
   async getAllAnnualCharges(userId: string = 'default-user'): Promise<AnnualCharge[]> {
     try {
       await this.ensureAnnualChargesTableExists();
@@ -824,6 +535,12 @@ export const annualChargeService = {
       const charge = await this.getAnnualChargeById(id, userId);
       if (!charge) {
         throw new Error('Charge non trouvée');
+      }
+
+      // ✅ CORRECTION : Vérifier si le statut est déjà le même
+      if (charge.isPaid === isPaid) {
+        console.log(`ℹ️ Charge déjà ${isPaid ? 'payée' : 'non payée'} - aucune action nécessaire`);
+        return;
       }
 
       // ✅ VALIDATION : Vérifier si on peut marquer comme payé
@@ -1053,6 +770,118 @@ export const annualChargeService = {
     } catch (error) {
       console.error('❌ [annualChargeService] Error checking islamic charge:', error);
       return false;
+    }
+  },
+
+  // ✅ CORRIGÉ : GÉNÉRER LES CHARGES RÉCURRENTES POUR L'ANNÉE SUIVANTE
+  async generateRecurringChargesForNextYear(userId: string = 'default-user'): Promise<{ generated: number; skipped: number }> {
+    try {
+      await this.ensureAnnualChargesTableExists();
+
+      const db = await getDatabase();
+      const currentYear = new Date().getFullYear();
+      const nextYear = currentYear + 1;
+      
+      // ✅ CORRECTION : Récupérer les charges récurrentes actives
+      const recurringCharges = await db.getAllAsync(
+        `SELECT * FROM annual_charges 
+         WHERE user_id = ? 
+         AND is_active = 1 
+         AND (is_recurring = 1 OR recurrence IS NOT NULL)`,
+        [userId]
+      ) as DatabaseAnnualCharge[];
+
+      console.log(`🔄 Génération des charges récurrentes pour ${nextYear}...`);
+      console.log(`📋 ${recurringCharges.length} charges récurrentes trouvées`);
+
+      let generated = 0;
+      let skipped = 0;
+
+      for (const charge of recurringCharges) {
+        try {
+          // ✅ CORRECTION : Calculer la nouvelle date d'échéance selon la récurrence
+          let nextYearDueDate: Date;
+
+          if (charge.recurrence === 'monthly') {
+            // Récurrence mensuelle : ajouter 1 mois à la date originale
+            const originalDate = new Date(charge.due_date);
+            nextYearDueDate = new Date(originalDate);
+            nextYearDueDate.setMonth(originalDate.getMonth() + 12); // 12 mois = 1 an en mensuel
+          } else if (charge.recurrence === 'quarterly') {
+            // Récurrence trimestrielle : ajouter 3 mois à la date originale
+            const originalDate = new Date(charge.due_date);
+            nextYearDueDate = new Date(originalDate);
+            nextYearDueDate.setMonth(originalDate.getMonth() + 4); // 4 trimestres = 1 an
+          } else {
+            // Récurrence annuelle (défaut) : même jour/mois, année suivante
+            const originalDate = new Date(charge.due_date);
+            nextYearDueDate = new Date(nextYear, originalDate.getMonth(), originalDate.getDate());
+          }
+
+          // Vérifier si la charge existe déjà pour l'année prochaine
+          const existingCharge = await db.getFirstAsync(
+            `SELECT id FROM annual_charges 
+             WHERE user_id = ? 
+             AND name = ? 
+             AND strftime('%Y', due_date) = ? 
+             AND recurrence = ?`,
+            [userId, charge.name, nextYear.toString(), charge.recurrence]
+          );
+
+          if (!existingCharge) {
+            // Créer la nouvelle charge récurrente
+            const newChargeId = generateId();
+            const createdAt = new Date().toISOString();
+
+            await db.runAsync(
+              `INSERT INTO annual_charges (
+                id, user_id, name, amount, due_date, category, description, 
+                is_recurring, is_active, created_at, is_islamic, islamic_holiday_id, 
+                arabic_name, type, is_paid, paid_date, reminder_days,
+                account_id, auto_deduct, payment_method, recurrence
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [
+                newChargeId,
+                userId,
+                charge.name,
+                charge.amount,
+                nextYearDueDate.toISOString().split('T')[0],
+                charge.category,
+                charge.description || '',
+                1, // is_recurring
+                1, // is_active
+                createdAt,
+                charge.is_islamic || 0,
+                charge.islamic_holiday_id || null,
+                charge.arabic_name || null,
+                charge.type || 'normal',
+                0, // is_paid (non payée)
+                null, // paid_date
+                charge.reminder_days || 7,
+                charge.account_id || null,
+                charge.auto_deduct || 0,
+                charge.payment_method || null,
+                charge.recurrence || null
+              ]
+            );
+
+            generated++;
+            console.log(`✅ Charge récurrente créée: ${charge.name} pour ${nextYear}`);
+          } else {
+            skipped++;
+            console.log(`ℹ️ Charge récurrente déjà existante: ${charge.name} pour ${nextYear}`);
+          }
+        } catch (error) {
+          console.error(`❌ Erreur génération charge ${charge.name}:`, error);
+          skipped++;
+        }
+      }
+
+      console.log(`✅ Génération récurrente terminée: ${generated} charges créées, ${skipped} ignorées`);
+      return { generated, skipped };
+    } catch (error) {
+      console.error('❌ Error generating recurring charges:', error);
+      throw error;
     }
   },
 

@@ -1,4 +1,4 @@
-﻿// src/hooks/useAnnualCharges.ts - VERSION OPTIMISÉE
+﻿// src/hooks/useAnnualCharges.ts - VERSION CORRECTE AVEC PRÉLÈVEMENTS AUTOMATIQUES
 import { useCallback, useEffect, useState } from 'react';
 import { annualChargeService } from '../services/annualChargeService';
 import { AnnualCharge, AnnualChargeStats, CreateAnnualChargeData, UpdateAnnualChargeData } from '../types/AnnualCharge';
@@ -7,6 +7,7 @@ export const useAnnualCharges = (userId: string = 'default-user') => {
   const [charges, setCharges] = useState<AnnualCharge[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [autoProcessed, setAutoProcessed] = useState(false); // ✅ Éviter les doubles traitements
 
   // ✅ OPTIMISATION : Filtrer automatiquement pour l'année courante
   const getCurrentYearCharges = useCallback((): AnnualCharge[] => {
@@ -34,7 +35,35 @@ export const useAnnualCharges = (userId: string = 'default-user') => {
     }
   }, [userId]);
 
-  // ✅ CRÉER UNE CHARGE AVEC GESTION AUTOMATIQUE DE LA RÉCURRENCE
+  // ✅ TRAITER LES PRÉLÈVEMENTS AUTOMATIQUES (SÉPARÉMENT)
+  const processAutoDeductCharges = useCallback(async (): Promise<{ processed: number; errors: string[] }> => {
+    try {
+      if (autoProcessed) {
+        console.log('ℹ️ Prélèvements automatiques déjà traités');
+        return { processed: 0, errors: [] };
+      }
+
+      setError(null);
+      console.log('🔄 [useAnnualCharges] Processing auto-deduct charges...');
+      const result = await annualChargeService.processDueCharges(userId);
+      
+      if (result.processed > 0) {
+        console.log(`✅ ${result.processed} charges processed automatically`);
+        setAutoProcessed(true);
+        // Recharger les charges après traitement
+        await loadCharges();
+      }
+      
+      return result;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur lors du traitement automatique';
+      console.error('❌ [useAnnualCharges] Error processing auto-deduct charges:', errorMessage);
+      setError(errorMessage);
+      throw err;
+    }
+  }, [userId, autoProcessed, loadCharges]);
+
+  // ✅ CRÉER UNE CHARGE
   const createCharge = useCallback(async (chargeData: CreateAnnualChargeData): Promise<string> => {
     try {
       setError(null);
@@ -53,7 +82,7 @@ export const useAnnualCharges = (userId: string = 'default-user') => {
     }
   }, [userId, loadCharges]);
 
-  // ✅ PAYER UNE CHARGE AVEC GÉNÉRATION AUTOMATIQUE DE LA RÉCURRENCE
+  // ✅ PAYER UNE CHARGE
   const payCharge = useCallback(async (chargeId: string, accountId?: string): Promise<void> => {
     try {
       setError(null);
@@ -88,7 +117,7 @@ export const useAnnualCharges = (userId: string = 'default-user') => {
     }
   }, [userId, loadCharges]);
 
-  // ✅ MÉTHODES DE FILTRAGE SIMPLIFIÉES POUR L'ANNÉE COURANTE
+  // ✅ MÉTHODES DE FILTRAGE SIMPLIFIÉES
   const getChargesByStatus = useCallback(async (status: 'all' | 'paid' | 'pending'): Promise<AnnualCharge[]> => {
     try {
       const currentYearCharges = getCurrentYearCharges();
@@ -145,7 +174,7 @@ export const useAnnualCharges = (userId: string = 'default-user') => {
     }
   }, [getCurrentYearCharges]);
 
-  // Reste des méthodes inchangées mais simplifiées
+  // Reste des méthodes
   const updateAnnualCharge = useCallback(async (chargeId: string, updates: UpdateAnnualChargeData): Promise<void> => {
     try {
       setError(null);
@@ -188,6 +217,7 @@ export const useAnnualCharges = (userId: string = 'default-user') => {
     setError(null);
   }, []);
 
+  // ✅ EFFET SIMPLE SANS BOUCLE
   useEffect(() => {
     loadCharges();
   }, [loadCharges]);
@@ -208,8 +238,11 @@ export const useAnnualCharges = (userId: string = 'default-user') => {
     getChargeById,
     getStats,
     getChargesByStatus,
+    processAutoDeductCharges, // ✅ SÉPARÉ : à appeler manuellement si besoin
 
     // Utilitaires
     clearError,
   };
 };
+
+export default useAnnualCharges;
