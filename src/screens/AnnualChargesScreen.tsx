@@ -1,7 +1,7 @@
-// src/screens/AnnualChargesScreen.tsx - VERSION COMPLÈTEMENT CORRIGÉE SANS BOUCLE INFINIE
+// src/screens/AnnualChargesScreen.tsx - VERSION SIMPLIFIÉE
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -16,7 +16,6 @@ import { SafeAreaView } from '../components/SafeAreaView';
 import { useCurrency } from '../context/CurrencyContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAnnualCharges } from '../hooks/useAnnualCharges';
-import { AnnualCharge } from '../types/AnnualCharge';
 
 export const AnnualChargesScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -31,111 +30,29 @@ export const AnnualChargesScreen: React.FC = () => {
     refreshAnnualCharges,
     deleteAnnualCharge,
     togglePaidStatus,
-    getChargesByStatus,
-    generateFutureRecurringCharges,
-    cleanupDuplicateCharges // ✅ NOUVEAU : Méthode de nettoyage
+    getChargesByStatus
   } = useAnnualCharges();
 
   const [stats, setStats] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'paid' | 'pending'>('all');
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
-  const [filteredCharges, setFilteredCharges] = useState<AnnualCharge[]>([]);
+  const [filteredCharges, setFilteredCharges] = useState<any[]>([]);
 
-  // ✅ CORRECTION : Référence pour éviter la boucle infinie
-  const hasGeneratedFutureCharges = useRef(false);
-  const hasCleanedDuplicates = useRef(false); // ✅ NOUVEAU : Nettoyage des doublons
+  const currentYear = new Date().getFullYear();
   const isDark = theme === 'dark';
 
-  // Générer une plage d'années dynamique autour de l'année courante
-  const currentYear = new Date().getFullYear();
-  const yearsBackward = 1; // inclure l'année précédente
-  const yearsForward = 5; // inclure les 5 années suivantes
-  const years = Array.from({ length: yearsBackward + yearsForward + 1 }, (_, i) => currentYear - yearsBackward + i);
-
-  // ✅ CORRECTION : Charger les données au focus de l'écran SANS BOUCLE
+  // Charger les données
   useFocusEffect(
     useCallback(() => {
-      let isActive = true;
-      
-      const loadDataSafely = async () => {
-        if (!isActive) return;
-        
-        try {
-          setRefreshing(true);
-
-          // ✅ CORRECTION : NETTOYER LES DOUBLONS UNE SEULE FOIS
-          if (!hasCleanedDuplicates.current) {
-            try {
-              console.log('🧹 Nettoyage initial des doublons...');
-              await cleanupDuplicateCharges();
-              hasCleanedDuplicates.current = true;
-            } catch (cleanErr) {
-              console.warn('Erreur nettoyage doublons (non bloquant):', cleanErr);
-            }
-          }
-
-          // ✅ CORRECTION : Générer les charges futures UNE SEULE FOIS
-          if (!hasGeneratedFutureCharges.current) {
-            try {
-              console.log('🔄 Génération initiale des charges futures...');
-              await generateFutureRecurringCharges();
-              hasGeneratedFutureCharges.current = true;
-            } catch (genErr) {
-              console.warn('Erreur génération charges futures (non bloquant):', genErr);
-            }
-          }
-
-          const chargesStats = await getStats();
-          if (isActive) setStats(chargesStats);
-
-          // Charger les charges filtrées
-          await applyFilters();
-        } catch (error) {
-          console.error('Error loading annual charges data:', error);
-        } finally {
-          if (isActive) setRefreshing(false);
-        }
-      };
-      
-      loadDataSafely();
-      
-      return () => {
-        isActive = false;
-      };
-    }, [selectedYear])
+      loadData();
+    }, [selectedStatus])
   );
 
   const loadData = async () => {
     try {
       setRefreshing(true);
-
-      // ✅ CORRECTION : NETTOYER LES DOUBLONS UNE SEULE FOIS
-      if (!hasCleanedDuplicates.current) {
-        try {
-          console.log('🧹 Nettoyage initial des doublons...');
-          await cleanupDuplicateCharges();
-          hasCleanedDuplicates.current = true;
-        } catch (cleanErr) {
-          console.warn('Erreur nettoyage doublons (non bloquant):', cleanErr);
-        }
-      }
-
-      // ✅ CORRECTION : Générer les charges futures UNE SEULE FOIS
-      if (!hasGeneratedFutureCharges.current) {
-        try {
-          console.log('🔄 Génération initiale des charges futures...');
-          await generateFutureRecurringCharges();
-          hasGeneratedFutureCharges.current = true;
-        } catch (genErr) {
-          console.warn('Erreur génération charges futures (non bloquant):', genErr);
-        }
-      }
-
       const chargesStats = await getStats();
       setStats(chargesStats);
-
-      // Charger les charges filtrées
       await applyFilters();
     } catch (error) {
       console.error('Error loading annual charges data:', error);
@@ -146,14 +63,7 @@ export const AnnualChargesScreen: React.FC = () => {
 
   const applyFilters = async () => {
     try {
-      let filtered = await getChargesByStatus(selectedStatus);
-      
-      // ✅ FILTRER PAR ANNÉE
-      filtered = filtered.filter(charge => {
-        const chargeYear = new Date(charge.dueDate).getFullYear();
-        return chargeYear === selectedYear;
-      });
-      
+      const filtered = await getChargesByStatus(selectedStatus);
       setFilteredCharges(filtered);
     } catch (error) {
       console.error('Error applying filters:', error);
@@ -167,11 +77,6 @@ export const AnnualChargesScreen: React.FC = () => {
   const handleStatusFilter = async (status: 'all' | 'paid' | 'pending') => {
     setSelectedStatus(status);
     await applyFilters();
-  };
-
-  const handleYearFilter = async (year: number) => {
-    setSelectedYear(year);
-    // Le useEffect se chargera du rechargement
   };
 
   const handleAddCharge = () => {
@@ -214,21 +119,7 @@ export const AnnualChargesScreen: React.FC = () => {
     );
   };
 
-  // ✅ NOUVELLE MÉTHODE : Forcer le nettoyage des doublons
-  const handleCleanDuplicates = async () => {
-    try {
-      setRefreshing(true);
-      const deletedCount = await cleanupDuplicateCharges();
-      await loadData();
-      Alert.alert('✅ Succès', `${deletedCount} charges en double ont été supprimées`);
-    } catch (error) {
-      Alert.alert('❌ Erreur', 'Impossible de nettoyer les doublons');
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
-  const getStatusColor = (charge: AnnualCharge) => {
+  const getStatusColor = (charge: any) => {
     if (charge.isPaid) return '#10B981';
     
     const dueDate = new Date(charge.dueDate);
@@ -242,7 +133,7 @@ export const AnnualChargesScreen: React.FC = () => {
     return '#6B7280';
   };
 
-  const getStatusText = (charge: AnnualCharge) => {
+  const getStatusText = (charge: any) => {
     if (charge.isPaid) return 'Payée';
     
     const dueDate = new Date(charge.dueDate);
@@ -256,44 +147,12 @@ export const AnnualChargesScreen: React.FC = () => {
     return 'À venir';
   };
 
-  // ✅ FILTRES SIMPLIFIÉS
+  // Filtres simplifiés
   const statusFilters = [
     { key: 'all' as const, label: 'Toutes', icon: '📋' },
     { key: 'pending' as const, label: 'En attente', icon: '⏳' },
     { key: 'paid' as const, label: 'Payées', icon: '✅' },
   ];
-
-  // ✅ CALCULER LES STATISTIQUES POUR L'ANNÉE SÉLECTIONNÉE
-  const getYearStats = () => {
-    if (!charges.length) {
-      return {
-        totalAmount: 0,
-        paidAmount: 0,
-        pendingAmount: 0,
-        paidCount: 0,
-        pendingCount: 0
-      };
-    }
-
-    const yearCharges = charges.filter(charge => 
-      new Date(charge.dueDate).getFullYear() === selectedYear
-    );
-
-    const totalAmount = yearCharges.reduce((sum, charge) => sum + charge.amount, 0);
-    const paidCharges = yearCharges.filter(charge => charge.isPaid);
-    const paidAmount = paidCharges.reduce((sum, charge) => sum + charge.amount, 0);
-    const pendingAmount = totalAmount - paidAmount;
-
-    return {
-      totalAmount,
-      paidAmount,
-      pendingAmount,
-      paidCount: paidCharges.length,
-      pendingCount: yearCharges.length - paidCharges.length
-    };
-  };
-
-  const yearStats = getYearStats();
 
   if (loading && !refreshing) {
     return (
@@ -332,7 +191,7 @@ export const AnnualChargesScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
           <Text style={[styles.title, isDark && styles.darkText]}>
-            Charges Annuelles
+            Charges Annuelles {currentYear}
           </Text>
           <TouchableOpacity 
             style={styles.addButton}
@@ -342,59 +201,17 @@ export const AnnualChargesScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* ✅ BOUTON DE NETTOYAGE DES DOUBLONS */}
-        {!refreshing && (
-          <TouchableOpacity 
-            style={[styles.cleanButton, isDark && styles.darkCleanButton]}
-            onPress={handleCleanDuplicates}
-          >
-            <Text style={styles.cleanButtonText}>🧹 Nettoyer les doublons</Text>
-          </TouchableOpacity>
-        )}
-
-        {/* ✅ FILTRE PAR ANNÉE */}
-        <View style={styles.yearFilterContainer}>
-          <Text style={[styles.yearFilterLabel, isDark && styles.darkText]}>
-            Année:
-          </Text>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            style={styles.yearsScrollView}
-          >
-            {years.map((year) => (
-              <TouchableOpacity
-                key={year}
-                style={[
-                  styles.yearButton,
-                  selectedYear === year && styles.yearButtonSelected,
-                  isDark && styles.darkYearButton
-                ]}
-                onPress={() => handleYearFilter(year)}
-              >
-                <Text style={[
-                  styles.yearButtonText,
-                  selectedYear === year && styles.yearButtonTextSelected,
-                  isDark && styles.darkText
-                ]}>
-                  {year}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* ✅ MONTANT TOTAL EN HAUT */}
+        {/* Montant total */}
         <View style={[styles.totalAmountCard, isDark && styles.darkTotalAmountCard]}>
           <Text style={[styles.totalAmountLabel, isDark && styles.darkSubtext]}>
-            Montant Total {selectedYear}
+            Montant Total {currentYear}
           </Text>
           <Text style={[styles.totalAmountValue, isDark && styles.darkText]}>
-            {formatAmount(yearStats.totalAmount)}
+            {formatAmount(stats?.totalAmount || 0)}
           </Text>
         </View>
 
-        {/* ✅ CARTES DE STATISTIQUES EN BAS */}
+        {/* Cartes de statistiques */}
         <View style={styles.statsCardsContainer}>
           <View style={[styles.statCard, isDark && styles.darkStatCard]}>
             <View style={[styles.statIcon, { backgroundColor: '#E8F5E8' }]}>
@@ -402,10 +219,10 @@ export const AnnualChargesScreen: React.FC = () => {
             </View>
             <View style={styles.statContent}>
               <Text style={[styles.statValue, isDark && styles.darkText]}>
-                {formatAmount(yearStats.paidAmount)}
+                {formatAmount(stats?.paidAmount || 0)}
               </Text>
               <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
-                Payé ({yearStats.paidCount})
+                Payé ({stats?.upcomingCharges?.filter((c: any) => c.isPaid)?.length || 0})
               </Text>
             </View>
           </View>
@@ -416,16 +233,16 @@ export const AnnualChargesScreen: React.FC = () => {
             </View>
             <View style={styles.statContent}>
               <Text style={[styles.statValue, isDark && styles.darkText]}>
-                {formatAmount(yearStats.pendingAmount)}
+                {formatAmount(stats?.pendingAmount || 0)}
               </Text>
               <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
-                En attente ({yearStats.pendingCount})
+                En attente ({stats?.upcomingCharges?.filter((c: any) => !c.isPaid)?.length || 0})
               </Text>
             </View>
           </View>
         </View>
 
-        {/* ✅ FILTRES DE STATUT SIMPLIFIÉS */}
+        {/* Filtres de statut */}
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false}
@@ -464,12 +281,12 @@ export const AnnualChargesScreen: React.FC = () => {
             <View style={[styles.emptyState, isDark && styles.darkEmptyState]}>
               <Ionicons name="calendar-outline" size={64} color={isDark ? '#555' : '#ccc'} />
               <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
-                Aucune charge {selectedStatus !== 'all' ? statusFilters.find(f => f.key === selectedStatus)?.label.toLowerCase() : ''} en {selectedYear}
+                Aucune charge {selectedStatus !== 'all' ? statusFilters.find(f => f.key === selectedStatus)?.label.toLowerCase() : ''} en {currentYear}
               </Text>
               <Text style={[styles.emptyDescription, isDark && styles.darkSubtext]}>
                 {selectedStatus === 'all' 
-                  ? `Commencez par ajouter votre première charge annuelle pour ${selectedYear}`
-                  : `Aucune charge ${statusFilters.find(f => f.key === selectedStatus)?.label.toLowerCase()} pour ${selectedYear}`
+                  ? `Commencez par ajouter votre première charge annuelle pour ${currentYear}`
+                  : `Aucune charge ${statusFilters.find(f => f.key === selectedStatus)?.label.toLowerCase()} pour ${currentYear}`
                 }
               </Text>
               {selectedStatus === 'all' && (
@@ -614,70 +431,6 @@ const styles = StyleSheet.create({
     width: 40,
     alignItems: 'flex-end',
   },
-  // ✅ BOUTON NETTOYAGE DOUBLONS
-  cleanButton: {
-    backgroundColor: '#FF6B6B',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    alignSelf: 'center',
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  darkCleanButton: {
-    backgroundColor: '#DC2626',
-  },
-  cleanButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  // ✅ FILTRE ANNÉE
-  yearFilterContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 16,
-  },
-  yearFilterLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-    marginRight: 12,
-  },
-  yearsScrollView: {
-    flex: 1,
-  },
-  yearButton: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  darkYearButton: {
-    backgroundColor: '#2c2c2e',
-    borderColor: '#444',
-  },
-  yearButtonSelected: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
-  yearButtonText: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
-  },
-  yearButtonTextSelected: {
-    color: '#fff',
-  },
-  // ✅ MONTANT TOTAL
   totalAmountCard: {
     backgroundColor: '#007AFF',
     padding: 20,
@@ -705,7 +458,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
   },
-  // ✅ CARTES STATISTIQUES
   statsCardsContainer: {
     flexDirection: 'row',
     paddingHorizontal: 20,
@@ -752,7 +504,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
   },
-  // FILTRES
   filtersContainer: {
     paddingHorizontal: 20,
     marginBottom: 16,
@@ -782,7 +533,6 @@ const styles = StyleSheet.create({
   filterTextSelected: {
     color: '#fff',
   },
-  // CHARGES
   chargesSection: {
     paddingHorizontal: 20,
     paddingBottom: 100,

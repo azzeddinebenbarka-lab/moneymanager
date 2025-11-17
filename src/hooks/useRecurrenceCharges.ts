@@ -1,6 +1,7 @@
 // src/hooks/useRecurrenceCharges.ts - VERSION COMPLÈTEMENT CORRIGÉE
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
+import { annualChargeService } from '../services/annualChargeService';
 import { recurrenceService } from '../services/recurrenceService';
 import { AnnualCharge } from '../types/AnnualCharge';
 
@@ -48,9 +49,8 @@ export const useRecurrenceCharges = (userId: string = 'default-user') => {
       setError(null);
 
       console.log('🔄 Génération charges année suivante...');
-      const result = await recurrenceService.generateRecurringChargesForNextYear(userId);
+      const result = await annualChargeService.generateRecurringChargesForNextYear(userId);
 
-      // ✅ CORRECTION : On retourne directement le résultat sans accéder à result.errors
       if (result.generated > 0) {
         Alert.alert(
           '✅ Génération Terminée',
@@ -63,7 +63,7 @@ export const useRecurrenceCharges = (userId: string = 'default-user') => {
         );
       }
 
-      return result; // ✅ Retourne directement { generated: number; skipped: number }
+      return result;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur génération charges';
       console.error('❌ Erreur génération année suivante:', errorMessage);
