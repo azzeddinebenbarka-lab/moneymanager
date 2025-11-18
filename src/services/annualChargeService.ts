@@ -1,4 +1,4 @@
-// src/services/annualChargeService.ts - VERSION CORRIGÉE
+// src/services/annualChargeService.ts - VERSION COMPLÈTEMENT CORRIGÉE
 import { AnnualCharge, AnnualChargeStats, CreateAnnualChargeData, UpdateAnnualChargeData } from '../types/AnnualCharge';
 import { generateId } from '../utils/numberUtils';
 import { accountService } from './accountService';
@@ -31,7 +31,7 @@ interface DatabaseAnnualCharge {
 }
 
 export const annualChargeService = {
-  // ✅ ASSURER QUE LA TABLE EXISTE
+  // ✅ ASSURER QUE LA TABLE EXISTE AVEC TOUTES LES COLONNES
   async ensureAnnualChargesTableExists(): Promise<void> {
     try {
       const db = await getDatabase();
@@ -70,10 +70,55 @@ export const annualChargeService = {
         `);
         
         console.log('✅ [annualChargeService] annual_charges table created successfully');
+      } else {
+        // Vérifier et ajouter les colonnes manquantes
+        await this.addMissingColumns();
       }
     } catch (error) {
       console.error('❌ [annualChargeService] Error ensuring annual_charges table exists:', error);
       throw error;
+    }
+  },
+
+  // ✅ AJOUTER LES COLONNES MANQUANTES
+  async addMissingColumns(): Promise<void> {
+    try {
+      const db = await getDatabase();
+      const tableInfo = await db.getAllAsync(`PRAGMA table_info(annual_charges)`) as any[];
+      const existingColumns = tableInfo.map(col => col.name);
+
+      const missingColumns = [
+        { name: 'is_active', type: 'INTEGER NOT NULL DEFAULT 1' },
+        { name: 'is_recurring', type: 'INTEGER NOT NULL DEFAULT 0' },
+        { name: 'is_islamic', type: 'INTEGER NOT NULL DEFAULT 0' },
+        { name: 'islamic_holiday_id', type: 'TEXT' },
+        { name: 'arabic_name', type: 'TEXT' },
+        { name: 'type', type: 'TEXT DEFAULT "normal"' },
+        { name: 'paid_date', type: 'TEXT' },
+        { name: 'reminder_days', type: 'INTEGER DEFAULT 7' },
+        { name: 'account_id', type: 'TEXT' },
+        { name: 'auto_deduct', type: 'INTEGER NOT NULL DEFAULT 0' },
+        { name: 'payment_method', type: 'TEXT' },
+        { name: 'recurrence', type: 'TEXT' }
+      ];
+
+      for (const column of missingColumns) {
+        if (!existingColumns.includes(column.name)) {
+          console.log(`🛠️ [annualChargeService] Adding missing column: ${column.name}`);
+          try {
+            await db.execAsync(`ALTER TABLE annual_charges ADD COLUMN ${column.name} ${column.type}`);
+            console.log(`✅ [annualChargeService] Column ${column.name} added successfully`);
+          } catch (alterError: any) {
+            if (alterError.message?.includes('duplicate column name')) {
+              console.log(`ℹ️ [annualChargeService] Column ${column.name} already exists`);
+            } else {
+              console.warn(`⚠️ [annualChargeService] Could not add column ${column.name}:`, alterError.message);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('❌ [annualChargeService] Error adding missing columns:', error);
     }
   },
 
@@ -122,8 +167,8 @@ export const annualChargeService = {
           arabicName: chargeData.arabicName,
           type: chargeData.type,
           paidDate: chargeData.paidDate,
-          isActive: chargeData.isActive,
-          isRecurring: chargeData.isRecurring
+          isActive: chargeData.isActive ?? true,
+          isRecurring: chargeData.isRecurring ?? false
         };
         
         await this.deductFromAccount(chargeForDeduction, chargeData.accountId, userId);
@@ -310,7 +355,6 @@ export const annualChargeService = {
         description: `Charge annuelle: ${charge.name}`,
         date: new Date().toISOString().split('T')[0],
         userId: userId,
-        // ✅ CORRECTION : Utiliser les propriétés correctes
         isAnnualCharge: true,
         annualChargeId: charge.id
       };
@@ -426,7 +470,7 @@ export const annualChargeService = {
     }
   },
 
-  // Reste des méthodes inchangées...
+  // ✅ OBTENIR TOUTES LES CHARGES
   async getAllAnnualCharges(userId: string = 'default-user'): Promise<AnnualCharge[]> {
     try {
       await this.ensureAnnualChargesTableExists();
@@ -470,6 +514,7 @@ export const annualChargeService = {
     }
   },
 
+  // ✅ METTRE À JOUR UNE CHARGE
   async updateAnnualCharge(id: string, updates: UpdateAnnualChargeData, userId: string = 'default-user'): Promise<void> {
     try {
       await this.ensureAnnualChargesTableExists();
@@ -527,6 +572,7 @@ export const annualChargeService = {
     }
   },
 
+  // ✅ OBTENIR UNE CHARGE PAR ID
   async getAnnualChargeById(id: string, userId: string = 'default-user'): Promise<AnnualCharge | null> {
     try {
       await this.ensureAnnualChargesTableExists();
@@ -559,7 +605,8 @@ export const annualChargeService = {
           accountId: result.account_id,
           autoDeduct: Boolean(result.auto_deduct),
           paymentMethod: result.payment_method,
-          recurrence: result.recurrence as 'yearly' | 'monthly' | 'quarterly' | undefined
+          recurrence: result.recurrence as 'yearly' | 'monthly' | 'quarterly' | undefined,
+          isRecurring: Boolean(result.is_recurring)
         };
         return charge;
       }
@@ -570,6 +617,7 @@ export const annualChargeService = {
     }
   },
 
+  // ✅ SUPPRIMER UNE CHARGE
   async deleteAnnualCharge(id: string, userId: string = 'default-user'): Promise<void> {
     try {
       await this.ensureAnnualChargesTableExists();
@@ -588,6 +636,7 @@ export const annualChargeService = {
     }
   },
 
+  // ✅ FILTRER LES CHARGES PAR STATUT
   async getChargesByStatus(status: 'all' | 'paid' | 'pending' | 'upcoming' | 'overdue', userId: string = 'default-user'): Promise<AnnualCharge[]> {
     try {
       const allCharges = await this.getAllAnnualCharges(userId);
@@ -615,6 +664,7 @@ export const annualChargeService = {
     }
   },
 
+  // ✅ OBTENIR LES STATISTIQUES
   async getAnnualChargeStats(userId: string = 'default-user'): Promise<AnnualChargeStats> {
     try {
       const charges = await this.getAllAnnualCharges(userId);
@@ -650,6 +700,7 @@ export const annualChargeService = {
     }
   },
 
+  // ✅ OBTENIR LES CHARGES RÉCURRENTES
   async getRecurringCharges(userId: string = 'default-user'): Promise<AnnualCharge[]> {
     try {
       const allCharges = await this.getAllAnnualCharges(userId);
@@ -660,6 +711,7 @@ export const annualChargeService = {
     }
   },
 
+  // ✅ OBTENIR LES CHARGES ISLAMIQUES
   async getIslamicAnnualCharges(userId: string = 'default-user'): Promise<AnnualCharge[]> {
     try {
       const allCharges = await this.getAllAnnualCharges(userId);
@@ -670,6 +722,7 @@ export const annualChargeService = {
     }
   },
 
+  // ✅ OBTENIR LES CHARGES ACTIVES
   async getActiveAnnualCharges(userId: string = 'default-user'): Promise<AnnualCharge[]> {
     try {
       const allCharges = await this.getAllAnnualCharges(userId);
@@ -680,6 +733,7 @@ export const annualChargeService = {
     }
   },
 
+  // ✅ OBTENIR LES CHARGES PAYÉES
   async getPaidAnnualCharges(userId: string = 'default-user'): Promise<AnnualCharge[]> {
     try {
       const allCharges = await this.getAllAnnualCharges(userId);
@@ -690,6 +744,7 @@ export const annualChargeService = {
     }
   },
 
+  // ✅ OBTENIR LES CHARGES NON PAYÉES
   async getUnpaidAnnualCharges(userId: string = 'default-user'): Promise<AnnualCharge[]> {
     try {
       const allCharges = await this.getAllAnnualCharges(userId);
@@ -700,6 +755,7 @@ export const annualChargeService = {
     }
   },
 
+  // ✅ OBTENIR LES CHARGES À PRÉLÈVEMENT AUTOMATIQUE
   async getAutoDeductCharges(userId: string = 'default-user'): Promise<AnnualCharge[]> {
     try {
       const allCharges = await this.getAllAnnualCharges(userId);
@@ -710,6 +766,7 @@ export const annualChargeService = {
     }
   },
 
+  // ✅ VÉRIFIER SI UNE CHARGE ISLAMIQUE EXISTE
   async checkIfIslamicChargeExists(holidayId: string, year: number, userId: string = 'default-user'): Promise<boolean> {
     try {
       await this.ensureAnnualChargesTableExists();
@@ -729,7 +786,7 @@ export const annualChargeService = {
     }
   },
 
-  // ✅ CORRIGÉ : GÉNÉRER LES CHARGES RÉCURRENTES POUR L'ANNÉE SUIVANTE
+  // ✅ GÉNÉRER LES CHARGES RÉCURRENTES POUR L'ANNÉE SUIVANTE
   async generateRecurringChargesForNextYear(userId: string = 'default-user'): Promise<{ generated: number; skipped: number }> {
     try {
       await this.ensureAnnualChargesTableExists();
@@ -841,6 +898,7 @@ export const annualChargeService = {
     }
   },
 
+  // ✅ NETTOYER LES ANCIENNES CHARGES
   async cleanupOldCharges(userId: string = 'default-user'): Promise<number> {
     try {
       await this.ensureAnnualChargesTableExists();
@@ -865,6 +923,7 @@ export const annualChargeService = {
     }
   },
 
+  // ✅ RÉINITIALISER LES CHARGES POUR LA NOUVELLE ANNÉE
   async resetChargesForNewYear(userId: string = 'default-user'): Promise<void> {
     try {
       await this.ensureAnnualChargesTableExists();
@@ -883,6 +942,7 @@ export const annualChargeService = {
     }
   },
 
+  // ✅ MARQUER COMME PAYÉ
   async markAsPaid(id: string, paidDate: string = new Date().toISOString(), userId: string = 'default-user'): Promise<void> {
     try {
       await this.togglePaidStatus(id, true, userId);
@@ -892,6 +952,7 @@ export const annualChargeService = {
     }
   },
 
+  // ✅ MARQUER COMME NON PAYÉ
   async markAsUnpaid(id: string, userId: string = 'default-user'): Promise<void> {
     try {
       await this.togglePaidStatus(id, false, userId);

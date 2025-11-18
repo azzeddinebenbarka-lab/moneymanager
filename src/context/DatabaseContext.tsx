@@ -2,7 +2,7 @@
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { categoryService } from '../services/categoryService';
 import { checkDatabaseStatus, initDatabase, resetDatabase } from '../services/database/sqlite';
-import migrateTransactionsTable from '../services/database/transactionMigration';
+import { emergencyAnnualChargesFix } from '../utils/emergencyAnnualChargesFix';
 import { emergencyFixSavingsTables } from '../utils/savingsEmergencyFix';
 
 interface DatabaseContextType {
@@ -32,33 +32,30 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({ children }) 
       
       // 1. Initialisation normale
       await initDatabase();
-      await emergencyFixSavingsTables();
       
-      // 2. Réparation d'urgence si nécessaire
+      // 2. Réparation d'urgence pour les charges annuelles
       try {
-  console.log('🛠️ [DB CONTEXT] Running annual charges emergency fix...');
-  console.log('✅ [DB CONTEXT] Annual charges emergency fix completed');
-} catch (annualChargesError) {
-  console.warn('⚠️ [DB CONTEXT] Annual charges fix had issues, but continuing...', annualChargesError);
-}
-      
-      // 3. Migration des transactions
-      try {
-        console.log('🔄 [DB CONTEXT] Running transactions migration...');
-        await migrateTransactionsTable();
-        console.log('✅ [DB CONTEXT] Transactions migration completed');
-      } catch (migrationError) {
-        console.warn('⚠️ [DB CONTEXT] Migration had issues, but continuing...', migrationError);
+        console.log('🛠️ [DB CONTEXT] Running annual charges emergency fix...');
+        await emergencyAnnualChargesFix();
+        console.log('✅ [DB CONTEXT] Annual charges emergency fix completed');
+      } catch (annualChargesError) {
+        console.warn('⚠️ [DB CONTEXT] Annual charges fix had issues, but continuing...', annualChargesError);
       }
       
-      // 4. La réparation des charges annuelles est maintenant gérée par annualChargeService.ensureAnnualChargesTableExists()
-      // Cette fonction est appelée automatiquement dans chaque méthode du service
+      // 3. Réparation des tables d'épargne
+      try {
+        console.log('🛠️ [DB CONTEXT] Running savings tables emergency fix...');
+        await emergencyFixSavingsTables();
+        console.log('✅ [DB CONTEXT] Savings tables emergency fix completed');
+      } catch (savingsError) {
+        console.warn('⚠️ [DB CONTEXT] Savings tables fix had issues, but continuing...', savingsError);
+      }
       
-      // 5. Vérification de l'état
+      // 4. Vérification de l'état
       const status = await checkDatabaseStatus();
       console.log('📋 [DB CONTEXT] Database status after repair:', status);
       
-      // 6. Initialisation des catégories
+      // 5. Initialisation des catégories
       console.log('🔄 [DB CONTEXT] Initializing default categories...');
       await categoryService.initializeDefaultCategories();
       

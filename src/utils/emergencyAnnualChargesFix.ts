@@ -27,16 +27,17 @@ export const emergencyAnnualChargesFix = async (): Promise<void> => {
           is_recurring INTEGER NOT NULL DEFAULT 0,
           is_active INTEGER NOT NULL DEFAULT 1,
           created_at TEXT NOT NULL,
-          -- COLONNES POUR CHARGES ISLAMIQUES
           is_islamic INTEGER NOT NULL DEFAULT 0,
           islamic_holiday_id TEXT,
           arabic_name TEXT,
           type TEXT DEFAULT 'normal',
-          -- COLONNES DE PAIEMENT
           is_paid INTEGER NOT NULL DEFAULT 0,
           paid_date TEXT,
-          -- ✅ AJOUT: Colonne pour les rappels
-          reminder_days INTEGER DEFAULT 7
+          reminder_days INTEGER DEFAULT 7,
+          account_id TEXT,
+          auto_deduct INTEGER NOT NULL DEFAULT 0,
+          payment_method TEXT,
+          recurrence TEXT
         );
       `);
       
@@ -50,18 +51,22 @@ export const emergencyAnnualChargesFix = async (): Promise<void> => {
     
     console.log('📋 [ANNUAL_CHARGES_FIX] Existing columns:', existingColumns);
     
-    // COLONNES REQUISES COMPLÈTES AVEC REMINDER_DAYS
+    // COLONNES REQUISES COMPLÈTES
     const requiredColumns = [
-      { name: 'description', type: 'TEXT' },
+      { name: 'description', type: 'TEXT', defaultValue: null },
       { name: 'is_recurring', type: 'INTEGER', defaultValue: '0' },
       { name: 'is_active', type: 'INTEGER', defaultValue: '1' },
       { name: 'is_islamic', type: 'INTEGER', defaultValue: '0' },
-      { name: 'islamic_holiday_id', type: 'TEXT' },
-      { name: 'arabic_name', type: 'TEXT' },
+      { name: 'islamic_holiday_id', type: 'TEXT', defaultValue: null },
+      { name: 'arabic_name', type: 'TEXT', defaultValue: null },
       { name: 'type', type: 'TEXT', defaultValue: "'normal'" },
       { name: 'is_paid', type: 'INTEGER', defaultValue: '0' },
-      { name: 'paid_date', type: 'TEXT' },
-      { name: 'reminder_days', type: 'INTEGER', defaultValue: '7' } // ✅ AJOUT: Colonne reminder_days
+      { name: 'paid_date', type: 'TEXT', defaultValue: null },
+      { name: 'reminder_days', type: 'INTEGER', defaultValue: '7' },
+      { name: 'account_id', type: 'TEXT', defaultValue: null },
+      { name: 'auto_deduct', type: 'INTEGER', defaultValue: '0' },
+      { name: 'payment_method', type: 'TEXT', defaultValue: null },
+      { name: 'recurrence', type: 'TEXT', defaultValue: null }
     ];
     
     let columnsAdded = 0;
@@ -71,24 +76,21 @@ export const emergencyAnnualChargesFix = async (): Promise<void> => {
         console.log(`🛠️ [ANNUAL_CHARGES_FIX] Adding ${requiredColumn.name} column...`);
         
         try {
-          if (requiredColumn.defaultValue) {
-            await db.execAsync(`
-              ALTER TABLE annual_charges 
-              ADD COLUMN ${requiredColumn.name} ${requiredColumn.type} DEFAULT ${requiredColumn.defaultValue};
-            `);
+          let sql: string;
+          if (requiredColumn.defaultValue !== null) {
+            sql = `ALTER TABLE annual_charges ADD COLUMN ${requiredColumn.name} ${requiredColumn.type} DEFAULT ${requiredColumn.defaultValue}`;
           } else {
-            await db.execAsync(`
-              ALTER TABLE annual_charges 
-              ADD COLUMN ${requiredColumn.name} ${requiredColumn.type};
-            `);
+            sql = `ALTER TABLE annual_charges ADD COLUMN ${requiredColumn.name} ${requiredColumn.type}`;
           }
+          
+          await db.execAsync(sql);
           columnsAdded++;
           console.log(`✅ [ANNUAL_CHARGES_FIX] ${requiredColumn.name} column added successfully`);
         } catch (alterError: any) {
-          if (alterError.message?.includes('duplicate column name')) {
+          if (alterError.message?.includes('duplicate column name') || alterError.message?.includes('already exists')) {
             console.log(`ℹ️ [ANNUAL_CHARGES_FIX] Column ${requiredColumn.name} already exists`);
           } else {
-            console.warn(`⚠️ [ANNUAL_CHARGES_FIX] Could not add column ${requiredColumn.name}:`, alterError);
+            console.warn(`⚠️ [ANNUAL_CHARGES_FIX] Could not add column ${requiredColumn.name}:`, alterError.message);
           }
         }
       } else {

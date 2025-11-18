@@ -1,4 +1,4 @@
-// src/services/database/sqlite.ts - VERSION CORRIGÉE AVEC COLONNES account_id
+// src/services/database/sqlite.ts - VERSION COMPLÈTEMENT CORRIGÉE
 import * as SQLite from 'expo-sqlite';
 
 export interface DatabaseAccount {
@@ -10,6 +10,7 @@ export interface DatabaseAccount {
   currency: string;
   color: string;
   created_at: string;
+  is_active: number;
 }
 
 export interface DatabaseTransaction {
@@ -22,6 +23,11 @@ export interface DatabaseTransaction {
   description: string;
   date: string;
   created_at: string;
+  is_recurring: number;
+  recurrence_type?: string;
+  recurrence_end_date?: string;
+  parent_transaction_id?: string;
+  next_occurrence?: string;
 }
 
 export interface DatabaseAnnualCharge {
@@ -39,6 +45,13 @@ export interface DatabaseAnnualCharge {
   recurrence?: string;
   account_id?: string;
   auto_deduct?: number;
+  is_active: number;
+  is_recurring: number;
+  is_islamic?: number;
+  islamic_holiday_id?: string;
+  arabic_name?: string;
+  type?: string;
+  paid_date?: string;
 }
 
 export interface DatabaseDebt {
@@ -204,7 +217,7 @@ const createTables = async (): Promise<void> => {
       currency TEXT NOT NULL DEFAULT 'EUR',
       color TEXT NOT NULL DEFAULT '#007AFF',
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      is_active INTEGER NOT NULL DEFAULT 1
     );
   `);
 
@@ -218,7 +231,7 @@ const createTables = async (): Promise<void> => {
       color TEXT NOT NULL,
       icon TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      is_active INTEGER NOT NULL DEFAULT 1
     );
   `);
 
@@ -236,12 +249,17 @@ const createTables = async (): Promise<void> => {
       description TEXT,
       date TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      is_recurring INTEGER NOT NULL DEFAULT 0,
+      recurrence_type TEXT,
+      recurrence_end_date TEXT,
+      parent_transaction_id TEXT,
+      next_occurrence TEXT,
       FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
       FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE
     );
   `);
 
-  // Table des transactions récurrentes AVEC next_date
+  // Table des transactions récurrentes
   await database.execAsync(`
     CREATE TABLE IF NOT EXISTS recurring_transactions (
       id TEXT PRIMARY KEY NOT NULL,
@@ -283,13 +301,13 @@ const createTables = async (): Promise<void> => {
     );
   `);
 
-  // ✅ CORRIGÉ : Table des charges annuelles AVEC account_id
+  // ✅ CORRIGÉ : Table des charges annuelles AVEC TOUTES LES COLONNES
   await database.execAsync(`
     CREATE TABLE IF NOT EXISTS annual_charges (
       id TEXT PRIMARY KEY NOT NULL,
       user_id TEXT NOT NULL,
       name TEXT NOT NULL,
-      amount REAL NOT NULL,
+      amount REAL NOT NULL DEFAULT 0,
       due_date TEXT NOT NULL,
       category TEXT NOT NULL,
       is_paid INTEGER NOT NULL DEFAULT 0,
@@ -300,6 +318,13 @@ const createTables = async (): Promise<void> => {
       recurrence TEXT,
       account_id TEXT,
       auto_deduct INTEGER DEFAULT 0,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      is_recurring INTEGER NOT NULL DEFAULT 0,
+      is_islamic INTEGER NOT NULL DEFAULT 0,
+      islamic_holiday_id TEXT,
+      arabic_name TEXT,
+      type TEXT DEFAULT 'normal',
+      paid_date TEXT,
       FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
       FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE SET NULL
     );
@@ -307,7 +332,7 @@ const createTables = async (): Promise<void> => {
 
   // ===== TABLES DE DETTES =====
 
-  // ✅ CORRIGÉ : Table des dettes AVEC payment_account_id
+  // Table des dettes
   await database.execAsync(`
     CREATE TABLE IF NOT EXISTS debts (
       id TEXT PRIMARY KEY NOT NULL,
@@ -347,7 +372,7 @@ const createTables = async (): Promise<void> => {
 
   // ===== TABLES D'ÉPARGNE =====
 
-  // ✅ CORRIGÉ : Table des objectifs d'épargne AVEC comptes associés
+  // Table des objectifs d'épargne
   await database.execAsync(`
     CREATE TABLE IF NOT EXISTS savings_goals (
       id TEXT PRIMARY KEY NOT NULL,
@@ -510,8 +535,8 @@ const initializeDefaultCategories = async (userId: string = 'default-user'): Pro
       for (const category of defaultCategories) {
         const createdAt = new Date().toISOString();
         await database.runAsync(
-          `INSERT INTO categories (id, user_id, name, type, color, icon, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [category.id, userId, category.name, category.type, category.color, category.icon, createdAt]
+          `INSERT INTO categories (id, user_id, name, type, color, icon, created_at, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [category.id, userId, category.name, category.type, category.color, category.icon, createdAt, 1]
         );
       }
       
@@ -632,7 +657,6 @@ export const getAllTables = async (): Promise<string[]> => {
   }
 };
 
-// ✅ NOUVELLE FONCTION : Migration pour ajouter les colonnes account_id
 export const runAccountIdMigration = async (): Promise<void> => {
   try {
     const db = await getDatabase();

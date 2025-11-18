@@ -1,4 +1,4 @@
-﻿// src/hooks/useAnnualCharges.ts - VERSION CORRIGÉE
+﻿// src/hooks/useAnnualCharges.ts - VERSION COMPLÈTEMENT CORRIGÉE
 import { useCallback, useEffect, useState } from 'react';
 import { annualChargeService } from '../services/annualChargeService';
 import { AnnualCharge, AnnualChargeStats, CreateAnnualChargeData, UpdateAnnualChargeData } from '../types/AnnualCharge';
@@ -7,9 +7,9 @@ export const useAnnualCharges = (userId: string = 'default-user') => {
   const [charges, setCharges] = useState<AnnualCharge[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0); // ✅ Pour forcer le re-render
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // ✅ OPTIMISATION : Filtrer automatiquement pour l'année courante
+  // Filtrer automatiquement pour l'année courante
   const getCurrentYearCharges = useCallback((): AnnualCharge[] => {
     const currentYear = new Date().getFullYear();
     return charges.filter(charge => {
@@ -35,12 +35,12 @@ export const useAnnualCharges = (userId: string = 'default-user') => {
     }
   }, [userId]);
 
-  // ✅ FORCER LE RE-REFRESH
+  // Forcer le re-render
   const forceRefresh = useCallback(() => {
     setRefreshTrigger(prev => prev + 1);
   }, []);
 
-  // ✅ TRAITER LES PRÉLÈVEMENTS AUTOMATIQUES
+  // Traiter les prélèvements automatiques
   const processAutoDeductCharges = useCallback(async (): Promise<{ processed: number; errors: string[] }> => {
     try {
       setError(null);
@@ -50,9 +50,8 @@ export const useAnnualCharges = (userId: string = 'default-user') => {
       
       if (result.processed > 0) {
         console.log(`✅ ${result.processed} charges processed automatically`);
-        // Recharger les charges après traitement
         await loadCharges();
-        forceRefresh(); // ✅ Forcer le re-render
+        forceRefresh();
       }
       
       return result;
@@ -64,7 +63,7 @@ export const useAnnualCharges = (userId: string = 'default-user') => {
     }
   }, [userId, loadCharges, forceRefresh]);
 
-  // ✅ CRÉER UNE CHARGE
+  // Créer une charge
   const createCharge = useCallback(async (chargeData: CreateAnnualChargeData): Promise<string> => {
     try {
       setError(null);
@@ -72,7 +71,7 @@ export const useAnnualCharges = (userId: string = 'default-user') => {
       
       const chargeId = await annualChargeService.createAnnualCharge(chargeData, userId);
       await loadCharges();
-      forceRefresh(); // ✅ Forcer le re-render
+      forceRefresh();
       
       console.log('✅ [useAnnualCharges] Annual charge created successfully');
       return chargeId;
@@ -84,7 +83,7 @@ export const useAnnualCharges = (userId: string = 'default-user') => {
     }
   }, [userId, loadCharges, forceRefresh]);
 
-  // ✅ PAYER UNE CHARGE
+  // Payer une charge
   const payCharge = useCallback(async (chargeId: string, accountId?: string): Promise<void> => {
     try {
       setError(null);
@@ -92,7 +91,7 @@ export const useAnnualCharges = (userId: string = 'default-user') => {
       
       await annualChargeService.payCharge(chargeId, accountId, userId);
       await loadCharges();
-      forceRefresh(); // ✅ Forcer le re-render
+      forceRefresh();
 
       console.log('✅ [useAnnualCharges] Charge paid successfully');
     } catch (err) {
@@ -103,14 +102,14 @@ export const useAnnualCharges = (userId: string = 'default-user') => {
     }
   }, [userId, loadCharges, forceRefresh]);
 
-  // ✅ BASILER LE STATUT PAYÉ
+  // Basculer le statut payé
   const togglePaidStatus = useCallback(async (chargeId: string, isPaid: boolean): Promise<void> => {
     try {
       setError(null);
       
       await annualChargeService.togglePaidStatus(chargeId, isPaid, userId);
       await loadCharges();
-      forceRefresh(); // ✅ Forcer le re-render
+      forceRefresh();
 
       console.log('✅ [useAnnualCharges] Paid status toggled successfully');
     } catch (err) {
@@ -121,7 +120,7 @@ export const useAnnualCharges = (userId: string = 'default-user') => {
     }
   }, [userId, loadCharges, forceRefresh]);
 
-  // ✅ MÉTHODES DE FILTRAGE SIMPLIFIÉES
+  // Filtrer les charges par statut
   const getChargesByStatus = useCallback(async (status: 'all' | 'paid' | 'pending'): Promise<AnnualCharge[]> => {
     try {
       const currentYearCharges = getCurrentYearCharges();
@@ -141,7 +140,7 @@ export const useAnnualCharges = (userId: string = 'default-user') => {
     }
   }, [getCurrentYearCharges]);
 
-  // ✅ STATISTIQUES POUR L'ANNÉE COURANTE
+  // Obtenir les statistiques
   const getStats = useCallback(async (): Promise<AnnualChargeStats> => {
     try {
       const currentYearCharges = getCurrentYearCharges();
@@ -184,7 +183,7 @@ export const useAnnualCharges = (userId: string = 'default-user') => {
       setError(null);
       await annualChargeService.updateAnnualCharge(chargeId, updates, userId);
       await loadCharges();
-      forceRefresh(); // ✅ Forcer le re-render
+      forceRefresh();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la mise à jour de la charge';
       setError(errorMessage);
@@ -197,7 +196,7 @@ export const useAnnualCharges = (userId: string = 'default-user') => {
       setError(null);
       await annualChargeService.deleteAnnualCharge(chargeId, userId);
       await loadCharges();
-      forceRefresh(); // ✅ Forcer le re-render
+      forceRefresh();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la suppression de la charge';
       setError(errorMessage);
@@ -217,21 +216,20 @@ export const useAnnualCharges = (userId: string = 'default-user') => {
 
   const refreshAnnualCharges = useCallback(async (): Promise<void> => {
     await loadCharges();
-    forceRefresh(); // ✅ Forcer le re-render
+    forceRefresh();
   }, [loadCharges, forceRefresh]);
 
   const clearError = useCallback((): void => {
     setError(null);
   }, []);
 
-  // ✅ EFFET AVEC RE-RENDER AUTOMATIQUE
   useEffect(() => {
     loadCharges();
-  }, [loadCharges, refreshTrigger]); // ✅ refreshTrigger déclenche le re-render
+  }, [loadCharges, refreshTrigger]);
 
   return {
     // État
-    charges: getCurrentYearCharges(), // ✅ Retourne uniquement l'année courante
+    charges: getCurrentYearCharges(),
     loading,
     error,
 
@@ -247,7 +245,7 @@ export const useAnnualCharges = (userId: string = 'default-user') => {
     getChargesByStatus,
     processAutoDeductCharges,
 
-    // ✅ NOUVEAU : Force refresh manuel
+    // Force refresh
     forceRefresh,
 
     // Utilitaires
