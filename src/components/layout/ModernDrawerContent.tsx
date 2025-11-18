@@ -1,4 +1,4 @@
-// src/components/layout/ModernDrawerContent.tsx - VERSION COMPLÈTEMENT CORRIGÉE
+// src/components/layout/ModernDrawerContent.tsx - VERSION CORRIGÉE
 import { Ionicons } from '@expo/vector-icons';
 import { DrawerContentComponentProps } from '@react-navigation/drawer';
 import React from 'react';
@@ -30,7 +30,7 @@ const ModernDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
         {
           label: 'Vue par Mois',
           icon: 'calendar' as const,
-          screen: 'MonthsOverview',
+          screen: 'MonthsOverviewStack', // ✅ CORRECTION : Nom unique
         },
       ],
     },
@@ -170,21 +170,46 @@ const ModernDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
     }
   };
 
-  // ✅ DÉTECTION ÉCRAN ACTIF
+  // ✅ DÉTECTION ÉCRAN ACTIF CORRIGÉE
   const isScreenActive = (screenName: string) => {
     try {
       const currentRoute = props.state.routes[props.state.index];
       
       // Vérifier les routes imbriquées dans les stacks
       let actualScreenName = currentRoute.name;
-      if (currentRoute.state) {
-        const nestedRoutes = currentRoute.state.routes;
-        const currentNestedRoute = nestedRoutes[nestedRoutes.length - 1];
-        actualScreenName = currentNestedRoute.name;
-      }
-
-      return actualScreenName === screenName;
+      
+      // ✅ CORRECTION : Gestion récursive des routes imbriquées
+      const getDeepRouteName = (route: any): string => {
+        if (route.state && route.state.routes) {
+          const nestedRoutes = route.state.routes;
+          const currentNestedRoute = nestedRoutes[nestedRoutes.length - 1];
+          return getDeepRouteName(currentNestedRoute);
+        }
+        return route.name;
+      };
+      
+      actualScreenName = getDeepRouteName(currentRoute);
+      
+      // ✅ CORRECTION : Mapping des noms de stack vers les noms d'écran principaux
+      const stackToScreenMap: Record<string, string> = {
+        'MonthsOverviewMain': 'MonthsOverviewStack',
+        'IslamicChargesMain': 'IslamicCharges',
+        'DashboardMain': 'Dashboard',
+        'TransactionsList': 'Transactions',
+        'AccountsList': 'Accounts',
+        'BudgetsList': 'Budgets',
+        'CategoriesList': 'Categories',
+        'AnnualChargesList': 'AnnualCharges',
+        'SettingsList': 'Settings',
+        'AnalyticsDashboard': 'Analytics',
+        'ReportsList': 'Analytics',
+      };
+      
+      const mappedScreenName = stackToScreenMap[actualScreenName] || actualScreenName;
+      
+      return mappedScreenName === screenName;
     } catch (error) {
+      console.error('❌ Erreur détection écran actif:', error);
       return false;
     }
   };

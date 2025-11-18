@@ -1,32 +1,38 @@
-// src/screens/MonthDetailScreen.tsx - VERSION CORRIGÉE
+// src/screens/MonthDetailScreen.tsx - VERSION COMPLÈTEMENT CORRIGÉE
+import { Ionicons } from '@expo/vector-icons';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { LinearGradient } from 'expo-linear-gradient';
-import React, { useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
   Animated,
   Dimensions,
+  FlatList,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
-import { PieChart } from 'react-native-chart-kit';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useCurrency } from '../context/CurrencyContext';
 import { useTheme } from '../context/ThemeContext';
 import { useMonthlyData } from '../hooks/useMonthlyData';
+import { useTransactions } from '../hooks/useTransactions';
 
+const { width } = Dimensions.get('window');
+
+// Types pour la navigation
 type RootStackParamList = {
   MonthDetail: { year: number; month: number };
   MonthsOverview: undefined;
+  TransactionDetail: { transactionId: string };
 };
 
 type MonthDetailScreenNavigationProp = StackNavigationProp<RootStackParamList, 'MonthDetail'>;
 type MonthDetailScreenRouteProp = RouteProp<RootStackParamList, 'MonthDetail'>;
-
-const { width } = Dimensions.get('window');
 
 const MonthDetailScreen: React.FC = () => {
   const navigation = useNavigation<MonthDetailScreenNavigationProp>();
@@ -34,411 +40,465 @@ const MonthDetailScreen: React.FC = () => {
   const { theme } = useTheme();
   const { formatAmount } = useCurrency();
   const { getMonthlyData } = useMonthlyData();
+  const { transactions, deleteTransaction, loading: transactionsLoading } = useTransactions();
+
   const { year, month } = route.params;
   const isDark = theme === 'dark';
 
-  const monthData = useMemo(() => {
-    return getMonthlyData(year, month);
-  }, [getMonthlyData, year, month]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<'all' | 'income' | 'expense'>('all');
+  const [monthData, setMonthData] = useState<any>(null);
+  const [filteredTransactions, setFilteredTransactions] = useState<any[]>([]);
 
-  // ✅ CORRECTION : Le paramètre month est déjà au format 0-11, pas besoin de -1
-  const monthName = new Date(year, month).toLocaleDateString('fr-FR', { 
-    month: 'long',
-    year: 'numeric'
-  }).toUpperCase();
-
-  // Animation values
+  // Animations
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
-  const slideAnim = React.useRef(new Animated.Value(50)).current;
+  const slideAnim = React.useRef(new Animated.Value(30)).current;
 
-  React.useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      })
-    ]).start();
-  }, []);
+  // ✅ CORRECTION : Charger les données du mois
+  const loadMonthData = useCallback(async () => {
+    try {
+      console.log(`🔍 Chargement données ${month}/${year}...`);
+      
+      // Obtenir les données du mois
+      const data = getMonthlyData(year, month);
+      setMonthData(data);
 
-  const getSavingsStatus = (savingsRate: number) => {
-    if (savingsRate >= 20) return { status: 'EXCELLENT', color: '#10B981', emoji: '🎯', gradient: ['#10B981', '#059669'] };
-    if (savingsRate >= 10) return { status: 'BON', color: '#22C55E', emoji: '📈', gradient: ['#22C55E', '#16A34A'] };
-    if (savingsRate >= 0) return { status: 'CORRECT', color: '#F59E0B', emoji: '⚡', gradient: ['#F59E0B', '#D97706'] };
-    return { status: 'À AMÉLIORER', color: '#EF4444', emoji: '🎯', gradient: ['#EF4444', '#DC2626'] };
+      // Filtrer les transactions selon le filtre sélectionné
+      let filtered = data.transactions || [];
+      
+      if (selectedFilter === 'income') {
+        filtered = filtered.filter((t: any) => t.type === 'income');
+      } else if (selectedFilter === 'expense') {
+        filtered = filtered.filter((t: any) => t.type === 'expense');
+      }
+
+      // Trier par date (plus récent en premier)
+      filtered.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      
+      setFilteredTransactions(filtered);
+
+      // Animation
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        })
+      ]).start();
+
+    } catch (error) {
+      console.error('❌ Erreur chargement données:', error);
+      Alert.alert('Erreur', 'Impossible de charger les données du mois');
+    }
+  }, [year, month, selectedFilter, getMonthlyData, fadeAnim, slideAnim]);
+
+  // ✅ CORRECTION : Recharger quand le filtre change
+  useEffect(() => {
+    loadMonthData();
+  }, [loadMonthData]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadMonthData();
+    setRefreshing(false);
   };
 
-  const savingsStatus = getSavingsStatus(monthData.savingsRate);
+  const handleFilterChange = (filter: 'all' | 'income' | 'expense') => {
+    setSelectedFilter(filter);
+  };
 
-  // Header moderne avec gradient
+  const handleTransactionPress = (transactionId: string) => {
+    navigation.navigate('TransactionDetail', { transactionId });
+  };
+
+  const handleDeleteTransaction = (transactionId: string, description: string) => {
+    Alert.alert(
+      'Supprimer la transaction',
+      `Êtes-vous sûr de vouloir supprimer "${description}" ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteTransaction(transactionId);
+              await loadMonthData(); // Recharger les données
+              Alert.alert('Succès', 'Transaction supprimée avec succès');
+            } catch (error) {
+              Alert.alert('Erreur', 'Impossible de supprimer la transaction');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleBack = () => {
+    navigation.goBack();
+  };
+
+  // Format du nom du mois
+  const monthName = useMemo(() => {
+    return new Date(year, month).toLocaleDateString('fr-FR', { 
+      month: 'long',
+      year: 'numeric'
+    });
+  }, [year, month]);
+
+  // Header moderne
   const ModernHeader = () => (
-    <LinearGradient
-      colors={isDark ? ['#1E293B', '#0F172A'] : ['#007AFF', '#0056CC']}
-      style={styles.headerGradient}
-    >
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButtonText}>‹</Text>
-        </TouchableOpacity>
-        <View style={styles.headerCenter}>
-          <Text style={styles.monthName}>{monthName}</Text>
-          <Text style={styles.monthSubtitle}>ANALYSE DÉTAILLÉE</Text>
-        </View>
-        <View style={styles.headerRight} />
+    <View style={[styles.header, isDark && styles.darkHeader]}>
+      <View style={styles.headerBackground}>
+        <View style={[styles.headerGradient, isDark && styles.darkHeaderGradient]} />
       </View>
-    </LinearGradient>
+      
+      <View style={styles.headerContent}>
+        <View style={styles.headerTop}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={handleBack}
+          >
+            <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#000"} />
+          </TouchableOpacity>
+          
+          <View style={styles.headerTitleContainer}>
+            <Text style={[styles.headerTitle, isDark && styles.darkTitle]}>
+              Détail du Mois
+            </Text>
+            <Text style={[styles.headerSubtitle, isDark && styles.darkSubtitle]}>
+              {monthName}
+            </Text>
+          </View>
+
+          <View style={styles.headerStats}>
+            <View style={styles.miniStat}>
+              <Ionicons name="receipt" size={14} color="#007AFF" />
+              <Text style={[styles.miniStatText, isDark && styles.darkSubtext]}>
+                {monthData?.transactionCount || 0} transactions
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </View>
   );
 
-  // Carte de résumé principal avec design premium
-  const FinancialSummaryCard = () => (
+  // Cartes de statistiques principales
+  const StatsCards = () => (
     <Animated.View 
       style={[
-        styles.summaryCard,
-        isDark && styles.darkCard,
+        styles.statsContainer,
         {
           opacity: fadeAnim,
           transform: [{ translateY: slideAnim }]
         }
       ]}
     >
-      <LinearGradient
-        colors={isDark ? ['#334155', '#1E293B'] : ['#FFFFFF', '#F8FAFC']}
-        style={styles.summaryGradient}
-      >
-        <View style={styles.summaryHeader}>
-          <Text style={[styles.cardTitle, isDark && styles.darkText]}>
-            📊 RÉSUMÉ FINANCIER
-          </Text>
-          <View style={[styles.savingsBadge, { backgroundColor: savingsStatus.color + '20' }]}>
-            <Text style={[styles.savingsBadgeText, { color: savingsStatus.color }]}>
-              {savingsStatus.emoji} {savingsStatus.status}
+      <View style={styles.statsRow}>
+        {/* Revenus */}
+        <View style={[styles.statCard, isDark && styles.darkCard]}>
+          <View style={[styles.statIcon, { backgroundColor: '#E8F5E8' }]}>
+            <Ionicons name="arrow-down" size={20} color="#10B981" />
+          </View>
+          <View style={styles.statContent}>
+            <Text style={[styles.statValue, isDark && styles.darkText]}>
+              {formatAmount(monthData?.income || 0)}
+            </Text>
+            <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+              Revenus
             </Text>
           </View>
         </View>
 
-        <View style={styles.summaryGrid}>
-          <View style={styles.summaryItem}>
-            <LinearGradient
-              colors={['#10B98120', '#10B98110']}
-              style={styles.summaryIcon}
-            >
-              <Text style={styles.summaryEmoji}>💰</Text>
-            </LinearGradient>
-            <Text style={styles.incomeValue}>
-              {formatAmount(monthData.income)}
-            </Text>
-            <Text style={[styles.summaryLabel, isDark && styles.darkSubtext]}>
-              REVENUS
-            </Text>
+        {/* Dépenses */}
+        <View style={[styles.statCard, isDark && styles.darkCard]}>
+          <View style={[styles.statIcon, { backgroundColor: '#FFE5E5' }]}>
+            <Ionicons name="arrow-up" size={20} color="#EF4444" />
           </View>
-          
-          <View style={styles.summaryItem}>
-            <LinearGradient
-              colors={['#EF444420', '#EF444410']}
-              style={styles.summaryIcon}
-            >
-              <Text style={styles.summaryEmoji}>💸</Text>
-            </LinearGradient>
-            <Text style={styles.expenseValue}>
-              {formatAmount(monthData.expenses)}
+          <View style={styles.statContent}>
+            <Text style={[styles.statValue, isDark && styles.darkText]}>
+              {formatAmount(monthData?.expenses || 0)}
             </Text>
-            <Text style={[styles.summaryLabel, isDark && styles.darkSubtext]}>
-              DÉPENSES
-            </Text>
-          </View>
-          
-          <View style={styles.summaryItem}>
-            <LinearGradient
-              colors={monthData.netFlow >= 0 ? ['#10B98120', '#10B98110'] : ['#EF444420', '#EF444410']}
-              style={styles.summaryIcon}
-            >
-              <Text style={styles.summaryEmoji}>
-                {monthData.netFlow >= 0 ? '📈' : '📉'}
-              </Text>
-            </LinearGradient>
-            <Text style={[
-              styles.netFlowValue,
-              { color: monthData.netFlow >= 0 ? '#10B981' : '#EF4444' }
-            ]}>
-              {formatAmount(monthData.netFlow)}
-            </Text>
-            <Text style={[styles.summaryLabel, isDark && styles.darkSubtext]}>
-              SOLDE
-            </Text>
-          </View>
-          
-          <View style={styles.summaryItem}>
-            <LinearGradient
-              colors={[savingsStatus.color + '20', savingsStatus.color + '10']}
-              style={styles.summaryIcon}
-            >
-              <Text style={styles.summaryEmoji}>🎯</Text>
-            </LinearGradient>
-            <Text style={[
-              styles.savingsRateValue,
-              { color: savingsStatus.color }
-            ]}>
-              {monthData.savingsRate.toFixed(1)}%
-            </Text>
-            <Text style={[styles.summaryLabel, isDark && styles.darkSubtext]}>
-              ÉPARGNE
+            <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+              Dépenses
             </Text>
           </View>
         </View>
-      </LinearGradient>
+      </View>
+
+      {/* Solde net */}
+      <View style={[styles.netFlowCard, isDark && styles.darkCard]}>
+        <View style={styles.netFlowHeader}>
+          <Ionicons 
+            name={monthData?.netFlow >= 0 ? "trending-up" : "trending-down"} 
+            size={24} 
+            color={monthData?.netFlow >= 0 ? '#10B981' : '#EF4444'} 
+          />
+          <Text style={[styles.netFlowLabel, isDark && styles.darkSubtext]}>
+            Solde du Mois
+          </Text>
+        </View>
+        <Text style={[
+          styles.netFlowValue,
+          { color: monthData?.netFlow >= 0 ? '#10B981' : '#EF4444' }
+        ]}>
+          {formatAmount(monthData?.netFlow || 0)}
+        </Text>
+        <Text style={[styles.savingsRate, isDark && styles.darkSubtext]}>
+          Taux d'épargne: {monthData?.savingsRate?.toFixed(1) || 0}%
+        </Text>
+      </View>
     </Animated.View>
   );
 
-  // Graphique circulaire moderne
-  const ExpenseChartCard = () => {
-    if (monthData.categoryBreakdown.length === 0) {
+  // Filtres de transactions
+  const TransactionFilters = () => (
+    <Animated.View 
+      style={[
+        styles.filtersContainer,
+        {
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }]
+        }
+      ]}
+    >
+      <Text style={[styles.filtersLabel, isDark && styles.darkSubtext]}>
+        Filtrer les transactions
+      </Text>
+      <View style={styles.filtersRow}>
+        {[
+          { key: 'all', label: 'Toutes', icon: 'list' },
+          { key: 'income', label: 'Revenus', icon: 'arrow-down' },
+          { key: 'expense', label: 'Dépenses', icon: 'arrow-up' },
+        ].map(filter => (
+          <TouchableOpacity
+            key={filter.key}
+            style={[
+              styles.filterButton,
+              selectedFilter === filter.key && styles.filterButtonActive,
+              isDark && styles.darkFilterButton
+            ]}
+            onPress={() => handleFilterChange(filter.key as any)}
+          >
+            <Ionicons 
+              name={filter.icon as any} 
+              size={16} 
+              color={selectedFilter === filter.key ? '#fff' : (isDark ? '#94A3B8' : '#64748B')} 
+            />
+            <Text style={[
+              styles.filterText,
+              selectedFilter === filter.key && styles.filterTextActive,
+              isDark && styles.darkText
+            ]}>
+              {filter.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </Animated.View>
+  );
+
+  // Analyse par catégorie
+  const CategoryAnalysis = () => {
+    if (!monthData?.categoryBreakdown?.length) return null;
+
+    return (
+      <Animated.View 
+        style={[
+          styles.categorySection,
+          isDark && styles.darkCard,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }
+        ]}
+      >
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, isDark && styles.darkTitle]}>
+            Analyse par Catégorie
+          </Text>
+          <Text style={[styles.sectionSubtitle, isDark && styles.darkSubtext]}>
+            Dépenses détaillées
+          </Text>
+        </View>
+
+        <View style={styles.categoriesList}>
+          {monthData.categoryBreakdown.slice(0, 5).map((category: any, index: number) => (
+            <View key={category.category} style={styles.categoryItem}>
+              <View style={styles.categoryInfo}>
+                <View style={[styles.categoryColor, { backgroundColor: getCategoryColor(index) }]} />
+                <View style={styles.categoryDetails}>
+                  <Text style={[styles.categoryName, isDark && styles.darkText]}>
+                    {category.category}
+                  </Text>
+                  <Text style={[styles.categoryPercentage, isDark && styles.darkSubtext]}>
+                    {category.percentage.toFixed(1)}%
+                  </Text>
+                </View>
+              </View>
+              <Text style={[styles.categoryAmount, isDark && styles.darkText]}>
+                {formatAmount(category.amount)}
+              </Text>
+            </View>
+          ))}
+        </View>
+      </Animated.View>
+    );
+  };
+
+  // Liste des transactions
+  const TransactionsList = () => {
+    if (filteredTransactions.length === 0) {
       return (
         <Animated.View 
           style={[
-            styles.chartCard,
-            isDark && styles.darkCard,
+            styles.emptyState,
             {
               opacity: fadeAnim,
               transform: [{ translateY: slideAnim }]
             }
           ]}
         >
-          <LinearGradient
-            colors={isDark ? ['#334155', '#1E293B'] : ['#FFFFFF', '#F8FAFC']}
-            style={styles.chartGradient}
-          >
-            <Text style={[styles.cardTitle, isDark && styles.darkText]}>
-              📈 RÉPARTITION DES DÉPENSES
-            </Text>
-            <View style={styles.emptyChart}>
-              <Text style={styles.emptyChartEmoji}>📊</Text>
-              <Text style={[styles.emptyChartText, isDark && styles.darkSubtext]}>
-                Aucune dépense ce mois-ci
-              </Text>
-            </View>
-          </LinearGradient>
+          <Ionicons 
+            name="receipt-outline" 
+            size={64} 
+            color={isDark ? '#4B5563' : '#9CA3AF'} 
+          />
+          <Text style={[styles.emptyTitle, isDark && styles.darkTitle]}>
+            Aucune transaction
+          </Text>
+          <Text style={[styles.emptyDescription, isDark && styles.darkSubtext]}>
+            {selectedFilter === 'all' 
+              ? `Aucune transaction pour ${monthName}`
+              : `Aucune transaction ${selectedFilter === 'income' ? 'de revenu' : 'de dépense'} pour ${monthName}`
+            }
+          </Text>
         </Animated.View>
       );
     }
 
-    const chartData = monthData.categoryBreakdown.slice(0, 6).map((item, index) => ({
-      name: item.category.length > 8 ? `${item.category.substring(0, 8)}...` : item.category,
-      value: item.amount,
-      color: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'][index],
-      legendFontColor: isDark ? '#94A3B8' : '#64748B',
-      legendFontSize: 10
-    }));
-
     return (
       <Animated.View 
         style={[
-          styles.chartCard,
-          isDark && styles.darkCard,
+          styles.transactionsSection,
           {
             opacity: fadeAnim,
             transform: [{ translateY: slideAnim }]
           }
         ]}
       >
-        <LinearGradient
-          colors={isDark ? ['#334155', '#1E293B'] : ['#FFFFFF', '#F8FAFC']}
-          style={styles.chartGradient}
-        >
-          <Text style={[styles.cardTitle, isDark && styles.darkText]}>
-            📈 RÉPARTITION DES DÉPENSES
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, isDark && styles.darkTitle]}>
+            Transactions ({filteredTransactions.length})
           </Text>
-          
-          <PieChart
-            data={chartData}
-            width={width - 80}
-            height={180}
-            chartConfig={{
-              backgroundColor: 'transparent',
-              backgroundGradientFrom: 'transparent',
-              backgroundGradientTo: 'transparent',
-              decimalPlaces: 0,
-              color: () => isDark ? '#F1F5F9' : '#1E293B',
-              labelColor: () => isDark ? '#94A3B8' : '#64748B',
-            }}
-            accessor="value"
-            backgroundColor="transparent"
-            paddingLeft="0"
-            absolute
-            style={styles.chart}
-          />
-        </LinearGradient>
+          <Text style={[styles.sectionSubtitle, isDark && styles.darkSubtext]}>
+            {selectedFilter === 'all' ? 'Toutes les transactions' : 
+             selectedFilter === 'income' ? 'Revenus seulement' : 'Dépenses seulement'}
+          </Text>
+        </View>
+
+        <FlatList
+          data={filteredTransactions}
+          renderItem={({ item }) => (
+            <TransactionCard 
+              transaction={item}
+              onPress={handleTransactionPress}
+              onDelete={handleDeleteTransaction}
+              isDark={isDark}
+            />
+          )}
+          keyExtractor={(item) => item.id}
+          scrollEnabled={false}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.transactionsList}
+        />
       </Animated.View>
     );
   };
 
-  // Statistiques avec design moderne
-  const StatisticsCard = () => (
-    <Animated.View 
-      style={[
-        styles.statsCard,
-        isDark && styles.darkCard,
-        {
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }]
-        }
-      ]}
+  // Carte de transaction
+  const TransactionCard = ({ transaction, onPress, onDelete, isDark }: any) => (
+    <TouchableOpacity
+      style={[styles.transactionCard, isDark && styles.darkCard]}
+      onPress={() => onPress(transaction.id)}
     >
-      <LinearGradient
-        colors={isDark ? ['#334155', '#1E293B'] : ['#FFFFFF', '#F8FAFC']}
-        style={styles.statsGradient}
-      >
-        <Text style={[styles.cardTitle, isDark && styles.darkText]}>
-          📊 STATISTIQUES DÉTAILLÉES
-        </Text>
-        
-        <View style={styles.statsList}>
-          <View style={styles.statRow}>
-            <View style={styles.statLeft}>
-              <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
-                Nombre de transactions
-              </Text>
-              <Text style={[styles.statSubLabel, isDark && styles.darkSubtext]}>
-                Total des opérations
-              </Text>
-            </View>
-            <View style={[styles.statValueContainer, { backgroundColor: '#007AFF20' }]}>
-              <Text style={[styles.statValue, isDark && styles.darkText]}>
-                {monthData.transactionCount}
-              </Text>
-            </View>
+      <View style={styles.transactionHeader}>
+        <View style={styles.transactionInfo}>
+          <View style={[
+            styles.transactionIcon,
+            { backgroundColor: transaction.type === 'income' ? '#E8F5E8' : '#FFE5E5' }
+          ]}>
+            <Ionicons 
+              name={transaction.type === 'income' ? 'arrow-down' : 'arrow-up'} 
+              size={16} 
+              color={transaction.type === 'income' ? '#10B981' : '#EF4444'} 
+            />
           </View>
-          
-          <View style={styles.statDivider} />
-          
-          <View style={styles.statRow}>
-            <View style={styles.statLeft}>
-              <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
-                Dépense moyenne
-              </Text>
-              <Text style={[styles.statSubLabel, isDark && styles.darkSubtext]}>
-                Par transaction
-              </Text>
-            </View>
-            <View style={[styles.statValueContainer, { backgroundColor: '#EF444420' }]}>
-              <Text style={[styles.statValue, isDark && styles.darkText]}>
-                {monthData.transactionCount > 0 ? formatAmount(monthData.expenses / monthData.transactionCount) : formatAmount(0)}
-              </Text>
-            </View>
-          </View>
-          
-          <View style={styles.statDivider} />
-          
-          <View style={styles.statRow}>
-            <View style={styles.statLeft}>
-              <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
-                Revenu moyen
-              </Text>
-              <Text style={[styles.statSubLabel, isDark && styles.darkSubtext]}>
-                Par transaction
-              </Text>
-            </View>
-            <View style={[styles.statValueContainer, { backgroundColor: '#10B98120' }]}>
-              <Text style={[styles.statValue, isDark && styles.darkText]}>
-                {monthData.transactionCount > 0 ? formatAmount(monthData.income / monthData.transactionCount) : formatAmount(0)}
-              </Text>
-            </View>
-          </View>
-          
-          <View style={styles.statDivider} />
-          
-          <View style={styles.statRow}>
-            <View style={styles.statLeft}>
-              <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
-                Taux d'épargne
-              </Text>
-              <Text style={[styles.statSubLabel, isDark && styles.darkSubtext]}>
-                Performance financière
-              </Text>
-            </View>
-            <View style={[styles.statValueContainer, { backgroundColor: savingsStatus.color + '20' }]}>
-              <Text style={[styles.statValue, { color: savingsStatus.color }]}>
-                {monthData.savingsRate.toFixed(1)}%
-              </Text>
-            </View>
+          <View style={styles.transactionDetails}>
+            <Text style={[styles.transactionDescription, isDark && styles.darkText]}>
+              {transaction.description || 'Sans description'}
+            </Text>
+            <Text style={[styles.transactionCategory, isDark && styles.darkSubtext]}>
+              {transaction.category} • {new Date(transaction.date).toLocaleDateString('fr-FR')}
+            </Text>
           </View>
         </View>
-      </LinearGradient>
-    </Animated.View>
+        
+        <View style={styles.transactionAmountContainer}>
+          <Text style={[
+            styles.transactionAmount,
+            { color: transaction.type === 'income' ? '#10B981' : '#EF4444' },
+            isDark && styles.darkText
+          ]}>
+            {transaction.type === 'income' ? '+' : '-'}{formatAmount(Math.abs(transaction.amount))}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.transactionActions}>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.editButton]}
+          onPress={() => onPress(transaction.id)}
+        >
+          <Ionicons name="create-outline" size={14} color="#007AFF" />
+          <Text style={styles.actionButtonText}>Modifier</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.actionButton, styles.deleteButton]}
+          onPress={() => onDelete(transaction.id, transaction.description)}
+        >
+          <Ionicons name="trash-outline" size={14} color="#EF4444" />
+          <Text style={styles.actionButtonText}>Supprimer</Text>
+        </TouchableOpacity>
+      </View>
+    </TouchableOpacity>
   );
 
-  // Top catégories avec design moderne
-  const TopCategoriesCard = () => {
-    if (monthData.categoryBreakdown.length === 0) {
-      return null;
-    }
-
-    return (
-      <Animated.View 
-        style={[
-          styles.categoriesCard,
-          isDark && styles.darkCard,
-          {
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }]
-          }
-        ]}
-      >
-        <LinearGradient
-          colors={isDark ? ['#334155', '#1E293B'] : ['#FFFFFF', '#F8FAFC']}
-          style={styles.categoriesGradient}
-        >
-          <Text style={[styles.cardTitle, isDark && styles.darkText]}>
-            🏆 TOP CATÉGORIES
-          </Text>
-          
-          {monthData.categoryBreakdown.slice(0, 5).map((category, index) => (
-            <View key={category.category} style={styles.categoryItem}>
-              <View style={styles.categoryLeft}>
-                <View style={[
-                  styles.categoryRank,
-                  { backgroundColor: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'][index] }
-                ]}>
-                  <Text style={styles.categoryRankText}>#{index + 1}</Text>
-                </View>
-                <View style={styles.categoryInfo}>
-                  <Text style={[styles.categoryName, isDark && styles.darkText]}>
-                    {category.category}
-                  </Text>
-                  <View style={styles.categoryProgress}>
-                    <View 
-                      style={[
-                        styles.categoryProgressBar,
-                        { 
-                          width: `${category.percentage}%`,
-                          backgroundColor: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'][index]
-                        }
-                      ]} 
-                    />
-                  </View>
-                </View>
-              </View>
-              <View style={styles.categoryRight}>
-                <Text style={[styles.categoryAmount, isDark && styles.darkText]}>
-                  {formatAmount(category.amount)}
-                </Text>
-                <Text style={[styles.categoryPercentage, isDark && styles.darkSubtext]}>
-                  {category.percentage.toFixed(1)}%
-                </Text>
-              </View>
-            </View>
-          ))}
-        </LinearGradient>
-      </Animated.View>
-    );
+  // Couleurs pour les catégories
+  const getCategoryColor = (index: number) => {
+    const colors = ['#007AFF', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+    return colors[index % colors.length];
   };
+
+  if (transactionsLoading && !monthData) {
+    return (
+      <SafeAreaView>
+        <View style={[styles.container, isDark && styles.darkContainer, styles.center]}>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <Text style={[styles.loadingText, isDark && styles.darkText]}>
+            Chargement des données...
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView>
@@ -448,11 +508,20 @@ const MonthDetailScreen: React.FC = () => {
         <ScrollView 
           style={styles.content}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={['#007AFF']}
+              tintColor={isDark ? '#007AFF' : '#007AFF'}
+            />
+          }
+          contentContainerStyle={styles.scrollContent}
         >
-          <FinancialSummaryCard />
-          <ExpenseChartCard />
-          <StatisticsCard />
-          <TopCategoriesCard />
+          <StatsCards />
+          <TransactionFilters />
+          <CategoryAnalysis />
+          <TransactionsList />
           
           <View style={styles.spacer} />
         </ScrollView>
@@ -469,320 +538,394 @@ const styles = StyleSheet.create({
   darkContainer: {
     backgroundColor: '#0F172A',
   },
-  headerGradient: {
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  header: {
-    flexDirection: 'row',
+  center: {
+    justifyContent: 'center',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 20,
+  },
+  
+  // Header
+  header: {
     paddingTop: 60,
-    paddingBottom: 30,
+    paddingBottom: 20,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  darkHeader: {
+    backgroundColor: 'transparent',
+  },
+  headerBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  headerGradient: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    opacity: 0.95,
+  },
+  darkHeaderGradient: {
+    backgroundColor: '#1E293B',
+    opacity: 0.95,
+  },
+  headerContent: {
+    paddingHorizontal: 24,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: 8,
+    marginRight: 16,
   },
-  backButtonText: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  headerCenter: {
-    alignItems: 'center',
+  headerTitleContainer: {
     flex: 1,
   },
-  monthName: {
+  headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  monthSubtitle: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontWeight: '600',
-    letterSpacing: 1,
-  },
-  headerRight: {
-    width: 40,
-  },
-  content: {
-    flex: 1,
-    padding: 20,
-  },
-  // Cartes avec gradients et ombres
-  summaryCard: {
-    borderRadius: 25,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 8,
-    overflow: 'hidden',
-  },
-  chartCard: {
-    borderRadius: 25,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 8,
-    overflow: 'hidden',
-  },
-  statsCard: {
-    borderRadius: 25,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 8,
-    overflow: 'hidden',
-  },
-  categoriesCard: {
-    borderRadius: 25,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 8,
-    overflow: 'hidden',
-  },
-  darkCard: {
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-  },
-  // Gradients pour les cartes
-  summaryGradient: {
-    padding: 25,
-  },
-  chartGradient: {
-    padding: 25,
-    alignItems: 'center',
-  },
-  statsGradient: {
-    padding: 25,
-  },
-  categoriesGradient: {
-    padding: 25,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
     color: '#1E293B',
-    marginBottom: 20,
-    letterSpacing: 0.5,
-  },
-  summaryHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  savingsBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-  },
-  savingsBadgeText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  summaryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 15,
-  },
-  summaryItem: {
-    width: '47%',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  summaryIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  summaryEmoji: {
-    fontSize: 20,
-  },
-  incomeValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#10B981',
     marginBottom: 4,
   },
-  expenseValue: {
+  headerSubtitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#EF4444',
-    marginBottom: 4,
-  },
-  netFlowValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  savingsRateValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  summaryLabel: {
-    fontSize: 11,
     color: '#64748B',
-    textAlign: 'center',
-    fontWeight: '600',
-    letterSpacing: 0.5,
   },
-  // Graphique
-  emptyChart: {
-    height: 150,
-    justifyContent: 'center',
-    alignItems: 'center',
+  headerStats: {
+    alignItems: 'flex-end',
   },
-  emptyChartEmoji: {
-    fontSize: 40,
-    marginBottom: 12,
-  },
-  emptyChartText: {
-    fontSize: 14,
-    color: '#64748B',
-    fontWeight: '500',
-  },
-  chart: {
-    marginVertical: 8,
-  },
-  // Statistiques
-  statsList: {
-    gap: 0,
-  },
-  statRow: {
+  miniStat: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
-  },
-  statLeft: {
-    flex: 1,
-  },
-  statLabel: {
-    fontSize: 14,
-    color: '#64748B',
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  statSubLabel: {
-    fontSize: 11,
-    color: '#94A3B8',
-  },
-  statValueContainer: {
+    backgroundColor: '#F1F5F9',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
-    minWidth: 80,
-    alignItems: 'center',
+    gap: 6,
   },
-  statValue: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#1E293B',
+  miniStatText: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '500',
   },
-  statDivider: {
-    height: 1,
-    backgroundColor: '#F1F5F9',
-    marginHorizontal: -10,
-  },
-  // Catégories
-  categoryItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  categoryLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  
+  // Contenu principal
+  content: {
     flex: 1,
   },
-  categoryRank: {
-    width: 32,
-    height: 32,
+  scrollContent: {
+    paddingBottom: 40,
+  },
+  
+  // Cartes de statistiques
+  statsContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    padding: 16,
     borderRadius: 16,
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },
-  categoryRankText: {
-    fontSize: 12,
+  darkCard: {
+    backgroundColor: '#1E293B',
+  },
+  statIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  statContent: {
+    flex: 1,
+  },
+  statValue: {
+    fontSize: 18,
     fontWeight: 'bold',
+    color: '#1E293B',
+    marginBottom: 2,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  netFlowCard: {
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    borderRadius: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  netFlowHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  netFlowLabel: {
+    fontSize: 14,
+    color: '#64748B',
+    fontWeight: '600',
+  },
+  netFlowValue: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  savingsRate: {
+    fontSize: 12,
+    color: '#64748B',
+  },
+  
+  // Filtres
+  filtersContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  filtersLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748B',
+    marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  filtersRow: {
+    flexDirection: 'row',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 12,
+    padding: 4,
+  },
+  filterButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    gap: 6,
+  },
+  darkFilterButton: {
+    backgroundColor: 'transparent',
+  },
+  filterButtonActive: {
+    backgroundColor: '#007AFF',
+  },
+  filterText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  filterTextActive: {
     color: '#FFFFFF',
   },
+  
+  // Analyse par catégorie
+  categorySection: {
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 24,
+    marginBottom: 24,
+    padding: 20,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  sectionHeader: {
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1E293B',
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: '#64748B',
+  },
+  categoriesList: {
+    gap: 12,
+  },
+  categoryItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
   categoryInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  categoryColor: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 12,
+  },
+  categoryDetails: {
     flex: 1,
   },
   categoryName: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#1E293B',
-    marginBottom: 6,
-  },
-  categoryProgress: {
-    height: 4,
-    backgroundColor: '#E2E8F0',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  categoryProgressBar: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  categoryRight: {
-    alignItems: 'flex-end',
-  },
-  categoryAmount: {
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '500',
     color: '#1E293B',
     marginBottom: 2,
   },
   categoryPercentage: {
     fontSize: 12,
     color: '#64748B',
+  },
+  categoryAmount: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1E293B',
+  },
+  
+  // Transactions
+  transactionsSection: {
+    paddingHorizontal: 24,
+  },
+  transactionsList: {
+    gap: 12,
+  },
+  transactionCard: {
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  transactionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  transactionInfo: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    flex: 1,
+  },
+  transactionIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  transactionDetails: {
+    flex: 1,
+  },
+  transactionDescription: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#1E293B',
+    marginBottom: 4,
+  },
+  transactionCategory: {
+    fontSize: 12,
+    color: '#64748B',
+  },
+  transactionAmountContainer: {
+    alignItems: 'flex-end',
+  },
+  transactionAmount: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  transactionActions: {
+    flexDirection: 'row',
+    gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    paddingTop: 12,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    gap: 4,
+  },
+  editButton: {
+    backgroundColor: '#EFF6FF',
+  },
+  deleteButton: {
+    backgroundColor: '#FEF2F2',
+  },
+  actionButtonText: {
+    fontSize: 12,
     fontWeight: '500',
   },
+  
+  // État vide
+  emptyState: {
+    alignItems: 'center',
+    padding: 48,
+    marginTop: 20,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#374151',
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptyDescription: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  
+  // Divers
   spacer: {
     height: 20,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+  },
+  darkTitle: {
+    color: '#F1F5F9',
+  },
+  darkSubtitle: {
+    color: '#94A3B8',
   },
   darkText: {
     color: '#F1F5F9',

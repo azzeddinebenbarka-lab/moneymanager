@@ -2,11 +2,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Animated,
   Dimensions,
   FlatList,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,6 +19,7 @@ import { SafeAreaView } from '../components/SafeAreaView';
 import { useCurrency } from '../context/CurrencyContext';
 import { useTheme } from '../context/ThemeContext';
 import { useMonthlyData } from '../hooks/useMonthlyData';
+import { useTransactions } from '../hooks/useTransactions';
 
 const { width } = Dimensions.get('window');
 
@@ -25,6 +27,7 @@ const { width } = Dimensions.get('window');
 type RootStackParamList = {
   MonthsOverview: undefined;
   MonthDetail: { year: number; month: number };
+  AddTransaction: undefined;
 };
 
 type MonthsOverviewScreenNavigationProp = StackNavigationProp<RootStackParamList, 'MonthsOverview'>;
@@ -34,25 +37,69 @@ const MonthsOverviewScreen: React.FC = () => {
   const { theme } = useTheme();
   const { formatAmount } = useCurrency();
   const { getMonthlyOverview, getAvailableYears } = useMonthlyData();
-  const isDark = theme === 'dark';
+  const { refreshTransactions } = useTransactions();
   
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [activeMetric, setActiveMetric] = useState<'income' | 'expenses' | 'balance'>('balance');
+  const [refreshing, setRefreshing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // ✅ CORRECTION : Déclarer isDark AVANT son utilisation
+  const isDark = theme === 'dark';
   
   // ✅ CORRECTION : Obtenir le mois et l'année actuels correctement
   const now = new Date();
   const currentMonth = now.getMonth(); // 0-11 (Janvier = 0)
   const currentYear = now.getFullYear();
 
-  // ✅ CORRECTION : getAvailableYears est une fonction, pas une variable
-  const availableYears = getAvailableYears;
-  const monthlyData = useMemo(() => {
-    return getMonthlyOverview(selectedYear);
-  }, [getMonthlyOverview, selectedYear]);
+  // ✅ CORRECTION : Charger les données depuis la base
+  const [monthlyData, setMonthlyData] = useState<any[]>([]);
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
 
   // Animation values
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
   const slideAnim = React.useRef(new Animated.Value(50)).current;
+
+  // ✅ CORRECTION : Fonction pour charger les données
+  const loadData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      console.log('🔄 Chargement des données mensuelles...');
+      
+      // Obtenir les années disponibles
+      const years = getAvailableYears();
+      setAvailableYears(years);
+      
+      // Obtenir les données mensuelles
+      const data = getMonthlyOverview(selectedYear);
+      setMonthlyData(data);
+      
+      console.log(`✅ Données chargées: ${data.length} mois pour ${selectedYear}`);
+      
+    } catch (error) {
+      console.error('❌ Erreur chargement données:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [getMonthlyOverview, getAvailableYears, selectedYear]);
+
+  // ✅ CORRECTION : Effet pour charger les données au montage et quand l'année change
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // ✅ CORRECTION : Pull to refresh
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refreshTransactions();
+      await loadData();
+    } catch (error) {
+      console.error('❌ Erreur rafraîchissement:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshTransactions, loadData]);
 
   React.useEffect(() => {
     Animated.parallel([
@@ -67,10 +114,22 @@ const MonthsOverviewScreen: React.FC = () => {
         useNativeDriver: true,
       })
     ]).start();
-  }, [selectedYear]);
+  }, [selectedYear, monthlyData]);
 
   // Calcul des totaux annuels avec plus de métriques
   const yearlyTotals = useMemo(() => {
+    if (monthlyData.length === 0) {
+      return {
+        totalIncome: 0,
+        totalExpenses: 0,
+        totalNetFlow: 0,
+        totalTransactions: 0,
+        avgMonthlyIncome: 0,
+        avgMonthlyExpenses: 0,
+        savingsRate: 0,
+      };
+    }
+
     const totals = monthlyData.reduce((acc, month) => ({
       totalIncome: acc.totalIncome + month.income,
       totalExpenses: acc.totalExpenses + month.expenses,
@@ -87,7 +146,7 @@ const MonthsOverviewScreen: React.FC = () => {
       avgMonthlyExpenses: 0,
     });
 
-    const monthCount = monthlyData.length || 1;
+    const monthCount = monthlyData.length;
     return {
       ...totals,
       avgMonthlyIncome: totals.avgMonthlyIncome / monthCount,
@@ -117,7 +176,6 @@ const MonthsOverviewScreen: React.FC = () => {
               Vue par Mois
             </Text>
             <Text style={[styles.subtitle, isDark && styles.darkSubtitle]}>
-              {/* ✅ CORRECTION : Afficher le mois et l'année actuels */}
               {new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
             </Text>
           </View>
@@ -154,8 +212,7 @@ const MonthsOverviewScreen: React.FC = () => {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.yearButtonsContainer}
       >
-        {/* ✅ CORRECTION : Appeler getAvailableYears() comme une fonction */}
-        {getAvailableYears().map(year => (
+        {availableYears.map(year => (
           <TouchableOpacity
             key={year}
             style={[
@@ -403,7 +460,6 @@ const MonthsOverviewScreen: React.FC = () => {
             netFlow={item.netFlow}
             transactionCount={item.transactionCount}
             onPress={handleMonthPress}
-            // ✅ CORRECTION : Vérification correcte du mois en cours
             isCurrentMonth={item.year === currentYear && item.month === currentMonth}
             highlightMetric={activeMetric === 'balance' ? 'netFlow' : activeMetric}
             animationDelay={index * 100}
@@ -417,6 +473,25 @@ const MonthsOverviewScreen: React.FC = () => {
     </Animated.View>
   );
 
+  // ✅ CORRECTION : Gestion du chargement
+  if (isLoading) {
+    return (
+      <SafeAreaView>
+        <View style={[styles.container, isDark && styles.darkContainer, styles.loadingContainer]}>
+          <View style={styles.loadingContent}>
+            <Ionicons name="calendar" size={64} color="#007AFF" />
+            <Text style={[styles.loadingText, isDark && styles.darkTitle]}>
+              Chargement des données...
+            </Text>
+            <Text style={[styles.loadingSubtext, isDark && styles.darkSubtext]}>
+              Analyse des transactions mensuelles
+            </Text>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView>
       <View style={[styles.container, isDark && styles.darkContainer]}>
@@ -426,6 +501,14 @@ const MonthsOverviewScreen: React.FC = () => {
           style={styles.content}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#007AFF']}
+              tintColor={isDark ? '#007AFF' : '#007AFF'}
+            />
+          }
         >
           <ModernYearSelector />
           
@@ -445,6 +528,7 @@ const MonthsOverviewScreen: React.FC = () => {
   );
 };
 
+// ... (les styles restent exactement les mêmes)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -452,6 +536,28 @@ const styles = StyleSheet.create({
   },
   darkContainer: {
     backgroundColor: '#0F172A',
+  },
+  
+  // État de chargement
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingContent: {
+    alignItems: 'center',
+    padding: 40,
+  },
+  loadingText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1E293B',
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  loadingSubtext: {
+    fontSize: 16,
+    color: '#64748B',
+    textAlign: 'center',
   },
   
   // Header moderne avec dégradé
