@@ -1,6 +1,7 @@
 ﻿// src/screens/TransactionsScreen.tsx - VERSION SIMPLIFIÉE AVEC FILTRES ANNÉE/MOIS
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -140,12 +141,17 @@ const TransactionsScreen = ({ navigation }: any) => {
     setRefreshing(false);
   };
 
+  // Stabiliser l'appel refreshTransactions en utilisant une ref
+  const refreshTransactionsRef = useRef<typeof refreshTransactions | null>(null);
+  useEffect(() => { refreshTransactionsRef.current = refreshTransactions; }, [refreshTransactions]);
+
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      refreshTransactions();
+      const fn = refreshTransactionsRef.current;
+      if (fn) fn();
     });
     return unsubscribe;
-  }, [navigation, refreshTransactions]);
+  }, [navigation]);
 
   // ✅ CALCULS STATISTIQUES
   const getStats = () => {
@@ -316,128 +322,32 @@ const TransactionsScreen = ({ navigation }: any) => {
     );
   };
 
-  // ✅ COMPOSANT : Carte de transaction
+  // ✅ COMPOSANT : Carte de transaction (version verticale, gradientée)
   const TransactionCard = ({ item }: { item: Transaction }) => {
-    const isSpecial = isSpecialTransaction(item);
-    const isRecurring = item.isRecurring && !isSpecial;
-
     return (
-      <TouchableOpacity 
-        style={[
-          styles.transactionCard, 
-          isDark && styles.darkCard,
-          isSpecial && styles.specialTransactionCard,
-          isRecurring && styles.recurringTransactionCard
-        ]}
+      <TouchableOpacity
+        style={[styles.cardBorder, isDark && styles.darkCardBorder]}
         onPress={() => handleTransactionPress(item.id)}
-        activeOpacity={isSpecial ? 1 : 0.7}
+        activeOpacity={0.85}
       >
-        <View style={styles.transactionMain}>
-          <View style={styles.transactionLeft}>
-            <View style={[
-              styles.iconContainer,
-              { 
-                backgroundColor: isSpecial ? '#007AFF20' : 
-                                 (item.type === 'income' ? '#10B98120' : '#EF444420'),
-                borderColor: isSpecial ? '#007AFF40' : 
-                                (item.type === 'income' ? '#10B98140' : '#EF444440')
-              },
-              isRecurring && styles.recurringIconContainer
-            ]}>
-              <Ionicons 
-                name={isSpecial ? (getSpecialCategoryIcon(item.category) as any) : 
-                      isRecurring ? 'repeat' :
-                      (item.type === 'income' ? 'arrow-down' : 'arrow-up')} 
-                size={20} 
-                color={isSpecial ? '#007AFF' : 
-                       isRecurring ? '#F59E0B' :
-                       (item.type === 'income' ? '#10B981' : '#EF4444')} 
-              />
+        <LinearGradient
+          colors={item.type === 'income' ? ['#F0FBF6', '#FFFFFF'] : ['#FFF5F6', '#FFFFFF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.cardGradient}
+        >
+          <View style={styles.cardVertical}>
+            <View style={[styles.cardIconLarge, { backgroundColor: item.type === 'income' ? '#ECFDF5' : '#FFF1F2' }]}>
+              <Ionicons name={item.type === 'income' ? 'arrow-down' : 'arrow-up'} size={20} color={item.type === 'income' ? '#059669' : '#DC2626'} />
             </View>
-            
-            <View style={styles.transactionInfo}>
-              <Text style={[styles.transactionDescription, isDark && styles.darkText]}>
-                {item.description || 'Sans description'}
-              </Text>
-              
-              <View style={styles.transactionMeta}>
-                <View style={styles.categoryContainer}>
-                  <Ionicons 
-                    name="pricetag" 
-                    size={12} 
-                    color={isDark ? '#888' : '#666'} 
-                  />
-                  <Text style={[
-                    styles.transactionCategory, 
-                    isDark && styles.darkSubtext,
-                    isSpecial && styles.specialCategoryText,
-                    isRecurring && styles.recurringCategoryText
-                  ]}>
-                    {isSpecial ? getSpecialCategoryLabel(item.category) : item.category}
-                  </Text>
-                </View>
-                
-                <Text style={[styles.transactionDate, isDark && styles.darkSubtext]}>
-                  {new Date(item.date).toLocaleDateString('fr-FR', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric'
-                  })}
-                </Text>
 
-                {isSpecial && (
-                  <View style={styles.systemBadge}>
-                    <Ionicons name="lock-closed" size={10} color="#007AFF" />
-                    <Text style={styles.systemBadgeText}>Système</Text>
-                  </View>
-                )}
+            <Text style={[styles.cardTitle, isDark && styles.darkText]} numberOfLines={2}>{item.description || 'Sans description'}</Text>
 
-                {isRecurring && (
-                  <View style={styles.recurringBadge}>
-                    <Ionicons name="repeat" size={10} color="#F59E0B" />
-                    <Text style={styles.recurringBadgeText}>Récurrente</Text>
-                  </View>
-                )}
-              </View>
-            </View>
+            <Text style={[styles.cardAmountLarge, { color: item.type === 'income' ? '#059669' : '#DC2626' }]}>{item.type === 'income' ? '+' : '-'}{formatAmount(Math.abs(item.amount))}</Text>
+
+            <Text style={[styles.cardDateSmall, isDark && styles.darkSubtext]}>{new Date(item.date).toLocaleDateString('fr-FR')}</Text>
           </View>
-
-          <View style={styles.transactionRight}>
-            <Text style={[
-              styles.transactionAmount,
-              { 
-                color: isSpecial ? '#007AFF' : 
-                       isRecurring ? '#F59E0B' :
-                       (item.type === 'income' ? '#10B981' : '#EF4444') 
-              }
-            ]}>
-              {item.type === 'income' ? '+' : ''}{formatAmount(item.amount)}
-            </Text>
-            
-            <Text style={[
-              styles.transactionType,
-              isDark && styles.darkSubtext
-            ]}>
-              {isSpecial ? 'Système' : 
-               isRecurring ? 'Récurrent' :
-               (item.type === 'income' ? 'Revenu' : 'Dépense')}
-            </Text>
-          </View>
-        </View>
-
-        {isSpecial && (
-          <View style={styles.readOnlyIndicator}>
-            <Ionicons name="eye" size={12} color="#007AFF" />
-            <Text style={styles.readOnlyText}>Lecture seule</Text>
-          </View>
-        )}
-
-        {isRecurring && (
-          <View style={styles.recurringIndicator}>
-            <Ionicons name="refresh" size={12} color="#F59E0B" />
-            <Text style={styles.recurringIndicatorText}>Se répète automatiquement</Text>
-          </View>
-        )}
+        </LinearGradient>
       </TouchableOpacity>
     );
   };
@@ -982,6 +892,52 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+  },
+
+  // Cartes verticales gradientées
+  cardBorder: {
+    borderWidth: 1,
+    borderColor: '#E6EEF8',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginHorizontal: 16,
+    marginBottom: 8,
+    backgroundColor: 'transparent'
+  },
+  darkCardBorder: {
+    borderColor: '#1F2937'
+  },
+  cardGradient: {
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    alignItems: 'center'
+  },
+  cardVertical: {
+    alignItems: 'center',
+  },
+  cardIconLarge: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  cardTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  cardAmountLarge: {
+    fontSize: 16,
+    fontWeight: '800',
+    marginBottom: 8,
+  },
+  cardDateSmall: {
+    fontSize: 12,
+    color: '#94A3B8',
   },
   
   // Textes sombres

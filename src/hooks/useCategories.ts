@@ -18,10 +18,6 @@ interface UseCategoriesReturn {
   getSubcategories: (parentId: string) => Promise<Category[]>;
   getCategoryTree: () => Promise<Array<{ category: Category; subcategories: Category[] }>>;
   createMultipleCategories: (categoriesData: CreateCategoryData[]) => Promise<{ success: boolean; created: number; errors: string[] }>;
-  // ✅ NOUVEAU : Forcer la réinitialisation
-  forceResetCategories: () => Promise<void>;
-  // ✅ NOUVEAU : Diagnostic
-  diagnoseCategories: () => Promise<any>;
 }
 
 export const useCategories = (userId: string = 'default-user'): UseCategoriesReturn => {
@@ -33,11 +29,7 @@ export const useCategories = (userId: string = 'default-user'): UseCategoriesRet
     try {
       setLoading(true);
       setError(null);
-      console.log('🔄 [useCategories] Chargement des catégories...');
-      
       const allCategories = await categoryService.getAllCategories(userId);
-      console.log(`✅ [useCategories] ${allCategories.length} catégories chargées`);
-      
       setCategories(allCategories);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
@@ -51,37 +43,6 @@ export const useCategories = (userId: string = 'default-user'): UseCategoriesRet
   useEffect(() => {
     loadCategories();
   }, [loadCategories]);
-
-  // ✅ NOUVEAU : Forcer la réinitialisation
-  const forceResetCategories = useCallback(async (): Promise<void> => {
-    try {
-      setError(null);
-      setLoading(true);
-      
-      const { categoryResetService } = await import('../services/categoryResetService');
-      await categoryResetService.forceResetCategories(userId);
-      
-      await loadCategories();
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [userId, loadCategories]);
-
-  // ✅ NOUVEAU : Diagnostic
-  const diagnoseCategories = useCallback(async (): Promise<any> => {
-    try {
-      const { categoryResetService } = await import('../services/categoryResetService');
-      return await categoryResetService.diagnoseCategories(userId);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      console.error('❌ [useCategories] Error diagnosing categories:', err);
-      throw err;
-    }
-  }, [userId]);
 
   const createCategory = useCallback(async (categoryData: CreateCategoryData): Promise<string> => {
     try {
@@ -214,9 +175,6 @@ export const useCategories = (userId: string = 'default-user'): UseCategoriesRet
     getSubcategories,
     getCategoryTree,
     createMultipleCategories,
-    // ✅ NOUVEAU
-    forceResetCategories,
-    diagnoseCategories,
   };
 };
 

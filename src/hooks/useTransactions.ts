@@ -7,7 +7,8 @@ export const useTransactions = (userId: string = 'default-user') => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  // Initialize to epoch so the first load is not skipped by the "throttle" logic
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date(0));
 
   // ✅ FONCTION POUR IDENTIFIER LES TRANSACTIONS D'ÉPARGNE
   const isSavingsTransaction = (transaction: Transaction): boolean => {

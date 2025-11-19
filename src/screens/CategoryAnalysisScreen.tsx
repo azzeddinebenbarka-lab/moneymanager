@@ -1,9 +1,11 @@
-// src/screens/CategoryAnalysisScreen.tsx - VERSION CORRIGÉE
+// src/screens/CategoryAnalysisScreen.tsx - VERSION CORRIGÉE POUR LES ICÔNES
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  ColorValue,
   ScrollView,
   StyleSheet,
   Text,
@@ -23,156 +25,200 @@ const CategoryAnalysisScreen = () => {
   const { transactions, loading: transactionsLoading } = useTransactions();
   const { categories } = useCategories();
   
-  const [filters, setFilters] = useState({
-    type: 'expense' as 'expense' | 'income',
-    year: new Date().getFullYear(),
-    month: new Date().getMonth() + 1,
-    category: '' as string | null
-  });
-  
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | 'all'>('all');
+  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | 'all'>('all');
   const [categoryData, setCategoryData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [monthTotals, setMonthTotals] = useState<{ income: number; expenses: number; balance: number }>({ income: 0, expenses: 0, balance: 0 });
+  const [filteredTransactionsForDisplay, setFilteredTransactionsForDisplay] = useState<any[]>([]);
 
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
   const isDark = theme === 'dark';
 
-  // Options pour les filtres
-  const years = [2024, 2025, 2026, 2027, 2028, 2029, 2030];
-  const months = [
-    { value: 1, label: 'Janvier' },
-    { value: 2, label: 'Février' },
-    { value: 3, label: 'Mars' },
-    { value: 4, label: 'Avril' },
-    { value: 5, label: 'Mai' },
-    { value: 6, label: 'Juin' },
-    { value: 7, label: 'Juillet' },
-    { value: 8, label: 'Août' },
-    { value: 9, label: 'Septembre' },
-    { value: 10, label: 'Octobre' },
-    { value: 11, label: 'Novembre' },
-    { value: 12, label: 'Décembre' }
-  ];
+  // ✅ CORRECTION : Définir les couleurs avec le bon type
+  const headerGradientColors: readonly [ColorValue, ColorValue] = isDark 
+    ? ['#1E293B', '#334155'] as const 
+    : ['#F3F8FF', '#FFFFFF'] as const;
 
-  // Fonction pour obtenir le nom de la catégorie à partir de son ID
+  const incomeGradientColors: readonly [ColorValue, ColorValue] = ['#E6FFFA', '#FFFFFF'] as const;
+  const expenseGradientColors: readonly [ColorValue, ColorValue] = ['#FFF1F2', '#FFFFFF'] as const;
+  const balanceGradientColors: readonly [ColorValue, ColorValue] = ['#F8FAFF', '#FFFFFF'] as const;
+
+  // Fonction pour obtenir les couleurs de gradient basées sur le type de transaction
+  const getTransactionGradientColors = (type: string): readonly [ColorValue, ColorValue] => {
+    return type === 'income' ? incomeGradientColors : expenseGradientColors;
+  };
+
   const getCategoryNameById = useCallback((categoryId: string) => {
     if (!categoryId) return 'Non catégorisé';
-    
     const category = categories.find(cat => cat.id === categoryId);
     return category?.name || 'Catégorie inconnue';
   }, [categories]);
 
-  // Fonction pour obtenir la couleur de la catégorie à partir de son ID
   const getCategoryColorById = useCallback((categoryId: string) => {
     if (!categoryId) return '#666666';
-    
     const category = categories.find(cat => cat.id === categoryId);
     return category?.color || '#666666';
   }, [categories]);
 
-  // Calculer les données avec les filtres
-  const calculateCategoryData = useCallback(() => {
-    setLoading(true);
-    
-    try {
-      const startDate = new Date(filters.year, filters.month - 1, 1);
-      const endDate = new Date(filters.year, filters.month, 0);
+  const getCategoryIconById = useCallback((categoryId: string) => {
+    if (!categoryId) return 'help-circle-outline';
+    const category = categories.find(cat => cat.id === categoryId);
+    return category?.icon || 'help-circle-outline';
+  }, [categories]);
 
-      // Filtrer les transactions selon les critères
-      const filteredTransactions = transactions.filter(transaction => {
-        if (!transaction.date) return false;
-        
-        // Filtre date
-        const transactionDate = new Date(transaction.date);
-        if (transactionDate < startDate || transactionDate > endDate) return false;
-        
-        // Filtre type
-        if (transaction.type !== filters.type) return false;
-        
+  // ✅ CORRECTION : Fonction pour obtenir l'icône Ionicons avec typage sécurisé
+  const getIoniconsIcon = (iconName: string): keyof typeof Ionicons.glyphMap => {
+    // Définition d'un mapping sécurisé avec seulement les icônes valides
+    const iconMap: Record<string, keyof typeof Ionicons.glyphMap> = {
+      // Icônes de base
+      'home': 'home-outline',
+      'restaurant': 'restaurant-outline',
+      'car': 'car-outline',
+      'medical': 'medical-outline',
+      'cart': 'cart-outline',
+      'game-controller': 'game-controller-outline',
+      'airplane': 'airplane-outline',
+      'cash': 'cash-outline',
+      'trending-up': 'trending-up-outline',
+      'gift': 'gift-outline',
+      'trophy': 'trophy-outline',
+      'wifi': 'wifi-outline',
+      'phone': 'call-outline', // ✅ CORRECTION : 'phone-outline' n'existe pas, utiliser 'call-outline'
+      'water': 'water-outline',
+      'flash': 'flash-outline',
+      'shirt': 'shirt-outline',
+      'cut': 'cut-outline',
+      'book': 'book-outline',
+      'musical-notes': 'musical-notes-outline',
+      'basketball': 'basketball-outline',
+      'film': 'film-outline',
+      'wine': 'wine-outline',
+      'cafe': 'cafe-outline',
+      'bus': 'bus-outline',
+      'train': 'train-outline',
+      'bicycle': 'bicycle-outline',
+      'bed': 'bed-outline',
+      'paw': 'paw-outline',
+      'heart': 'heart-outline',
+      'briefcase': 'briefcase-outline',
+      'construct': 'construct-outline',
+      'leaf': 'leaf-outline',
+      'flower': 'flower-outline',
+      'rocket': 'rocket-outline',
+      'star': 'star-outline',
+      'school': 'school-outline',
+      'business': 'business-outline',
+      'card': 'card-outline',
+      'person': 'person-outline',
+      'people': 'people-outline',
+      'document': 'document-outline',
+      'shield': 'shield-outline',
+      'barbell': 'barbell-outline',
+      'fitness': 'fitness-outline',
+      'eye': 'eye-outline',
+      'flask': 'flask-outline',
+      'location': 'location-outline',
+      'pricetag': 'pricetag-outline',
+      'desktop': 'desktop-outline',
+      'laptop': 'laptop-outline',
+      'tv': 'tv-outline',
+      'diamond': 'diamond-outline',
+      'sparkles': 'sparkles-outline',
+      'build': 'build-outline',
+      'nutrition': 'nutrition-outline',
+      'cube': 'cube-outline',
+      'fast-food': 'fast-food-outline',
+      'basket': 'basket-outline',
+      'car-sport': 'car-sport-outline',
+      'map': 'map-outline',
+      'play-circle': 'play-circle-outline',
+      'pencil': 'pencil-outline',
+      'call': 'call-outline',
+      'flame': 'flame-outline',
+      'warning': 'warning-outline',
+      'ellipsis-horizontal': 'ellipsis-horizontal-outline',
+      
+      // Fallback par défaut
+      'help-circle-outline': 'help-circle-outline'
+    };
+
+    // ✅ CORRECTION : Retourner une icône valide ou le fallback
+    const validIcon = iconMap[iconName];
+    if (validIcon && validIcon in Ionicons.glyphMap) {
+      return validIcon;
+    }
+    
+    // Fallback sécurisé
+    return 'help-circle-outline';
+  };
+
+  useEffect(() => {
+    setLoading(true);
+    try {
+      const year = currentYear;
+      const month = currentMonth;
+
+      const monthTx = (transactions || []).filter(t => {
+        if (!t?.date) return false;
+        const d = new Date(t.date);
+        return d.getFullYear() === year && d.getMonth() + 1 === month;
+      });
+
+      const incomeTotal = monthTx.filter(t => t.type === 'income').reduce((s, t) => s + Math.abs(t.amount || 0), 0);
+      const expensesTotal = monthTx.filter(t => t.type === 'expense').reduce((s, t) => s + Math.abs(t.amount || 0), 0);
+
+      const categoryTotals: Record<string, { amount: number; count: number; color: string; name: string }> = {};
+
+      const filteredForList = monthTx.filter(tx => {
+        if (selectedCategoryId && selectedCategoryId !== 'all') {
+          const txCat = (categories || []).find(c => c.id === tx.category || c.name === tx.category);
+          if (!txCat) return false;
+          if (selectedSubcategoryId && selectedSubcategoryId !== 'all') {
+            return txCat.id === selectedSubcategoryId;
+          }
+          return txCat.id === selectedCategoryId || txCat.parentId === selectedCategoryId;
+        }
         return true;
       });
 
-      // Calculer les totaux par catégorie
-      const categoryTotals: { [key: string]: { 
-        amount: number; 
-        count: number; 
-        color: string;
-        name: string;
-        id: string;
-      } } = {};
-
-      filteredTransactions.forEach(transaction => {
-        const amount = Math.abs(transaction.amount || 0);
-        const categoryId = transaction.category || 'uncategorized';
-        
-        if (!categoryTotals[categoryId]) {
-          const categoryName = getCategoryNameById(categoryId);
-          const categoryColor = getCategoryColorById(categoryId);
-          
-          categoryTotals[categoryId] = {
-            amount: 0,
-            count: 0,
-            color: categoryColor,
-            name: categoryName,
-            id: categoryId
-          };
+      filteredForList.forEach(tx => {
+        const amount = Math.abs(tx.amount || 0);
+        const catId = tx.category || 'uncategorized';
+        if (!categoryTotals[catId]) {
+          categoryTotals[catId] = { amount: 0, count: 0, color: getCategoryColorById(catId), name: getCategoryNameById(catId) };
         }
-        
-        categoryTotals[categoryId].amount += amount;
-        categoryTotals[categoryId].count += 1;
+        categoryTotals[catId].amount += amount;
+        categoryTotals[catId].count += 1;
       });
 
-      // Convertir en tableau et trier par montant décroissant
-      const chartData = Object.entries(categoryTotals)
-        .map(([categoryId, data]) => ({
-          id: categoryId,
-          name: data.name,
-          amount: data.amount,
-          count: data.count,
-          color: data.color
-        }))
-        .sort((a, b) => b.amount - a.amount);
+      const chartData = Object.entries(categoryTotals).map(([id, v]) => ({ id, name: v.name, amount: v.amount, count: v.count, color: v.color })).sort((a, b) => b.amount - a.amount);
 
       setCategoryData(chartData);
-
-      console.log('📊 Category analysis:', {
-        year: filters.year,
-        month: filters.month,
-        type: filters.type,
-        totalTransactions: filteredTransactions.length,
-        totalAmount: chartData.reduce((sum, cat) => sum + cat.amount, 0),
-        categories: chartData.length,
-        categoryMapping: chartData.map(cat => ({ id: cat.id, name: cat.name }))
-      });
-    } catch (error) {
-      console.error('❌ Error calculating category data:', error);
-    } finally {
+      setLoading(false);
+      setMonthTotals({ income: incomeTotal, expenses: expensesTotal, balance: incomeTotal - expensesTotal });
+      setFilteredTransactionsForDisplay(filteredForList);
+    } catch (err) {
+      console.error('❌ Error computing category analysis', err);
       setLoading(false);
     }
-  }, [transactions, categories, filters, getCategoryNameById, getCategoryColorById]);
-
-  useEffect(() => {
-    calculateCategoryData();
-  }, [calculateCategoryData]);
+  }, [transactions, categories, selectedCategoryId, selectedSubcategoryId, currentYear, currentMonth, getCategoryColorById, getCategoryNameById]);
 
   const handleCategoryPress = (categoryId: string, categoryName: string) => {
     try {
-      // Navigation vers les transactions filtrées par catégorie
       (navigation as any).navigate('Transactions', {
         filters: {
-          category: categoryId, // Utiliser l'ID pour le filtrage
-          categoryName: categoryName, // Passer le nom pour l'affichage
-          type: filters.type,
-          year: filters.year,
-          month: filters.month
+          category: categoryId,
+          categoryName: categoryName,
+          year: currentYear,
+          month: currentMonth
         }
       });
     } catch (error) {
       console.warn('Navigation vers Transactions non disponible');
       (navigation as any).navigate('Transactions');
     }
-  };
-
-  const getMonthName = (monthNumber: number) => {
-    return months.find(m => m.value === monthNumber)?.label || '';
   };
 
   if (loading || transactionsLoading) {
@@ -185,8 +231,6 @@ const CategoryAnalysisScreen = () => {
       </SafeAreaView>
     );
   }
-
-  const totalAmount = categoryData.reduce((sum, cat) => sum + cat.amount, 0);
 
   return (
     <SafeAreaView>
@@ -205,179 +249,176 @@ const CategoryAnalysisScreen = () => {
           <View style={styles.headerRight} />
         </View>
 
-        {/* Filtres Simplifiés */}
-        <View style={styles.filtersContainer}>
-          {/* Type (Dépenses/Revenus) */}
-          <View style={styles.filterGroup}>
-            <Text style={[styles.filterLabel, isDark && styles.darkSubtext]}>
-              Type
-            </Text>
-            <View style={styles.typeButtons}>
-              {(['expense', 'income'] as const).map(type => (
+        <LinearGradient 
+          colors={headerGradientColors} 
+          style={styles.headerGradientWrapper}
+        >
+          <View style={styles.filtersModernHeader}>
+            <Text style={[styles.headerModernTitle, isDark && styles.darkText]}>Catégories du mois</Text>
+          </View>
+
+          {/* Catégories (chips) */}
+          <View style={styles.chipsRowContainer}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
+              <TouchableOpacity
+                style={[styles.chip, selectedCategoryId === 'all' && styles.chipActive]}
+                onPress={() => { setSelectedCategoryId('all'); setSelectedSubcategoryId('all'); }}
+              >
+                <Text style={[styles.chipText, selectedCategoryId === 'all' && styles.chipTextActive]}>Toutes</Text>
+              </TouchableOpacity>
+              {(categories || []).filter(c => c.level === 0).map((cat: any) => (
                 <TouchableOpacity
-                  key={type}
-                  style={[
-                    styles.typeButton,
-                    filters.type === type && styles.typeButtonActive,
-                    isDark && styles.darkTypeButton,
-                  ]}
-                  onPress={() => setFilters(prev => ({ ...prev, type }))}
+                  key={cat.id}
+                  style={[styles.chip, selectedCategoryId === cat.id && styles.chipActive]}
+                  onPress={() => { setSelectedCategoryId(cat.id); setSelectedSubcategoryId('all'); }}
                 >
-                  <Text
-                    style={[
-                      styles.typeButtonText,
-                      filters.type === type && styles.typeButtonTextActive,
-                      isDark && styles.darkText,
-                    ]}
-                  >
-                    {type === 'expense' ? 'Dépenses' : 'Revenus'}
-                  </Text>
+                  <Text style={[styles.chipText, selectedCategoryId === cat.id && styles.chipTextActive]}>{cat.name}</Text>
                 </TouchableOpacity>
               ))}
-            </View>
+            </ScrollView>
           </View>
 
-          {/* Année et Mois */}
-          <View style={styles.dateFilters}>
-            <View style={styles.filterGroup}>
-              <Text style={[styles.filterLabel, isDark && styles.darkSubtext]}>
-                Année
-              </Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View style={styles.yearButtons}>
-                  {years.map(year => (
-                    <TouchableOpacity
-                      key={year}
-                      style={[
-                        styles.yearButton,
-                        filters.year === year && styles.yearButtonActive,
-                        isDark && styles.darkYearButton,
-                      ]}
-                      onPress={() => setFilters(prev => ({ ...prev, year }))}
-                    >
-                      <Text
-                        style={[
-                          styles.yearButtonText,
-                          filters.year === year && styles.yearButtonTextActive,
-                          isDark && styles.darkText,
-                        ]}
-                      >
-                        {year}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+          {/* Sous-catégories si une catégorie est sélectionnée */}
+          {selectedCategoryId !== 'all' && (
+            <View style={styles.chipsRowContainer}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
+                <TouchableOpacity
+                  style={[styles.chip, selectedSubcategoryId === 'all' && styles.chipActive]}
+                  onPress={() => setSelectedSubcategoryId('all')}
+                >
+                  <Text style={[styles.chipText, selectedSubcategoryId === 'all' && styles.chipTextActive]}>Toutes sous-catégories</Text>
+                </TouchableOpacity>
+                {(categories || []).filter(c => c.parentId === selectedCategoryId).map((sub: any) => (
+                  <TouchableOpacity
+                    key={sub.id}
+                    style={[styles.chip, selectedSubcategoryId === sub.id && styles.chipActive]}
+                    onPress={() => setSelectedSubcategoryId(sub.id)}
+                  >
+                    <Text style={[styles.chipText, selectedSubcategoryId === sub.id && styles.chipTextActive]}>{sub.name}</Text>
+                  </TouchableOpacity>
+                ))}
               </ScrollView>
             </View>
-
-            <View style={styles.filterGroup}>
-              <Text style={[styles.filterLabel, isDark && styles.darkSubtext]}>
-                Mois
-              </Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View style={styles.monthButtons}>
-                  {months.map(month => (
-                    <TouchableOpacity
-                      key={month.value}
-                      style={[
-                        styles.monthButton,
-                        filters.month === month.value && styles.monthButtonActive,
-                        isDark && styles.darkMonthButton,
-                      ]}
-                      onPress={() => setFilters(prev => ({ ...prev, month: month.value }))}
-                    >
-                      <Text
-                        style={[
-                          styles.monthButtonText,
-                          filters.month === month.value && styles.monthButtonTextActive,
-                          isDark && styles.darkText,
-                        ]}
-                      >
-                        {month.label.slice(0, 3)}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </ScrollView>
-            </View>
-          </View>
-        </View>
+          )}
+        </LinearGradient>
 
         {/* Résumé */}
         <View style={styles.summary}>
-          <Text style={[styles.summaryTitle, isDark && styles.darkText]}>
-            {filters.type === 'expense' ? 'Dépenses' : 'Revenus'} {getMonthName(filters.month)} {filters.year}
-          </Text>
-          <Text style={[styles.summaryAmount, isDark && styles.darkText]}>
-            {formatAmount(totalAmount)}
-          </Text>
           <Text style={[styles.summarySubtitle, isDark && styles.darkSubtext]}>
             {categoryData.length} catégories • {categoryData.reduce((sum, cat) => sum + cat.count, 0)} transactions
           </Text>
         </View>
 
-        {/* Liste des Catégories */}
+        {/* Totaux du mois */}
+        <View style={styles.totalsCardsRow}>
+          <LinearGradient 
+            colors={incomeGradientColors} 
+            style={[styles.totalCard, styles.totalCardLeft]}
+          > 
+            <Text style={[styles.totalCardLabel, isDark && styles.darkSubtext]}>Revenus</Text>
+            <Text style={[styles.totalCardValue, { color: '#047857' }]}>{formatAmount(monthTotals.income)}</Text>
+          </LinearGradient>
+
+          <LinearGradient 
+            colors={expenseGradientColors} 
+            style={styles.totalCard}
+          >
+            <Text style={[styles.totalCardLabel, isDark && styles.darkSubtext]}>Dépenses</Text>
+            <Text style={[styles.totalCardValue, { color: '#B91C1C' }]}>{formatAmount(monthTotals.expenses)}</Text>
+          </LinearGradient>
+
+          <LinearGradient 
+            colors={balanceGradientColors} 
+            style={[styles.totalCard, styles.totalCardRight]}
+          >
+            <Text style={[styles.totalCardLabel, isDark && styles.darkSubtext]}>Solde</Text>
+            <Text style={[styles.totalCardValue, { color: monthTotals.balance >= 0 ? '#059669' : '#DC2626' }]}>
+              {formatAmount(monthTotals.balance)}
+            </Text>
+          </LinearGradient>
+        </View>
+
+        {/* Transactions avec icônes fonctionnelles */}
         <ScrollView 
           style={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.categoriesList}>
-            {categoryData.map((category, index) => (
-              <TouchableOpacity
-                key={category.id}
-                style={[styles.categoryItem, isDark && styles.darkCard]}
-                onPress={() => handleCategoryPress(category.id, category.name)}
-              >
-                <View style={styles.categoryLeft}>
-                  <View style={[styles.categoryColor, { backgroundColor: category.color }]} />
-                  <View style={styles.categoryInfo}>
-                    <Text style={[styles.categoryName, isDark && styles.darkText]}>
-                      {category.name}
-                    </Text>
-                    <Text style={[styles.categoryCount, isDark && styles.darkSubtext]}>
-                      {category.count} transaction{category.count > 1 ? 's' : ''}
-                    </Text>
-                  </View>
-                </View>
-                
-                <View style={styles.categoryRight}>
-                  <Text style={[styles.categoryAmount, isDark && styles.darkText]}>
-                    {formatAmount(category.amount)}
-                  </Text>
-                  <Text style={[styles.categoryPercentage, isDark && styles.darkSubtext]}>
-                    {totalAmount > 0 ? ((category.amount / totalAmount) * 100).toFixed(1) : 0}%
-                  </Text>
-                </View>
-
-                <Ionicons 
-                  name="chevron-forward" 
-                  size={20} 
-                  color={isDark ? "#888" : "#666"} 
-                  style={styles.chevron}
-                />
-              </TouchableOpacity>
-            ))}
+          <View style={styles.transactionsSection}>
+            <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+              Transactions ({filteredTransactionsForDisplay.length})
+            </Text>
+            
+            {(filteredTransactionsForDisplay || []).map((tx: any) => {
+              const amountColor = tx.type === 'income' ? '#059669' : '#DC2626';
+              const gradientColors = getTransactionGradientColors(tx.type);
+              const categoryColor = getCategoryColorById(tx.category || 'uncategorized');
+              const categoryIcon = getCategoryIconById(tx.category || 'uncategorized');
+              const ioniconsIcon = getIoniconsIcon(categoryIcon);
+              
+              return (
+                <TouchableOpacity 
+                  key={tx.id || tx._id || Math.random()} 
+                  style={styles.txCard} 
+                  onPress={() => {}}
+                >
+                  <LinearGradient 
+                    colors={gradientColors} 
+                    style={[styles.txCardInner, styles.txCardShadow]}
+                  >
+                    <View style={styles.txLeft}>
+                      {/* ✅ CORRECTION : Icône Ionicons fonctionnelle */}
+                      <View style={[styles.txIconContainer, { backgroundColor: categoryColor + '20' }]}>
+                        <Ionicons 
+                          name={ioniconsIcon} 
+                          size={20} 
+                          color={categoryColor}
+                        />
+                      </View>
+                      <View style={styles.txInfo}>
+                        <Text style={[styles.txTitle, isDark && styles.darkText]} numberOfLines={1}>
+                          {tx.description || getCategoryNameById(tx.category || '') || 'Transaction'}
+                        </Text>
+                        <Text style={[styles.txDate, isDark && styles.darkSubtext]}>
+                          {tx.date ? new Date(tx.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : ''}
+                          {' • '}
+                          {getCategoryNameById(tx.category || '')}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.txAmountContainer}>
+                      <Ionicons 
+                        name={tx.type === 'income' ? 'arrow-down' : 'arrow-up'} 
+                        size={16} 
+                        color={amountColor}
+                        style={styles.txAmountIcon}
+                      />
+                      <Text style={[styles.txAmount, { color: amountColor }]}>
+                        {tx.type === 'income' ? '+' : '-'}{formatAmount(Math.abs(tx.amount || 0))}
+                      </Text>
+                    </View>
+                  </LinearGradient>
+                </TouchableOpacity>
+              );
+            })}
+            
+            {(!filteredTransactionsForDisplay || filteredTransactionsForDisplay.length === 0) && (
+              <View style={styles.emptyTransactions}>
+                <Ionicons name="receipt-outline" size={48} color={isDark ? '#666' : '#999'} />
+                <Text style={[styles.emptySubtext, isDark && styles.darkSubtext]}>
+                  Aucune transaction pour ces filtres
+                </Text>
+              </View>
+            )}
+            
+            <View style={styles.spacer} />
           </View>
-
-          {categoryData.length === 0 && (
-            <View style={styles.emptyState}>
-              <Ionicons name="folder-outline" size={64} color={isDark ? '#555' : '#ccc'} />
-              <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
-                Aucune {filters.type === 'expense' ? 'dépense' : 'recette'} pour {getMonthName(filters.month)} {filters.year}
-              </Text>
-              <Text style={[styles.emptySubtext, isDark && styles.darkSubtext]}>
-                Modifiez les filtres ou ajoutez des transactions
-              </Text>
-            </View>
-          )}
-
-          <View style={styles.spacer} />
         </ScrollView>
       </View>
     </SafeAreaView>
   );
 };
 
+// Les styles restent exactement les mêmes...
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -418,142 +459,10 @@ const styles = StyleSheet.create({
   headerRight: {
     width: 40,
   },
-  filtersContainer: {
-    padding: 20,
-    paddingTop: 0,
-    gap: 20,
-  },
-  filterGroup: {
-    gap: 12,
-  },
-  filterLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  typeButtons: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  darkTypeButton: {
-    backgroundColor: '#2c2c2e',
-  },
-  typeButton: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  typeButtonActive: {
-    backgroundColor: '#007AFF',
-  },
-  typeButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-  },
-  typeButtonTextActive: {
-    color: '#fff',
-  },
-  dateFilters: {
-    gap: 16,
-  },
-  yearButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  yearButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    minWidth: 70,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  darkYearButton: {
-    backgroundColor: '#2c2c2e',
-    borderColor: '#38383a',
-  },
-  yearButtonActive: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
-  yearButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-  },
-  yearButtonTextActive: {
-    color: '#fff',
-  },
-  monthButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  monthButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    minWidth: 60,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  darkMonthButton: {
-    backgroundColor: '#2c2c2e',
-    borderColor: '#38383a',
-  },
-  monthButtonActive: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
-  monthButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-  },
-  monthButtonTextActive: {
-    color: '#fff',
-  },
   summary: {
-    padding: 20,
+    padding: 10,
     paddingTop: 0,
     alignItems: 'center',
-  },
-  summaryTitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  summaryAmount: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 4,
   },
   summarySubtitle: {
     fontSize: 14,
@@ -563,97 +472,173 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  categoriesList: {
-    padding: 20,
-    paddingTop: 0,
-    gap: 12,
-  },
-  categoryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  categoryLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  categoryColor: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    marginRight: 12,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
-  },
-  categoryInfo: {
-    flex: 1,
-  },
-  categoryName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-    marginBottom: 4,
-  },
-  categoryCount: {
-    fontSize: 13,
-    color: '#666',
-  },
-  categoryRight: {
-    alignItems: 'flex-end',
-    marginRight: 12,
-  },
-  categoryAmount: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 4,
-  },
-  categoryPercentage: {
-    fontSize: 12,
-    color: '#666',
-    fontWeight: '500',
-  },
-  chevron: {
-    opacity: 0.7,
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 80,
-    paddingHorizontal: 40,
-  },
-  emptyText: {
-    fontSize: 18,
-    color: '#666',
-    marginTop: 16,
-    textAlign: 'center',
-    fontWeight: '500',
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 8,
-    textAlign: 'center',
-  },
   spacer: {
     height: 20,
-  },
-  darkCard: {
-    backgroundColor: '#2c2c2e',
   },
   darkText: {
     color: '#fff',
   },
   darkSubtext: {
     color: '#888',
+  },
+  headerGradientWrapper: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEF2FF'
+  },
+  filtersModernHeader: {
+    paddingVertical: 8,
+  },
+  headerModernTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0F172A'
+  },
+  chipsRowContainer: {
+    marginTop: 12,
+  },
+  chipsRow: {
+    paddingVertical: 6,
+    paddingRight: 12,
+    alignItems: 'center'
+  },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F1F5F9',
+    marginRight: 8,
+  },
+  chipActive: {
+    backgroundColor: '#007AFF'
+  },
+  chipText: {
+    fontSize: 13,
+    color: '#334155',
+    fontWeight: '600'
+  },
+  chipTextActive: {
+    color: '#FFFFFF'
+  },
+  transactionsSection: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  txCard: {
+    marginBottom: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  txCardInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 0,
+    borderColor: 'transparent'
+  },
+  txCardShadow: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  txLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  txIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    marginRight: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  txInfo: {
+    flex: 1,
+  },
+  txTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0F172A'
+  },
+  txDate: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 4,
+  },
+  txAmountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 12,
+  },
+  txAmountIcon: {
+    marginRight: 4,
+  },
+  txAmount: {
+    fontSize: 15,
+    fontWeight: '700',
+    minWidth: 80,
+    textAlign: 'right'
+  },
+  emptyTransactions: {
+    paddingVertical: 24,
+    alignItems: 'center',
+  },
+  totalsCardsRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    gap: 12,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  totalCard: {
+    flex: 0,
+    width: 110,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginHorizontal: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(15,23,42,0.04)'
+  },
+  totalCardLeft: {
+    marginLeft: 0
+  },
+  totalCardRight: {
+    marginRight: 0
+  },
+  totalCardLabel: {
+    fontSize: 12,
+    color: '#64748B',
+    marginBottom: 6,
+    fontWeight: '600'
+  },
+  totalCardValue: {
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'center'
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#999',
+    marginTop: 8,
+    textAlign: 'center',
   },
 });
 

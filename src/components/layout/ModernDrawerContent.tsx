@@ -152,15 +152,28 @@ const ModernDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
     console.log(`🎯 Navigation vers: ${screen}`);
     
     try {
-      // Vérifier si l'écran existe
-      const routeExists = props.navigation.getState().routeNames.includes(screen);
-      
+      // Gestion des écrans imbriqués (ouvrir le stack parent puis la route interne)
+      const nestedMap: Record<string, { parent: string; screen: string } | undefined> = {
+        'CategoryAnalysis': { parent: 'Analytics', screen: 'CategoryAnalysis' },
+      };
+
+      const nested = nestedMap[screen];
+      if (nested) {
+        // Naviguer vers le stack parent et demander l'écran imbriqué
+        (props.navigation as any).navigate(nested.parent, { screen: nested.screen });
+        console.log(`✅ Navigation imbriquée vers: ${nested.parent} -> ${nested.screen}`);
+        return;
+      }
+
+      // Vérifier si l'écran existe au niveau root
+      const state = props.navigation.getState();
+      const routeExists = Array.isArray(state.routeNames) && state.routeNames.includes(screen);
+
       if (routeExists) {
         props.navigation.navigate(screen as any);
         console.log(`✅ Navigation réussie vers: ${screen}`);
       } else {
-        console.warn(`⚠️ L'écran ${screen} n'existe pas dans la navigation`);
-        // Navigation de secours vers Dashboard
+        console.warn(`⚠️ L'écran ${screen} n'existe pas dans la navigation, fallback vers Dashboard`);
         props.navigation.navigate('Dashboard' as any);
       }
     } catch (error) {
