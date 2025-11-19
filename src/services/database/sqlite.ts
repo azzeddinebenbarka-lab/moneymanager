@@ -1,4 +1,4 @@
-// src/services/database/sqlite.ts - VERSION COMPLÈTEMENT CORRIGÉE
+// src/services/database/sqlite.ts - VERSION CORRIGÉE
 import * as SQLite from 'expo-sqlite';
 
 export interface DatabaseAccount {
@@ -107,6 +107,9 @@ export const initDatabase = async (): Promise<SQLite.SQLiteDatabase> => {
     
     await createDefaultUser();
     
+    // ✅ CORRECTION : Appeler la migration des catégories AVANT l'initialisation des données
+    await migrateCategoriesTable();
+    
     await initializeDefaultData();
     
     // RÉACTIVER les foreign keys après l'initialisation
@@ -172,6 +175,89 @@ const createDefaultUser = async (): Promise<void> => {
   }
 };
 
+// ✅ NOUVELLE FONCTION : Migration de la table categories
+const migrateCategoriesTable = async (): Promise<void> => {
+  if (!database) throw new Error('Database not initialized');
+
+  try {
+    console.log('🔄 Vérification de la structure de la table categories...');
+    
+    // Vérifier si la table categories existe
+    const tableExists = await database.getFirstAsync(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='categories'"
+    );
+
+    if (!tableExists) {
+      console.log('📦 Création de la table categories avec sous-catégories...');
+      await createCategoriesTableWithSubcategories();
+      return;
+    }
+
+    // Vérifier la structure de la table existante
+    const tableInfo = await database.getAllAsync('PRAGMA table_info(categories)') as any[];
+    const columns = tableInfo.map(col => col.name);
+    
+    console.log('🔍 Colonnes existantes dans categories:', columns);
+
+    // Colonnes requises pour le système de sous-catégories
+    const requiredColumns = ['parent_id', 'level', 'sort_order', 'budget'];
+    const missingColumns = requiredColumns.filter(col => !columns.includes(col));
+
+    if (missingColumns.length > 0) {
+      console.log(`🛠️ Ajout des colonnes manquantes: ${missingColumns.join(', ')}`);
+      
+      for (const column of missingColumns) {
+        try {
+          if (column === 'parent_id') {
+            await database.execAsync('ALTER TABLE categories ADD COLUMN parent_id TEXT');
+          } else if (column === 'level') {
+            await database.execAsync('ALTER TABLE categories ADD COLUMN level INTEGER DEFAULT 0');
+          } else if (column === 'sort_order') {
+            await database.execAsync('ALTER TABLE categories ADD COLUMN sort_order INTEGER DEFAULT 0');
+          } else if (column === 'budget') {
+            await database.execAsync('ALTER TABLE categories ADD COLUMN budget REAL DEFAULT 0');
+          }
+          console.log(`✅ Colonne ${column} ajoutée`);
+        } catch (error: any) {
+          if (!error.message?.includes('duplicate column name')) {
+            console.error(`❌ Erreur ajout colonne ${column}:`, error);
+          }
+        }
+      }
+    }
+
+    console.log('✅ Structure de la table categories vérifiée et migrée');
+  } catch (error) {
+    console.error('❌ Erreur lors de la migration de la table categories:', error);
+    throw error;
+  }
+};
+
+// ✅ NOUVELLE FONCTION : Créer la table categories avec sous-catégories
+const createCategoriesTableWithSubcategories = async (): Promise<void> => {
+  if (!database) throw new Error('Database not initialized');
+
+  await database.execAsync(`
+    CREATE TABLE IF NOT EXISTS categories (
+      id TEXT PRIMARY KEY NOT NULL,
+      user_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL,
+      color TEXT NOT NULL,
+      icon TEXT NOT NULL,
+      parent_id TEXT,
+      level INTEGER NOT NULL DEFAULT 0,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      budget REAL NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (parent_id) REFERENCES categories (id) ON DELETE SET NULL
+    );
+  `);
+  
+  console.log('✅ Table categories créée avec support des sous-catégories');
+};
+
 const createTables = async (): Promise<void> => {
   if (!database) throw new Error('Database not initialized');
 
@@ -221,19 +307,7 @@ const createTables = async (): Promise<void> => {
     );
   `);
 
-  // Table des catégories
-  await database.execAsync(`
-    CREATE TABLE IF NOT EXISTS categories (
-      id TEXT PRIMARY KEY NOT NULL,
-      user_id TEXT NOT NULL,
-      name TEXT NOT NULL,
-      type TEXT NOT NULL,
-      color TEXT NOT NULL,
-      icon TEXT NOT NULL,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      is_active INTEGER NOT NULL DEFAULT 1
-    );
-  `);
+  // ✅ CORRECTION : La table categories est maintenant créée dans migrateCategoriesTable()
 
   // ===== TABLES DES TRANSACTIONS =====
 
@@ -301,7 +375,7 @@ const createTables = async (): Promise<void> => {
     );
   `);
 
-  // ✅ CORRIGÉ : Table des charges annuelles AVEC TOUTES LES COLONNES
+  // Table des charges annuelles
   await database.execAsync(`
     CREATE TABLE IF NOT EXISTS annual_charges (
       id TEXT PRIMARY KEY NOT NULL,
@@ -465,80 +539,25 @@ const createTables = async (): Promise<void> => {
     );
   `);
 
-  // ===== TABLES DE SYNCHRONISATION ET BACKUP =====
-
-  // Table des sessions de synchronisation
-  await database.execAsync(`
-    CREATE TABLE IF NOT EXISTS sync_sessions (
-      id TEXT PRIMARY KEY NOT NULL,
-      user_id TEXT NOT NULL,
-      sync_type TEXT NOT NULL,
-      status TEXT NOT NULL,
-      started_at TEXT NOT NULL,
-      completed_at TEXT,
-      records_synced INTEGER DEFAULT 0,
-      error_message TEXT,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-    );
-  `);
-
-  // Table des sauvegardes
-  await database.execAsync(`
-    CREATE TABLE IF NOT EXISTS backups (
-      id TEXT PRIMARY KEY NOT NULL,
-      user_id TEXT NOT NULL,
-      backup_type TEXT NOT NULL,
-      file_path TEXT NOT NULL,
-      file_size INTEGER NOT NULL,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      is_encrypted INTEGER NOT NULL DEFAULT 0,
-      FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-    );
-  `);
-
   console.log('✅ Toutes les tables créées avec succès');
 };
 
-// Fonction séparée pour initialiser les catégories
+// ✅ CORRECTION : Fonction d'initialisation des catégories simplifiée
 const initializeDefaultCategories = async (userId: string = 'default-user'): Promise<void> => {
   if (!database) throw new Error('Database not initialized');
 
   try {
     const categoriesExist = await database.getFirstAsync(
-      'SELECT 1 FROM categories LIMIT 1'
+      'SELECT 1 FROM categories WHERE user_id = ? LIMIT 1',
+      [userId]
     );
 
     if (!categoriesExist) {
       console.log('🔄 Initialisation des catégories par défaut...');
       
-      const defaultCategories = [
-        // Dépenses
-        { id: 'cat_1', name: 'Alimentation', type: 'expense', color: '#FF6B6B', icon: 'restaurant' },
-        { id: 'cat_2', name: 'Transport', type: 'expense', color: '#4ECDC4', icon: 'car' },
-        { id: 'cat_3', name: 'Logement', type: 'expense', color: '#45B7D1', icon: 'home' },
-        { id: 'cat_4', name: 'Loisirs', type: 'expense', color: '#96CEB4', icon: 'game-controller' },
-        { id: 'cat_5', name: 'Santé', type: 'expense', color: '#FFEAA7', icon: 'medical' },
-        { id: 'cat_6', name: 'Shopping', type: 'expense', color: '#DDA0DD', icon: 'cart' },
-        { id: 'cat_7', name: 'Éducation', type: 'expense', color: '#98D8C8', icon: 'school' },
-        { id: 'cat_8', name: 'Voyages', type: 'expense', color: '#F7DC6F', icon: 'airplane' },
-        { id: 'cat_9', name: 'Autres dépenses', type: 'expense', color: '#778899', icon: 'ellipsis-horizontal' },
-        
-        // Revenus
-        { id: 'cat_10', name: 'Salaire', type: 'income', color: '#52C41A', icon: 'cash' },
-        { id: 'cat_11', name: 'Investissements', type: 'income', color: '#FAAD14', icon: 'trending-up' },
-        { id: 'cat_12', name: 'Cadeaux', type: 'income', color: '#722ED1', icon: 'gift' },
-        { id: 'cat_13', name: 'Prime', type: 'income', color: '#13C2C2', icon: 'trophy' },
-        { id: 'cat_14', name: 'Autres revenus', type: 'income', color: '#20B2AA', icon: 'add-circle' },
-      ];
-
-      for (const category of defaultCategories) {
-        const createdAt = new Date().toISOString();
-        await database.runAsync(
-          `INSERT INTO categories (id, user_id, name, type, color, icon, created_at, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-          [category.id, userId, category.name, category.type, category.color, category.icon, createdAt, 1]
-        );
-      }
+      // Utiliser categoryService pour initialiser les catégories complètes
+      const { categoryService } = await import('../categoryService');
+      await categoryService.initializeDefaultCategories(userId);
       
       console.log('✅ Catégories par défaut initialisées avec succès');
     } else {
@@ -554,6 +573,7 @@ const initializeDefaultData = async (): Promise<void> => {
   if (!database) throw new Error('Database not initialized');
 
   try {
+    // ✅ CORRECTION : Initialiser les catégories AVEC le bon userId
     await initializeDefaultCategories('default-user');
 
     // Initialiser les paramètres de notification par défaut
@@ -657,74 +677,6 @@ export const getAllTables = async (): Promise<string[]> => {
   }
 };
 
-export const runAccountIdMigration = async (): Promise<void> => {
-  try {
-    const db = await getDatabase();
-    
-    console.log('🔄 Exécution de la migration account_id...');
-    
-    // Migration pour ajouter account_id aux tables
-    try {
-      await db.execAsync(`
-        ALTER TABLE annual_charges ADD COLUMN account_id TEXT;
-      `);
-      console.log('✅ Colonne account_id ajoutée à annual_charges');
-    } catch (error) {
-      console.log('ℹ️ Colonne account_id existe déjà dans annual_charges');
-    }
-    
-    try {
-      await db.execAsync(`
-        ALTER TABLE annual_charges ADD COLUMN auto_deduct INTEGER DEFAULT 0;
-      `);
-      console.log('✅ Colonne auto_deduct ajoutée à annual_charges');
-    } catch (error) {
-      console.log('ℹ️ Colonne auto_deduct existe déjà dans annual_charges');
-    }
-    
-    try {
-      await db.execAsync(`
-        ALTER TABLE debts ADD COLUMN payment_account_id TEXT;
-      `);
-      console.log('✅ Colonne payment_account_id ajoutée à debts');
-    } catch (error) {
-      console.log('ℹ️ Colonne payment_account_id existe déjà dans debts');
-    }
-    
-    try {
-      await db.execAsync(`
-        ALTER TABLE debts ADD COLUMN auto_pay INTEGER DEFAULT 0;
-      `);
-      console.log('✅ Colonne auto_pay ajoutée à debts');
-    } catch (error) {
-      console.log('ℹ️ Colonne auto_pay existe déjà dans debts');
-    }
-    
-    try {
-      await db.execAsync(`
-        ALTER TABLE savings_goals ADD COLUMN savings_account_id TEXT;
-      `);
-      console.log('✅ Colonne savings_account_id ajoutée à savings_goals');
-    } catch (error) {
-      console.log('ℹ️ Colonne savings_account_id existe déjà dans savings_goals');
-    }
-    
-    try {
-      await db.execAsync(`
-        ALTER TABLE savings_goals ADD COLUMN contribution_account_id TEXT;
-      `);
-      console.log('✅ Colonne contribution_account_id ajoutée à savings_goals');
-    } catch (error) {
-      console.log('ℹ️ Colonne contribution_account_id existe déjà dans savings_goals');
-    }
-    
-    console.log('✅ Migration account_id terminée avec succès');
-  } catch (error) {
-    console.error('❌ Erreur lors de la migration account_id:', error);
-    throw error;
-  }
-};
-
 export const databaseUtils = {
   checkDatabaseStatus,
   resetDatabase,
@@ -733,7 +685,6 @@ export const databaseUtils = {
   initDatabase,
   getTableInfo,
   getAllTables,
-  runAccountIdMigration,
 };
 
 export const sqlite = {
@@ -744,5 +695,4 @@ export const sqlite = {
   checkDatabaseStatus,
   getTableInfo,
   getAllTables,
-  runAccountIdMigration,
 };

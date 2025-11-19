@@ -18,6 +18,7 @@ import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 
 // Navigation 
 import ModernDrawerNavigator from './src/navigation/ModernDrawerNavigator';
+import { TestCategories } from './src/components/TestCategories';
 
 // Hook pour l'initialisation des polices
 const useAppInitialization = () => {

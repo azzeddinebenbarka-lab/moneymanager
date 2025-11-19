@@ -1,4 +1,4 @@
-// src/services/categoryService.ts - VERSION DÉFINITIVEMENT CORRIGÉE
+// src/services/categoryService.ts - VERSION COMPLÈTE AVEC TOUTES LES CATÉGORIES
 import { Category } from '../types';
 import { getDatabase } from './database/sqlite';
 
@@ -50,7 +50,7 @@ interface CategoryTree {
   subcategories: Category[];
 }
 
-// ✅ SERVICE PRINCIPAL AVEC SOUS-CATÉGORIES
+// ✅ SERVICE PRINCIPAL AVEC TOUTES LES CATÉGORIES
 export const categoryService = {
   // ===== OPÉRATIONS CRUD =====
 
@@ -594,7 +594,7 @@ export const categoryService = {
     }
   },
 
-  // Initialiser les catégories par défaut avec hiérarchie - ✅ CORRECTION DÉFINITIVE
+  // ✅ INITIALISATION AVEC TOUTES LES CATÉGORIES DÉTAILLÉES
   async initializeDefaultCategories(userId: string = 'default-user'): Promise<void> {
     try {
       const db = await getDatabase();
@@ -608,51 +608,189 @@ export const categoryService = {
       ) as DatabaseCategory[];
       
       if (existingCategories.length === 0) {
-        console.log('🔄 [categoryService] Initializing default categories with hierarchy...');
+        console.log('🔄 [categoryService] Initializing ALL categories with complete hierarchy...');
         
-        // ✅ CORRECTION : Définir une interface pour les catégories par défaut
         interface DefaultCategory {
           id: string;
           name: string;
           type: 'expense' | 'income';
           color: string;
           icon: string;
-          parentId?: string | null; // ✅ CORRECTION : parentId optionnel
+          parentId?: string | null;
           level: number;
           sortOrder: number;
         }
 
-        const defaultCategories: DefaultCategory[] = [
-          // Catégories principales Dépenses
-          { id: 'cat_main_food', name: 'Alimentation', type: 'expense', color: '#FF6B6B', icon: 'restaurant', level: 0, sortOrder: 1 },
-          { id: 'cat_main_transport', name: 'Transport', type: 'expense', color: '#4ECDC4', icon: 'car', level: 0, sortOrder: 2 },
-          { id: 'cat_main_housing', name: 'Logement', type: 'expense', color: '#45B7D1', icon: 'home', level: 0, sortOrder: 3 },
-          { id: 'cat_main_entertainment', name: 'Loisirs', type: 'expense', color: '#96CEB4', icon: 'game-controller', level: 0, sortOrder: 4 },
-          { id: 'cat_main_health', name: 'Santé', type: 'expense', color: '#FFEAA7', icon: 'medical', level: 0, sortOrder: 5 },
-          { id: 'cat_main_shopping', name: 'Shopping', type: 'expense', color: '#DDA0DD', icon: 'cart', level: 0, sortOrder: 6 },
-          
-          // Catégories principales Revenus
-          { id: 'cat_main_salary', name: 'Salaire', type: 'income', color: '#52C41A', icon: 'cash', level: 0, sortOrder: 7 },
-          { id: 'cat_main_investments', name: 'Investissements', type: 'income', color: '#FAAD14', icon: 'trending-up', level: 0, sortOrder: 8 },
-          { id: 'cat_main_other_income', name: 'Autres revenus', type: 'income', color: '#20B2AA', icon: 'add-circle', level: 0, sortOrder: 9 },
+        // ✅ CATÉGORIES PRINCIPALES DÉPENSES
+        const mainExpenseCategories: DefaultCategory[] = [
+          { id: 'cat_main_housing', name: '🏠 Logement', type: 'expense', color: '#45B7D1', icon: 'home', level: 0, sortOrder: 1 },
+          { id: 'cat_main_food', name: '🍴 Nourriture & Courses', type: 'expense', color: '#FF6B6B', icon: 'restaurant', level: 0, sortOrder: 2 },
+          { id: 'cat_main_transport', name: '🚗 Transport', type: 'expense', color: '#4ECDC4', icon: 'car', level: 0, sortOrder: 3 },
+          { id: 'cat_main_health', name: '🧍‍♂️ Santé & Bien-être', type: 'expense', color: '#FFEAA7', icon: 'medical', level: 0, sortOrder: 4 },
+          { id: 'cat_main_family', name: '👨‍👩‍👦 Famille & Enfants', type: 'expense', color: '#A78BFA', icon: 'people', level: 0, sortOrder: 5 },
+          { id: 'cat_main_shopping', name: '🛍️ Achats personnels', type: 'expense', color: '#DDA0DD', icon: 'cart', level: 0, sortOrder: 6 },
+          { id: 'cat_main_entertainment', name: '🎉 Loisirs & Sorties', type: 'expense', color: '#96CEB4', icon: 'game-controller', level: 0, sortOrder: 7 },
+          { id: 'cat_main_work', name: '💼 Travail / Études', type: 'expense', color: '#F39C12', icon: 'briefcase', level: 0, sortOrder: 8 },
+          { id: 'cat_main_finances', name: '💳 Finances & Obligations', type: 'expense', color: '#E74C3C', icon: 'card', level: 0, sortOrder: 9 },
+          { id: 'cat_main_religion', name: '🕌 Religion / Spiritualité', type: 'expense', color: '#16A085', icon: 'star', level: 0, sortOrder: 10 },
+          { id: 'cat_main_savings', name: '💾 Épargne & Investissements', type: 'expense', color: '#27AE60', icon: 'trending-up', level: 0, sortOrder: 11 },
+          { id: 'cat_main_other', name: '⚙️ Autres', type: 'expense', color: '#95A5A6', icon: 'ellipsis-horizontal', level: 0, sortOrder: 12 },
         ];
 
-        // Sous-catégories
+        // ✅ CATÉGORIES PRINCIPALES REVENUS
+        const mainIncomeCategories: DefaultCategory[] = [
+          { id: 'cat_main_primary_income', name: '👨‍💼 Salaire', type: 'income', color: '#52C41A', icon: 'cash', level: 0, sortOrder: 13 },
+          { id: 'cat_main_secondary_income', name: '💻 Revenus secondaires', type: 'income', color: '#FAAD14', icon: 'laptop', level: 0, sortOrder: 14 },
+          { id: 'cat_main_financial_income', name: '💵 Revenus financiers', type: 'income', color: '#20B2AA', icon: 'trending-up', level: 0, sortOrder: 15 },
+          { id: 'cat_main_other_income', name: '🎁 Autres revenus', type: 'income', color: '#BB8FCE', icon: 'gift', level: 0, sortOrder: 16 },
+          { id: 'cat_main_spiritual_income', name: '🕌 Revenus spirituels', type: 'income', color: '#16A085', icon: 'star', level: 0, sortOrder: 17 },
+        ];
+
+        // ✅ SOUS-CATÉGORIES DÉTAILLÉES
         const subcategories: DefaultCategory[] = [
-          // Sous-catégories Alimentation
-          { id: 'cat_sub_groceries', name: 'Épicerie', type: 'expense', color: '#FF6B6B', icon: 'basket', parentId: 'cat_main_food', level: 1, sortOrder: 1 },
-          { id: 'cat_sub_restaurants', name: 'Restaurants', type: 'expense', color: '#FF6B6B', icon: 'restaurant', parentId: 'cat_main_food', level: 1, sortOrder: 2 },
-          
-          // Sous-catégories Transport
+          // 🏠 SOUS-CATÉGORIES LOGEMENT
+          { id: 'cat_sub_rent', name: 'Loyer / Crédit immobilier', type: 'expense', color: '#45B7D1', icon: 'home', parentId: 'cat_main_housing', level: 1, sortOrder: 1 },
+          { id: 'cat_sub_charges', name: 'Charges de copropriété', type: 'expense', color: '#45B7D1', icon: 'document', parentId: 'cat_main_housing', level: 1, sortOrder: 2 },
+          { id: 'cat_sub_electricity', name: 'Électricité', type: 'expense', color: '#45B7D1', icon: 'flash', parentId: 'cat_main_housing', level: 1, sortOrder: 3 },
+          { id: 'cat_sub_water', name: 'Eau', type: 'expense', color: '#45B7D1', icon: 'water', parentId: 'cat_main_housing', level: 1, sortOrder: 4 },
+          { id: 'cat_sub_gas', name: 'Gaz', type: 'expense', color: '#45B7D1', icon: 'flame', parentId: 'cat_main_housing', level: 1, sortOrder: 5 },
+          { id: 'cat_sub_internet', name: 'Internet / Wi-Fi', type: 'expense', color: '#45B7D1', icon: 'wifi', parentId: 'cat_main_housing', level: 1, sortOrder: 6 },
+          { id: 'cat_sub_phone', name: 'Téléphone', type: 'expense', color: '#45B7D1', icon: 'call', parentId: 'cat_main_housing', level: 1, sortOrder: 7 },
+          { id: 'cat_sub_maintenance', name: 'Entretien maison / Réparations', type: 'expense', color: '#45B7D1', icon: 'build', parentId: 'cat_main_housing', level: 1, sortOrder: 8 },
+          { id: 'cat_sub_housing_insurance', name: 'Assurance habitation', type: 'expense', color: '#45B7D1', icon: 'shield', parentId: 'cat_main_housing', level: 1, sortOrder: 9 },
+          { id: 'cat_sub_furniture', name: 'Meubles / Décoration', type: 'expense', color: '#45B7D1', icon: 'bed', parentId: 'cat_main_housing', level: 1, sortOrder: 10 },
+          { id: 'cat_sub_cleaning', name: 'Produits ménagers', type: 'expense', color: '#45B7D1', icon: 'sparkles', parentId: 'cat_main_housing', level: 1, sortOrder: 11 },
+
+          // 🍴 SOUS-CATÉGORIES NOURRITURE
+          { id: 'cat_sub_groceries', name: 'Super marché / Épicerie', type: 'expense', color: '#FF6B6B', icon: 'basket', parentId: 'cat_main_food', level: 1, sortOrder: 1 },
+          { id: 'cat_sub_butcher', name: 'Boucherie / Poissonnerie', type: 'expense', color: '#FF6B6B', icon: 'restaurant', parentId: 'cat_main_food', level: 1, sortOrder: 2 },
+          { id: 'cat_sub_fruits', name: 'Fruits & légumes', type: 'expense', color: '#FF6B6B', icon: 'nutrition', parentId: 'cat_main_food', level: 1, sortOrder: 3 },
+          { id: 'cat_sub_basics', name: 'Produits de base (huile, farine, sucre…)', type: 'expense', color: '#FF6B6B', icon: 'cube', parentId: 'cat_main_food', level: 1, sortOrder: 4 },
+          { id: 'cat_sub_takeaway', name: 'Repas à emporter / Livraison', type: 'expense', color: '#FF6B6B', icon: 'fast-food', parentId: 'cat_main_food', level: 1, sortOrder: 5 },
+          { id: 'cat_sub_restaurants', name: 'Restaurants / Cafés', type: 'expense', color: '#FF6B6B', icon: 'cafe', parentId: 'cat_main_food', level: 1, sortOrder: 6 },
+          { id: 'cat_sub_drinks', name: 'Eau / Boissons', type: 'expense', color: '#FF6B6B', icon: 'water', parentId: 'cat_main_food', level: 1, sortOrder: 7 },
+
+          // 🚗 SOUS-CATÉGORIES TRANSPORT
           { id: 'cat_sub_fuel', name: 'Carburant', type: 'expense', color: '#4ECDC4', icon: 'car', parentId: 'cat_main_transport', level: 1, sortOrder: 1 },
-          { id: 'cat_sub_public_transport', name: 'Transport public', type: 'expense', color: '#4ECDC4', icon: 'bus', parentId: 'cat_main_transport', level: 1, sortOrder: 2 },
-          
-          // Sous-catégories Logement
-          { id: 'cat_sub_rent', name: 'Loyer', type: 'expense', color: '#45B7D1', icon: 'home', parentId: 'cat_main_housing', level: 1, sortOrder: 1 },
-          { id: 'cat_sub_utilities', name: 'Services publics', type: 'expense', color: '#45B7D1', icon: 'flash', parentId: 'cat_main_housing', level: 1, sortOrder: 2 },
+          { id: 'cat_sub_public_transport', name: 'Transport en commun', type: 'expense', color: '#4ECDC4', icon: 'bus', parentId: 'cat_main_transport', level: 1, sortOrder: 2 },
+          { id: 'cat_sub_taxi', name: 'Taxi / VTC', type: 'expense', color: '#4ECDC4', icon: 'car', parentId: 'cat_main_transport', level: 1, sortOrder: 3 },
+          { id: 'cat_sub_car_insurance', name: 'Assurance auto', type: 'expense', color: '#4ECDC4', icon: 'shield', parentId: 'cat_main_transport', level: 1, sortOrder: 4 },
+          { id: 'cat_sub_car_repair', name: 'Réparation / Entretien', type: 'expense', color: '#4ECDC4', icon: 'build', parentId: 'cat_main_transport', level: 1, sortOrder: 5 },
+          { id: 'cat_sub_parking', name: 'Stationnement / Péage', type: 'expense', color: '#4ECDC4', icon: 'location', parentId: 'cat_main_transport', level: 1, sortOrder: 6 },
+          { id: 'cat_sub_vehicle_purchase', name: 'Achat de véhicule', type: 'expense', color: '#4ECDC4', icon: 'car-sport', parentId: 'cat_main_transport', level: 1, sortOrder: 7 },
+          { id: 'cat_sub_technical_check', name: 'Visite technique', type: 'expense', color: '#4ECDC4', icon: 'document', parentId: 'cat_main_transport', level: 1, sortOrder: 8 },
+          { id: 'cat_sub_sticker', name: 'Vignette', type: 'expense', color: '#4ECDC4', icon: 'pricetag', parentId: 'cat_main_transport', level: 1, sortOrder: 9 },
+          { id: 'cat_sub_car_wash', name: 'Lavage voiture', type: 'expense', color: '#4ECDC4', icon: 'water', parentId: 'cat_main_transport', level: 1, sortOrder: 10 },
+
+          // 🧍‍♂️ SOUS-CATÉGORIES SANTÉ
+          { id: 'cat_sub_doctor', name: 'Médecin / Pharmacie', type: 'expense', color: '#FFEAA7', icon: 'medical', parentId: 'cat_main_health', level: 1, sortOrder: 1 },
+          { id: 'cat_sub_lab', name: 'Analyses / Laboratoire', type: 'expense', color: '#FFEAA7', icon: 'flask', parentId: 'cat_main_health', level: 1, sortOrder: 2 },
+          { id: 'cat_sub_hospital', name: 'Hôpital / Clinique', type: 'expense', color: '#FFEAA7', icon: 'medical', parentId: 'cat_main_health', level: 1, sortOrder: 3 },
+          { id: 'cat_sub_glasses_dental', name: 'Lunettes / Dentiste', type: 'expense', color: '#FFEAA7', icon: 'eye', parentId: 'cat_main_health', level: 1, sortOrder: 4 },
+          { id: 'cat_sub_health_insurance', name: 'Assurance santé', type: 'expense', color: '#FFEAA7', icon: 'shield', parentId: 'cat_main_health', level: 1, sortOrder: 5 },
+          { id: 'cat_sub_health_products', name: 'Produits de santé', type: 'expense', color: '#FFEAA7', icon: 'fitness', parentId: 'cat_main_health', level: 1, sortOrder: 6 },
+          { id: 'cat_sub_gym', name: 'Salle de sport / Coach', type: 'expense', color: '#FFEAA7', icon: 'barbell', parentId: 'cat_main_health', level: 1, sortOrder: 7 },
+          { id: 'cat_sub_personal_care', name: 'Soins personnels (coiffeur, esthétique, etc.)', type: 'expense', color: '#FFEAA7', icon: 'cut', parentId: 'cat_main_health', level: 1, sortOrder: 8 },
+
+          // 👨‍👩‍👦 SOUS-CATÉGORIES FAMILLE
+          { id: 'cat_sub_childcare', name: 'Garde d\'enfant', type: 'expense', color: '#A78BFA', icon: 'people', parentId: 'cat_main_family', level: 1, sortOrder: 1 },
+          { id: 'cat_sub_school', name: 'École / Crèche', type: 'expense', color: '#A78BFA', icon: 'school', parentId: 'cat_main_family', level: 1, sortOrder: 2 },
+          { id: 'cat_sub_school_supplies', name: 'Fournitures scolaires', type: 'expense', color: '#A78BFA', icon: 'pencil', parentId: 'cat_main_family', level: 1, sortOrder: 3 },
+          { id: 'cat_sub_kids_activities', name: 'Activités / Loisirs enfants', type: 'expense', color: '#A78BFA', icon: 'game-controller', parentId: 'cat_main_family', level: 1, sortOrder: 4 },
+          { id: 'cat_sub_kids_clothes', name: 'Vêtements enfants', type: 'expense', color: '#A78BFA', icon: 'shirt', parentId: 'cat_main_family', level: 1, sortOrder: 5 },
+          { id: 'cat_sub_gifts', name: 'Cadeaux / Anniversaire', type: 'expense', color: '#A78BFA', icon: 'gift', parentId: 'cat_main_family', level: 1, sortOrder: 6 },
+          { id: 'cat_sub_kids_savings', name: 'Épargne pour enfants', type: 'expense', color: '#A78BFA', icon: 'trending-up', parentId: 'cat_main_family', level: 1, sortOrder: 7 },
+
+          // 🛍️ SOUS-CATÉGORIES ACHATS PERSONNELS
+          { id: 'cat_sub_clothes', name: 'Vêtements / Chaussures', type: 'expense', color: '#DDA0DD', icon: 'shirt', parentId: 'cat_main_shopping', level: 1, sortOrder: 1 },
+          { id: 'cat_sub_accessories', name: 'Accessoires / Bijoux', type: 'expense', color: '#DDA0DD', icon: 'diamond', parentId: 'cat_main_shopping', level: 1, sortOrder: 2 },
+          { id: 'cat_sub_beauty', name: 'Produits de beauté', type: 'expense', color: '#DDA0DD', icon: 'sparkles', parentId: 'cat_main_shopping', level: 1, sortOrder: 3 },
+          { id: 'cat_sub_tech', name: 'Téléphone / Accessoires tech', type: 'expense', color: '#DDA0DD', icon: 'phone-portrait', parentId: 'cat_main_shopping', level: 1, sortOrder: 4 },
+          { id: 'cat_sub_electronics', name: 'Électronique', type: 'expense', color: '#DDA0DD', icon: 'tv', parentId: 'cat_main_shopping', level: 1, sortOrder: 5 },
+          { id: 'cat_sub_books_games', name: 'Livres / Jeux', type: 'expense', color: '#DDA0DD', icon: 'book', parentId: 'cat_main_shopping', level: 1, sortOrder: 6 },
+          { id: 'cat_sub_other_shopping', name: 'Autres achats personnels', type: 'expense', color: '#DDA0DD', icon: 'cart', parentId: 'cat_main_shopping', level: 1, sortOrder: 7 },
+
+          // 🎉 SOUS-CATÉGORIES LOISIRS
+          { id: 'cat_sub_outings', name: 'Sorties / Cinéma / Café', type: 'expense', color: '#96CEB4', icon: 'film', parentId: 'cat_main_entertainment', level: 1, sortOrder: 1 },
+          { id: 'cat_sub_travel', name: 'Voyages / Vacances', type: 'expense', color: '#96CEB4', icon: 'airplane', parentId: 'cat_main_entertainment', level: 1, sortOrder: 2 },
+          { id: 'cat_sub_excursions', name: 'Excursions', type: 'expense', color: '#96CEB4', icon: 'map', parentId: 'cat_main_entertainment', level: 1, sortOrder: 3 },
+          { id: 'cat_sub_subscriptions', name: 'Abonnements Netflix, Spotify, etc.', type: 'expense', color: '#96CEB4', icon: 'play-circle', parentId: 'cat_main_entertainment', level: 1, sortOrder: 4 },
+          { id: 'cat_sub_hobbies', name: 'Hobbies / Sport', type: 'expense', color: '#96CEB4', icon: 'game-controller', parentId: 'cat_main_entertainment', level: 1, sortOrder: 5 },
+          { id: 'cat_sub_pets', name: 'Animaux de compagnie', type: 'expense', color: '#96CEB4', icon: 'paw', parentId: 'cat_main_entertainment', level: 1, sortOrder: 6 },
+
+          // 💼 SOUS-CATÉGORIES TRAVAIL
+          { id: 'cat_sub_training', name: 'Formation / Cours', type: 'expense', color: '#F39C12', icon: 'school', parentId: 'cat_main_work', level: 1, sortOrder: 1 },
+          { id: 'cat_sub_work_supplies', name: 'Matériel de travail', type: 'expense', color: '#F39C12', icon: 'briefcase', parentId: 'cat_main_work', level: 1, sortOrder: 2 },
+          { id: 'cat_sub_work_transport', name: 'Transport professionnel', type: 'expense', color: '#F39C12', icon: 'car', parentId: 'cat_main_work', level: 1, sortOrder: 3 },
+          { id: 'cat_sub_professional_taxes', name: 'Cotisations / Impôts professionnels', type: 'expense', color: '#F39C12', icon: 'document', parentId: 'cat_main_work', level: 1, sortOrder: 4 },
+          { id: 'cat_sub_software', name: 'Outils logiciels / Abonnements', type: 'expense', color: '#F39C12', icon: 'desktop', parentId: 'cat_main_work', level: 1, sortOrder: 5 },
+          { id: 'cat_sub_coworking', name: 'Coworking / Bureau', type: 'expense', color: '#F39C12', icon: 'business', parentId: 'cat_main_work', level: 1, sortOrder: 6 },
+
+          // 💳 SOUS-CATÉGORIES FINANCES
+          { id: 'cat_sub_taxes', name: 'Impôts / Taxes', type: 'expense', color: '#E74C3C', icon: 'document', parentId: 'cat_main_finances', level: 1, sortOrder: 1 },
+          { id: 'cat_sub_insurances', name: 'Assurances (auto, vie, habitation, etc.)', type: 'expense', color: '#E74C3C', icon: 'shield', parentId: 'cat_main_finances', level: 1, sortOrder: 2 },
+          { id: 'cat_sub_credits', name: 'Crédits / Remboursements', type: 'expense', color: '#E74C3C', icon: 'card', parentId: 'cat_main_finances', level: 1, sortOrder: 3 },
+          { id: 'cat_sub_bank_fees', name: 'Frais bancaires', type: 'expense', color: '#E74C3C', icon: 'card', parentId: 'cat_main_finances', level: 1, sortOrder: 4 },
+          { id: 'cat_sub_interests', name: 'Intérêts', type: 'expense', color: '#E74C3C', icon: 'trending-up', parentId: 'cat_main_finances', level: 1, sortOrder: 5 },
+          { id: 'cat_sub_charity', name: 'Sadaqa / Don / Zakat', type: 'expense', color: '#E74C3C', icon: 'heart', parentId: 'cat_main_finances', level: 1, sortOrder: 6 },
+          { id: 'cat_sub_associations', name: 'Cotisations / Associations', type: 'expense', color: '#E74C3C', icon: 'people', parentId: 'cat_main_finances', level: 1, sortOrder: 7 },
+          { id: 'cat_sub_other_financial', name: 'Autres obligations financières', type: 'expense', color: '#E74C3C', icon: 'card', parentId: 'cat_main_finances', level: 1, sortOrder: 8 },
+
+          // 🕌 SOUS-CATÉGORIES RELIGION
+          { id: 'cat_sub_mosque', name: 'Mosquée / Sadaqa / Zakat', type: 'expense', color: '#16A085', icon: 'star', parentId: 'cat_main_religion', level: 1, sortOrder: 1 },
+          { id: 'cat_sub_hajj', name: 'Hajj / Omra', type: 'expense', color: '#16A085', icon: 'airplane', parentId: 'cat_main_religion', level: 1, sortOrder: 2 },
+          { id: 'cat_sub_eid_ramadan', name: 'Aïd / Ramadan (achats, cadeaux, viande, etc.)', type: 'expense', color: '#16A085', icon: 'moon', parentId: 'cat_main_religion', level: 1, sortOrder: 3 },
+          { id: 'cat_sub_religious_books', name: 'Livres / Cours religieux', type: 'expense', color: '#16A085', icon: 'book', parentId: 'cat_main_religion', level: 1, sortOrder: 4 },
+
+          // 💾 SOUS-CATÉGORIES ÉPARGNE
+          { id: 'cat_sub_monthly_savings', name: 'Épargne mensuelle', type: 'expense', color: '#27AE60', icon: 'trending-up', parentId: 'cat_main_savings', level: 1, sortOrder: 1 },
+          { id: 'cat_sub_emergency_savings', name: 'Épargne d\'urgence', type: 'expense', color: '#27AE60', icon: 'shield', parentId: 'cat_main_savings', level: 1, sortOrder: 2 },
+          { id: 'cat_sub_car_house_savings', name: 'Épargne voiture / maison', type: 'expense', color: '#27AE60', icon: 'home', parentId: 'cat_main_savings', level: 1, sortOrder: 3 },
+          { id: 'cat_sub_kids_savings', name: 'Épargne enfant', type: 'expense', color: '#27AE60', icon: 'people', parentId: 'cat_main_savings', level: 1, sortOrder: 4 },
+          { id: 'cat_sub_crypto', name: 'Crypto / Bourse / Placements', type: 'expense', color: '#27AE60', icon: 'trending-up', parentId: 'cat_main_savings', level: 1, sortOrder: 5 },
+          { id: 'cat_sub_retirement', name: 'Fonds retraite', type: 'expense', color: '#27AE60', icon: 'person', parentId: 'cat_main_savings', level: 1, sortOrder: 6 },
+
+          // ⚙️ SOUS-CATÉGORIES AUTRES
+          { id: 'cat_sub_gifts_other', name: 'Cadeaux / Fêtes', type: 'expense', color: '#95A5A6', icon: 'gift', parentId: 'cat_main_other', level: 1, sortOrder: 1 },
+          { id: 'cat_sub_unexpected', name: 'Imprévus / Urgences', type: 'expense', color: '#95A5A6', icon: 'warning', parentId: 'cat_main_other', level: 1, sortOrder: 2 },
+          { id: 'cat_sub_other_expenses', name: 'Autres dépenses diverses', type: 'expense', color: '#95A5A6', icon: 'ellipsis-horizontal', parentId: 'cat_main_other', level: 1, sortOrder: 3 },
+
+          // 👨‍💼 SOUS-CATÉGORIES REVENUS PRINCIPAUX
+          { id: 'cat_sub_salary', name: 'Salaire', type: 'income', color: '#52C41A', icon: 'cash', parentId: 'cat_main_primary_income', level: 1, sortOrder: 1 },
+          { id: 'cat_sub_bonus', name: 'Prime / Bonus', type: 'income', color: '#52C41A', icon: 'trophy', parentId: 'cat_main_primary_income', level: 1, sortOrder: 2 },
+          { id: 'cat_sub_allowance', name: 'Indemnité / Allocation', type: 'income', color: '#52C41A', icon: 'document', parentId: 'cat_main_primary_income', level: 1, sortOrder: 3 },
+          { id: 'cat_sub_pension', name: 'Pension / Retraite', type: 'income', color: '#52C41A', icon: 'person', parentId: 'cat_main_primary_income', level: 1, sortOrder: 4 },
+
+          // 💻 SOUS-CATÉGORIES REVENUS SECONDAIRES
+          { id: 'cat_sub_freelance', name: 'Freelance / Auto-entrepreneur', type: 'income', color: '#FAAD14', icon: 'laptop', parentId: 'cat_main_secondary_income', level: 1, sortOrder: 1 },
+          { id: 'cat_sub_sales', name: 'Vente de produits', type: 'income', color: '#FAAD14', icon: 'cart', parentId: 'cat_main_secondary_income', level: 1, sortOrder: 2 },
+          { id: 'cat_sub_services', name: 'Prestation de service', type: 'income', color: '#FAAD14', icon: 'construct', parentId: 'cat_main_secondary_income', level: 1, sortOrder: 3 },
+          { id: 'cat_sub_rental', name: 'Location (appartement, voiture, matériel)', type: 'income', color: '#FAAD14', icon: 'home', parentId: 'cat_main_secondary_income', level: 1, sortOrder: 4 },
+          { id: 'cat_sub_commissions', name: 'Commissions / Affiliations', type: 'income', color: '#FAAD14', icon: 'people', parentId: 'cat_main_secondary_income', level: 1, sortOrder: 5 },
+          { id: 'cat_sub_tips', name: 'Pourboires', type: 'income', color: '#FAAD14', icon: 'cash', parentId: 'cat_main_secondary_income', level: 1, sortOrder: 6 },
+
+          // 💵 SOUS-CATÉGORIES REVENUS FINANCIERS
+          { id: 'cat_sub_bank_interest', name: 'Intérêts bancaires', type: 'income', color: '#20B2AA', icon: 'trending-up', parentId: 'cat_main_financial_income', level: 1, sortOrder: 1 },
+          { id: 'cat_sub_dividends', name: 'Dividendes', type: 'income', color: '#20B2AA', icon: 'trending-up', parentId: 'cat_main_financial_income', level: 1, sortOrder: 2 },
+          { id: 'cat_sub_investment_gains', name: 'Gains d\'investissement', type: 'income', color: '#20B2AA', icon: 'trending-up', parentId: 'cat_main_financial_income', level: 1, sortOrder: 3 },
+          { id: 'cat_sub_crypto_income', name: 'Revenus crypto', type: 'income', color: '#20B2AA', icon: 'logo-bitcoin', parentId: 'cat_main_financial_income', level: 1, sortOrder: 4 },
+
+          // 🎁 SOUS-CATÉGORIES AUTRES REVENUS
+          { id: 'cat_sub_gifts_received', name: 'Cadeaux reçus', type: 'income', color: '#BB8FCE', icon: 'gift', parentId: 'cat_main_other_income', level: 1, sortOrder: 1 },
+          { id: 'cat_sub_refunds', name: 'Remboursement', type: 'income', color: '#BB8FCE', icon: 'refresh', parentId: 'cat_main_other_income', level: 1, sortOrder: 2 },
+          { id: 'cat_sub_inheritance', name: 'Héritage / Don', type: 'income', color: '#BB8FCE', icon: 'heart', parentId: 'cat_main_other_income', level: 1, sortOrder: 3 },
+          { id: 'cat_sub_family_help', name: 'Aide familiale', type: 'income', color: '#BB8FCE', icon: 'people', parentId: 'cat_main_other_income', level: 1, sortOrder: 4 },
+          { id: 'cat_sub_cashback', name: 'Cashback / Réductions', type: 'income', color: '#BB8FCE', icon: 'pricetag', parentId: 'cat_main_other_income', level: 1, sortOrder: 5 },
+
+          // 🕌 SOUS-CATÉGORIES REVENUS SPIRITUELS
+          { id: 'cat_sub_charity_received', name: 'Aide / Sadaqa reçue', type: 'income', color: '#16A085', icon: 'heart', parentId: 'cat_main_spiritual_income', level: 1, sortOrder: 1 },
+          { id: 'cat_sub_association_funds', name: 'Fonds associatifs', type: 'income', color: '#16A085', icon: 'people', parentId: 'cat_main_spiritual_income', level: 1, sortOrder: 2 },
         ];
 
-        for (const category of [...defaultCategories, ...subcategories]) {
+        // ✅ INSERTION DE TOUTES LES CATÉGORIES
+        const allCategories = [...mainExpenseCategories, ...mainIncomeCategories, ...subcategories];
+        
+        for (const category of allCategories) {
           const createdAt = new Date().toISOString();
           await db.runAsync(
             `INSERT INTO categories (id, user_id, name, type, color, icon, parent_id, level, sort_order, is_active, budget, created_at) 
@@ -664,7 +802,7 @@ export const categoryService = {
               category.type, 
               category.color, 
               category.icon,
-              category.parentId || null, // ✅ CORRECTION : parentId existe maintenant
+              category.parentId || null,
               category.level,
               category.sortOrder,
               1, // is_active
@@ -674,7 +812,7 @@ export const categoryService = {
           );
         }
         
-        console.log('✅ [categoryService] Default categories with hierarchy initialized successfully');
+        console.log('✅ [categoryService] ALL categories initialized successfully:', allCategories.length, 'categories');
       } else {
         console.log('ℹ️ [categoryService] Categories already exist, skipping initialization');
       }
@@ -919,7 +1057,6 @@ const repairCategoriesTable = async (): Promise<void> => {
       let restoredCount = 0;
       for (const category of existingData) {
         try {
-          // ✅ CORRECTION DÉFINITIVE : Utiliser parent_id au lieu de parentId
           await db.runAsync(
             `INSERT INTO categories (id, user_id, name, type, color, icon, parent_id, level, sort_order, is_active, budget, created_at) 
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -930,7 +1067,7 @@ const repairCategoriesTable = async (): Promise<void> => {
               category.type,
               category.color,
               category.icon,
-              category.parent_id || null, // ✅ CORRECTION : parent_id au lieu de parentId
+              category.parent_id || null,
               category.level || 0,
               category.sort_order || 0,
               category.is_active !== undefined ? category.is_active : 1,

@@ -85,6 +85,7 @@ type DrawerParamList = {
 const Drawer = createDrawerNavigator<DrawerParamList>();
 const Stack = createStackNavigator();
 
+
 // Stack pour Tableau de Bord
 const DashboardStack = () => (
   <Stack.Navigator 
