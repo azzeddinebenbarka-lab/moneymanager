@@ -6,6 +6,7 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import ModernDrawerContent from '../components/layout/ModernDrawerContent';
 import { useTheme } from '../context/ThemeContext';
+import { DesignSystemDemo } from '../design/DesignSystemDemo';
 
 // Import des écrans
 import AccountDetailScreen from '../screens/AccountDetailScreen';
@@ -255,6 +256,19 @@ const ModernDrawerNavigator = () => {
           drawerLabel: "Tableau de Bord",
         }}
       />
+
+      <Drawer.Screen
+  name="DesignSystemDemo"
+  component={DesignSystemDemo}
+  options={{
+    drawerIcon: ({ color, size }) => (
+      <View style={[styles.iconContainer, { backgroundColor: '#8B5CF6' }]}>
+        <Ionicons name="color-palette" size={size-2} color="#FFFFFF" />
+      </View>
+    ),
+    drawerLabel: "Design System Demo",
+  }}
+/>
 
       {/* ✅ CORRECTION : Vue par Mois avec nom unique */}
       <Drawer.Screen

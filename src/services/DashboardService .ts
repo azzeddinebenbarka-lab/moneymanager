@@ -416,7 +416,7 @@ export const dashboardService = {
         debtService.getAllDebts(userId),
         savingsService.getAllSavingsGoals(userId),
         transactionService.getAllTransactions(userId),
-        transactionService.getActiveRecurringTransactions(userId)
+        transactionService.getRecurringTransactions(userId)
       ]);
       
       console.log('✅ [dashboardService] Synchronisation terminée');
