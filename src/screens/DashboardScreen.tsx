@@ -28,6 +28,7 @@ import { useSavings } from '../hooks/useSavings';
 import { useSync } from '../hooks/useSync';
 import { useTransactions } from '../hooks/useTransactions';
 import { calculationService } from '../services/calculationService';
+import resolveCategoryLabel from '../utils/categoryResolver';
 
 const { width } = Dimensions.get('window');
 const HEADER_BG = require('../../assets/images/interfaces/Dashboard.png');
@@ -595,102 +596,73 @@ const DashboardScreen: React.FC = () => {
 
               const allCategories = categories || [];
 
-              const tryResolveCategoryById = (catId: string | undefined) => {
-                if (!catId) return null;
-                return allCategories.find((c: any) => c.id === catId) || null;
-              };
-
-              // 1) explicit subCategory on transaction
+              // Use centralized resolver which accepts id, name or legacy keywords
               if (tx.subCategory) {
-                const sub = tryResolveCategoryById(tx.subCategory);
-                if (sub) {
-                  childLabel = sub.name;
-                  if (sub.parentId) {
-                    const parent = tryResolveCategoryById(sub.parentId);
-                    parentLabel = parent ? parent.name : null;
-                  }
-                }
+                const resolved = resolveCategoryLabel(tx.subCategory, allCategories as any);
+                childLabel = resolved.child;
+                parentLabel = resolved.parent || null;
               }
 
-              // 2) category on transaction (could be a subcategory)
               if (!childLabel && tx.category) {
-                const cat = tryResolveCategoryById(tx.category);
-                if (cat) {
-                  if (cat.parentId) {
-                    childLabel = cat.name;
-                    const parent = tryResolveCategoryById(cat.parentId);
-                    parentLabel = parent ? parent.name : null;
-                  } else {
-                    childLabel = cat.name;
-                  }
-                }
+                const resolved = resolveCategoryLabel(tx.category, allCategories as any);
+                childLabel = resolved.child;
+                parentLabel = parentLabel || resolved.parent || null;
               }
 
-              // 3) If still unresolved, try related services: annual charges, debts, parent transaction
+              // annual charge: prefer showing parent category name only when available
               if (!childLabel) {
-                // annual charge reference
                 const foundCharge = (annualCharges || []).find((c: any) => c.id === tx.annualChargeId || c.id === tx.chargeId || c.id === tx.recurringChargeId);
                 if (foundCharge && foundCharge.category) {
-                  const cat = tryResolveCategoryById(foundCharge.category);
-                  if (cat) {
-                    // User requested: display parent category name for annual charges
-                    if (cat.parentId) {
-                      const parent = tryResolveCategoryById(cat.parentId);
-                      if (parent) {
-                        // show parent name only
-                        childLabel = parent.name;
-                        parentLabel = null;
-                      } else {
-                        childLabel = cat.name;
-                      }
-                    } else {
-                      childLabel = cat.name;
-                    }
+                  const resolved = resolveCategoryLabel(foundCharge.category, allCategories as any);
+                  if (resolved.parent) {
+                    childLabel = resolved.parent;
+                    parentLabel = null;
+                  } else {
+                    childLabel = resolved.child;
                   }
                 }
               }
 
               if (!childLabel) {
-                // debts reference
-                // use debts from hook available earlier
-                // `debts` is in scope from useDebts hook above
                 const foundDebt = (debts || []).find((d: any) => d.id === tx.debtId || d.id === tx.debt);
                 if (foundDebt && foundDebt.category) {
-                  const cat = tryResolveCategoryById(foundDebt.category);
-                  if (cat) childLabel = cat.name;
+                  const resolved = resolveCategoryLabel(foundDebt.category, allCategories as any);
+                  childLabel = resolved.child;
+                  parentLabel = parentLabel || resolved.parent || null;
                 }
               }
 
-              // 4) budgets and savings goals may reference categories
               if (!childLabel) {
                 const foundBudget = (budgets || []).find((b: any) => b.id === tx.budgetId || b.category === tx.category || b.subCategory === tx.subCategory);
                 if (foundBudget) {
-                  const cat = tryResolveCategoryById(foundBudget.category);
-                  if (cat) childLabel = cat.name;
+                  const resolved = resolveCategoryLabel(foundBudget.category, allCategories as any);
+                  childLabel = resolved.child;
+                  parentLabel = parentLabel || resolved.parent || null;
                 }
               }
 
               if (!childLabel) {
                 const foundGoal = (goals || []).find((g: any) => g.id === tx.savingsGoalId || g.category === tx.category);
                 if (foundGoal) {
-                  // goals store category as a keyword or category id
-                  const cat = tryResolveCategoryById(foundGoal.category);
-                  childLabel = cat ? cat.name : foundGoal.name || foundGoal.category;
+                  const resolved = resolveCategoryLabel(foundGoal.category || foundGoal.name, allCategories as any);
+                  childLabel = resolved.child || foundGoal.name || foundGoal.category;
+                  parentLabel = parentLabel || resolved.parent || null;
                 }
               }
 
-              // 4) fallback: try parent transaction if it exists
               if (!childLabel && tx.parentTransactionId) {
                 const parentTx = (transactions || []).find((t: any) => t.id === tx.parentTransactionId);
                 if (parentTx) {
-                  const cat = tryResolveCategoryById(parentTx.category);
-                  if (cat) childLabel = cat.name;
+                  const resolved = resolveCategoryLabel(parentTx.category, allCategories as any);
+                  childLabel = resolved.child;
+                  parentLabel = parentLabel || resolved.parent || null;
                 }
               }
 
               if (!childLabel) {
-                // final fallback to raw field
-                childLabel = tx.category || tx.description || 'Autre';
+                const resolved = resolveCategoryLabel(tx.category || tx.description, allCategories as any);
+                childLabel = resolved.child || tx.description || 'Autre';
+                parentLabel = parentLabel || resolved.parent || null;
               }
 
               categoryName = parentLabel ? `${parentLabel} › ${childLabel}` : childLabel;

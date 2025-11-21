@@ -1,20 +1,17 @@
-﻿// src/screens/BudgetsScreen.tsx - Restored clean version
+﻿// src/screens/BudgetsScreen.tsx - VERSION CORRIGÉE
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  RefreshControl,
-  SectionList,
+  FlatList,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import BudgetCard from '../components/budget/BudgetCard';
 import BudgetForm from '../components/budget/BudgetForm';
-import BudgetProgress from '../components/budget/BudgetProgress';
 import { useCurrency } from '../context/CurrencyContext';
 import { useTheme } from '../context/ThemeContext';
 import { useBudgets } from '../hooks/useBudgets';
@@ -27,17 +24,17 @@ interface BudgetsScreenProps {
 const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
   const { formatAmount } = useCurrency();
   const { theme } = useTheme();
-  const {
-    budgets,
-    loading,
-    error,
-    stats,
-    createBudget,
-    deleteBudget,
-    toggleBudget,
-    refreshBudgets,
+  const { 
+    budgets, 
+    loading, 
+    error, 
+    stats, 
+    createBudget, 
+    deleteBudget, 
+    toggleBudget, 
+    refreshBudgets 
   } = useBudgets();
-
+  
   const [showBudgetForm, setShowBudgetForm] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const isDark = theme === 'dark';
@@ -52,7 +49,7 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
     try {
       await createBudget(budgetData);
       setShowBudgetForm(false);
-    } catch (err) {
+    } catch (error) {
       Alert.alert('Erreur', 'Impossible de créer le budget');
     }
   };
@@ -60,16 +57,16 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
   const handleDeleteBudget = (id: string) => {
     const budget = budgets.find(b => b.id === id);
     if (!budget) return;
-
+    
     Alert.alert(
       'Supprimer le budget',
       `Êtes-vous sûr de vouloir supprimer le budget "${budget.name}" ?`,
       [
         { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Supprimer',
+        { 
+          text: 'Supprimer', 
           style: 'destructive',
-          onPress: () => deleteBudget(id),
+          onPress: () => deleteBudget(id)
         },
       ]
     );
@@ -83,11 +80,14 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
     navigation.navigate('EditBudget', { budgetId: budget.id });
   };
 
+  // États de chargement et d'erreur
   if (loading && !refreshing) {
     return (
       <View style={[styles.container, isDark && styles.darkContainer, styles.center]}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={[styles.loadingText, isDark && styles.darkText]}>Chargement des budgets...</Text>
+        <Text style={[styles.loadingText, isDark && styles.darkText]}>
+          Chargement des budgets...
+        </Text>
       </View>
     );
   }
@@ -96,7 +96,9 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
     return (
       <View style={[styles.container, isDark && styles.darkContainer, styles.center]}>
         <Ionicons name="alert-circle-outline" size={64} color="#FF3B30" />
-        <Text style={[styles.errorText, isDark && styles.darkText]}>{error}</Text>
+        <Text style={[styles.errorText, isDark && styles.darkText]}>
+          {error}
+        </Text>
         <TouchableOpacity style={styles.retryButton} onPress={refreshBudgets}>
           <Text style={styles.retryButtonText}>Réessayer</Text>
         </TouchableOpacity>
@@ -108,112 +110,142 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
   const inactiveBudgets = budgets.filter(budget => !budget.isActive);
 
   return (
-    <SafeAreaView style={[styles.container, isDark && styles.darkContainer]} edges={["top"]}>
+    <View style={[styles.container, isDark && styles.darkContainer]}>
+      {/* Header avec statistiques */}
       <View style={[styles.header, isDark && styles.darkHeader]}>
         <View style={styles.headerTop}>
-          <Text style={[styles.title, isDark && styles.darkText]}>Budgets</Text>
-          <TouchableOpacity style={[styles.headerButton, isDark && styles.darkHeaderButton]} onPress={() => setShowBudgetForm(true)}>
-            <Ionicons name="add" size={18} color="#007AFF" />
+          <Text style={[styles.title, isDark && styles.darkText]}>
+            Budgets
+          </Text>
+          <TouchableOpacity 
+            style={[styles.headerButton, isDark && styles.darkHeaderButton]}
+            onPress={() => setShowBudgetForm(true)}
+          >
+            <Ionicons name="add" size={20} color="#007AFF" />
           </TouchableOpacity>
         </View>
 
-        <Text style={[styles.subtitle, isDark && styles.darkSubtext]}>Gérez vos limites de dépenses</Text>
+        <Text style={[styles.subtitle, isDark && styles.darkSubtext]}>
+          Gérez vos limites de dépenses
+        </Text>
 
+        {/* Statistiques rapides */}
         <View style={[styles.statsContainer, isDark && styles.darkStatsContainer]}>
           <View style={styles.statItem}>
-            <Text style={[styles.statValue, isDark && styles.darkText]}>{stats.totalBudgets}</Text>
-            <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>Total</Text>
+            <Text style={[styles.statValue, isDark && styles.darkText]}>
+              {stats.totalBudgets}
+            </Text>
+            <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+              Total
+            </Text>
           </View>
+          
           <View style={styles.statDivider} />
+          
           <View style={styles.statItem}>
-            <Text style={[styles.statValue, { color: stats.activeBudgets > 0 ? '#34C759' : isDark ? '#fff' : '#000' }]}>{stats.activeBudgets}</Text>
-            <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>Actifs</Text>
+            <Text style={[styles.statValue, { color: stats.activeBudgets > 0 ? '#34C759' : isDark ? '#fff' : '#000' }]}>
+              {stats.activeBudgets}
+            </Text>
+            <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+              Actifs
+            </Text>
           </View>
+          
           <View style={styles.statDivider} />
+          
           <View style={styles.statItem}>
-            <Text style={[styles.statValue, { color: stats.averageUsage > 80 ? '#FF9500' : isDark ? '#fff' : '#000' }]}>{Math.round(stats.averageUsage)}%</Text>
-            <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>Utilisation</Text>
+            <Text style={[styles.statValue, { color: stats.averageUsage > 80 ? '#FF9500' : isDark ? '#fff' : '#000' }]}>
+              {Math.round(stats.averageUsage)}%
+            </Text>
+            <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+              Utilisation
+            </Text>
           </View>
         </View>
       </View>
 
-      <View style={[styles.summaryCard, isDark && styles.darkCard]}>
-        <View style={styles.summaryRow}>
-          <View>
-            <Text style={[styles.summaryLabel, isDark && styles.darkSubtext]}>Budget mensuel total</Text>
-            <Text style={[styles.summaryMonth, isDark && styles.darkSubtext]}>{new Date().toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}</Text>
-          </View>
-          <Text style={[styles.summaryAmount, isDark && styles.darkText]}>
-            {(() => {
-              const total = budgets.filter(b => b.period === 'monthly').reduce((s, b) => s + b.amount, 0);
-              return total.toFixed(0) + ' €';
-            })()}
-          </Text>
-        </View>
+      <FlatList
+        data={[]}
+        renderItem={null}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <>
+            {/* Budgets actifs */}
+            {activeBudgets.length > 0 && (
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+                    Budgets Actifs ({activeBudgets.length})
+                  </Text>
+                </View>
 
-        <View style={styles.summaryProgressWrap}>
-          <BudgetProgress
-            spent={budgets.filter(b => b.period === 'monthly').reduce((s, b) => s + b.spent, 0)}
-            budget={budgets.filter(b => b.period === 'monthly').reduce((s, b) => s + b.amount, 0) || 1}
-            showLabels={false}
-            height={10}
-          />
+                {activeBudgets.map((budget) => (
+                  <BudgetCard
+                    key={budget.id}
+                    budget={budget}
+                    onPress={() => handleBudgetPress(budget)}
+                    onLongPress={() => handleDeleteBudget(budget.id)}
+                    onToggle={handleToggleBudget}
+                  />
+                ))}
+              </View>
+            )}
 
-          <Text style={[styles.summaryRemaining, isDark && styles.darkSubtext]}>
-            {(() => {
-              const total = budgets.filter(b => b.period === 'monthly').reduce((s, b) => s + b.amount, 0);
-              const spent = budgets.filter(b => b.period === 'monthly').reduce((s, b) => s + b.spent, 0);
-              const remain = Math.max(total - spent, 0);
-              return `Reste: ${remain.toFixed(0)} € · Sur la bonne voie 🎯`;
-            })()}
-          </Text>
-        </View>
-      </View>
+            {/* Budgets inactifs */}
+            {inactiveBudgets.length > 0 && (
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+                    Budgets Inactifs ({inactiveBudgets.length})
+                  </Text>
+                </View>
 
-      <Text style={[styles.sectionMainTitle, isDark && styles.darkText]}>Budgets par catégorie</Text>
-
-      <SectionList
-        sections={[
-          { title: `Budgets Actifs (${activeBudgets.length})`, data: activeBudgets },
-          { title: `Budgets Inactifs (${inactiveBudgets.length})`, data: inactiveBudgets },
-        ]}
-        keyExtractor={(item: Budget) => item.id}
-        renderItem={({ item }: { item: Budget }) => (
-          <BudgetCard
-            budget={item}
-            onPress={() => handleBudgetPress(item)}
-            onLongPress={() => handleDeleteBudget(item.id)}
-            onToggle={handleToggleBudget}
-          />
-        )}
-        ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
-        renderSectionHeader={({ section }) => (
-          section.data && section.data.length > 0 ? (
-            <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, isDark && styles.darkText]}>{section.title}</Text>
-            </View>
-          ) : null
-        )}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#007AFF']} tintColor={isDark ? '#fff' : '#007AFF'} />
+                {inactiveBudgets.map((budget) => (
+                  <BudgetCard
+                    key={budget.id}
+                    budget={budget}
+                    onPress={() => handleBudgetPress(budget)}
+                    onLongPress={() => handleDeleteBudget(budget.id)}
+                    onToggle={handleToggleBudget}
+                  />
+                ))}
+              </View>
+            )}
+          </>
         }
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Ionicons name="pie-chart-outline" size={64} color={isDark ? '#555' : '#ccc'} />
-            <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>Aucun budget</Text>
-            <Text style={[styles.emptySubtext, isDark && styles.darkSubtext]}>Créez votre premier budget pour suivre vos dépenses</Text>
-            <TouchableOpacity style={styles.createButton} onPress={() => setShowBudgetForm(true)}>
+            <Ionicons 
+              name="pie-chart-outline" 
+              size={64} 
+              color={isDark ? '#555' : '#ccc'} 
+            />
+            <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
+              Aucun budget
+            </Text>
+            <Text style={[styles.emptySubtext, isDark && styles.darkSubtext]}>
+              Créez votre premier budget pour suivre vos dépenses
+            </Text>
+            <TouchableOpacity 
+              style={styles.createButton}
+              onPress={() => setShowBudgetForm(true)}
+            >
               <Text style={styles.createButtonText}>Créer un budget</Text>
             </TouchableOpacity>
           </View>
         }
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.listContent, { paddingBottom: 120 }]}
         ListFooterComponent={<View style={styles.spacer} />}
       />
 
-      <BudgetForm visible={showBudgetForm} onClose={() => setShowBudgetForm(false)} onSubmit={handleCreateBudget} />
-    </SafeAreaView>
+      {/* Formulaire de création de budget */}
+      <BudgetForm
+        visible={showBudgetForm}
+        onClose={() => setShowBudgetForm(false)}
+        onSubmit={handleCreateBudget}
+      />
+    </View>
   );
 };
 
@@ -291,10 +323,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
   },
-  summaryLabel: {
-    fontSize: 12,
-    color: '#888',
-  },
   statDivider: {
     width: 1,
     height: 30,
@@ -305,12 +333,10 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
   },
   sectionHeader: {
-    marginBottom: 8,
-    paddingHorizontal: 12,
-    paddingTop: 6,
+    marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#000',
   },
@@ -375,58 +401,6 @@ const styles = StyleSheet.create({
   },
   darkSubtext: {
     color: '#888',
-  },
-  summaryMonth: {
-    fontSize: 13,
-    color: '#666',
-    marginTop: 2,
-  },
-  summaryCard: {
-    backgroundColor: '#fff',
-    margin: 16,
-    padding: 16,
-    borderRadius: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  summaryAmount: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#000',
-  },
-  summaryProgressWrap: {
-    gap: 8,
-  },
-  summaryRemaining: {
-    marginTop: 6,
-    color: '#34C759',
-    fontSize: 13,
-  },
-  sectionMainTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginHorizontal: 16,
-    marginTop: 8,
-    marginBottom: 6,
-  },
-  darkCard: {
-    backgroundColor: '#2c2c2e',
-    borderColor: '#38383a',
-  },
-  listContent: {
-    paddingHorizontal: 12,
-  },
-  itemSeparator: {
-    height: 10,
   },
 });
 

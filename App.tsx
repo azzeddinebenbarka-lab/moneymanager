@@ -1,10 +1,12 @@
 // App.tsx - VERSION COMPLÈTEMENT CORRIGÉE
 import { Ionicons } from '@expo/vector-icons';
 import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
 import * as Font from 'expo-font';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AuthProvider } from './src/context/AuthContext';
 import { CurrencyProvider } from './src/context/CurrencyContext';
 
 // Components
@@ -18,6 +20,8 @@ import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 
 // Navigation 
 import ModernDrawerNavigator from './src/navigation/ModernDrawerNavigator';
+import LoginScreen from './src/screens/auth/LoginScreen';
+import { useAuth } from './src/context/AuthContext';
 
 // Hook pour l'initialisation des polices
 const useAppInitialization = () => {
@@ -153,9 +157,19 @@ const InitializationErrorScreen = ({
 );
 
 // Navigation principale avec thème
+const Stack = createStackNavigator();
+
 const AppNavigation = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const { user, loading: authLoading } = useAuth();
+
+  // While auth context initializes, show a loader
+  if (authLoading) return (
+    <SafeAreaView>
+      <InitialLoader message="Vérification d'authentification..." />
+    </SafeAreaView>
+  );
 
   return (
     <SafeAreaView>
@@ -165,7 +179,13 @@ const AppNavigation = () => {
         translucent={false}
       />
       <NavigationContainer>
-        <ModernDrawerNavigator />
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          {!user ? (
+            <Stack.Screen name="Login" component={LoginScreen} />
+          ) : (
+            <Stack.Screen name="Main" component={ModernDrawerNavigator} />
+          )}
+        </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaView>
   );
@@ -214,12 +234,14 @@ const AppWithProviders = () => {
       <ThemeProvider>
         <CurrencyProvider>
           <DatabaseProvider>
-            {/* ✅ AJOUT : IslamicSettingsProvider */}
-            <IslamicSettingsProvider>
-              <DatabaseLoader>
-                <AppNavigation />
-              </DatabaseLoader>
-            </IslamicSettingsProvider>
+            <AuthProvider>
+              {/* ✅ AJOUT : IslamicSettingsProvider */}
+              <IslamicSettingsProvider>
+                <DatabaseLoader>
+                  <AppNavigation />
+                </DatabaseLoader>
+              </IslamicSettingsProvider>
+            </AuthProvider>
           </DatabaseProvider>
         </CurrencyProvider>
       </ThemeProvider>

@@ -3,14 +3,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
 import {
-  Alert,
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    Alert,
+    FlatList,
+    RefreshControl,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AccountForm from '../components/account/AccountForm';
 import { useCurrency } from '../context/CurrencyContext';
 import { useTheme } from '../context/ThemeContext';
@@ -55,21 +56,19 @@ const AccountsScreen = ({ navigation }: any) => {
     try {
       await createAccount(accountData);
       setShowAccountForm(false);
-      // ✅ RAFRAÎCHIR APRÈS CRÉATION
+      setEditingAccount(null);
       await refreshAccounts();
     } catch (error) {
       Alert.alert('Erreur', 'Impossible de créer le compte');
     }
   };
 
-  const handleUpdateAccount = async (accountData: Omit<Account, 'id' | 'createdAt'>) => {
-    if (!editingAccount) return;
-    
+  const handleUpdateAccount = async (accountData: Account) => {
     try {
-      await updateAccount(editingAccount.id, accountData);
+      if (!accountData.id) throw new Error('Identifiant manquant');
+      await updateAccount(accountData.id, accountData);
       setShowAccountForm(false);
       setEditingAccount(null);
-      // ✅ RAFRAÎCHIR APRÈS MODIFICATION
       await refreshAccounts();
     } catch (error) {
       Alert.alert('Erreur', 'Impossible de modifier le compte');
@@ -148,31 +147,43 @@ const AccountsScreen = ({ navigation }: any) => {
     </TouchableOpacity>
   );
 
-  // ✅ HEADER AVEC ICÔNE RAFRAÎCHISSEMENT
-  const HeaderWithRefresh = () => (
-    <View style={[styles.header, isDark && styles.darkHeader]}>
-      <View style={styles.headerContent}>
-        <View>
-          <Text style={[styles.totalLabel, isDark && styles.darkText]}>
-            Solde total
-          </Text>
-          <Text style={[styles.totalAmount, isDark && styles.darkText]}>
-            {formatAmount(totalBalance)}
-          </Text>
+  
+  
+  // New header matching design
+  const Header = () => (
+    <View style={[styles.topHeader, isDark && styles.darkHeader]}> 
+      <View style={styles.topHeaderRow}>
+        <TouchableOpacity style={styles.backWrap} onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={20} color={isDark ? '#fff' : '#0F172A'} />
+        </TouchableOpacity>
+
+        <Text style={[styles.pageTitle, isDark && styles.darkText]}>Mes Comptes</Text>
+
+        <TouchableOpacity style={styles.refreshIcon} onPress={onRefresh} disabled={refreshing}>
+          <Ionicons name="refresh" size={20} color={isDark ? '#fff' : '#0F172A'} />
+        </TouchableOpacity>
+      </View>
+
+      <View style={[styles.summaryCard, isDark && styles.darkCard]}> 
+        <View style={styles.summaryTop}>
+          <View>
+            <Text style={[styles.summaryLabel, isDark && styles.darkSubtext]}>TOTAL DES AVOIRS</Text>
+            <Text style={[styles.summaryAmount, isDark && styles.darkText]}>{formatAmount(totalBalance)}</Text>
+          </View>
+          <View style={styles.summaryIcon}>
+            <Ionicons name="library-outline" size={28} color="#007AFF" />
+          </View>
         </View>
-        <View style={styles.headerActions}>
-          {/* ICÔNE RAFRAÎCHISSEMENT */}
-          <TouchableOpacity 
-            style={[styles.refreshButton, isDark && styles.darkRefreshButton]}
-            onPress={onRefresh}
-            disabled={refreshing}
-          >
-            <Ionicons 
-              name="refresh" 
-              size={20} 
-              color={refreshing ? "#999" : (isDark ? "#fff" : "#007AFF")} 
-            />
-          </TouchableOpacity>
+
+        <View style={styles.summarySplit}>
+          <View style={styles.splitItem}>
+            <Text style={[styles.splitLabel, isDark && styles.darkSubtext]}>Comptes courants</Text>
+            <Text style={[styles.splitValue, isDark && styles.darkText]}>{formatAmount(accounts.filter(a => a.type !== 'savings').reduce((s, a) => s + a.balance, 0))}</Text>
+          </View>
+          <View style={styles.splitItem}>
+            <Text style={[styles.splitLabel, isDark && styles.darkSubtext]}>Épargne</Text>
+            <Text style={[styles.splitValue, isDark && styles.darkText]}>{formatAmount(accounts.filter(a => a.type === 'savings').reduce((s, a) => s + a.balance, 0))}</Text>
+          </View>
         </View>
       </View>
     </View>
@@ -189,62 +200,57 @@ const AccountsScreen = ({ navigation }: any) => {
   }
 
   return (
-    <View style={[styles.container, isDark && styles.darkContainer]}>
-      <HeaderWithRefresh />
+    <SafeAreaView style={[styles.container, isDark && styles.darkContainer]} edges={["top"]}>
+      <Header />
 
-      {/* Liste des comptes */}
-      <FlatList
-        data={accounts}
-        renderItem={renderAccountItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={['#007AFF']}
-            tintColor={isDark ? '#fff' : '#007AFF'}
+      <View style={styles.content}>
+        <View style={styles.listContainer}>
+          <FlatList
+            data={accounts}
+            renderItem={renderAccountItem}
+            keyExtractor={(item) => String(item.id)}
+            contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={['#007AFF']}
+                tintColor={isDark ? '#fff' : '#007AFF'}
+              />
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyState}>
+                <Ionicons 
+                  name="wallet-outline" 
+                  size={64} 
+                  color={isDark ? '#555' : '#ccc'} 
+                />
+                <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
+                  Aucun compte créé
+                </Text>
+                <Text style={[styles.emptySubtext, isDark && styles.darkSubtext]}>
+                  Ajoutez votre premier compte pour commencer
+                </Text>
+              </View>
+            }
           />
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Ionicons 
-              name="wallet-outline" 
-              size={64} 
-              color={isDark ? '#555' : '#ccc'} 
-            />
-            <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
-              Aucun compte créé
-            </Text>
-            <Text style={[styles.emptySubtext, isDark && styles.darkSubtext]}>
-              Ajoutez votre premier compte pour commencer
-            </Text>
-          </View>
-        }
-      />
+        </View>
 
-      {/* Bouton d'ajout */}
-      <TouchableOpacity 
-        style={styles.addButton}
-        onPress={() => {
-          setEditingAccount(null);
-          setShowAccountForm(true);
-        }}
-      >
-        <Ionicons name="add" size={24} color="#fff" />
-      </TouchableOpacity>
+        <TouchableOpacity style={[styles.primaryCTA, isDark && styles.darkCTA]} onPress={() => { setEditingAccount(null); setShowAccountForm(true); }}>
+          <Text style={styles.primaryCTAText}>Ajouter un compte</Text>
+        </TouchableOpacity>
 
-      {/* Formulaire de création/modification de compte */}
-      <AccountForm
-        visible={showAccountForm}
-        onClose={() => {
-          setShowAccountForm(false);
-          setEditingAccount(null);
-        }}
-        onSubmit={editingAccount ? handleUpdateAccount : handleCreateAccount}
-        editingAccount={editingAccount || undefined} // ✅ CORRECTION : Convertir null en undefined
-      />
-    </View>
+        <AccountForm
+          visible={showAccountForm}
+          onClose={() => {
+            setShowAccountForm(false);
+            setEditingAccount(null);
+          }}
+          onSubmit={editingAccount ? handleUpdateAccount : handleCreateAccount}
+          editingAccount={editingAccount || undefined}
+        />
+      </View>
+    </SafeAreaView>
   );
 };
 
@@ -419,6 +425,119 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: '#666',
+  },
+  // New header / summary styles
+  topHeader: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e6e6e6',
+  },
+  topHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  backWrap: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pageTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  refreshIcon: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  summaryCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  summaryTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  summaryLabel: {
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 4,
+  },
+  summaryAmount: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#000',
+  },
+  summaryIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 10,
+    backgroundColor: '#f0f6ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  summarySplit: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  splitItem: {
+    flex: 1,
+  },
+  splitLabel: {
+    fontSize: 12,
+    color: '#888',
+  },
+  splitValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#000',
+    marginTop: 6,
+  },
+  // Layout helpers
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+  listContainer: {
+    flex: 1,
+  },
+  separator: {
+    height: 12,
+  },
+  primaryCTA: {
+    marginTop: 12,
+    backgroundColor: '#007AFF',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  darkCTA: {
+    backgroundColor: '#0a84ff',
+  },
+  primaryCTAText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  emptyWrap: {
+    padding: 30,
+    alignItems: 'center',
   },
 });
 

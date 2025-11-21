@@ -1,24 +1,26 @@
 ﻿// src/screens/TransactionsScreen.tsx - VERSION SIMPLIFIÉE AVEC FILTRES ANNÉE/MOIS
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    Modal,
+    Pressable,
+    RefreshControl,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useCurrency } from '../context/CurrencyContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
+import useCategories from '../hooks/useCategories';
 import { useTransactions } from '../hooks/useTransactions';
 import { Transaction } from '../types';
+import resolveCategoryLabel from '../utils/categoryResolver';
 
 const TransactionsScreen = ({ navigation }: any) => {
   const { formatAmount } = useCurrency();
@@ -35,7 +37,9 @@ const TransactionsScreen = ({ navigation }: any) => {
   
   const [refreshing, setRefreshing] = useState(false);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1); // Novembre = 11
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(new Date().getMonth() + 1); // null = whole year
+  const [yearOnly, setYearOnly] = useState<boolean>(false);
+  const [selectedTab, setSelectedTab] = useState<string>('Toutes');
 
   const isDark = theme === 'dark';
 
@@ -68,13 +72,39 @@ const TransactionsScreen = ({ navigation }: any) => {
 
   // ✅ FILTRER LES TRANSACTIONS PAR ANNÉE ET MOIS
   const getFilteredTransactions = (): Transaction[] => {
-    return transactions.filter(transaction => {
-      const transactionDate = new Date(transaction.date);
-      const transactionYear = transactionDate.getFullYear();
-      const transactionMonth = transactionDate.getMonth() + 1;
-      
-      return transactionYear === selectedYear && transactionMonth === selectedMonth;
-    });
+    // Filtrage initial
+    let base = transactions.slice();
+
+    // Si on filtre par année uniquement ("Cette année"), ne filtrer que sur l'année
+    if (yearOnly) {
+      base = base.filter(transaction => {
+        const d = new Date(transaction.date);
+        return d.getFullYear() === selectedYear;
+      });
+    } else {
+      // Filtre par année et mois
+      base = base.filter(transaction => {
+        const transactionDate = new Date(transaction.date);
+        const transactionYear = transactionDate.getFullYear();
+        const transactionMonth = transactionDate.getMonth() + 1;
+        return transactionYear === selectedYear && transactionMonth === selectedMonth;
+      });
+    }
+
+    // Appliquer filtre selon l'onglet sélectionné
+    if (selectedTab === 'Revenus') {
+      base = base.filter(t => t.type === 'income');
+    } else if (selectedTab === 'Dépenses') {
+      base = base.filter(t => t.type === 'expense');
+    } else if (selectedTab === 'Ce mois') {
+      const now = new Date();
+      base = transactions.filter(t => {
+        const d = new Date(t.date);
+        return d.getFullYear() === now.getFullYear() && (d.getMonth() + 1) === (now.getMonth() + 1);
+      });
+    }
+
+    return base;
   };
 
   // ✅ VÉRIFIER SI UNE TRANSACTION EST SPÉCIALE
@@ -182,83 +212,89 @@ const TransactionsScreen = ({ navigation }: any) => {
   const months = generateMonths();
   const currentMonth = new Date().getMonth() + 1;
 
-  // ✅ COMPOSANT : En-tête moderne avec filtres
-  const ModernHeader = () => (
-    <View style={[styles.header, isDark && styles.darkHeader]}>
-      <View style={styles.headerTop}>
-        <Text style={[styles.title, isDark && styles.darkText]}>
-          Transactions
-        </Text>
-        <TouchableOpacity 
-          style={[styles.addButton, isDark && styles.darkAddButton]}
-          onPress={() => navigation.navigate('AddTransaction')}
-        >
-          <Ionicons name="add" size={24} color="#007AFF" />
+  // Nouveau header : bouton retour + titre centré + onglets segmentés (Toutes / Revenus / Dépenses / Ce mois)
+  const ImageHeader = () => (
+    <View style={[styles.headerImage, isDark && styles.darkHeader]}>
+      <View style={styles.headerRow}> 
+        <TouchableOpacity style={[styles.backButton, isDark && styles.darkAddButton]} onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={20} color={isDark ? '#fff' : '#0f172a'} />
         </TouchableOpacity>
-      </View>
-      
-      {/* ✅ FILTRE ANNÉE - Scroll horizontal */}
-      <View style={styles.filterSection}>
-        <Text style={[styles.filterLabel, isDark && styles.darkSubtext]}>Année</Text>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.yearScrollContent}
-        >
-          {years.map((year) => (
-            <TouchableOpacity
-              key={year}
-              style={[
-                styles.yearButton,
-                selectedYear === year && styles.yearButtonActive,
-                isDark && styles.darkYearButton
-              ]}
-              onPress={() => setSelectedYear(year)}
-            >
-              <Text style={[
-                styles.yearButtonText,
-                selectedYear === year && styles.yearButtonTextActive,
-                isDark && styles.darkText
-              ]}>
-                {year}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+
+        <Text style={[styles.titleCentered, isDark && styles.darkText]}>Transactions</Text>
+
+        <View style={{width:44}} />
       </View>
 
-      {/* ✅ FILTRE MOIS - Scroll horizontal avec mois courant en premier */}
-      <View style={styles.filterSection}>
-        <Text style={[styles.filterLabel, isDark && styles.darkSubtext]}>Mois</Text>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.monthScrollContent}
-        >
-          {/* Afficher les mois à partir du mois courant */}
-          {months.slice(currentMonth - 1).concat(months.slice(0, currentMonth - 1)).map((month) => (
+      <View style={styles.segmentContainer}>
+        {['Toutes','Revenus','Dépenses','Ce mois'].map((tab) => {
+          const active = (tab === selectedTab);
+          return (
             <TouchableOpacity
-              key={month.number}
-              style={[
-                styles.monthButton,
-                selectedMonth === month.number && styles.monthButtonActive,
-                isDark && styles.darkMonthButton
-              ]}
-              onPress={() => setSelectedMonth(month.number)}
+              key={tab}
+              style={[styles.segmentButton, active && styles.segmentButtonActive]}
+              onPress={() => {
+                setSelectedTab(tab);
+                if (tab === 'Ce mois') {
+                  const now = new Date();
+                  setSelectedMonth(now.getMonth() + 1);
+                  setSelectedYear(now.getFullYear());
+                }
+              }}
             >
-              <Text style={[
-                styles.monthButtonText,
-                selectedMonth === month.number && styles.monthButtonTextActive,
-                isDark && styles.darkText
-              ]}>
-                {month.short}
-              </Text>
+              <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{tab}</Text>
             </TouchableOpacity>
-          ))}
-        </ScrollView>
+          );
+        })}
       </View>
     </View>
   );
+
+  // Compact filter: show selected month + 'Cette année' pill and a dropdown to pick month
+  const [monthDropdownVisible, setMonthDropdownVisible] = useState(false);
+
+  const CompactFilter = () => {
+    const selectedMonthObj = months.find(m => m.number === selectedMonth) || months[new Date().getMonth()];
+    return (
+      <View style={styles.compactFilterContainer}>
+        <View style={styles.compactLeft}>
+          <Text style={[styles.currentMonthText, isDark && styles.darkText]}>{selectedMonthObj.name} {selectedYear}</Text>
+          <TouchableOpacity
+            style={[styles.anneePill, yearOnly && styles.anneePillActive]}
+            onPress={() => {
+              const now = new Date();
+              setSelectedYear(now.getFullYear());
+              setYearOnly(!yearOnly);
+              setSelectedMonth(yearOnly ? (now.getMonth() + 1) : null);
+            }}
+          >
+            <Text style={[styles.anneePillText, yearOnly && styles.anneePillTextActive]}>Cette année</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity style={styles.monthDropdownButton} onPress={() => setMonthDropdownVisible(true)}>
+          <Text style={styles.monthDropdownText}>{selectedMonthObj.short}</Text>
+          <Ionicons name="chevron-down" size={18} color={isDark ? '#fff' : '#0f172a'} style={{marginLeft:8}} />
+        </TouchableOpacity>
+
+        <Modal transparent visible={monthDropdownVisible} animationType="fade">
+          <Pressable style={styles.modalOverlay} onPress={() => setMonthDropdownVisible(false)}>
+            <View style={[styles.modalContent, isDark && styles.darkCard]}>
+              {months.map((m) => (
+                <TouchableOpacity key={m.number} style={styles.modalItem} onPress={() => {
+                  setSelectedMonth(m.number);
+                  setYearOnly(false);
+                  setSelectedTab('Toutes');
+                  setMonthDropdownVisible(false);
+                }}>
+                  <Text style={[styles.modalItemText, isDark && styles.darkText]}>{m.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Pressable>
+        </Modal>
+      </View>
+    );
+  };
 
   // ✅ COMPOSANT : Résumé financier
   const FinancialSummary = () => {
@@ -322,32 +358,33 @@ const TransactionsScreen = ({ navigation }: any) => {
     );
   };
 
-  // ✅ COMPOSANT : Carte de transaction (version verticale, gradientée)
-  const TransactionCard = ({ item }: { item: Transaction }) => {
+  // Nouveau composant : carte horizontale compacte (icone à gauche, détails au centre, montant à droite)
+  const ListTransactionItem = ({ item }: { item: Transaction }) => {
+    const isIncome = item.type === 'income';
+    const { categories } = useCategories();
+    const resolved = resolveCategoryLabel(item.subCategory || item.category, categories || []);
+    const label = resolved.parent ? `${resolved.parent} › ${resolved.child}` : resolved.child;
     return (
-      <TouchableOpacity
-        style={[styles.cardBorder, isDark && styles.darkCardBorder]}
-        onPress={() => handleTransactionPress(item.id)}
-        activeOpacity={0.85}
-      >
-        <LinearGradient
-          colors={item.type === 'income' ? ['#F0FBF6', '#FFFFFF'] : ['#FFF5F6', '#FFFFFF']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.cardGradient}
-        >
-          <View style={styles.cardVertical}>
-            <View style={[styles.cardIconLarge, { backgroundColor: item.type === 'income' ? '#ECFDF5' : '#FFF1F2' }]}>
-              <Ionicons name={item.type === 'income' ? 'arrow-down' : 'arrow-up'} size={20} color={item.type === 'income' ? '#059669' : '#DC2626'} />
+      <TouchableOpacity style={[styles.transactionCard, isDark && styles.darkCard]} onPress={() => handleTransactionPress(item.id)} activeOpacity={0.85}>
+        <View style={styles.transactionMain}>
+          <View style={styles.transactionLeft}>
+            <View style={[styles.iconContainer, { backgroundColor: '#fff', borderColor: '#E6EEF8' }]}>
+              <Ionicons name={isIncome ? 'arrow-down' : 'arrow-up'} size={20} color={isIncome ? '#10B981' : '#EF4444'} />
             </View>
 
-            <Text style={[styles.cardTitle, isDark && styles.darkText]} numberOfLines={2}>{item.description || 'Sans description'}</Text>
-
-            <Text style={[styles.cardAmountLarge, { color: item.type === 'income' ? '#059669' : '#DC2626' }]}>{item.type === 'income' ? '+' : '-'}{formatAmount(Math.abs(item.amount))}</Text>
-
-            <Text style={[styles.cardDateSmall, isDark && styles.darkSubtext]}>{new Date(item.date).toLocaleDateString('fr-FR')}</Text>
+            <View style={styles.transactionInfo}>
+              <Text style={[styles.transactionDescription, isDark && styles.darkText]} numberOfLines={1}>{item.description || 'Sans description'}</Text>
+              <View style={styles.transactionMeta}>
+                <Text style={[styles.transactionCategory, isDark && styles.darkSubtext]}>{label}</Text>
+                <Text style={[styles.transactionDate, isDark && styles.darkSubtext]}>{new Date(item.date).toLocaleDateString('fr-FR')}</Text>
+              </View>
+            </View>
           </View>
-        </LinearGradient>
+
+          <View style={styles.transactionRight}>
+            <Text style={[styles.transactionAmount, { color: isIncome ? '#10B981' : '#EF4444' }]}>{isIncome ? '+' : '-'}{formatAmount(Math.abs(item.amount))}</Text>
+          </View>
+        </View>
       </TouchableOpacity>
     );
   };
@@ -397,7 +434,7 @@ const TransactionsScreen = ({ navigation }: any) => {
   if (loading && !refreshing && transactions.length === 0) {
     return (
       <SafeAreaView style={[styles.container, isDark && styles.darkContainer]}>
-        <ModernHeader />
+        <ImageHeader />
         <LoadingIndicator />
       </SafeAreaView>
     );
@@ -405,11 +442,12 @@ const TransactionsScreen = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={[styles.container, isDark && styles.darkContainer]}>
-      <ModernHeader />
+      <ImageHeader />
+      <CompactFilter />
       
       <FlatList
         data={filteredTransactions}
-        renderItem={({ item }) => <TransactionCard item={item} />}
+        renderItem={({ item }) => <ListTransactionItem item={item} />}
         keyExtractor={(item) => item.id}
         refreshControl={
           <RefreshControl 
@@ -461,6 +499,65 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
   },
+  headerImage: {
+    backgroundColor: '#f8f9fa',
+    paddingTop: 40,
+    paddingBottom: 12,
+    paddingHorizontal: 16,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  titleCentered: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  segmentContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    backgroundColor: 'transparent',
+  },
+  segmentButton: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 0,
+    marginRight: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  segmentButtonActive: {
+    backgroundColor: '#8b5cf6',
+  },
+  segmentText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  segmentTextActive: {
+    color: '#fff',
+  },
   darkHeader: {
     backgroundColor: '#2c2c2e',
   },
@@ -506,6 +603,84 @@ const styles = StyleSheet.create({
   yearScrollContent: {
     paddingHorizontal: 4,
     gap: 8,
+  },
+  filtersContainer: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: 'transparent',
+  },
+  compactFilterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: 'transparent',
+  },
+  compactLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  currentMonthText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  anneePill: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#f1f5f9',
+  },
+  anneePillActive: {
+    backgroundColor: '#007AFF',
+  },
+  anneePillText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  anneePillTextActive: {
+    color: '#fff',
+  },
+  monthDropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  monthDropdownText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0f172a',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: 260,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingVertical: 8,
+  },
+  modalItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  modalItemText: {
+    fontSize: 16,
+    color: '#0f172a',
   },
   monthScrollContent: {
     paddingHorizontal: 4,
@@ -656,14 +831,14 @@ const styles = StyleSheet.create({
   transactionCard: {
     backgroundColor: '#fff',
     marginHorizontal: 16,
-    marginBottom: 8,
-    borderRadius: 16,
+    marginBottom: 12,
+    borderRadius: 14,
     padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 3,
   },
   specialTransactionCard: {
     borderLeftWidth: 4,
@@ -703,9 +878,9 @@ const styles = StyleSheet.create({
   },
   transactionDescription: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-    marginBottom: 8,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 6,
   },
   transactionMeta: {
     flexDirection: 'row',
