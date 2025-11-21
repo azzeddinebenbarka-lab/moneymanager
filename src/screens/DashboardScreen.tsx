@@ -587,8 +587,43 @@ const DashboardScreen: React.FC = () => {
               const iconName = isIncome ? 'cash' : 'cart';
               const iconBg = isIncome ? 'rgba(46, 204, 113, 0.12)' : 'rgba(255, 77, 79, 0.08)';
               const amountText = isIncome ? `+ ${formatAmount(Math.abs(tx.amount))}` : `- ${formatAmount(Math.abs(tx.amount))}`;
-              const categoryObj = (categories || []).find((c: any) => c.id === tx.category);
-              const categoryName = categoryObj ? categoryObj.name : (tx.category || 'Autre');
+              // Determine category and subcategory names
+              let categoryName = 'Autre';
+              let fullCategoryLabel = '';
+
+              const allCategories = categories || [];
+
+              // If transaction has explicit subCategory id
+              if (tx.subCategory) {
+                const sub = allCategories.find((c: any) => c.id === tx.subCategory);
+                if (sub) {
+                  if (sub.parentId) {
+                    const parent = allCategories.find((p: any) => p.id === sub.parentId);
+                    fullCategoryLabel = parent ? `${parent.name} › ${sub.name}` : sub.name;
+                  } else {
+                    fullCategoryLabel = sub.name;
+                  }
+                }
+              }
+
+              // If no explicit subCategory, inspect category field
+              if (!fullCategoryLabel) {
+                const cat = allCategories.find((c: any) => c.id === tx.category);
+                if (cat) {
+                  if (cat.parentId) {
+                    const parent = allCategories.find((p: any) => p.id === cat.parentId);
+                    fullCategoryLabel = parent ? `${parent.name} › ${cat.name}` : cat.name;
+                  } else {
+                    fullCategoryLabel = cat.name;
+                  }
+                }
+              }
+
+              if (!fullCategoryLabel) {
+                fullCategoryLabel = tx.category || 'Autre';
+              }
+
+              categoryName = fullCategoryLabel;
               const subtitle = `${categoryName} • ${new Date(tx.date).toLocaleDateString()} ${new Date(tx.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
 
               return (
