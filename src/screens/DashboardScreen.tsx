@@ -360,7 +360,7 @@ const QuickActionsGrid: React.FC = () => {
   );
 };
 
-// ✅ COMPOSANT : HEADER MODERNE
+// ✅ COMPOSANT : HEADER MODERNE (restauré)
 const ModernHeader: React.FC = () => {
   const { colors, spacing } = useDesignSystem();
   const navigation = useNavigation();
@@ -368,50 +368,52 @@ const ModernHeader: React.FC = () => {
   const { settings: islamicSettings } = useIslamicCharges();
 
   return (
-    <ImageBackground
-      source={HEADER_BG}
-      style={[styles.header, { paddingTop: 30, paddingBottom: 12 }]}
-      imageStyle={{ borderBottomLeftRadius: 24, borderBottomRightRadius: 24, opacity: 0.95 }}
-    >
-      <LinearGradient
-        colors={['rgba(255,255,255,0.06)', 'rgba(255,255,255,0)']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={[styles.headerOverlay, { paddingHorizontal: 12 }]}
-      >
-        <View style={styles.headerRow}> 
-          <View style={styles.headerLeft}>
-            <View style={[styles.logo, { backgroundColor: colors.primary[500] }]}> 
-              <Ionicons name="wallet" size={22} color={colors.text.inverse} />
-            </View>
-            <View style={{ marginLeft: 8 }}>
-              <Text style={[styles.title, { color: colors.text.primary, fontSize: 20 }]}>MoneyManager</Text>
-              <Text style={[styles.subtitle, { color: colors.text.secondary, fontSize: 12 }]}>Tableau de Bord</Text>
-            </View>
+    <View style={[styles.header, { backgroundColor: colors.background.card }]}>
+      <View style={styles.headerContent}>
+        <View style={styles.titleContainer}>
+          <View style={[styles.logo, { backgroundColor: colors.primary[500] }]}>
+            <Ionicons name="wallet" size={24} color={colors.text.inverse} />
           </View>
-
-          <View style={styles.headerActionsContainer}>
-            <TouchableOpacity
-              style={[styles.iconPill, { backgroundColor: colors.background.card }]}
-              onPress={() => syncAllData()}
-              disabled={isSyncing}
-            >
-              <Ionicons name="refresh" size={18} color={isSyncing ? colors.text.disabled : colors.primary[500]} />
-            </TouchableOpacity>
-
-            {islamicSettings.isEnabled && (
-              <TouchableOpacity style={[styles.iconPill, { backgroundColor: colors.background.card }]} onPress={() => navigation.navigate('IslamicCharges' as never)}>
-                <Ionicons name="star" size={18} color={colors.functional.investment} />
-              </TouchableOpacity>
-            )}
-
-            <TouchableOpacity style={[styles.iconPill, { backgroundColor: colors.background.card }]} onPress={() => navigation.navigate('Alerts' as never)}>
-              <Ionicons name="notifications" size={18} color={colors.text.primary} />
-            </TouchableOpacity>
+          <View>
+            <Text style={[styles.title, { color: colors.text.primary }]}>
+              MoneyManager
+            </Text>
+            <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
+              Tableau de Bord
+            </Text>
           </View>
         </View>
-      </LinearGradient>
-    </ImageBackground>
+        <View style={styles.actions}>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: colors.background.secondary }]}
+            onPress={() => syncAllData()}
+            disabled={isSyncing}
+          >
+            <Ionicons
+              name="refresh"
+              size={20}
+              color={isSyncing ? colors.text.disabled : colors.primary[500]}
+            />
+          </TouchableOpacity>
+
+          {islamicSettings.isEnabled && (
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: colors.background.secondary }]}
+              onPress={() => navigation.navigate('IslamicCharges' as never)}
+            >
+              <Ionicons name="star" size={20} color={colors.functional.investment} />
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: colors.background.secondary }]}
+            onPress={() => navigation.navigate('Alerts' as never)}
+          >
+            <Ionicons name="notifications" size={20} color={colors.text.primary} />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
   );
 };
 
@@ -528,33 +530,18 @@ const DashboardScreen: React.FC = () => {
           <QuickActionsGrid />
 
           {/* Donut: Revenus / Dépenses / Solde */}
-          <View style={[styles.row, { gap: 12 }]}>
-            <View style={[styles.halfCard, { backgroundColor: colors.background.card }]}>
+          <View style={[styles.row, { gap: 12, justifyContent: 'center' }]}>
+            <View style={[styles.halfCard, { backgroundColor: colors.background.card, maxWidth: 320 }]}> 
               <DonutChart
                 data={[
                   { name: 'Revenus', amount: Math.max(0, analytics.cashFlow.income), color: colors.functional.income },
                   { name: 'Dépenses', amount: Math.max(0, Math.abs(analytics.cashFlow.expenses)), color: colors.functional.expense },
                   { name: 'Solde', amount: Math.max(0, Math.abs(analytics.cashFlow.netFlow)), color: analytics.cashFlow.netFlow >= 0 ? colors.functional.savings : colors.functional.debt }
                 ]}
-                  size={140}
+                size={160}
                 strokeWidth={28}
-                  centerLabel={`${formatAmount(analytics.cashFlow.netFlow)}`}
-                  legendPosition="right"
-              />
-            </View>
-
-            {/* Donut: Objectifs (épargne) */}
-            <View style={[styles.halfCard, { backgroundColor: colors.background.card }]}>
-              <DonutChart
-                data={(goals || []).slice(0,6).map((g: any, i: number) => ({
-                  name: g.name || `Objectif ${i+1}`,
-                  amount: g.currentAmount || 0,
-                  color: g.color || ['#52C41A','#FF6B6B','#4ECDC4','#FAAD14','#722ED1','#45B7D1'][i % 6]
-                }))}
-                  size={140}
-                strokeWidth={22}
-                centerLabel={goalsCenterLabel}
-                  legendPosition="right"
+                centerLabel={`${formatAmount(analytics.cashFlow.netFlow)}`}
+                legendPosition="right"
               />
             </View>
           </View>

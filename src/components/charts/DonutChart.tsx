@@ -48,7 +48,17 @@ const DonutChart: React.FC<DonutChartProps> = ({ data, size = 160, strokeWidth =
   const svgElement = (
     <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
       <G rotation={-90} origin={`${size / 2}, ${size / 2}`}>
-          {data.map((d, i) => {
+        {total === 0 && (
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={'#F0F0F0'}
+            strokeWidth={strokeWidth}
+            fill="transparent"
+          />
+        )}
+        {data.map((d, i) => {
             const value = Math.max(0, d.amount);
             const portion = total === 0 ? 0 : value / total;
             const dash = `${circumference * portion} ${circumference * (1 - portion)}`;
@@ -78,13 +88,18 @@ const DonutChart: React.FC<DonutChartProps> = ({ data, size = 160, strokeWidth =
     <Animated.View style={[styles.container, { width: showLegendRight ? Math.max(size + 120, 260) : size, transform: [{ scale }], opacity, minHeight: size + 24 }]}>
       {showLegendRight ? (
         <View style={styles.rowRight}>
-          {svgElement}
+          <View style={{ position: 'relative' }}>
+            {svgElement}
+            <View style={[styles.center, { width: centerDiameter, height: centerDiameter, borderRadius: centerDiameter / 2, left: (size - centerDiameter) / 2, top: (size - centerDiameter) / 2 }]}>
+              <Text style={[styles.centerText, { fontSize: Math.max(12, centerDiameter / 6) }]}>{centerLabel ?? (total ? total.toString() : '—')}</Text>
+            </View>
+          </View>
           <View style={styles.legendRight}>
             {legendItems.map((it, idx) => (
               <View key={it.name + idx} style={styles.legendRowRight}>
                 <View style={[styles.legendColor, { backgroundColor: it.color }]} />
                 <Text style={styles.legendLabel} numberOfLines={1}>{it.name}</Text>
-                <Text style={styles.legendValue}>{it.percent}%</Text>
+                <Text style={[styles.legendValue, { color: it.color }]}>{it.percent}%</Text>
               </View>
             ))}
           </View>
@@ -103,7 +118,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ data, size = 160, strokeWidth =
               <View key={it.name + idx} style={styles.legendRow}>
                 <View style={[styles.legendColor, { backgroundColor: it.color }]} />
                 <Text style={styles.legendLabel} numberOfLines={1}>{it.name}</Text>
-                <Text style={styles.legendValue}>{it.percent}%</Text>
+                <Text style={[styles.legendValue, { color: it.color }]}>{it.percent}%</Text>
               </View>
             ))}
           </View>
