@@ -648,6 +648,24 @@ const DashboardScreen: React.FC = () => {
                 }
               }
 
+              // 4) budgets and savings goals may reference categories
+              if (!childLabel) {
+                const foundBudget = (budgets || []).find((b: any) => b.id === tx.budgetId || b.category === tx.category || b.subCategory === tx.subCategory);
+                if (foundBudget) {
+                  const cat = tryResolveCategoryById(foundBudget.category);
+                  if (cat) childLabel = cat.name;
+                }
+              }
+
+              if (!childLabel) {
+                const foundGoal = (goals || []).find((g: any) => g.id === tx.savingsGoalId || g.category === tx.category);
+                if (foundGoal) {
+                  // goals store category as a keyword or category id
+                  const cat = tryResolveCategoryById(foundGoal.category);
+                  childLabel = cat ? cat.name : foundGoal.name || foundGoal.category;
+                }
+              }
+
               // 4) fallback: try parent transaction if it exists
               if (!childLabel && tx.parentTransactionId) {
                 const parentTx = (transactions || []).find((t: any) => t.id === tx.parentTransactionId);
