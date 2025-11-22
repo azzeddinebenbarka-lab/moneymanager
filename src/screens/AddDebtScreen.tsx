@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useDebts } from '../hooks/useDebts';
 import { CreateDebtData, DEBT_TYPES, DebtType } from '../types/Debt';
@@ -31,6 +32,7 @@ interface DebtFormData {
 }
 
 const AddDebtScreen = ({ navigation }: any) => {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const { formatAmount } = useCurrency();
   const { createDebt } = useDebts();

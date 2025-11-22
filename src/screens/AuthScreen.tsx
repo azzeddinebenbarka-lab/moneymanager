@@ -10,10 +10,12 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
 
 // Version temporaire - à connecter avec AuthContext plus tard 
 const AuthScreen = () => {
+  const { t } = useLanguage();
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [isSettingUp, setIsSettingUp] = useState(false);

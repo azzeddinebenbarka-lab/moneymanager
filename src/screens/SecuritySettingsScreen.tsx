@@ -11,10 +11,12 @@ import {
     View
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
+import { useLanguage } from '../context/LanguageContext';
 import { useSecurity } from '../context/SecurityContext';
 import { useDesignSystem } from '../context/ThemeContext';
 
 export const SecuritySettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { t } = useLanguage();
   const { colors } = useDesignSystem();
   const {
     preferences,

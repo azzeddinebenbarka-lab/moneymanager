@@ -17,6 +17,7 @@ import {
 import MonthCard from '../components/analytics/MonthCard';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem } from '../context/ThemeContext';
 import { useMonthlyData } from '../hooks/useMonthlyData';
 import { useTransactions } from '../hooks/useTransactions';
@@ -34,6 +35,7 @@ type MonthsOverviewScreenNavigationProp = StackNavigationProp<RootStackParamList
 
 const MonthsOverviewScreen: React.FC = () => {
   const navigation = useNavigation<MonthsOverviewScreenNavigationProp>();
+  const { t } = useLanguage();
   const { colors } = useDesignSystem();
   const { formatAmount } = useCurrency();
   const { getMonthlyOverview, getAvailableYears } = useMonthlyData();

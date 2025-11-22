@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useSavings } from '../hooks/useSavings';
@@ -41,7 +42,8 @@ interface AddSavingsGoalScreenProps {
   navigation: any;
 }
 
-const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation }) => {
+export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation }) => {
+  const { t } = useLanguage();
   const { colors } = useDesignSystem();
   const { formatAmount } = useCurrency();
   const { createGoal } = useSavings();

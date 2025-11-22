@@ -8,8 +8,10 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import { useLanguage } from '../context/LanguageContext';
 
 const ImportScreen = () => {
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleImport = () => {

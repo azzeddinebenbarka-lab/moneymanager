@@ -1,6 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useLanguage } from '../context/LanguageContext';
 
 // Types pour les calculs d'épargne
 interface SavingsSimulation {
@@ -139,6 +140,7 @@ const calculateLumpSumImpact = (
 };
 
 export const SavingsCalculatorScreen = () => {
+  const { t } = useLanguage();
   const navigation = useNavigation();
   
   const [formData, setFormData] = useState({

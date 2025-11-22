@@ -10,11 +10,13 @@ import {
 } from 'react-native';
 import DebtForm from '../components/debts/DebtForm';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useDebts } from '../hooks/useDebts';
 import { Debt } from '../types/Debt';
 
 const DebtsScreen = ({ navigation }: any) => {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const { formatAmount } = useCurrency();
   const { debts, stats, createDebt, updateDebt, refreshDebts } = useDebts();

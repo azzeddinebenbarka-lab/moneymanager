@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useDebts } from '../hooks/useDebts';
 import { Debt, DEBT_TYPES, DebtType } from '../types/Debt';

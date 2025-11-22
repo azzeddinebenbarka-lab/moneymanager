@@ -1,6 +1,7 @@
 // src/screens/SavingsAnalyticsScreen.tsx
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 
 // Composant Header personnalisé
@@ -27,6 +28,7 @@ const Header = ({
 );
 
 export const SavingsAnalyticsScreen = () => {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 

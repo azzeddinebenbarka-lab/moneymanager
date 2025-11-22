@@ -3,9 +3,11 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Header } from '../components/ui/Header';
+import { useLanguage } from '../context/LanguageContext';
 import { calculateAmortizationSchedule, calculateDebtFreeDate } from '../utils/debtCalculator';
 
 const DebtCalculatorScreen = () => {
+  const { t } = useLanguage();
   const navigation = useNavigation();
   
   const [formData, setFormData] = useState({

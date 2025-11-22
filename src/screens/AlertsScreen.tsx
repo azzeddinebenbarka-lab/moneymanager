@@ -8,6 +8,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useSmartAlerts } from '../hooks/useSmartAlerts';
 import { Alert as AlertType } from '../types/Alert';
@@ -16,6 +17,7 @@ type PriorityType = 'all' | 'critical' | 'high' | 'medium' | 'low';
 
 export default function AlertsScreen() {
   const { colors } = useDesignSystem();
+  const { t } = useLanguage();
   const { isDark } = useTheme();
   const { alerts, loading, markAsRead, markAllAsRead, refreshAlerts } = useSmartAlerts();
   

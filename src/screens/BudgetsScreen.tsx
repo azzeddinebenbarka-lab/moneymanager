@@ -2,17 +2,18 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import BudgetCard from '../components/budget/BudgetCard';
 import BudgetForm from '../components/budget/BudgetForm';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useBudgets } from '../hooks/useBudgets';
 import { Budget } from '../types';
@@ -23,6 +24,7 @@ interface BudgetsScreenProps {
 
 const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
   const { formatAmount } = useCurrency();
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const { 
     budgets, 
@@ -50,7 +52,7 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
       await createBudget(budgetData);
       setShowBudgetForm(false);
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de créer le budget');
+      Alert.alert(t.error, 'Impossible de créer le budget');
     }
   };
 
@@ -59,12 +61,12 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
     if (!budget) return;
     
     Alert.alert(
-      'Supprimer le budget',
-      `Êtes-vous sûr de vouloir supprimer le budget "${budget.name}" ?`,
+      t.delete + ' ' + t.myBudget,
+      t.confirmDelete,
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         { 
-          text: 'Supprimer', 
+          text: t.delete, 
           style: 'destructive',
           onPress: () => deleteBudget(id)
         },
@@ -223,7 +225,7 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
               color={isDark ? '#555' : '#ccc'} 
             />
             <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
-              Aucun budget
+              {t.noBudgets}
             </Text>
             <Text style={[styles.emptySubtext, isDark && styles.darkSubtext]}>
               Créez votre premier budget pour suivre vos dépenses
@@ -232,7 +234,7 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
               style={styles.createButton}
               onPress={() => setShowBudgetForm(true)}
             >
-              <Text style={styles.createButtonText}>Créer un budget</Text>
+              <Text style={styles.createButtonText}>{t.createBudget}</Text>
             </TouchableOpacity>
           </View>
         }

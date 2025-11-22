@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from '../components/SafeAreaView';
 import { AddContributionModal } from '../components/savings/AddContributionModal';
 import { DeleteGoalModal } from '../components/savings/DeleteGoalModal';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useSavings } from '../hooks/useSavings';
@@ -25,6 +26,7 @@ interface SavingsScreenProps {
 }
 
 const SavingsScreen: React.FC<SavingsScreenProps> = ({ navigation }) => {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const { 
     goals, 

@@ -11,11 +11,13 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useBudgets } from '../hooks/useBudgets';
 import { Budget } from '../types';
 
 const EditBudgetScreen = ({ navigation, route }: any) => {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const { updateBudget, getBudgetById } = useBudgets();
   

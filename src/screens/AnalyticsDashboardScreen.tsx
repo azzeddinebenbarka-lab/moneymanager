@@ -11,6 +11,7 @@ import {
     View,
 } from 'react-native';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useReports } from '../hooks/useReports';
 
@@ -22,6 +23,7 @@ const { width: screenWidth } = Dimensions.get('window');
 type PeriodType = 'month' | '3months' | '6months' | 'year';
 
 const AnalyticsDashboardScreen = ({ navigation }: any) => {
+  const { t } = useLanguage();
   const { colors } = useDesignSystem();
   const { theme } = useTheme();
   const { formatAmount } = useCurrency();

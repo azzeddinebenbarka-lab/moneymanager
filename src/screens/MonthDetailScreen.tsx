@@ -18,6 +18,7 @@ import {
 import { SafeAreaView } from '../components/SafeAreaView';
 import ListTransactionItem from '../components/transaction/ListTransactionItem';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import useCategories from '../hooks/useCategories';
 import { useMonthlyData } from '../hooks/useMonthlyData';
@@ -39,6 +40,7 @@ type MonthDetailScreenRouteProp = any;
 const MonthDetailScreen: React.FC = () => {
   const navigation = useNavigation() as MonthDetailScreenNavigationProp;
   const route = useRoute() as MonthDetailScreenRouteProp;
+  const { t } = useLanguage();
   const { colors } = useDesignSystem();
   const { theme } = useTheme();
   const { formatAmount } = useCurrency();

@@ -14,12 +14,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AccountForm from '../components/account/AccountForm';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { Account } from '../types';
 
 const AccountsScreen = ({ navigation }: any) => {
   const { formatAmount } = useCurrency();
+  const { t } = useLanguage();
   const { colors } = useDesignSystem();
   const { theme } = useTheme();
   const { 
@@ -91,7 +93,7 @@ const AccountsScreen = ({ navigation }: any) => {
               // ✅ RAFRAÎCHIR APRÈS SUPPRESSION
               await refreshAccounts();
             } catch (error: any) {
-              Alert.alert('Erreur', error.message || 'Impossible de supprimer le compte');
+              Alert.alert(t.error, error.message || 'Impossible de supprimer le compte');
             }
           },
         },
@@ -118,9 +120,9 @@ const AccountsScreen = ({ navigation }: any) => {
               {item.name}
             </Text>
             <Text style={[styles.accountType, { color: colors.text.secondary }]}>
-              {item.type === 'cash' ? 'Espèces' : 
-               item.type === 'bank' ? 'Banque' : 
-               item.type === 'card' ? 'Carte' : 'Épargne'}
+              {item.type === 'cash' ? t.cash : 
+               item.type === 'bank' ? t.bank : 
+               item.type === 'card' ? t.card : t.savings}
             </Text>
           </View>
         </View>
@@ -158,7 +160,7 @@ const AccountsScreen = ({ navigation }: any) => {
           <Ionicons name="chevron-back" size={20} color={colors.text.primary} />
         </TouchableOpacity>
 
-        <Text style={[styles.pageTitle, { color: colors.text.primary }]}>Mes Comptes</Text>
+        <Text style={[styles.pageTitle, { color: colors.text.primary }]}>{t.myAccounts}</Text>
 
         <TouchableOpacity style={styles.refreshIcon} onPress={onRefresh} disabled={refreshing}>
           <Ionicons name="refresh" size={20} color={colors.text.primary} />
@@ -168,7 +170,7 @@ const AccountsScreen = ({ navigation }: any) => {
       <View style={[styles.summaryCard, { backgroundColor: colors.background.card }]}> 
         <View style={styles.summaryTop}>
           <View>
-            <Text style={[styles.summaryLabel, { color: colors.text.secondary }]}>TOTAL DES AVOIRS</Text>
+            <Text style={[styles.summaryLabel, { color: colors.text.secondary }]}>{t.totalBalance?.toUpperCase()}</Text>
             <Text style={[styles.summaryAmount, { color: colors.text.primary }]}>{formatAmount(totalBalance)}</Text>
           </View>
           <View style={styles.summaryIcon}>
@@ -178,11 +180,11 @@ const AccountsScreen = ({ navigation }: any) => {
 
         <View style={styles.summarySplit}>
           <View style={styles.splitItem}>
-            <Text style={[styles.splitLabel, { color: colors.text.secondary }]}>Comptes courants</Text>
+            <Text style={[styles.splitLabel, { color: colors.text.secondary }]}>{t.accounts}</Text>
             <Text style={[styles.splitValue, { color: colors.text.primary }]}>{formatAmount(accounts.filter(a => a.type !== 'savings').reduce((s, a) => s + a.balance, 0))}</Text>
           </View>
           <View style={styles.splitItem}>
-            <Text style={[styles.splitLabel, { color: colors.text.secondary }]}>Épargne</Text>
+            <Text style={[styles.splitLabel, { color: colors.text.secondary }]}>{t.savings}</Text>
             <Text style={[styles.splitValue, { color: colors.text.primary }]}>{formatAmount(accounts.filter(a => a.type === 'savings').reduce((s, a) => s + a.balance, 0))}</Text>
           </View>
         </View>
@@ -194,7 +196,7 @@ const AccountsScreen = ({ navigation }: any) => {
     return (
       <View style={[styles.container, { backgroundColor: colors.background.primary }, styles.center]}>
         <Text style={[styles.loadingText, { color: colors.text.primary }]}>
-          Chargement des comptes...
+          {t.loading}
         </Text>
       </View>
     );

@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useCategories } from '../hooks/useCategories';
@@ -25,6 +26,7 @@ import { Account, Category, CreateTransactionData } from '../types';
 const AddTransactionScreen = ({ navigation, route }: any) => {
   const isRecurring = route.params?.isRecurring || false;
   const { colors } = useDesignSystem();
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const { formatAmount } = useCurrency();
   const { accounts, loading: accountsLoading, error: accountsError, refreshAccounts } = useAccounts();

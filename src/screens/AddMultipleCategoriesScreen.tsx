@@ -11,6 +11,7 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
+import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem } from '../context/ThemeContext';
 import { useCategories } from '../hooks/useCategories';
 
@@ -33,6 +34,7 @@ interface CategoryHierarchy {
 }
 
 const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { t } = useLanguage();
   const { colors } = useDesignSystem();
   const { createMultipleCategories, categories: existingCategories } = useCategories();
 

@@ -14,6 +14,7 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
+import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useCategories } from '../hooks/useCategories';
 import { Category } from '../types';
@@ -29,6 +30,7 @@ interface CategoryFormData {
 
 const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { colors } = useDesignSystem();
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const { 
     categories, 

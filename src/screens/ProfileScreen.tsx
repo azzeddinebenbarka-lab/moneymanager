@@ -7,6 +7,7 @@ import { ChangePasswordModal } from '../components/modals/ChangePasswordModal';
 import { EditEmailModal } from '../components/modals/EditEmailModal';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useCategories } from '../hooks/useCategories';
@@ -14,6 +15,7 @@ import { useTransactions } from '../hooks/useTransactions';
 
 const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const { user, logout, changePassword, updateEmail } = useAuth();
   const { formatAmount, currency } = useCurrency();
   const isDark = theme === 'dark';

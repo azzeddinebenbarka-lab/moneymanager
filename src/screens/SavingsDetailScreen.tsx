@@ -13,6 +13,7 @@ import { SafeAreaView } from '../components/SafeAreaView';
 import { AddContributionModal } from '../components/savings/AddContributionModal';
 import { ContributionHistory } from '../components/savings/ContributionHistory';
 import { SavingsGoalDetail } from '../components/savings/SavingsGoalDetail';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useSavings } from '../hooks/useSavings';
 import { SavingsGoal } from '../types/Savings';
@@ -24,6 +25,7 @@ interface SavingsDetailScreenProps {
 
 const SavingsDetailScreen: React.FC<SavingsDetailScreenProps> = ({ navigation, route }) => {
   const { goalId } = route.params;
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const { getGoalById, addContribution, getContributionHistory, deleteGoal } = useSavings();
   

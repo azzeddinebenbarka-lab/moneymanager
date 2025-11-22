@@ -12,12 +12,14 @@ import {
   View,
 } from 'react-native';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { transferService } from '../services/transferService';
 import { TransferData } from '../types';
 
 const TransferScreen = ({ navigation, route }: any) => {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const { formatAmount } = useCurrency(); // ✅ CORRECTION : Utiliser le contexte devise
   const { accounts, refreshAccounts } = useAccounts();

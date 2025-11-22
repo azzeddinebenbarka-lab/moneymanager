@@ -11,6 +11,7 @@ import { AssetAllocationChart } from '../components/analytics/AssetAllocationCha
 import { FinancialSummaryCard } from '../components/analytics/FinancialSummaryCard';
 import { NetWorthCard } from '../components/analytics/NetWorthCard';
 import { NetWorthChart } from '../components/analytics/NetWorthChart';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAnalytics } from '../hooks/useAnalytics';
 

@@ -11,6 +11,7 @@ import {
     View,
 } from 'react-native';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useCategories } from '../hooks/useCategories';
 import { useTransactions } from '../hooks/useTransactions';
@@ -20,6 +21,7 @@ const { width: screenWidth } = Dimensions.get('window');
 type PeriodType = '1month' | '6months' | 'year';
 
 const CategoryAnalysisScreen = ({ navigation }: any) => {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const { formatAmount } = useCurrency();
   const { transactions, refreshTransactions } = useTransactions();

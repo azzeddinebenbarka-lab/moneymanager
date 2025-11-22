@@ -3,12 +3,14 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
+import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem } from '../context/ThemeContext';
 
 const APP_VERSION = '1.0.0';
 const BUILD_NUMBER = '1';
 
 export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { t } = useLanguage();
   const { colors } = useDesignSystem();
 
   const handleOpenLink = (url: string, title: string) => {

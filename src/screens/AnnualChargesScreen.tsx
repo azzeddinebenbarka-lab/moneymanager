@@ -15,12 +15,14 @@ import {
 import { SafeAreaView } from '../components/SafeAreaView';
 import { ToggleSwitch } from '../components/ui/ToggleSwitch';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useAnnualCharges } from '../hooks/useAnnualCharges';
 import { useIslamicCharges } from '../hooks/useIslamicCharges';
 
 export const AnnualChargesScreen: React.FC = () => {
   const navigation = useNavigation();
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const { colors } = useDesignSystem();
   const { formatAmount } = useCurrency();

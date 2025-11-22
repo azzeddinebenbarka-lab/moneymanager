@@ -14,12 +14,14 @@ import BarChart from '../components/charts/BarChart';
 import LineChart from '../components/charts/LineChart';
 import PieChart from '../components/charts/PieChart';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useReports } from '../hooks/useReports';
 
 const ReportsScreen = ({ navigation }: any) => {
   const { colors } = useDesignSystem();
   const { formatAmount } = useCurrency();
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const {
     monthlySummaries,

@@ -3,16 +3,17 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useCategories } from '../hooks/useCategories';
@@ -20,6 +21,7 @@ import { useTransactions } from '../hooks/useTransactions';
 import { Transaction } from '../types'; // Importez le type Transaction
 
 const EditTransactionScreen = ({ navigation, route }: any) => {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const { accounts, loading: accountsLoading, refreshAccounts } = useAccounts();
   const { categories, loading: categoriesLoading } = useCategories();

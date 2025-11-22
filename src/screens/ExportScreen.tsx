@@ -11,9 +11,11 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 
 const ExportScreen = () => {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const [exporting, setExporting] = useState(false);
   const [exportFormat, setExportFormat] = useState<'csv' | 'excel' | 'pdf' | null>(null);

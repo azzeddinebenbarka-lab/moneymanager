@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import DeleteGoalModal from '../components/savings/DeleteGoalModal';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useSavings } from '../hooks/useSavings';
@@ -25,6 +26,7 @@ interface EditSavingsGoalScreenProps {
 
 const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigation, route }) => {
   const { goalId } = route.params;
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const { getGoalById, updateGoal, deleteGoalWithTransactions, getRelatedTransactionsCount } = useSavings();
   const { accounts } = useAccounts();

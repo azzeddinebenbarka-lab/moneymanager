@@ -5,9 +5,11 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import { SafeAreaView } from '../components/SafeAreaView';
 import { LanguageSelector } from '../components/settings/LanguageSelector';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
 
 export const GeneralSettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { t } = useLanguage();
   const { colors } = useDesignSystem();
   const { theme, setTheme } = useTheme();
   const { currentCurrency } = useCurrency();

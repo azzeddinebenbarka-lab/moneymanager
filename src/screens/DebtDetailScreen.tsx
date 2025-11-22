@@ -11,6 +11,7 @@ import {
     View,
 } from 'react-native';
 import { useCurrency } from '../context/CurrencyContext'; // ✅ AJOUT: Import du contexte devise
+import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useDebts } from '../hooks/useDebts';
@@ -23,6 +24,7 @@ interface DebtDetailScreenProps {
 
 const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }) => {
   const { debtId } = route.params;
+  const { t } = useLanguage();
   const { colors } = useDesignSystem();
   const { theme } = useTheme();
   const { formatAmount } = useCurrency(); // ✅ CORRECTION: Ajout du contexte devise

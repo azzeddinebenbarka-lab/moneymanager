@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Header } from '../components/ui/Header';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAdvancedAnalytics } from '../hooks/useAdvancedAnalytics';
 

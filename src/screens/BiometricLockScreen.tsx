@@ -2,6 +2,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem } from '../context/ThemeContext';
 import { useBiometricAuth } from '../hooks/useBiometricAuth';
 
@@ -10,6 +11,7 @@ interface BiometricLockScreenProps {
 }
 
 export const BiometricLockScreen: React.FC<BiometricLockScreenProps> = ({ onUnlock }) => {
+  const { t } = useLanguage();
   const { colors } = useDesignSystem();
   const { authenticate, biometricAvailable, biometricType, isLoading } = useBiometricAuth();
   const [attemptCount, setAttemptCount] = useState(0);

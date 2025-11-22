@@ -10,10 +10,12 @@ import {
 } from 'react-native';
 import { Header } from '../components/ui/Header';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAdvancedAnalytics } from '../hooks/useAdvancedAnalytics';
 
 export const SpendingAnalyticsScreen = ({ navigation }: any) => {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const { spendingAnalysis, loading } = useAdvancedAnalytics(); 
   const [refreshing, setRefreshing] = React.useState(false);

@@ -10,6 +10,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useSmartAlerts } from '../hooks/useSmartAlerts';
 import { Alert } from '../types/Alert';
@@ -17,6 +18,7 @@ import { Alert } from '../types/Alert';
 type TabType = 'toutes' | 'nonLues' | 'alertes';
 
 const NotificationsScreen = () => {
+  const { t } = useLanguage();
   const { colors } = useDesignSystem();
   const { theme } = useTheme();
   const isDark = theme === 'dark';

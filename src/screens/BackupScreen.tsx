@@ -15,6 +15,7 @@ import {
     View
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
+import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem } from '../context/ThemeContext';
 import { useBackup } from '../hooks/useBackup';
 import { useExport } from '../hooks/useExport';
@@ -23,6 +24,7 @@ const AUTO_BACKUP_KEY = '@auto_backup_enabled';
 const LAST_BACKUP_KEY = '@last_backup_date';
 
 export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { t } = useLanguage();
   const { colors } = useDesignSystem();
   const { createBackup, isLoading: backupLoading } = useBackup();
   const { exportFullBackup, exportTransactions, isExporting, exportProgress } = useExport();

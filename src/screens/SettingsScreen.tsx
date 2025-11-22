@@ -4,14 +4,16 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem } from '../context/ThemeContext';
 
 export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { colors } = useDesignSystem();
+  const { t } = useLanguage();
   const { user } = useAuth();
 
   // Extraction du nom depuis l'email
-  const userName = user?.email ? user.email.split('@')[0].split('.')[0] : 'Utilisateur';
+  const userName = user?.email ? user.email.split('@')[0].split('.')[0] : t.user;
   const capitalizedUserName = userName.charAt(0).toUpperCase() + userName.slice(1);
   
   const handleNavigate = (screenName: string) => {
@@ -21,35 +23,35 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
   const settingsSections = [
     {
       icon: 'settings-outline',
-      title: 'Général',
+      title: t.general,
       description: 'Devise, langue, thème',
       color: colors.primary[500],
       screen: 'GeneralSettings',
     },
     {
       icon: 'shield-checkmark-outline',
-      title: 'Sécurité',
+      title: t.security,
       description: 'Mot de passe, biométrie, code PIN',
       color: '#FF3B30',
       screen: 'SecuritySettings',
     },
     {
       icon: 'notifications-outline',
-      title: 'Notifications',
+      title: t.notifications,
       description: 'Gestion des notifications push',
       color: '#FF9500',
       screen: 'NotificationSettings',
     },
     {
       icon: 'cloud-upload-outline',
-      title: 'Sauvegarde',
+      title: t.backup,
       description: 'Backup et restauration des données',
       color: '#34C759',
       screen: 'BackupScreen',
     },
     {
       icon: 'information-circle-outline',
-      title: 'À propos',
+      title: t.about,
       description: 'Version, aide, conditions',
       color: '#5856D6',
       screen: 'AboutScreen',

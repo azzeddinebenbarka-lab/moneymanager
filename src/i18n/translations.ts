@@ -51,6 +51,9 @@ export interface Translations {
   addAccount: string;
   accountName: string;
   balance: string;
+  cash: string;
+  bank: string;
+  card: string;
   
   // Budgets
   myBudgets: string;
@@ -191,6 +194,30 @@ export interface Translations {
   october: string;
   november: string;
   december: string;
+  
+  // Formulaires et champs supplémentaires
+  selectAccount: string;
+  selectCategory: string;
+  enterAmount: string;
+  enterDescription: string;
+  selectDate: string;
+  recurring: string;
+  frequency: string;
+  endDateOptional: string;
+  addTransaction: string;
+  editTransaction: string;
+  general: string;
+  notifications: string;
+  about: string;
+  version: string;
+  help: string;
+  terms: string;
+  password: string;
+  biometric: string;
+  pinCode: string;
+  pushNotifications: string;
+  backupAndRestore: string;
+  user: string;
 }
 
 export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
@@ -246,6 +273,9 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     addAccount: 'Ajouter un Compte',
     accountName: 'Nom du Compte',
     balance: 'Solde',
+    cash: 'Espèces',
+    bank: 'Banque',
+    card: 'Carte',
     
     // Budgets
     myBudgets: 'Mes Budgets',
@@ -386,6 +416,30 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     october: 'Octobre',
     november: 'Novembre',
     december: 'Décembre',
+    
+    // Formulaires et champs supplémentaires
+    selectAccount: 'Sélectionner un compte',
+    selectCategory: 'Sélectionner une catégorie',
+    enterAmount: 'Entrer le montant',
+    enterDescription: 'Entrer une description',
+    selectDate: 'Sélectionner une date',
+    recurring: 'Récurrent',
+    frequency: 'Fréquence',
+    endDateOptional: 'Date de fin (optionnelle)',
+    addTransaction: 'Ajouter une transaction',
+    editTransaction: 'Modifier la transaction',
+    general: 'Général',
+    notifications: 'Notifications',
+    about: 'À propos',
+    version: 'Version',
+    help: 'Aide',
+    terms: 'Conditions',
+    password: 'Mot de passe',
+    biometric: 'Biométrie',
+    pinCode: 'Code PIN',
+    pushNotifications: 'Notifications push',
+    backupAndRestore: 'Sauvegarde et restauration',
+    user: 'Utilisateur',
   },
   
   en: {
@@ -440,6 +494,9 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     addAccount: 'Add Account',
     accountName: 'Account Name',
     balance: 'Balance',
+    cash: 'Cash',
+    bank: 'Bank',
+    card: 'Card',
     
     // Budgets
     myBudgets: 'My Budgets',
@@ -580,6 +637,30 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     october: 'October',
     november: 'November',
     december: 'December',
+    
+    // Additional form fields
+    selectAccount: 'Select an account',
+    selectCategory: 'Select a category',
+    enterAmount: 'Enter amount',
+    enterDescription: 'Enter description',
+    selectDate: 'Select date',
+    recurring: 'Recurring',
+    frequency: 'Frequency',
+    endDateOptional: 'End date (optional)',
+    addTransaction: 'Add transaction',
+    editTransaction: 'Edit transaction',
+    general: 'General',
+    notifications: 'Notifications',
+    about: 'About',
+    version: 'Version',
+    help: 'Help',
+    terms: 'Terms',
+    password: 'Password',
+    biometric: 'Biometric',
+    pinCode: 'PIN Code',
+    pushNotifications: 'Push notifications',
+    backupAndRestore: 'Backup and restore',
+    user: 'User',
   },
   
   ar: {
@@ -634,6 +715,9 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     addAccount: 'إضافة حساب',
     accountName: 'اسم الحساب',
     balance: 'الرصيد',
+    cash: 'نقدي',
+    bank: 'بنك',
+    card: 'بطاقة',
     
     // الميزانيات
     myBudgets: 'ميزانياتي',
@@ -774,5 +858,29 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     october: 'أكتوبر',
     november: 'نوفمبر',
     december: 'ديسمبر',
+    
+    // حقول نموذج إضافية
+    selectAccount: 'اختر حساب',
+    selectCategory: 'اختر فئة',
+    enterAmount: 'أدخل المبلغ',
+    enterDescription: 'أدخل وصف',
+    selectDate: 'اختر تاريخ',
+    recurring: 'متكرر',
+    frequency: 'التكرار',
+    endDateOptional: 'تاريخ الانتهاء (اختياري)',
+    addTransaction: 'إضافة معاملة',
+    editTransaction: 'تعديل المعاملة',
+    general: 'عام',
+    notifications: 'الإشعارات',
+    about: 'حول',
+    version: 'الإصدار',
+    help: 'مساعدة',
+    terms: 'الشروط',
+    password: 'كلمة المرور',
+    biometric: 'القياسات الحيوية',
+    pinCode: 'رمز PIN',
+    pushNotifications: 'إشعارات فورية',
+    backupAndRestore: 'نسخ واستعادة',
+    user: 'مستخدم',
   },
 };

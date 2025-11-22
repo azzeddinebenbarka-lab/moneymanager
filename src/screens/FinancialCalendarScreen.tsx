@@ -8,6 +8,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem } from '../context/ThemeContext';
 import { useAnnualCharges } from '../hooks/useAnnualCharges';
 import { useCategories } from '../hooks/useCategories';
@@ -18,6 +19,7 @@ import resolveCategoryLabel from '../utils/categoryResolver';
 
 
 export const FinancialCalendarScreen = ({ navigation }: any) => {
+  const { t } = useLanguage();
   const { colors } = useDesignSystem();
   const { transactions } = useTransactions();
   const { charges } = useAnnualCharges();

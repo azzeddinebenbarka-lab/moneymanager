@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useBackup } from '../hooks/useBackup';
 import { CloudBackupService } from '../services/backup/cloudBackup';
@@ -24,6 +25,7 @@ interface BackupItem {
 }
 
 export const BackupRestoreScreen: React.FC = () => {
+  const { t } = useLanguage();
   const [localBackups, setLocalBackups] = useState<BackupItem[]>([]);
   const [cloudBackups, setCloudBackups] = useState<BackupItem[]>([]);
   const [cloudConfig, setCloudConfig] = useState<any>(null);
