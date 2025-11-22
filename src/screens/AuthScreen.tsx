@@ -10,7 +10,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { useTheme } from '../context/ThemeContext';
+import { useDesignSystem, useTheme } from '../context/ThemeContext';
 
 // Version temporaire - à connecter avec AuthContext plus tard 
 const AuthScreen = () => {
@@ -18,6 +18,7 @@ const AuthScreen = () => {
   const [confirmPin, setConfirmPin] = useState('');
   const [isSettingUp, setIsSettingUp] = useState(false);
   const { theme } = useTheme();
+  const { colors } = useDesignSystem();
   const isDark = theme === 'dark';
 
   const handlePinSubmit = () => {
@@ -57,15 +58,15 @@ const AuthScreen = () => {
 
   return (
     <KeyboardAvoidingView 
-      style={[styles.container, isDark && styles.darkContainer]}
+      style={[styles.container, { backgroundColor: colors.background.primary }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.content}>
-        <Text style={[styles.title, isDark && styles.darkText]}>
+        <Text style={[styles.title, { color: colors.text.primary }]}>
           {isSettingUp ? 'Configurer votre PIN' : 'Money Manager'}
         </Text>
         
-        <Text style={[styles.subtitle, isDark && styles.darkText]}>
+        <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
           {isSettingUp 
             ? 'Choisissez un code PIN à 4 chiffres' 
             : 'Entrez votre code PIN'
@@ -74,14 +75,14 @@ const AuthScreen = () => {
 
         <View style={styles.pinContainer}>
           <TextInput
-            style={[styles.pinInput, isDark && styles.darkInput]}
+            style={[styles.pinInput, { backgroundColor: colors.background.secondary, color: colors.text.primary }]}
             value={pin}
             onChangeText={setPin}
             keyboardType="number-pad"
             secureTextEntry
             maxLength={4}
             placeholder="****"
-            placeholderTextColor={isDark ? '#666' : '#999'}
+            placeholderTextColor={colors.text.disabled}
             textAlign="center"
           />
         </View>
@@ -89,14 +90,14 @@ const AuthScreen = () => {
         {isSettingUp && (
           <View style={styles.pinContainer}>
             <TextInput
-              style={[styles.pinInput, isDark && styles.darkInput]}
+              style={[styles.pinInput, { backgroundColor: colors.background.secondary, color: colors.text.primary }]}
               value={confirmPin}
               onChangeText={setConfirmPin}
               keyboardType="number-pad"
               secureTextEntry
               maxLength={4}
               placeholder="Confirmer le PIN"
-              placeholderTextColor={isDark ? '#666' : '#999'}
+              placeholderTextColor={colors.text.disabled}
               textAlign="center"
             />
           </View>
@@ -119,7 +120,7 @@ const AuthScreen = () => {
           onPress={() => setIsSettingUp(!isSettingUp)} 
           style={styles.switchButton}
         >
-          <Text style={[styles.switchText, isDark && styles.darkText]}>
+          <Text style={[styles.switchText, { color: colors.text.primary }]}>
             {isSettingUp ? 'Retour à la connexion' : 'Première connexion ?'}
           </Text>
         </TouchableOpacity>
@@ -131,10 +132,6 @@ const AuthScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  darkContainer: {
-    backgroundColor: '#1c1c1e',
   },
   content: {
     flex: 1,
@@ -145,15 +142,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#000',
     marginBottom: 16,
-  },
-  darkText: {
-    color: '#fff',
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
     marginBottom: 40,
     textAlign: 'center',
   },
@@ -170,13 +162,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000',
-    backgroundColor: '#f8f9fa',
-  },
-  darkInput: {
-    backgroundColor: '#2c2c2e',
-    borderColor: '#0A84FF',
-    color: '#fff',
   },
   button: {
     backgroundColor: '#007AFF',

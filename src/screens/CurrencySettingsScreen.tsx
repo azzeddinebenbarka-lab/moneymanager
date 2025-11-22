@@ -170,11 +170,11 @@ const CurrencySettingsScreen = ({ navigation }: any) => {
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
-        <View style={[styles.modalContent, isDark && styles.darkCard]}>
-          <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, isDark && styles.darkText]}>Sélectionner une devise</Text>
+        <View style={[styles.modalContent, { backgroundColor: colors.background.card }]}>
+          <View style={[styles.modalHeader, { borderBottomColor: colors.border.primary }]}>
+            <Text style={[styles.modalTitle, { color: colors.text.primary }]}>Sélectionner une devise</Text>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color={isDark ? '#fff' : '#000'} />
+              <Ionicons name="close" size={24} color={colors.text.primary} />
             </TouchableOpacity>
           </View>
           
@@ -184,8 +184,7 @@ const CurrencySettingsScreen = ({ navigation }: any) => {
                 key={curr.code}
                 style={[
                   styles.modalItem,
-                  isDark && styles.darkModalItem,
-                  curr.code === selectedCode && styles.selectedModalItem
+                  { backgroundColor: curr.code === selectedCode ? colors.primary[100] : colors.background.secondary }
                 ]}
                 onPress={() => {
                   onSelect(curr.code);
@@ -194,15 +193,15 @@ const CurrencySettingsScreen = ({ navigation }: any) => {
               >
                 <Text style={styles.currencyFlag}>{curr.flag}</Text>
                 <View style={styles.modalItemText}>
-                  <Text style={[styles.modalItemName, isDark && styles.darkText]}>
+                  <Text style={[styles.modalItemName, { color: colors.text.primary }]}>
                     {curr.name}
                   </Text>
-                  <Text style={[styles.modalItemCode, isDark && styles.darkSubtext]}>
+                  <Text style={[styles.modalItemCode, { color: colors.text.secondary }]}>
                     {curr.code} • {curr.symbol}
                   </Text>
                 </View>
                 {curr.code === selectedCode && (
-                  <Ionicons name="checkmark-circle" size={24} color="#34C759" />
+                  <Ionicons name="checkmark-circle" size={24} color={colors.semantic.success} />
                 )}
               </TouchableOpacity>
             ))}
@@ -213,22 +212,25 @@ const CurrencySettingsScreen = ({ navigation }: any) => {
   );
 
   return (
-    <View style={[styles.container, isDark && styles.darkContainer]}>
+    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
       {/* Header */}
-      <View style={[styles.header, isDark && styles.darkHeader]}>
+      <View style={[styles.header, { 
+        backgroundColor: colors.background.card, 
+        borderBottomColor: colors.border.primary 
+      }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={isDark ? '#fff' : '#000'} />
+          <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, isDark && styles.darkText]}>Devises</Text>
+        <Text style={[styles.headerTitle, { color: colors.text.primary }]}>Devises</Text>
         <TouchableOpacity 
           style={styles.refreshButton} 
           onPress={handleRefresh}
           disabled={isRefreshing}
         >
           {isRefreshing ? (
-            <ActivityIndicator size="small" color="#007AFF" />
+            <ActivityIndicator size="small" color={colors.primary[500]} />
           ) : (
-            <Ionicons name="refresh" size={24} color="#007AFF" />
+            <Ionicons name="refresh" size={24} color={colors.primary[500]} />
           )}
         </TouchableOpacity>
       </View>
@@ -241,10 +243,10 @@ const CurrencySettingsScreen = ({ navigation }: any) => {
         }
       >
         {/* Devise actuelle */}
-        <View style={[styles.currentCurrencyCard, isDark && styles.darkCard]}>
+        <View style={[styles.currentCurrencyCard, { backgroundColor: colors.background.card }]}>
           <View style={styles.currentCurrencyHeader}>
-            <Ionicons name="wallet" size={24} color="#007AFF" />
-            <Text style={[styles.currentCurrencyLabel, isDark && styles.darkSubtext]}>
+            <Ionicons name="wallet" size={24} color={colors.primary[500]} />
+            <Text style={[styles.currentCurrencyLabel, { color: colors.text.secondary }]}>
               DEVISE PRINCIPALE
             </Text>
           </View>
@@ -254,27 +256,27 @@ const CurrencySettingsScreen = ({ navigation }: any) => {
                 {currencies.find(c => c.code === currency.code)?.flag || '💰'}
               </Text>
               <View>
-                <Text style={[styles.currentCurrencyCode, isDark && styles.darkText]}>
+                <Text style={[styles.currentCurrencyCode, { color: colors.text.primary }]}>
                   {currency.code}
                 </Text>
-                <Text style={[styles.currentCurrencyName, isDark && styles.darkSubtext]}>
+                <Text style={[styles.currentCurrencyName, { color: colors.text.secondary }]}>
                   {currencies.find(c => c.code === currency.code)?.name || currency.name}
                 </Text>
               </View>
-              <Ionicons name="checkmark-circle" size={24} color="#34C759" />
+              <Ionicons name="checkmark-circle" size={24} color={colors.semantic.success} />
             </View>
           </View>
         </View>
 
         {/* Statut de connexion */}
         {lastUpdate && (
-          <View style={[styles.statusCard, isDark && styles.darkStatusCard]}>
+          <View style={[styles.statusCard, { backgroundColor: allRates ? colors.semantic.success + '20' : colors.semantic.error + '20' }]}>
             <Ionicons 
               name={allRates ? "cloud-done" : "cloud-offline"} 
               size={16} 
-              color={allRates ? "#34C759" : "#EF4444"} 
+              color={allRates ? colors.semantic.success : colors.semantic.error} 
             />
-            <Text style={[styles.statusText, isDark && styles.darkSubtext]}>
+            <Text style={[styles.statusText, { color: colors.text.secondary }]}>
               {allRates 
                 ? `Taux mis à jour ${lastUpdate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
                 : 'Hors ligne - Utilisation du cache'
@@ -284,18 +286,18 @@ const CurrencySettingsScreen = ({ navigation }: any) => {
         )}
 
         {/* Convertisseur en temps réel */}
-        <View style={[styles.converterCard, isDark && styles.darkCard]}>
+        <View style={[styles.converterCard, { backgroundColor: colors.background.card }]}>
           <View style={styles.converterHeader}>
-            <Ionicons name="swap-horizontal" size={24} color="#007AFF" />
-            <Text style={[styles.converterTitle, isDark && styles.darkText]}>
+            <Ionicons name="swap-horizontal" size={24} color={colors.primary[500]} />
+            <Text style={[styles.converterTitle, { color: colors.text.primary }]}>
               Convertisseur en temps réel
             </Text>
           </View>
           
           {isLoading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#007AFF" />
-              <Text style={[styles.loadingText, isDark && styles.darkSubtext]}>
+              <ActivityIndicator size="large" color={colors.primary[500]} />
+              <Text style={[styles.loadingText, { color: colors.text.secondary }]}>
                 Chargement des taux de change...
               </Text>
             </View>
@@ -304,43 +306,43 @@ const CurrencySettingsScreen = ({ navigation }: any) => {
               {/* Montant source */}
               <View style={styles.converterRow}>
                 <View style={styles.converterInputGroup}>
-                  <Text style={[styles.inputLabel, isDark && styles.darkSubtext]}>Montant</Text>
+                  <Text style={[styles.inputLabel, { color: colors.text.secondary }]}>Montant</Text>
                   <TextInput
-                    style={[styles.amountInput, isDark && styles.darkInput, isDark && styles.darkText]}
+                    style={[styles.amountInput, { backgroundColor: colors.background.secondary, color: colors.text.primary }]}
                     value={amount}
                     onChangeText={setAmount}
                     keyboardType="numeric"
                     placeholder="1000"
-                    placeholderTextColor={isDark ? '#666' : '#999'}
+                    placeholderTextColor={colors.text.disabled}
                   />
                 </View>
                 
                 <TouchableOpacity
-                  style={[styles.currencySelector, isDark && styles.darkSelector]}
+                  style={[styles.currencySelector, { backgroundColor: colors.background.secondary }]}
                   onPress={() => setShowSourcePicker(true)}
                 >
                   <Text style={styles.currencySelectorFlag}>
                     {currencies.find(c => c.code === sourceCurrency)?.flag}
                   </Text>
-                  <Text style={[styles.currencySelectorCode, isDark && styles.darkText]}>
+                  <Text style={[styles.currencySelectorCode, { color: colors.text.primary }]}>
                     {sourceCurrency}
                   </Text>
-                  <Ionicons name="chevron-down" size={20} color={isDark ? '#fff' : '#000'} />
+                  <Ionicons name="chevron-down" size={20} color={colors.text.primary} />
                 </TouchableOpacity>
               </View>
 
               {/* Bouton swap */}
               <View style={styles.swapContainer}>
-                <TouchableOpacity style={styles.swapButton} onPress={swapCurrencies}>
-                  <Ionicons name="swap-vertical" size={24} color="#007AFF" />
+                <TouchableOpacity style={[styles.swapButton, { backgroundColor: colors.primary[100] }]} onPress={swapCurrencies}>
+                  <Ionicons name="swap-vertical" size={24} color={colors.primary[500]} />
                 </TouchableOpacity>
               </View>
 
               {/* Montant cible */}
               <View style={styles.converterRow}>
-                <View style={[styles.resultBox, isDark && styles.darkResultBox]}>
-                  <Text style={[styles.resultLabel, isDark && styles.darkSubtext]}>Résultat</Text>
-                  <Text style={[styles.resultAmount, isDark && styles.darkText]}>
+                <View style={[styles.resultBox, { backgroundColor: colors.background.secondary }]}>
+                  <Text style={[styles.resultLabel, { color: colors.text.secondary }]}>Résultat</Text>
+                  <Text style={[styles.resultAmount, { color: colors.primary[500] }]}>
                     {convertedAmount.toLocaleString('fr-FR', { 
                       minimumFractionDigits: 2, 
                       maximumFractionDigits: 2 
@@ -349,24 +351,24 @@ const CurrencySettingsScreen = ({ navigation }: any) => {
                 </View>
                 
                 <TouchableOpacity
-                  style={[styles.currencySelector, isDark && styles.darkSelector]}
+                  style={[styles.currencySelector, { backgroundColor: colors.background.secondary }]}
                   onPress={() => setShowTargetPicker(true)}
                 >
                   <Text style={styles.currencySelectorFlag}>
                     {currencies.find(c => c.code === targetCurrency)?.flag}
                   </Text>
-                  <Text style={[styles.currencySelectorCode, isDark && styles.darkText]}>
+                  <Text style={[styles.currencySelectorCode, { color: colors.text.primary }]}>
                     {targetCurrency}
                   </Text>
-                  <Ionicons name="chevron-down" size={20} color={isDark ? '#fff' : '#000'} />
+                  <Ionicons name="chevron-down" size={20} color={colors.text.primary} />
                 </TouchableOpacity>
               </View>
 
               {/* Taux de change */}
               {exchangeRate > 0 && (
-                <View style={[styles.rateInfo, isDark && styles.darkRateInfo]}>
-                  <Ionicons name="information-circle" size={16} color="#007AFF" />
-                  <Text style={[styles.rateText, isDark && styles.darkSubtext]}>
+                <View style={[styles.rateInfo, { backgroundColor: colors.primary[100] }]}>
+                  <Ionicons name="information-circle" size={16} color={colors.primary[500]} />
+                  <Text style={[styles.rateText, { color: colors.text.secondary }]}>
                     1 {sourceCurrency} = {exchangeRate.toFixed(4)} {targetCurrency}
                   </Text>
                 </View>
@@ -377,14 +379,14 @@ const CurrencySettingsScreen = ({ navigation }: any) => {
 
         {/* Changer la devise principale */}
         <View style={styles.section}>
-          <View style={[styles.warningBox, isDark && styles.darkWarningBox]}>
-            <Ionicons name="warning" size={20} color="#F59E0B" />
-            <Text style={[styles.warningText, isDark && styles.darkText]}>
+          <View style={[styles.warningBox, { backgroundColor: colors.semantic.warning + '20' }]}>
+            <Ionicons name="warning" size={20} color={colors.semantic.warning} />
+            <Text style={[styles.warningText, { color: colors.text.primary }]}>
               Changer la devise principale affectera l'affichage de tous vos montants dans l'application.
             </Text>
           </View>
 
-          <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
             Changer la devise principale
           </Text>
 
@@ -393,24 +395,24 @@ const CurrencySettingsScreen = ({ navigation }: any) => {
               key={curr.code}
               style={[
                 styles.currencyItem,
-                isDark && styles.darkCurrencyItem,
-                curr.code === currency.code && styles.selectedCurrency
+                { backgroundColor: colors.background.card },
+                curr.code === currency.code && { borderWidth: 2, borderColor: colors.semantic.success }
               ]}
               onPress={() => handleCurrencyChange(curr.code)}
             >
               <View style={styles.currencyItemLeft}>
                 <Text style={styles.currencyItemFlag}>{curr.flag}</Text>
                 <View>
-                  <Text style={[styles.currencyItemName, isDark && styles.darkText]}>
+                  <Text style={[styles.currencyItemName, { color: colors.text.primary }]}>
                     {curr.name}
                   </Text>
-                  <Text style={[styles.currencyItemCode, isDark && styles.darkSubtext]}>
+                  <Text style={[styles.currencyItemCode, { color: colors.text.secondary }]}>
                     {curr.code} • {curr.symbol}
                   </Text>
                 </View>
               </View>
               {curr.code === currency.code && (
-                <Ionicons name="checkmark-circle" size={24} color="#34C759" />
+                <Ionicons name="checkmark-circle" size={24} color={colors.semantic.success} />
               )}
             </TouchableOpacity>
           ))}
@@ -439,10 +441,6 @@ export default CurrencySettingsScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-  darkContainer: {
-    backgroundColor: '#000',
   },
   header: {
     flexDirection: 'row',
@@ -450,13 +448,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
-  darkHeader: {
-    backgroundColor: '#1C1C1E',
-    borderBottomColor: '#2C2C2E',
   },
   backButton: {
     padding: 8,
@@ -464,19 +456,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
     flex: 1,
     textAlign: 'center',
     marginRight: 40,
   },
   refreshButton: {
     padding: 8,
-  },
-  darkText: {
-    color: '#fff',
-  },
-  darkSubtext: {
-    color: '#999',
   },
   content: {
     flex: 1,
@@ -485,7 +470,6 @@ const styles = StyleSheet.create({
   
   // Devise actuelle
   currentCurrencyCard: {
-    backgroundColor: '#fff',
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
@@ -494,9 +478,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
-  },
-  darkCard: {
-    backgroundColor: '#1C1C1E',
   },
   currentCurrencyHeader: {
     flexDirection: 'row',
@@ -507,7 +488,6 @@ const styles = StyleSheet.create({
   currentCurrencyLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#666',
     letterSpacing: 0.5,
   },
   currentCurrencyContent: {
@@ -524,11 +504,9 @@ const styles = StyleSheet.create({
   currentCurrencyCode: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#000',
   },
   currentCurrencyName: {
     fontSize: 14,
-    color: '#666',
     marginTop: 4,
   },
   
@@ -536,23 +514,17 @@ const styles = StyleSheet.create({
   statusCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E8F5E9',
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
     gap: 8,
   },
-  darkStatusCard: {
-    backgroundColor: '#1C2D1F',
-  },
   statusText: {
     fontSize: 12,
-    color: '#666',
   },
   
   // Convertisseur
   converterCard: {
-    backgroundColor: '#fff',
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
@@ -571,7 +543,6 @@ const styles = StyleSheet.create({
   converterTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
   },
   loadingContainer: {
     alignItems: 'center',
@@ -581,7 +552,6 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 14,
-    color: '#666',
   },
   converterRow: {
     flexDirection: 'row',
@@ -595,34 +565,24 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#666',
     marginBottom: 8,
   },
   amountInput: {
-    backgroundColor: '#F5F5F5',
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
     fontSize: 20,
     fontWeight: '600',
-    color: '#000',
     height: 52,
-  },
-  darkInput: {
-    backgroundColor: '#2C2C2E',
   },
   currencySelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 12,
     gap: 6,
     minWidth: 110,
-  },
-  darkSelector: {
-    backgroundColor: '#2C2C2E',
   },
   currencySelectorFlag: {
     fontSize: 18,
@@ -630,55 +590,42 @@ const styles = StyleSheet.create({
   currencySelectorCode: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#000',
   },
   swapContainer: {
     alignItems: 'center',
     marginVertical: 8,
   },
   swapButton: {
-    backgroundColor: '#E3F2FD',
     borderRadius: 24,
     padding: 12,
   },
   resultBox: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 16,
     justifyContent: 'center',
     height: 52,
   },
-  darkResultBox: {
-    backgroundColor: '#2C2C2E',
-  },
   resultLabel: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#666',
     marginBottom: 4,
   },
   resultAmount: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#007AFF',
   },
   rateInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E3F2FD',
     borderRadius: 8,
     padding: 12,
     marginTop: 8,
     gap: 8,
   },
-  darkRateInfo: {
-    backgroundColor: '#1C2D3A',
-  },
   rateText: {
     fontSize: 12,
-    color: '#666',
   },
   
   // Section
@@ -688,25 +635,19 @@ const styles = StyleSheet.create({
   },
   warningBox: {
     flexDirection: 'row',
-    backgroundColor: '#FFF3E0',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     gap: 12,
   },
-  darkWarningBox: {
-    backgroundColor: '#3A2F1C',
-  },
   warningText: {
     flex: 1,
     fontSize: 13,
-    color: '#000',
     lineHeight: 18,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 12,
   },
   
@@ -715,17 +656,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
     marginBottom: 8,
-  },
-  darkCurrencyItem: {
-    backgroundColor: '#1C1C1E',
-  },
-  selectedCurrency: {
-    borderWidth: 2,
-    borderColor: '#34C759',
   },
   currencyItemLeft: {
     flexDirection: 'row',
@@ -739,11 +672,9 @@ const styles = StyleSheet.create({
   currencyItemName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#000',
   },
   currencyItemCode: {
     fontSize: 12,
-    color: '#666',
     marginTop: 2,
   },
   currencyFlag: {
@@ -757,7 +688,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '80%',
@@ -768,12 +698,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
   },
   modalList: {
     padding: 16,
@@ -784,14 +712,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginBottom: 8,
-    backgroundColor: '#F5F5F5',
     gap: 12,
-  },
-  darkModalItem: {
-    backgroundColor: '#2C2C2E',
-  },
-  selectedModalItem: {
-    backgroundColor: '#E3F2FD',
   },
   modalItemText: {
     flex: 1,
@@ -799,11 +720,9 @@ const styles = StyleSheet.create({
   modalItemName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#000',
   },
   modalItemCode: {
     fontSize: 12,
-    color: '#666',
     marginTop: 2,
   },
 });

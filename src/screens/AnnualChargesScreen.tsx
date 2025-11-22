@@ -15,13 +15,14 @@ import {
 import { SafeAreaView } from '../components/SafeAreaView';
 import { ToggleSwitch } from '../components/ui/ToggleSwitch';
 import { useCurrency } from '../context/CurrencyContext';
-import { useTheme } from '../context/ThemeContext';
+import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useAnnualCharges } from '../hooks/useAnnualCharges';
 import { useIslamicCharges } from '../hooks/useIslamicCharges';
 
 export const AnnualChargesScreen: React.FC = () => {
   const navigation = useNavigation();
   const { theme } = useTheme();
+  const { colors } = useDesignSystem();
   const { formatAmount } = useCurrency();
   
   const {
@@ -303,9 +304,9 @@ export const AnnualChargesScreen: React.FC = () => {
   if (loading && !refreshing) {
     return (
       <SafeAreaView>
-        <View style={[styles.container, isDark && styles.darkContainer, styles.center]}>
-          <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={[styles.loadingText, isDark && styles.darkText]}>
+        <View style={[styles.container, { backgroundColor: colors.background.primary }, styles.center]}>
+          <ActivityIndicator size="large" color={colors.primary[500]} />
+          <Text style={[styles.loadingText, { color: colors.text.primary }]}>
             Chargement des charges annuelles...
           </Text>
         </View>
@@ -316,13 +317,13 @@ export const AnnualChargesScreen: React.FC = () => {
   return (
     <SafeAreaView>
       <ScrollView 
-        style={[styles.container, isDark && styles.darkContainer]}
+        style={[styles.container, { backgroundColor: colors.background.primary }]}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={['#007AFF']}
-            tintColor={isDark ? '#007AFF' : '#007AFF'}
+            colors={[colors.primary[500]]}
+            tintColor={colors.primary[500]}
           />
         }
       >
@@ -333,26 +334,26 @@ export const AnnualChargesScreen: React.FC = () => {
               style={styles.backButton}
               onPress={() => navigation.goBack()}
             >
-              <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#000"} />
+              <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
             </TouchableOpacity>
           </View>
-          <Text style={[styles.title, isDark && styles.darkText]}>
+          <Text style={[styles.title, { color: colors.text.primary }]}>
             Charges Annuelles {currentYear}
           </Text>
           <TouchableOpacity 
             style={styles.addButton}
             onPress={handleAddCharge}
           >
-            <Ionicons name="add" size={24} color="#007AFF" />
+            <Ionicons name="add" size={24} color={colors.primary[500]} />
           </TouchableOpacity>
         </View>
 
         {/* Toggle Charges Islamiques */}
-        <View style={[styles.islamicToggleCard, isDark && styles.darkIslamicToggleCard]}>
+        <View style={[styles.islamicToggleCard, { backgroundColor: colors.background.card }]}>
           <View style={styles.islamicToggleHeader}>
             <View style={styles.islamicToggleInfo}>
               <Ionicons name="star" size={20} color="#8A2BE2" />
-              <Text style={[styles.islamicToggleTitle, isDark && styles.darkText]}>
+              <Text style={[styles.islamicToggleTitle, { color: colors.text.primary }]}>
                 Charges Islamiques
               </Text>
             </View>
@@ -362,7 +363,7 @@ export const AnnualChargesScreen: React.FC = () => {
               size="medium"
             />
           </View>
-          <Text style={[styles.islamicToggleDescription, isDark && styles.darkSubtext]}>
+          <Text style={[styles.islamicToggleDescription, { color: colors.text.secondary }]}>
             {islamicSettings.isEnabled 
               ? 'Activé - Gestion des charges liées aux fêtes musulmanes'
               : 'Désactivé - Activez pour gérer les charges islamiques'
@@ -372,26 +373,26 @@ export const AnnualChargesScreen: React.FC = () => {
           {islamicSettings.isEnabled && (
             <View style={styles.islamicStats}>
               <View style={styles.islamicStat}>
-                <Text style={[styles.islamicStatValue, isDark && styles.darkText]}>
+                <Text style={[styles.islamicStatValue, { color: colors.text.primary }]}>
                   {islamicCharges.length}
                 </Text>
-                <Text style={[styles.islamicStatLabel, isDark && styles.darkSubtext]}>
+                <Text style={[styles.islamicStatLabel, { color: colors.text.secondary }]}>
                   Charges
                 </Text>
               </View>
               <View style={styles.islamicStat}>
-                <Text style={[styles.islamicStatValue, isDark && styles.darkText]}>
+                <Text style={[styles.islamicStatValue, { color: colors.text.primary }]}>
                   {islamicCharges.filter(c => c.isPaid).length}
                 </Text>
-                <Text style={[styles.islamicStatLabel, isDark && styles.darkSubtext]}>
+                <Text style={[styles.islamicStatLabel, { color: colors.text.secondary }]}>
                   Payées
                 </Text>
               </View>
               <View style={styles.islamicStat}>
-                <Text style={[styles.islamicStatValue, isDark && styles.darkText]}>
+                <Text style={[styles.islamicStatValue, { color: colors.text.primary }]}>
                   {formatAmount(islamicCharges.reduce((sum, charge) => sum + charge.amount, 0))}
                 </Text>
-                <Text style={[styles.islamicStatLabel, isDark && styles.darkSubtext]}>
+                <Text style={[styles.islamicStatLabel, { color: colors.text.secondary }]}>
                   Total
                 </Text>
               </View>
@@ -404,15 +405,13 @@ export const AnnualChargesScreen: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.islamicFilterButton,
-              !showIslamicCharges && styles.islamicFilterButtonActive,
-              isDark && styles.darkIslamicFilterButton
+              { backgroundColor: !showIslamicCharges ? colors.primary[500] : colors.background.secondary }
             ]}
             onPress={() => setShowIslamicCharges(false)}
           >
             <Text style={[
               styles.islamicFilterText,
-              !showIslamicCharges && styles.islamicFilterTextActive,
-              isDark && styles.darkText
+              { color: !showIslamicCharges ? colors.text.inverse : colors.text.primary }
             ]}>
               📋 Toutes les charges
             </Text>
@@ -420,8 +419,7 @@ export const AnnualChargesScreen: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.islamicFilterButton,
-              showIslamicCharges && styles.islamicFilterButtonActive,
-              isDark && styles.darkIslamicFilterButton
+              { backgroundColor: showIslamicCharges ? colors.primary[500] : colors.background.secondary }
             ]}
             onPress={() => {
               if (!islamicSettings.isEnabled) {
@@ -437,8 +435,7 @@ export const AnnualChargesScreen: React.FC = () => {
           >
             <Text style={[
               styles.islamicFilterText,
-              showIslamicCharges && styles.islamicFilterTextActive,
-              isDark && styles.darkText
+              { color: showIslamicCharges ? colors.text.inverse : colors.text.primary }
             ]}>
               🕌 Charges islamiques {!islamicSettings.isEnabled && '(Activer)'}
             </Text>
@@ -447,7 +444,7 @@ export const AnnualChargesScreen: React.FC = () => {
 
         {/* Bouton Prélèvement Automatique */}
         <TouchableOpacity
-          style={[styles.autoDeductButton, isDark && styles.darkAutoDeductButton]}
+          style={[styles.autoDeductButton, { backgroundColor: colors.background.card }]}
           onPress={async () => {
             Alert.alert(
               '💰 Prélèvement Automatique',
@@ -508,47 +505,47 @@ export const AnnualChargesScreen: React.FC = () => {
             <Ionicons name="flash" size={20} color="#FFF" />
           </View>
           <View style={styles.autoDeductContent}>
-            <Text style={[styles.autoDeductTitle, isDark && styles.darkText]}>Prélever toutes les charges</Text>
-            <Text style={[styles.autoDeductSubtitle, isDark && styles.darkSubtext]}>Annuelles + Islamiques (si activées)</Text>
+            <Text style={[styles.autoDeductTitle, { color: colors.text.primary }]}>Prélever toutes les charges</Text>
+            <Text style={[styles.autoDeductSubtitle, { color: colors.text.secondary }]}>Annuelles + Islamiques (si activées)</Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color={isDark ? "#0A84FF" : "#007AFF"} />
+          <Ionicons name="chevron-forward" size={20} color={colors.primary[500]} />
         </TouchableOpacity>
 
         {/* Montant total */}
-        <View style={[styles.totalAmountCard, isDark && styles.darkTotalAmountCard]}>
-          <Text style={[styles.totalAmountLabel, isDark && styles.darkSubtext]}>
+        <View style={[styles.totalAmountCard, { backgroundColor: colors.background.card }]}>
+          <Text style={[styles.totalAmountLabel, { color: colors.text.secondary }]}>
             Montant Total {currentYear}
           </Text>
-          <Text style={[styles.totalAmountValue, isDark && styles.darkText]}>
+          <Text style={[styles.totalAmountValue, { color: colors.text.primary }]}>
             {formatAmount(stats?.totalAmount || 0)}
           </Text>
         </View>
 
         {/* Cartes de statistiques */}
         <View style={styles.statsCardsContainer}>
-          <View style={[styles.statCard, isDark && styles.darkStatCard]}>
-            <View style={[styles.statIcon, { backgroundColor: '#E8F5E8' }]}>
+          <View style={[styles.statCard, { backgroundColor: colors.background.card }]}>
+            <View style={[styles.statIcon, { backgroundColor: colors.semantic.success + '20' }]}>
               <Text style={styles.statIconText}>✅</Text>
             </View>
             <View style={styles.statContent}>
-              <Text style={[styles.statValue, isDark && styles.darkText]}>
+              <Text style={[styles.statValue, { color: colors.text.primary }]}>
                 {formatAmount(stats?.paidAmount || 0)}
               </Text>
-              <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+              <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
                 Payé ({stats?.upcomingCharges?.filter((c: any) => c.isPaid)?.length || 0})
               </Text>
             </View>
           </View>
 
-          <View style={[styles.statCard, isDark && styles.darkStatCard]}>
-            <View style={[styles.statIcon, { backgroundColor: '#FFF3E0' }]}>
+          <View style={[styles.statCard, { backgroundColor: colors.background.card }]}>
+            <View style={[styles.statIcon, { backgroundColor: colors.semantic.warning + '20' }]}>
               <Text style={styles.statIconText}>⏳</Text>
             </View>
             <View style={styles.statContent}>
-              <Text style={[styles.statValue, isDark && styles.darkText]}>
+              <Text style={[styles.statValue, { color: colors.text.primary }]}>
                 {formatAmount(stats?.pendingAmount || 0)}
               </Text>
-              <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+              <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
                 En attente ({stats?.upcomingCharges?.filter((c: any) => !c.isPaid)?.length || 0})
               </Text>
             </View>
@@ -566,15 +563,13 @@ export const AnnualChargesScreen: React.FC = () => {
               key={filter.key}
               style={[
                 styles.filterButton,
-                selectedStatus === filter.key && styles.filterButtonSelected,
-                isDark && styles.darkFilterButton
+                { backgroundColor: selectedStatus === filter.key ? colors.primary[500] : colors.background.secondary }
               ]}
               onPress={() => handleStatusFilter(filter.key)}
             >
               <Text style={[
                 styles.filterText,
-                selectedStatus === filter.key && styles.filterTextSelected,
-                isDark && styles.darkText
+                { color: selectedStatus === filter.key ? colors.text.inverse : colors.text.primary }
               ]}>
                 {filter.icon} {filter.label}
               </Text>
@@ -584,7 +579,7 @@ export const AnnualChargesScreen: React.FC = () => {
 
         {/* Liste des charges */}
         <View style={styles.chargesSection}>
-          <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
             {showIslamicCharges ? 'Charges Islamiques' : 
              selectedStatus === 'all' ? 'Toutes les charges' :
              selectedStatus === 'paid' ? 'Charges payées' : 
@@ -593,13 +588,13 @@ export const AnnualChargesScreen: React.FC = () => {
           </Text>
 
           {displayCharges.length === 0 ? (
-            <View style={[styles.emptyState, isDark && styles.darkEmptyState]}>
+            <View style={[styles.emptyState, { backgroundColor: colors.background.card }]}>
               <Ionicons 
                 name={showIslamicCharges ? "star-outline" : "calendar-outline"} 
                 size={64} 
-                color={isDark ? '#555' : '#ccc'} 
+                color={colors.text.disabled} 
               />
-              <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
+              <Text style={[styles.emptyText, { color: colors.text.secondary }]}>
                 {showIslamicCharges 
                   ? !islamicSettings.isEnabled 
                     ? 'Charges islamiques désactivées'
@@ -607,7 +602,7 @@ export const AnnualChargesScreen: React.FC = () => {
                   : `Aucune charge ${selectedStatus !== 'all' ? statusFilters.find(f => f.key === selectedStatus)?.label.toLowerCase() : ''} en ${currentYear}`
                 }
               </Text>
-              <Text style={[styles.emptyDescription, isDark && styles.darkSubtext]}>
+              <Text style={[styles.emptyDescription, { color: colors.text.secondary }]}>
                 {showIslamicCharges 
                   ? !islamicSettings.isEnabled
                     ? 'Activez le toggle "Charges Islamiques" en haut pour commencer à gérer vos charges islamiques'
@@ -642,7 +637,7 @@ export const AnnualChargesScreen: React.FC = () => {
             displayCharges.map((charge) => (
               <TouchableOpacity 
                 key={charge.id} 
-                style={[styles.modernChargeCard, isDark && styles.darkChargeCard]}
+                style={[styles.modernChargeCard, { backgroundColor: colors.background.card }]}
                 onPress={() => handleEditCharge(charge.id)}
                 activeOpacity={0.7}
               >
@@ -656,10 +651,10 @@ export const AnnualChargesScreen: React.FC = () => {
                     />
                   </View>
                   <View style={styles.modernChargeInfo}>
-                    <Text style={[styles.modernChargeName, isDark && styles.darkText]}>
+                    <Text style={[styles.modernChargeName, { color: colors.text.primary }]}>
                       {charge.name}
                     </Text>
-                    <Text style={[styles.modernChargeCategory, isDark && styles.darkSubtext]}>
+                    <Text style={[styles.modernChargeCategory, { color: colors.text.secondary }]}>
                       {charge.category}
                     </Text>
                   </View>
@@ -679,21 +674,21 @@ export const AnnualChargesScreen: React.FC = () => {
                 </View>
 
                 {/* Montant principal */}
-                <Text style={[styles.modernChargeAmount, isDark && styles.darkText]}>
+                <Text style={[styles.modernChargeAmount, { color: colors.text.primary }]}>
                   {formatAmount(charge.amount)}
                 </Text>
 
                 {/* Informations de fréquence et échéance */}
                 <View style={styles.modernChargeDetails}>
                   <View style={styles.modernDetailItem}>
-                    <Ionicons name="repeat" size={14} color={isDark ? '#888' : '#666'} />
-                    <Text style={[styles.modernDetailText, isDark && styles.darkSubtext]}>
+                    <Ionicons name="repeat" size={14} color={colors.text.secondary} />
+                    <Text style={[styles.modernDetailText, { color: colors.text.secondary }]}>
                       {formatRecurrence(charge)}
                     </Text>
                   </View>
                   <View style={styles.modernDetailItem}>
-                    <Ionicons name="calendar" size={14} color={isDark ? '#888' : '#666'} />
-                    <Text style={[styles.modernDetailText, isDark && styles.darkSubtext]}>
+                    <Ionicons name="calendar" size={14} color={colors.text.secondary} />
+                    <Text style={[styles.modernDetailText, { color: colors.text.secondary }]}>
                       Échéance: {new Date(charge.dueDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                     </Text>
                   </View>
@@ -740,10 +735,6 @@ export const AnnualChargesScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  darkContainer: {
-    backgroundColor: '#1c1c1e',
   },
   center: {
     justifyContent: 'center',
@@ -766,7 +757,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#000',
     textAlign: 'center',
     flex: 1,
   },
@@ -777,7 +767,6 @@ const styles = StyleSheet.create({
   },
   // Styles pour le toggle islamique
   islamicToggleCard: {
-    backgroundColor: '#fff',
     padding: 16,
     marginHorizontal: 20,
     borderRadius: 12,
@@ -787,9 +776,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
-  },
-  darkIslamicToggleCard: {
-    backgroundColor: '#2c2c2e',
   },
   islamicToggleHeader: {
     flexDirection: 'row',
@@ -805,11 +791,9 @@ const styles = StyleSheet.create({
   islamicToggleTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#000',
   },
   islamicToggleDescription: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 12,
   },
   islamicStats: {
@@ -825,12 +809,10 @@ const styles = StyleSheet.create({
   islamicStatValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#000',
     marginBottom: 2,
   },
   islamicStatLabel: {
     fontSize: 12,
-    color: '#666',
   },
   // Filtre charges islamiques
   islamicFilter: {
@@ -841,29 +823,14 @@ const styles = StyleSheet.create({
   },
   islamicFilterButton: {
     flex: 1,
-    backgroundColor: '#fff',
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 8,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  darkIslamicFilterButton: {
-    backgroundColor: '#2c2c2e',
-    borderColor: '#444',
-  },
-  islamicFilterButtonActive: {
-    backgroundColor: '#8A2BE2',
-    borderColor: '#8A2BE2',
   },
   islamicFilterText: {
     fontSize: 14,
-    color: '#666',
     fontWeight: '500',
-  },
-  islamicFilterTextActive: {
-    color: '#fff',
   },
   totalAmountCard: {
     backgroundColor: '#007AFF',
@@ -877,9 +844,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
-  },
-  darkTotalAmountCard: {
-    backgroundColor: '#0A84FF',
   },
   totalAmountLabel: {
     fontSize: 14,
@@ -900,7 +864,6 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#fff',
     padding: 16,
     borderRadius: 12,
     flexDirection: 'row',
@@ -931,41 +894,24 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#000',
     marginBottom: 2,
   },
   statLabel: {
     fontSize: 12,
-    color: '#666',
   },
   filtersContainer: {
     paddingHorizontal: 20,
     marginBottom: 16,
   },
   filterButton: {
-    backgroundColor: '#fff',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     marginRight: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  darkFilterButton: {
-    backgroundColor: '#2c2c2e',
-    borderColor: '#444',
-  },
-  filterButtonSelected: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
   },
   filterText: {
     fontSize: 14,
-    color: '#666',
     fontWeight: '500',
-  },
-  filterTextSelected: {
-    color: '#fff',
   },
   chargesSection: {
     paddingHorizontal: 20,
@@ -974,11 +920,9 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000',
     marginBottom: 16,
   },
   chargeCard: {
-    backgroundColor: '#fff',
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
@@ -987,9 +931,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
-  },
-  darkChargeCard: {
-    backgroundColor: '#2c2c2e',
   },
   chargeHeader: {
     flexDirection: 'row',
@@ -1003,7 +944,6 @@ const styles = StyleSheet.create({
   chargeName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#000',
     marginBottom: 4,
   },
   islamicBadge: {
@@ -1037,12 +977,10 @@ const styles = StyleSheet.create({
   },
   chargeCategory: {
     fontSize: 14,
-    color: '#666',
   },
   chargeAmount: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000',
   },
   chargeDetails: {
     flexDirection: 'row',
@@ -1054,7 +992,6 @@ const styles = StyleSheet.create({
   },
   chargeDate: {
     fontSize: 12,
-    color: '#666',
     marginBottom: 4,
   },
   chargeStatus: {
@@ -1064,7 +1001,6 @@ const styles = StyleSheet.create({
   },
   chargeAccount: {
     fontSize: 11,
-    color: '#666',
   },
   chargeActions: {
     flexDirection: 'row',
@@ -1093,23 +1029,17 @@ const styles = StyleSheet.create({
   },
   chargeNotes: {
     fontSize: 12,
-    color: '#666',
     marginTop: 8,
     fontStyle: 'italic',
   },
   emptyState: {
-    backgroundColor: '#fff',
     padding: 40,
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 20,
   },
-  darkEmptyState: {
-    backgroundColor: '#2c2c2e',
-  },
   emptyText: {
     fontSize: 18,
-    color: '#666',
     textAlign: 'center',
     marginTop: 16,
     marginBottom: 8,
@@ -1117,7 +1047,6 @@ const styles = StyleSheet.create({
   },
   emptyDescription: {
     fontSize: 14,
-    color: '#666',
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 20,
@@ -1149,26 +1078,15 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  darkFab: {
-    backgroundColor: '#0A84FF',
-  },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
-  },
-  darkText: {
-    color: '#fff',
-  },
-  darkSubtext: {
-    color: '#888',
   },
   
   // ✅ STYLES POUR LE BOUTON DE PRÉLÈVEMENT AUTOMATIQUE
   autoDeductButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     padding: 16,
     borderRadius: 16,
     marginHorizontal: 16,
@@ -1180,10 +1098,6 @@ const styles = StyleSheet.create({
     elevation: 3,
     borderWidth: 2,
     borderColor: '#007AFF',
-  },
-  darkAutoDeductButton: {
-    backgroundColor: '#1C1C1E',
-    borderColor: '#0A84FF',
   },
   autoDeductIconContainer: {
     width: 40,
@@ -1205,7 +1119,6 @@ const styles = StyleSheet.create({
   },
   autoDeductSubtitle: {
     fontSize: 13,
-    color: '#666',
     fontWeight: '500',
   },
   
@@ -1227,7 +1140,6 @@ const styles = StyleSheet.create({
   
   // ✅ NOUVEAUX STYLES MODERNES
   modernChargeCard: {
-    backgroundColor: '#fff',
     padding: 16,
     borderRadius: 16,
     marginBottom: 16,
@@ -1258,12 +1170,10 @@ const styles = StyleSheet.create({
   modernChargeName: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#000',
     marginBottom: 2,
   },
   modernChargeCategory: {
     fontSize: 13,
-    color: '#666',
     fontWeight: '500',
   },
   modernIslamicBadge: {
@@ -1277,7 +1187,6 @@ const styles = StyleSheet.create({
   modernChargeAmount: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#000',
     marginBottom: 12,
     letterSpacing: -0.5,
   },
