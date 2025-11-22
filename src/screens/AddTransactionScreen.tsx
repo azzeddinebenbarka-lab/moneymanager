@@ -327,7 +327,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
 
         {/* Montant */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
+          <Text style={[styles.label, { color: colors.text.primary }]}>
             Montant *
           </Text>
           <View style={styles.amountContainer}>
@@ -335,17 +335,17 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
               style={[
                 styles.input, 
                 styles.amountInput, 
-                isDark && styles.darkInput,
+                { backgroundColor: colors.background.secondary, color: colors.text.primary },
               ]}
               value={form.amount}
               onChangeText={(text) => setForm(prev => ({ ...prev, amount: text.replace(',', '.') }))}
               placeholder="0.00"
-              placeholderTextColor={isDark ? "#888" : "#999"}
+              placeholderTextColor={colors.text.disabled}
               keyboardType="decimal-pad"
             />
           </View>
           {form.amount && (
-            <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+            <Text style={[styles.hint, { color: colors.text.secondary }]}>
               {formatAmount(Math.abs(parseFloat(form.amount) || 0))}
             </Text>
           )}
@@ -353,12 +353,12 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
 
         {/* Catégorie AVEC DROPDOWN */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
+          <Text style={[styles.label, { color: colors.text.primary }]}>
             Catégorie *
           </Text>
           
           <TouchableOpacity
-            style={[styles.dropdownButton, isDark && styles.darkInput]}
+            style={[styles.dropdownButton, { backgroundColor: colors.background.secondary }]}
             onPress={() => setShowCategoryDropdown(true)}
           >
             <View style={styles.dropdownButtonContent}>
@@ -371,19 +371,19 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
                       color={categories.find(cat => cat.id === form.category)?.color} 
                     />
                   </View>
-                  <Text style={[styles.dropdownButtonText, isDark && styles.darkText]}>
+                  <Text style={[styles.dropdownButtonText, { color: colors.text.primary }]}>
                     {selectedCategoryName}
                   </Text>
                 </View>
               ) : (
-                <Text style={[styles.dropdownPlaceholder, isDark && styles.darkSubtext]}>
+                <Text style={[styles.dropdownPlaceholder, { color: colors.text.disabled }]}>
                   Sélectionner une catégorie...
                 </Text>
               )}
               <Ionicons 
                 name="chevron-down" 
                 size={20} 
-                color={isDark ? "#888" : "#666"} 
+                color={colors.text.disabled} 
               />
             </View>
           </TouchableOpacity>
@@ -393,41 +393,41 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
 
         {/* Compte */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
+          <Text style={[styles.label, { color: colors.text.primary }]}>
             Compte *
           </Text>
           
           {accountsLoading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color="#007AFF" />
-              <Text style={[styles.loadingText, isDark && styles.darkSubtext]}>
+              <ActivityIndicator size="small" color={colors.primary[500]} />
+              <Text style={[styles.loadingText, { color: colors.text.secondary }]}>
                 Chargement des comptes...
               </Text>
             </View>
           ) : accountsError ? (
             <View style={styles.errorContainer}>
-              <Ionicons name="alert-circle" size={24} color="#FF3B30" />
-              <Text style={styles.errorText}>
+              <Ionicons name="alert-circle" size={24} color={colors.semantic.error} />
+              <Text style={[styles.errorText, { color: colors.semantic.error }]}>
                 Erreur de chargement: {accountsError}
               </Text>
               <TouchableOpacity 
-                style={styles.retryButton}
+                style={[styles.retryButton, { backgroundColor: colors.primary[500] }]}
                 onPress={refreshAccounts}
               >
-                <Text style={styles.retryButtonText}>Réessayer</Text>
+                <Text style={[styles.retryButtonText, { color: colors.text.inverse }]}>Réessayer</Text>
               </TouchableOpacity>
             </View>
           ) : accounts.length === 0 ? (
             <View style={styles.emptyState}>
-              <Ionicons name="wallet-outline" size={32} color={isDark ? "#555" : "#ccc"} />
-              <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
+              <Ionicons name="wallet-outline" size={32} color={colors.text.disabled} />
+              <Text style={[styles.emptyText, { color: colors.text.secondary }]}>
                 Aucun compte disponible
               </Text>
               <TouchableOpacity 
-                style={styles.addButton}
+                style={[styles.addButton, { backgroundColor: colors.primary[500] }]}
                 onPress={() => navigation.navigate('Accounts')}
               >
-                <Text style={styles.addButtonText}>Créer un compte</Text>
+                <Text style={[styles.addButtonText, { color: colors.text.inverse }]}>Ĺréer un compte</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -441,8 +441,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
                   key={account.id}
                   style={[
                     styles.accountButton,
-                    form.accountId === account.id && styles.accountButtonSelected,
-                    isDark && styles.darkAccountButton
+                    { backgroundColor: form.accountId === account.id ? colors.primary[100] : colors.background.secondary },
                   ]}
                   onPress={() => setForm(prev => ({ ...prev, accountId: account.id }))}
                 >
@@ -450,15 +449,13 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
                   <View style={styles.accountInfo}>
                     <Text style={[
                       styles.accountText,
-                      form.accountId === account.id && styles.accountTextSelected,
-                      isDark && styles.darkText
+                      { color: form.accountId === account.id ? colors.primary[500] : colors.text.primary },
                     ]}>
                       {account.name}
                     </Text>
                     <Text style={[
                       styles.accountBalance,
-                      form.accountId === account.id && styles.accountBalanceSelected,
-                      isDark && styles.darkSubtext
+                      { color: form.accountId === account.id ? colors.primary[500] : colors.text.secondary },
                     ]}>
                       {formatAmount(account.balance)}
                     </Text>
@@ -471,32 +468,32 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
 
         {/* Description */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
+          <Text style={[styles.label, { color: colors.text.primary }]}>
             Description
           </Text>
           <TextInput
-            style={[styles.input, isDark && styles.darkInput]}
+            style={[styles.input, { backgroundColor: colors.background.secondary, color: colors.text.primary }]}
             value={form.description}
             onChangeText={(text) => setForm(prev => ({ ...prev, description: text }))}
             placeholder="Ajouter une description..."
-            placeholderTextColor={isDark ? "#888" : "#999"}
+            placeholderTextColor={colors.text.disabled}
             multiline
           />
         </View>
 
         {/* Date */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
+          <Text style={[styles.label, { color: colors.text.primary }]}>
             Date
           </Text>
           <TouchableOpacity 
-            style={[styles.dateButton, isDark && styles.darkInput]}
+            style={[styles.dateButton, { backgroundColor: colors.background.secondary }]}
             onPress={() => setShowDatePicker(true)}
           >
-            <Text style={[styles.dateText, isDark && styles.darkText]}>
+            <Text style={[styles.dateText, { color: colors.text.primary }]}>
               {form.date.toLocaleDateString('fr-FR')}
             </Text>
-            <Ionicons name="calendar" size={20} color={isDark ? "#fff" : "#666"} />
+            <Ionicons name="calendar" size={20} color={colors.text.secondary} />
           </TouchableOpacity>
           {showDatePicker && (
             <DateTimePicker
@@ -511,14 +508,13 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
         {/* Section Récurrence */}
         <View style={styles.inputGroup}>
           <View style={styles.switchContainer}>
-            <Text style={[styles.label, isDark && styles.darkText]}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
               Transaction récurrente
             </Text>
             <TouchableOpacity
               style={[
                 styles.switch,
-                form.isRecurring && styles.switchActive,
-                isDark && styles.darkSwitch,
+                { backgroundColor: form.isRecurring ? colors.primary[500] : colors.background.secondary },
               ]}
               onPress={() => setForm(prev => ({ ...prev, isRecurring: !prev.isRecurring }))}
             >
@@ -531,27 +527,26 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
           
           {form.isRecurring && (
             <>
-              <Text style={[styles.helperText, isDark && styles.darkSubtext]}>
+              <Text style={[styles.helperText, { color: colors.text.secondary }]}>
                 Cette transaction se répétera automatiquement
               </Text>
 
               {/* Fréquence */}
               <View style={styles.recurrenceSection}>
-                <Text style={[styles.subLabel, isDark && styles.darkText]}>Fréquence *</Text>
+                <Text style={[styles.subLabel, { color: colors.text.primary }]}>Fréquence *</Text>
                 <View style={styles.frequencyContainer}>
                   {frequencyOptions.map((freq) => (
                     <TouchableOpacity
                       key={freq.value}
                       style={[
                         styles.frequencyButton,
-                        form.recurrenceType === freq.value && styles.frequencyButtonSelected,
-                        isDark && styles.darkFrequencyButton
+                        { backgroundColor: form.recurrenceType === freq.value ? colors.primary[500] : colors.background.secondary },
                       ]}
                       onPress={() => setForm(prev => ({ ...prev, recurrenceType: freq.value as any }))}
                     >
                       <Text style={[
                         styles.frequencyText,
-                        form.recurrenceType === freq.value && styles.frequencyTextSelected,
+                        { color: form.recurrenceType === freq.value ? colors.text.inverse : colors.text.primary },
                       ]}>
                         {freq.label}
                       </Text>
@@ -563,11 +558,11 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
               {/* Date de fin */}
               <View style={styles.recurrenceSection}>
                 <View style={styles.endDateHeader}>
-                  <Text style={[styles.subLabel, isDark && styles.darkText]}>
+                  <Text style={[styles.subLabel, { color: colors.text.primary }]}>
                     Date de fin
                   </Text>
                   <TouchableOpacity 
-                    style={styles.toggleButton}
+                    style={[styles.toggleButton, { backgroundColor: colors.primary[100] }]}
                     onPress={() => {
                       setHasEndDate(!hasEndDate);
                       if (!hasEndDate) {
@@ -583,7 +578,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
                       }
                     }}
                   >
-                    <Text style={styles.toggleButtonText}>
+                    <Text style={[styles.toggleButtonText, { color: colors.primary[500] }]}>
                       {hasEndDate ? 'Désactiver' : 'Activer'}
                     </Text>
                   </TouchableOpacity>
@@ -591,16 +586,16 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
                 
                 {hasEndDate && (
                   <TouchableOpacity 
-                    style={[styles.dateButton, isDark && styles.darkInput]}
+                    style={[styles.dateButton, { backgroundColor: colors.background.secondary }]}
                     onPress={() => setShowEndDatePicker(true)}
                   >
-                    <Text style={[styles.dateText, isDark && styles.darkText]}>
+                    <Text style={[styles.dateText, { color: colors.text.primary }]}>
                       {form.recurrenceEndDate 
                         ? form.recurrenceEndDate.toLocaleDateString('fr-FR')
                         : 'Sélectionner une date'
                       }
                     </Text>
-                    <Ionicons name="calendar" size={20} color={isDark ? "#fff" : "#666"} />
+                    <Ionicons name="calendar" size={20} color={colors.text.secondary} />
                   </TouchableOpacity>
                 )}
                 {showEndDatePicker && (
@@ -619,23 +614,23 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
         {/* Boutons */}
         <View style={styles.buttonsContainer}>
           <TouchableOpacity 
-            style={[styles.cancelButton, isDark && styles.darkCancelButton]}
+            style={[styles.cancelButton, { backgroundColor: colors.background.secondary }]}
             onPress={() => navigation.goBack()}
             disabled={loading}
           >
-            <Text style={styles.cancelButtonText}>Annuler</Text>
+            <Text style={[styles.cancelButtonText, { color: colors.text.primary }]}>Annuler</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
             style={[
               styles.saveButton, 
-              loading && styles.saveButtonDisabled,
-              (!form.amount || !form.category || !form.accountId) && styles.saveButtonDisabled
+              { backgroundColor: colors.primary[500] },
+              (loading || !form.amount || !form.category || !form.accountId) && { opacity: 0.5 },
             ]}
             onPress={handleSave}
             disabled={loading || !form.amount || !form.category || !form.accountId}
           >
-            <Text style={styles.saveButtonText}>
+            <Text style={[styles.saveButtonText, { color: colors.text.inverse }]}>
               {loading ? 'Ajout...' : 'Ajouter'}
             </Text>
           </TouchableOpacity>
@@ -648,10 +643,6 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  darkContainer: {
-    backgroundColor: '#1c1c1e',
   },
   content: {
     padding: 20,
@@ -669,7 +660,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#000',
   },
   typeSelector: {
     flexDirection: 'row',
@@ -684,20 +674,12 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#ddd',
+    borderColor: 'transparent',
     gap: 8,
-  },
-  typeButtonActive: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
   },
   typeButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
-  },
-  typeButtonTextActive: {
-    color: '#fff',
   },
   inputGroup: {
     marginBottom: 24,
@@ -705,28 +687,19 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 12,
   },
   subLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: 'transparent',
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    color: '#000',
-  },
-  darkInput: {
-    backgroundColor: '#2c2c2e',
-    borderColor: '#444',
-    color: '#fff',
   },
   amountContainer: {
     flexDirection: 'row',
@@ -737,16 +710,13 @@ const styles = StyleSheet.create({
   },
   hint: {
     fontSize: 12,
-    color: '#666',
     marginTop: 4,
     fontStyle: 'italic',
   },
   
-  // ✅ NOUVEAUX STYLES POUR LA DROPDOWN
   dropdownButton: {
-    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: 'transparent',
     borderRadius: 12,
     padding: 16,
   },
@@ -762,11 +732,9 @@ const styles = StyleSheet.create({
   },
   dropdownButtonText: {
     fontSize: 16,
-    color: '#000',
   },
   dropdownPlaceholder: {
     fontSize: 16,
-    color: '#999',
   },
   categoryIconContainer: {
     width: 32,
@@ -776,21 +744,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   
-  // Modal styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '80%',
     paddingBottom: 20,
-  },
-  darkModalContent: {
-    backgroundColor: '#1c1c1e',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -803,7 +766,6 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000',
   },
   closeButton: {
     padding: 4,
@@ -818,7 +780,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f0f0f0',
   },
   categoryItemSelected: {
-    backgroundColor: '#f0f8ff',
+    backgroundColor: 'rgba(0, 122, 255, 0.1)',
   },
   categoryItemContent: {
     flexDirection: 'row',
@@ -833,16 +795,13 @@ const styles = StyleSheet.create({
   },
   categoryItemText: {
     fontSize: 16,
-    color: '#000',
     fontWeight: '500',
   },
   categoryItemTextSelected: {
-    color: '#007AFF',
     fontWeight: '600',
   },
   subcategoryItemText: {
     fontSize: 14,
-    color: '#666',
   },
   
   accountsContainer: {
@@ -853,20 +812,11 @@ const styles = StyleSheet.create({
   accountButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     padding: 16,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#e0e0e0',
+    borderColor: 'transparent',
     minWidth: 200,
-  },
-  darkAccountButton: {
-    backgroundColor: '#2c2c2e',
-    borderColor: '#444',
-  },
-  accountButtonSelected: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
   },
   colorIndicator: {
     width: 16,
@@ -880,32 +830,22 @@ const styles = StyleSheet.create({
   accountText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 4,
-  },
-  accountTextSelected: {
-    color: '#fff',
   },
   accountBalance: {
     fontSize: 14,
-    color: '#666',
-  },
-  accountBalanceSelected: {
-    color: 'rgba(255, 255, 255, 0.8)',
   },
   dateButton: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: 'transparent',
     borderRadius: 12,
     padding: 16,
   },
   dateText: {
     fontSize: 16,
-    color: '#000',
   },
   switchContainer: {
     flexDirection: 'row',
@@ -916,16 +856,9 @@ const styles = StyleSheet.create({
   switch: {
     width: 50,
     height: 28,
-    backgroundColor: '#ccc',
     borderRadius: 14,
     padding: 2,
     justifyContent: 'center',
-  },
-  darkSwitch: {
-    backgroundColor: '#38383a',
-  },
-  switchActive: {
-    backgroundColor: '#34C759',
   },
   switchThumb: {
     width: 24,
@@ -939,7 +872,6 @@ const styles = StyleSheet.create({
   },
   helperText: {
     fontSize: 14,
-    color: '#666',
     fontStyle: 'italic',
     marginBottom: 16,
   },
@@ -952,30 +884,17 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   frequencyButton: {
-    backgroundColor: '#f0f0f0',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: 'transparent',
     minWidth: 100,
-  },
-  darkFrequencyButton: {
-    backgroundColor: '#333',
-    borderColor: '#555',
-  },
-  frequencyButtonSelected: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
   },
   frequencyText: {
     fontSize: 14,
-    color: '#666',
     fontWeight: '500',
     textAlign: 'center',
-  },
-  frequencyTextSelected: {
-    color: '#fff',
   },
   endDateHeader: {
     flexDirection: 'row',
@@ -988,7 +907,6 @@ const styles = StyleSheet.create({
   },
   toggleButtonText: {
     fontSize: 14,
-    color: '#007AFF',
     fontWeight: '500',
   },
   buttonsContainer: {
@@ -998,33 +916,23 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     flex: 1,
-    backgroundColor: '#f0f0f0',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
-  },
-  darkCancelButton: {
-    backgroundColor: '#333',
   },
   cancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
   },
   saveButton: {
     flex: 1,
-    backgroundColor: '#007AFF',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
   },
-  saveButtonDisabled: {
-    backgroundColor: '#ccc',
-  },
   saveButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
   },
   loadingContainer: {
     flexDirection: 'row',
@@ -1035,33 +943,27 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 14,
-    color: '#666',
     fontStyle: 'italic',
   },
   errorContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
-    backgroundColor: '#fff',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#FF3B30',
     gap: 12,
   },
   errorText: {
     fontSize: 14,
-    color: '#FF3B30',
     textAlign: 'center',
   },
   retryButton: {
-    backgroundColor: '#007AFF',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
     marginTop: 8,
   },
   retryButtonText: {
-    color: '#fff',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -1069,7 +971,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 40,
-    backgroundColor: '#f8f9fa',
     borderRadius: 12,
     borderWidth: 2,
     borderColor: '#e0e0e0',
@@ -1077,28 +978,19 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#666',
     textAlign: 'center',
     marginTop: 16,
     marginBottom: 8,
   },
   addButton: {
-    backgroundColor: '#007AFF',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
     marginTop: 8,
   },
   addButtonText: {
-    color: '#fff',
     fontSize: 14,
     fontWeight: '600',
-  },
-  darkText: {
-    color: '#fff',
-  },
-  darkSubtext: {
-    color: '#888',
   },
 });
 

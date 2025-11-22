@@ -11,7 +11,7 @@ import {
     View,
 } from 'react-native';
 import { useCurrency } from '../context/CurrencyContext';
-import { useTheme } from '../context/ThemeContext';
+import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useReports } from '../hooks/useReports';
 
 // Composants de graphiques
@@ -22,6 +22,7 @@ const { width: screenWidth } = Dimensions.get('window');
 type PeriodType = 'month' | '3months' | '6months' | 'year';
 
 const AnalyticsDashboardScreen = ({ navigation }: any) => {
+  const { colors } = useDesignSystem();
   const { theme } = useTheme();
   const { formatAmount } = useCurrency();
   const {
@@ -134,37 +135,37 @@ const AnalyticsDashboardScreen = ({ navigation }: any) => {
   }, [filteredData]);
 
   return (
-    <View style={[styles.container, isDark && styles.darkContainer]}>
+    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
       {/* Header moderne */}
-      <View style={[styles.modernHeader, isDark && styles.darkModernHeader]}>
+      <View style={[styles.modernHeader, { backgroundColor: colors.background.card }]}>
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#000"} />
+          <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
         </TouchableOpacity>
-        <Text style={[styles.modernTitle, isDark && styles.darkText]}>
+        <Text style={[styles.modernTitle, { color: colors.text.primary }]}>
           Statistiques Avancées
         </Text>
         
         {/* Dropdown filtre période */}
         <View style={styles.dropdownContainer}>
           <TouchableOpacity 
-            style={[styles.dropdownButton, isDark && styles.darkDropdownButton]}
+            style={[styles.dropdownButton, { backgroundColor: colors.background.secondary }]}
             onPress={() => setShowDropdown(!showDropdown)}
           >
-            <Text style={[styles.dropdownButtonText, isDark && styles.darkText]}>
+            <Text style={[styles.dropdownButtonText, { color: colors.text.primary }]}>
               {getPeriodLabel(selectedPeriod)}
             </Text>
             <Ionicons 
               name={showDropdown ? "chevron-up" : "chevron-down"} 
               size={16} 
-              color={isDark ? "#fff" : "#000"} 
+              color={colors.text.primary} 
             />
           </TouchableOpacity>
           
           {showDropdown && (
-            <View style={[styles.dropdownMenu, isDark && styles.darkDropdownMenu]}>
+            <View style={[styles.dropdownMenu, { backgroundColor: colors.background.card }]}>
               {[
                 { key: 'month' as PeriodType, label: 'Ce mois' },
                 { key: '3months' as PeriodType, label: '3 mois' },
@@ -175,7 +176,7 @@ const AnalyticsDashboardScreen = ({ navigation }: any) => {
                   key={period.key}
                   style={[
                     styles.dropdownItem,
-                    selectedPeriod === period.key && styles.dropdownItemActive,
+                    { backgroundColor: selectedPeriod === period.key ? colors.primary[100] : 'transparent' },
                   ]}
                   onPress={() => {
                     setSelectedPeriod(period.key);
@@ -184,13 +185,12 @@ const AnalyticsDashboardScreen = ({ navigation }: any) => {
                 >
                   <Text style={[
                     styles.dropdownItemText,
-                    isDark && styles.darkText,
-                    selectedPeriod === period.key && styles.dropdownItemTextActive,
+                    { color: selectedPeriod === period.key ? colors.primary[500] : colors.text.primary },
                   ]}>
                     {period.label}
                   </Text>
                   {selectedPeriod === period.key && (
-                    <Ionicons name="checkmark" size={18} color="#007AFF" />
+                    <Ionicons name="checkmark" size={18} color={colors.primary[500]} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -205,16 +205,16 @@ const AnalyticsDashboardScreen = ({ navigation }: any) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={refreshAllData}
-            tintColor={isDark ? '#fff' : '#000'}
+            tintColor={colors.primary[500]}
           />
         }
         showsVerticalScrollIndicator={false}
       >
         {/* Graphique d'évolution mensuelle */}
-        <View style={[styles.chartCard, isDark && styles.darkChartCard]}>
+        <View style={[styles.chartCard, { backgroundColor: colors.background.card }]}>
           <View style={styles.chartHeader}>
-            <Ionicons name="trending-up" size={20} color={isDark ? "#fff" : "#000"} />
-            <Text style={[styles.chartTitle, isDark && styles.darkText]}>
+            <Ionicons name="trending-up" size={20} color={colors.text.primary} />
+            <Text style={[styles.chartTitle, { color: colors.text.primary }]}>
               Évolution mensuelle
             </Text>
           </View>
@@ -226,7 +226,7 @@ const AnalyticsDashboardScreen = ({ navigation }: any) => {
             />
           ) : (
             <View style={styles.emptyChart}>
-              <Text style={[styles.emptyChartText, isDark && styles.darkSubtext]}>
+              <Text style={[styles.emptyChartText, { color: colors.text.secondary }]}>
                 Aucune donnée disponible
               </Text>
             </View>
@@ -234,11 +234,11 @@ const AnalyticsDashboardScreen = ({ navigation }: any) => {
         </View>
 
         {/* Comparaison mensuelle */}
-        <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
           Comparaison mensuelle
         </Text>
         
-        <View style={[styles.comparisonCard, isDark && styles.darkComparisonCard]}>
+        <View style={[styles.comparisonCard, { backgroundColor: colors.background.card }]}>
           {filteredData && Array.isArray(filteredData) && filteredData.length > 0 ? (
             filteredData.slice(-3).reverse().map((month, index) => {
               const date = new Date(month.month);
@@ -249,16 +249,15 @@ const AnalyticsDashboardScreen = ({ navigation }: any) => {
                 <View key={month.month} style={styles.comparisonRow}>
                   <Text style={[
                     styles.comparisonMonth,
-                    isDark && styles.darkSubtext,
+                    { color: isCurrentMonth ? colors.primary[500] : colors.text.secondary },
                     isCurrentMonth && styles.comparisonMonthCurrent,
-                    isCurrentMonth && { color: '#007AFF' }
                   ]}>
                     {monthName.charAt(0).toUpperCase() + monthName.slice(1)}
                   </Text>
                   <Text style={[
                     styles.comparisonAmount,
-                    isDark && styles.darkText,
-                    isCurrentMonth && { color: '#007AFF', fontWeight: 'bold' }
+                    { color: isCurrentMonth ? colors.primary[500] : colors.text.primary },
+                    isCurrentMonth && { fontWeight: 'bold' },
                   ]}>
                     {formatAmount(month.expenses || 0)}
                   </Text>
@@ -267,7 +266,7 @@ const AnalyticsDashboardScreen = ({ navigation }: any) => {
             })
           ) : (
             <View style={styles.emptyState}>
-              <Text style={[styles.emptyChartText, isDark && styles.darkSubtext]}>
+              <Text style={[styles.emptyChartText, { color: colors.text.secondary }]}>
                 Aucune donnée disponible
               </Text>
             </View>
@@ -275,56 +274,56 @@ const AnalyticsDashboardScreen = ({ navigation }: any) => {
         </View>
 
         {/* Tendances & Prévisions */}
-        <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
           Tendances & Prévisions
         </Text>
 
         {/* Moyenne mensuelle */}
-        <View style={[styles.insightCard, isDark && styles.darkInsightCard]}>
-          <View style={styles.insightIcon}>
-            <Ionicons name="bar-chart" size={20} color="#007AFF" />
+        <View style={[styles.insightCard, { backgroundColor: colors.background.card }]}>
+          <View style={[styles.insightIcon, { backgroundColor: colors.primary[500] + '20' }]}>
+            <Ionicons name="bar-chart" size={20} color={colors.primary[500]} />
           </View>
           <View style={styles.insightContent}>
-            <Text style={[styles.insightLabel, isDark && styles.darkText]}>
+            <Text style={[styles.insightLabel, { color: colors.text.primary }]}>
               Moyenne mensuelle
             </Text>
-            <Text style={[styles.insightSubtext, isDark && styles.darkSubtext]}>
+            <Text style={[styles.insightSubtext, { color: colors.text.secondary }]}>
               Basé sur les {filteredData?.length || 0} derniers mois
             </Text>
           </View>
-          <Text style={[styles.insightValue, isDark && styles.darkText]}>
+          <Text style={[styles.insightValue, { color: colors.text.primary }]}>
             {formatAmount(monthlyAverage)}
           </Text>
         </View>
 
         {/* Prévision janvier */}
-        <View style={[styles.insightCard, isDark && styles.darkInsightCard]}>
-          <View style={[styles.insightIcon, { backgroundColor: '#FEF3C7' }]}>
-            <Ionicons name="bulb" size={20} color="#F59E0B" />
+        <View style={[styles.insightCard, { backgroundColor: colors.background.card }]}>
+          <View style={[styles.insightIcon, { backgroundColor: colors.semantic.warning + '20' }]}>
+            <Ionicons name="bulb" size={20} color={colors.semantic.warning} />
           </View>
           <View style={styles.insightContent}>
-            <Text style={[styles.insightLabel, isDark && styles.darkText]}>
+            <Text style={[styles.insightLabel, { color: colors.text.primary }]}>
               Prévision janvier
             </Text>
-            <Text style={[styles.insightSubtext, isDark && styles.darkSubtext]}>
+            <Text style={[styles.insightSubtext, { color: colors.text.secondary }]}>
               {nextMonthPrediction.isIncreasing ? '+' : ''}{nextMonthPrediction.percentage.toFixed(0)}% vs décembre • Tendance à la {nextMonthPrediction.isIncreasing ? 'hausse' : 'baisse'}
             </Text>
           </View>
-          <Text style={[styles.insightValue, isDark && styles.darkText]}>
+          <Text style={[styles.insightValue, { color: colors.text.primary }]}>
             ~{formatAmount(nextMonthPrediction.amount)}
           </Text>
         </View>
 
         {/* Recommandation */}
-        <View style={[styles.recommendationCard, isDark && styles.darkRecommendationCard]}>
-          <View style={styles.recommendationIcon}>
-            <Ionicons name="bulb" size={20} color="#F59E0B" />
+        <View style={[styles.recommendationCard, { backgroundColor: colors.background.card }]}>
+          <View style={[styles.recommendationIcon, { backgroundColor: colors.semantic.warning + '20' }]}>
+            <Ionicons name="bulb" size={20} color={colors.semantic.warning} />
           </View>
           <View style={styles.recommendationContent}>
-            <Text style={[styles.recommendationTitle, isDark && styles.darkText]}>
+            <Text style={[styles.recommendationTitle, { color: colors.text.primary }]}>
               Recommandation
             </Text>
-            <Text style={[styles.recommendationText, isDark && styles.darkSubtext]}>
+            <Text style={[styles.recommendationText, { color: colors.text.secondary }]}>
               {nextMonthPrediction.isIncreasing 
                 ? 'Vos dépenses augmentent légèrement. Pensez à revoir votre budget pour maintenir votre équilibre financier.'
                 : 'Bonne nouvelle ! Vos dépenses sont en baisse. Continuez sur cette lancée pour améliorer votre épargne.'}
@@ -341,24 +340,16 @@ const AnalyticsDashboardScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-  darkContainer: {
-    backgroundColor: '#000',
   },
 
   // Header moderne
   modernHeader: {
-    backgroundColor: '#fff',
     paddingTop: 60,
     paddingBottom: 16,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
-  },
-  darkModernHeader: {
-    backgroundColor: '#1c1c1e',
   },
   backButton: {
     width: 40,
@@ -369,7 +360,6 @@ const styles = StyleSheet.create({
   modernTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#000',
     flex: 1,
   },
 
@@ -385,22 +375,16 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 12,
-    backgroundColor: '#F0F0F0',
     minWidth: 120,
-  },
-  darkDropdownButton: {
-    backgroundColor: '#2c2c2e',
   },
   dropdownButtonText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#000',
   },
   dropdownMenu: {
     position: 'absolute',
     top: 42,
     right: 0,
-    backgroundColor: '#fff',
     borderRadius: 12,
     minWidth: 150,
     shadowColor: '#000',
@@ -409,9 +393,6 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
     overflow: 'hidden',
-  },
-  darkDropdownMenu: {
-    backgroundColor: '#2c2c2e',
   },
   dropdownItem: {
     flexDirection: 'row',
@@ -422,16 +403,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
   },
-  dropdownItemActive: {
-    backgroundColor: '#F5F5F5',
-  },
   dropdownItemText: {
     fontSize: 14,
-    color: '#000',
-  },
-  dropdownItemTextActive: {
-    fontWeight: '600',
-    color: '#007AFF',
   },
 
   content: {
@@ -440,7 +413,6 @@ const styles = StyleSheet.create({
 
   // Carte graphique
   chartCard: {
-    backgroundColor: '#fff',
     marginHorizontal: 16,
     marginBottom: 24,
     padding: 16,
@@ -451,9 +423,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  darkChartCard: {
-    backgroundColor: '#1c1c1e',
-  },
   chartHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -463,7 +432,6 @@ const styles = StyleSheet.create({
   chartTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
   },
   emptyChart: {
     height: 200,
@@ -472,7 +440,6 @@ const styles = StyleSheet.create({
   },
   emptyChartText: {
     fontSize: 14,
-    color: '#888',
   },
   emptyState: {
     padding: 20,
@@ -484,14 +451,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#000',
     marginHorizontal: 16,
     marginBottom: 12,
   },
 
   // Carte comparaison
   comparisonCard: {
-    backgroundColor: '#fff',
     marginHorizontal: 16,
     marginBottom: 24,
     padding: 16,
@@ -501,9 +466,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
-  },
-  darkComparisonCard: {
-    backgroundColor: '#1c1c1e',
   },
   comparisonRow: {
     flexDirection: 'row',
@@ -515,7 +477,6 @@ const styles = StyleSheet.create({
   },
   comparisonMonth: {
     fontSize: 14,
-    color: '#666',
   },
   comparisonMonthCurrent: {
     fontSize: 14,
@@ -524,12 +485,10 @@ const styles = StyleSheet.create({
   comparisonAmount: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
   },
 
   // Cartes insight
   insightCard: {
-    backgroundColor: '#fff',
     marginHorizontal: 16,
     marginBottom: 12,
     padding: 16,
@@ -543,14 +502,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  darkInsightCard: {
-    backgroundColor: '#1c1c1e',
-  },
   insightIcon: {
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#E3F2FD',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -560,22 +515,18 @@ const styles = StyleSheet.create({
   insightLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 4,
   },
   insightSubtext: {
     fontSize: 12,
-    color: '#888',
   },
   insightValue: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000',
   },
 
   // Carte recommandation
   recommendationCard: {
-    backgroundColor: '#FEF3C7',
     marginHorizontal: 16,
     marginBottom: 24,
     padding: 16,
@@ -583,14 +534,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
   },
-  darkRecommendationCard: {
-    backgroundColor: '#453209',
-  },
   recommendationIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -600,25 +547,15 @@ const styles = StyleSheet.create({
   recommendationTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 4,
   },
   recommendationText: {
     fontSize: 14,
-    color: '#666',
     lineHeight: 20,
   },
 
   spacer: {
     height: 40,
-  },
-
-  // Utilitaires
-  darkText: {
-    color: '#fff',
-  },
-  darkSubtext: {
-    color: '#888',
   },
 });
 

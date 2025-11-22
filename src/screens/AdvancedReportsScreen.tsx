@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { FinancialSummaryCard } from '../components/analytics/FinancialSummaryCard';
 import { NetWorthChart } from '../components/analytics/NetWorthChart';
-import { useTheme } from '../context/ThemeContext';
+import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useAdvancedAnalytics } from '../hooks/useAdvancedAnalytics';
 import { CashFlowData, CategoryBreakdown, MonthlyTrend, NetWorthData } from '../types/Analytics';
 
@@ -31,34 +31,34 @@ interface FinancialReport {
 }
 
 // ✅ CORRECTION : Composants avec types adaptés
-const CashFlowChart = ({ data, isDark }: { data: CashFlowData[], isDark: boolean }) => (
-  <View style={[styles.placeholderChart, isDark && styles.darkPlaceholder]}>
-    <Text style={[styles.placeholderText, isDark && styles.darkText]}>
+const CashFlowChart = ({ data, isDark, colors }: { data: CashFlowData[], isDark: boolean, colors: any }) => (
+  <View style={[styles.placeholderChart, { backgroundColor: colors.background.card }]}>
+    <Text style={[styles.placeholderText, { color: colors.text.primary }]}>
       📊 Graphique Flux de Trésorerie
     </Text>
-    <Text style={[styles.placeholderSubtext, isDark && styles.darkText]}>
+    <Text style={[styles.placeholderSubtext, { color: colors.text.secondary }]}>
       {data.length} points de données disponibles
     </Text>
   </View>
 );
 
-const CategoryBreakdownChart = ({ categories, isDark }: { categories: CategoryBreakdown[], isDark: boolean }) => (
-  <View style={[styles.placeholderChart, isDark && styles.darkPlaceholder]}>
-    <Text style={[styles.placeholderText, isDark && styles.darkText]}>
+const CategoryBreakdownChart = ({ categories, isDark, colors }: { categories: CategoryBreakdown[], isDark: boolean, colors: any }) => (
+  <View style={[styles.placeholderChart, { backgroundColor: colors.background.card }]}>
+    <Text style={[styles.placeholderText, { color: colors.text.primary }]}>
       🥧 Graphique Répartition Catégories
     </Text>
-    <Text style={[styles.placeholderSubtext, isDark && styles.darkText]}>
+    <Text style={[styles.placeholderSubtext, { color: colors.text.secondary }]}>
       {categories.length} catégories à afficher
     </Text>
   </View>
 );
 
-const MonthlyTrendsChart = ({ data, isDark }: { data: MonthlyTrend[], isDark: boolean }) => (
-  <View style={[styles.placeholderChart, isDark && styles.darkPlaceholder]}>
-    <Text style={[styles.placeholderText, isDark && styles.darkText]}>
+const MonthlyTrendsChart = ({ data, isDark, colors }: { data: MonthlyTrend[], isDark: boolean, colors: any }) => (
+  <View style={[styles.placeholderChart, { backgroundColor: colors.background.card }]}>
+    <Text style={[styles.placeholderText, { color: colors.text.primary }]}>
       📈 Graphique Tendances Mensuelles
     </Text>
-    <Text style={[styles.placeholderSubtext, isDark && styles.darkText]}>
+    <Text style={[styles.placeholderSubtext, { color: colors.text.secondary }]}>
       {data.length} mois de données
     </Text>
   </View>
@@ -68,35 +68,38 @@ const MonthlyTrendsChart = ({ data, isDark }: { data: MonthlyTrend[], isDark: bo
 const Header = ({ 
   title, 
   showBackButton, 
-  onBackPress 
+  onBackPress,
+  colors
 }: { 
   title: string; 
   showBackButton?: boolean; 
   onBackPress?: () => void;
+  colors: any;
 }) => (
-  <View style={styles.header}>
+  <View style={[styles.header, { backgroundColor: colors.background.primary }]}>
     <View style={styles.headerContent}>
       {showBackButton && (
         <TouchableOpacity style={styles.backButton} onPress={onBackPress}>
-          <Text style={styles.backButtonText}>←</Text>
+          <Text style={[styles.backButtonText, { color: colors.primary[500] }]}>←</Text>
         </TouchableOpacity>
       )}
-      <Text style={styles.headerTitle}>{title}</Text>
+      <Text style={[styles.headerTitle, { color: colors.text.primary }]}>{title}</Text>
       <View style={styles.headerSpacer} />
     </View>
   </View>
 );
 
 // Composant LoadingScreen personnalisé
-const LoadingScreen = () => (
-  <View style={styles.loadingContainer}>
-    <ActivityIndicator size="large" color="#007AFF" />
-    <Text style={styles.loadingText}>Chargement des rapports...</Text>
+const LoadingScreen = ({ colors }: { colors: any }) => (
+  <View style={[styles.loadingContainer, { backgroundColor: colors.background.primary }]}>
+    <ActivityIndicator size="large" color={colors.primary[500]} />
+    <Text style={[styles.loadingText, { color: colors.text.primary }]}>Chargement des rapports...</Text>
   </View>
 );
 
 export const AdvancedReportsScreen = ({ navigation }: any) => {
   const { theme } = useTheme();
+  const { colors } = useDesignSystem();
   const {
     financialHealth,
     spendingByCategory,
@@ -260,29 +263,30 @@ export const AdvancedReportsScreen = ({ navigation }: any) => {
   ];
 
   if (localLoading && !refreshing) {
-    return <LoadingScreen />;
+    return <LoadingScreen colors={colors} />;
   }
 
   return (
-    <View style={[styles.container, isDark && styles.darkContainer]}>
+    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
       <Header 
         title="Rapports Avancés" 
         showBackButton 
         onBackPress={() => navigation.goBack()}
+        colors={colors}
       />
 
       {/* Sélecteur de période */}
-      <View style={[styles.periodSelector, isDark && styles.darkCard]}>
+      <View style={[styles.periodSelector, { backgroundColor: colors.background.card }]}>
         <TouchableOpacity
           style={[
             styles.periodButton,
-            selectedPeriod === 'month' && styles.periodButtonActive
+            { backgroundColor: selectedPeriod === 'month' ? colors.primary[500] : 'transparent' }
           ]}
           onPress={() => handlePeriodChange('month')}
         >
           <Text style={[
             styles.periodButtonText,
-            selectedPeriod === 'month' && styles.periodButtonTextActive
+            { color: selectedPeriod === 'month' ? colors.text.inverse : colors.text.secondary }
           ]}>
             Mois
           </Text>
@@ -290,13 +294,13 @@ export const AdvancedReportsScreen = ({ navigation }: any) => {
         <TouchableOpacity
           style={[
             styles.periodButton,
-            selectedPeriod === 'quarter' && styles.periodButtonActive
+            { backgroundColor: selectedPeriod === 'quarter' ? colors.primary[500] : 'transparent' }
           ]}
           onPress={() => handlePeriodChange('quarter')}
         >
           <Text style={[
             styles.periodButtonText,
-            selectedPeriod === 'quarter' && styles.periodButtonTextActive
+            { color: selectedPeriod === 'quarter' ? colors.text.inverse : colors.text.secondary }
           ]}>
             Trimestre
           </Text>
@@ -304,13 +308,13 @@ export const AdvancedReportsScreen = ({ navigation }: any) => {
         <TouchableOpacity
           style={[
             styles.periodButton,
-            selectedPeriod === 'year' && styles.periodButtonActive
+            { backgroundColor: selectedPeriod === 'year' ? colors.primary[500] : 'transparent' }
           ]}
           onPress={() => handlePeriodChange('year')}
         >
           <Text style={[
             styles.periodButtonText,
-            selectedPeriod === 'year' && styles.periodButtonTextActive
+            { color: selectedPeriod === 'year' ? colors.text.inverse : colors.text.secondary }
           ]}>
             Année
           </Text>
@@ -318,17 +322,17 @@ export const AdvancedReportsScreen = ({ navigation }: any) => {
       </View>
 
       {/* Navigation par onglets */}
-      <View style={[styles.tabContainer, isDark && styles.darkCard]}>
+      <View style={[styles.tabContainer, { backgroundColor: colors.background.card }]}>
         <TouchableOpacity
           style={[
             styles.tabButton,
-            activeTab === 'overview' && styles.tabButtonActive
+            { backgroundColor: activeTab === 'overview' ? colors.primary[500] : 'transparent' }
           ]}
           onPress={() => setActiveTab('overview')}
         >
           <Text style={[
             styles.tabButtonText,
-            activeTab === 'overview' && styles.tabButtonTextActive
+            { color: activeTab === 'overview' ? colors.text.inverse : colors.text.secondary }
           ]}>
             Aperçu
           </Text>
@@ -336,13 +340,13 @@ export const AdvancedReportsScreen = ({ navigation }: any) => {
         <TouchableOpacity
           style={[
             styles.tabButton,
-            activeTab === 'trends' && styles.tabButtonActive
+            { backgroundColor: activeTab === 'trends' ? colors.primary[500] : 'transparent' }
           ]}
           onPress={() => setActiveTab('trends')}
         >
           <Text style={[
             styles.tabButtonText,
-            activeTab === 'trends' && styles.tabButtonTextActive
+            { color: activeTab === 'trends' ? colors.text.inverse : colors.text.secondary }
           ]}>
             Tendances
           </Text>
@@ -350,13 +354,13 @@ export const AdvancedReportsScreen = ({ navigation }: any) => {
         <TouchableOpacity
           style={[
             styles.tabButton,
-            activeTab === 'categories' && styles.tabButtonActive
+            { backgroundColor: activeTab === 'categories' ? colors.primary[500] : 'transparent' }
           ]}
           onPress={() => setActiveTab('categories')}
         >
           <Text style={[
             styles.tabButtonText,
-            activeTab === 'categories' && styles.tabButtonTextActive
+            { color: activeTab === 'categories' ? colors.text.inverse : colors.text.secondary }
           ]}>
             Catégories
           </Text>
@@ -368,7 +372,7 @@ export const AdvancedReportsScreen = ({ navigation }: any) => {
           <RefreshControl 
             refreshing={refreshing} 
             onRefresh={onRefresh}
-            tintColor={isDark ? "#fff" : "#000"}
+            tintColor={colors.primary[500]}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -387,7 +391,7 @@ export const AdvancedReportsScreen = ({ navigation }: any) => {
             {/* Patrimoine net */}
             {netWorthHistory && netWorthHistory.length > 0 && (
               <View style={styles.chartSection}>
-                <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+                <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
                   Évolution du Patrimoine
                 </Text>
                 <NetWorthChart 
@@ -400,12 +404,13 @@ export const AdvancedReportsScreen = ({ navigation }: any) => {
             {/* Flux de trésorerie */}
             {financialReport?.cashFlow && financialReport.cashFlow.length > 0 && (
               <View style={styles.chartSection}>
-                <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+                <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
                   Flux de Trésorerie (30 jours)
                 </Text>
                 <CashFlowChart 
                   data={financialReport.cashFlow}
                   isDark={isDark}
+                  colors={colors}
                 />
               </View>
             )}
@@ -416,22 +421,23 @@ export const AdvancedReportsScreen = ({ navigation }: any) => {
           <View style={styles.tabContent}>
             {/* Tendances mensuelles */}
             <View style={styles.chartSection}>
-              <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+              <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
                 Tendances sur 6 mois
               </Text>
               <MonthlyTrendsChart 
                 data={financialReport.monthlyTrend || []}
                 isDark={isDark}
+                colors={colors}
               />
             </View>
 
             {/* Score financier */}
             <View style={styles.chartSection}>
-              <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+              <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
                 Score Financier
               </Text>
-              <View style={[styles.scoreContainer, isDark && styles.darkScoreContainer]}>
-                <Text style={[styles.scoreValue, isDark && styles.darkText]}>
+              <View style={[styles.scoreContainer, { backgroundColor: colors.background.card }]}>
+                <Text style={[styles.scoreValue, { color: colors.text.primary }]}>
                   {financialHealth?.financialScore || 75}/100
                 </Text>
                 <View style={styles.scoreBar}>
@@ -442,7 +448,7 @@ export const AdvancedReportsScreen = ({ navigation }: any) => {
                     ]} 
                   />
                 </View>
-                <Text style={[styles.scoreLabel, isDark && styles.darkSubtext]}>
+                <Text style={[styles.scoreLabel, { color: colors.text.secondary }]}>
                   {financialHealth?.financialScore && financialHealth.financialScore >= 80 ? 'Excellent' :
                    financialHealth?.financialScore && financialHealth.financialScore >= 60 ? 'Bon' :
                    'À améliorer'}
@@ -457,12 +463,13 @@ export const AdvancedReportsScreen = ({ navigation }: any) => {
             {/* Répartition par catégorie */}
             {financialReport.categories && financialReport.categories.filter((c: CategoryBreakdown) => c.type === 'expense').length > 0 && (
               <View style={styles.chartSection}>
-                <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+                <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
                   Répartition des Dépenses
                 </Text>
                 <CategoryBreakdownChart 
                   categories={financialReport.categories.filter((c: CategoryBreakdown) => c.type === 'expense')}
                   isDark={isDark}
+                  colors={colors}
                 />
                 
                 {/* Liste des catégories de dépenses */}
@@ -473,11 +480,11 @@ export const AdvancedReportsScreen = ({ navigation }: any) => {
                       <View key={index} style={styles.categoryItem}>
                         <View style={styles.categoryInfo}>
                           <View style={[styles.categoryColor, { backgroundColor: category.color || '#CCCCCC' }]} />
-                          <Text style={[styles.categoryName, isDark && styles.darkText]}>
+                          <Text style={[styles.categoryName, { color: colors.text.primary }]}>
                             {category.name}
                           </Text>
                         </View>
-                        <Text style={[styles.categoryAmount, isDark && styles.darkText]}>
+                        <Text style={[styles.categoryAmount, { color: colors.text.primary }]}>
                           {category.amount} € ({category.percentage}%)
                         </Text>
                       </View>
@@ -489,12 +496,13 @@ export const AdvancedReportsScreen = ({ navigation }: any) => {
             {/* Répartition des revenus */}
             {financialReport.categories && financialReport.categories.filter((c: CategoryBreakdown) => c.type === 'income').length > 0 && (
               <View style={styles.chartSection}>
-                <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+                <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
                   Répartition des Revenus
                 </Text>
                 <CategoryBreakdownChart 
                   categories={financialReport.categories.filter((c: CategoryBreakdown) => c.type === 'income')}
                   isDark={isDark}
+                  colors={colors}
                 />
               </View>
             )}
@@ -504,19 +512,19 @@ export const AdvancedReportsScreen = ({ navigation }: any) => {
         {/* Actions rapides */}
         <View style={styles.quickActions}>
           <TouchableOpacity 
-            style={[styles.actionButton, isDark && styles.darkActionButton]}
+            style={[styles.actionButton, { backgroundColor: colors.background.card }]}
             onPress={() => navigation.navigate('DebtAnalytics')}
           >
-            <Text style={styles.actionButtonText}>
+            <Text style={[styles.actionButtonText, { color: colors.text.primary }]}>
               📊 Analytics Dettes
             </Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={[styles.actionButton, isDark && styles.darkActionButton]}
+            style={[styles.actionButton, { backgroundColor: colors.background.card }]}
             onPress={() => navigation.navigate('SavingsAnalytics')}
           >
-            <Text style={styles.actionButtonText}>
+            <Text style={[styles.actionButtonText, { color: colors.text.primary }]}>
               🎯 Analytics Épargne
             </Text>
           </TouchableOpacity>
@@ -529,21 +537,12 @@ export const AdvancedReportsScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  darkContainer: {
-    backgroundColor: '#1c1c1e',
   },
   header: {
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
     paddingTop: 50,
     paddingBottom: 12,
-  },
-  darkHeader: {
-    backgroundColor: '#2c2c2e',
-    borderBottomColor: '#38383a',
   },
   headerContent: {
     flexDirection: 'row',
@@ -556,13 +555,11 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 18,
-    color: '#007AFF',
     fontWeight: 'bold',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000',
   },
   headerSpacer: {
     width: 40,
@@ -571,12 +568,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
   },
   scrollContent: {
     padding: 16,
@@ -584,7 +579,6 @@ const styles = StyleSheet.create({
   },
   periodSelector: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
     margin: 16,
     marginBottom: 8,
     borderRadius: 12,
@@ -595,30 +589,18 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 3,
   },
-  darkCard: {
-    backgroundColor: '#2c2c2e',
-  },
   periodButton: {
     flex: 1,
     paddingVertical: 8,
     alignItems: 'center',
     borderRadius: 8,
   },
-  periodButtonActive: {
-    backgroundColor: '#007AFF',
-  },
   periodButtonText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#666',
-  },
-  periodButtonTextActive: {
-    color: '#fff',
-    fontWeight: '600',
   },
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
     margin: 16,
     marginTop: 8,
     borderRadius: 12,
@@ -635,23 +617,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 8,
   },
-  tabButtonActive: {
-    backgroundColor: '#007AFF',
-  },
   tabButtonText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#666',
-  },
-  tabButtonTextActive: {
-    color: '#fff',
-    fontWeight: '600',
   },
   tabContent: {
     gap: 20,
   },
   chartSection: {
-    backgroundColor: '#fff',
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
@@ -663,18 +636,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000',
     marginBottom: 16,
-  },
-  darkText: {
-    color: '#fff',
-  },
-  darkSubtext: {
-    color: '#888',
   },
   placeholderChart: {
     height: 200,
-    backgroundColor: '#f8f9fa',
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
@@ -682,31 +647,21 @@ const styles = StyleSheet.create({
     borderColor: '#e9ecef',
     borderStyle: 'dashed',
   },
-  darkPlaceholder: {
-    backgroundColor: '#2c2c2e',
-    borderColor: '#444',
-  },
   placeholderText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#6c757d',
     marginBottom: 8,
   },
   placeholderSubtext: {
     fontSize: 12,
-    color: '#adb5bd',
   },
   scoreContainer: {
     alignItems: 'center',
     padding: 20,
   },
-  darkScoreContainer: {
-    backgroundColor: '#2c2c2e',
-  },
   scoreValue: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#000',
     marginBottom: 16,
   },
   scoreBar: {
@@ -724,7 +679,6 @@ const styles = StyleSheet.create({
   },
   scoreLabel: {
     fontSize: 14,
-    color: '#666',
     fontWeight: '500',
   },
   categoriesList: {
@@ -752,13 +706,11 @@ const styles = StyleSheet.create({
   categoryName: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#000',
     flex: 1,
   },
   categoryAmount: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000',
   },
   quickActions: {
     flexDirection: 'row',
@@ -769,7 +721,6 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     minWidth: '48%',
-    backgroundColor: '#fff',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -779,13 +730,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  darkActionButton: {
-    backgroundColor: '#2c2c2e',
-  },
   actionButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000',
   },
   errorContainer: {
     flex: 1,

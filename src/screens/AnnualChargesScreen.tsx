@@ -722,10 +722,10 @@ export const AnnualChargesScreen: React.FC = () => {
 
         {/* Bouton d'action flottant */}
         <TouchableOpacity 
-          style={[styles.fab, isDark && styles.darkFab]}
+          style={[styles.fab, { backgroundColor: colors.primary[500] }]}
           onPress={handleAddCharge}
         >
-          <Ionicons name="add" size={24} color="#fff" />
+          <Ionicons name="add" size={24} color={colors.text.inverse} />
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

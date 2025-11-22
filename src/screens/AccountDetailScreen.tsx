@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import AccountForm from '../components/account/AccountForm';
 import { useCurrency } from '../context/CurrencyContext';
-import { useTheme } from '../context/ThemeContext';
+import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useCategories } from '../hooks/useCategories';
 import { useTransactions } from '../hooks/useTransactions';
@@ -43,7 +43,8 @@ const TransactionItem = React.memo(({
   formatAmount, 
   isProcessing,
   getCategoryName,
-  isReadOnly // ✅ NOUVEAU PROP POUR LECTURE SEULE
+  isReadOnly, // ✅ NOUVEAU PROP POUR LECTURE SEULE
+  colors
 }: { 
   transaction: Transaction;
   isDark: boolean;
@@ -52,6 +53,7 @@ const TransactionItem = React.memo(({
   isProcessing: boolean;
   getCategoryName: (categoryId: string) => string;
   isReadOnly: boolean; // ✅ INDICATION SI LECTURE SEULE
+  colors: any;
 }) => {
   const isSpecialTransaction = READONLY_CATEGORIES.includes(transaction.category);
   
@@ -59,7 +61,7 @@ const TransactionItem = React.memo(({
     <TouchableOpacity
       style={[
         styles.transactionItem, 
-        isDark && styles.darkCard,
+        { backgroundColor: colors.background.card },
         isReadOnly && styles.readOnlyTransaction // ✅ STYLE SPÉCIAL POUR LECTURE SEULE
       ]}
       activeOpacity={isReadOnly ? 1 : 0.7} // ✅ DÉSACTIVER LE CLIC SI LECTURE SEULE
@@ -79,14 +81,14 @@ const TransactionItem = React.memo(({
         <Ionicons 
           name={transaction.type === 'income' ? "arrow-down-circle" : "arrow-up-circle"} 
           size={24} 
-          color={transaction.type === 'income' ? "#34C759" : "#FF3B30"} 
+          color={transaction.type === 'income' ? colors.semantic.success : colors.semantic.error} 
         />
         <View style={styles.transactionDetails}>
-          <Text style={[styles.transactionDescription, isDark && styles.darkText]}>
+          <Text style={[styles.transactionDescription, { color: colors.text.primary }]}>
             {transaction.description || 'Sans description'}
           </Text>
           <View style={styles.categoryContainer}>
-            <Text style={[styles.transactionCategory, isDark && styles.darkSubtext]}>
+            <Text style={[styles.transactionCategory, { color: colors.text.secondary }]}>
               {getCategoryName(transaction.category)}
             </Text>
             {isReadOnly && ( // ✅ BADGE "AUTOMATIQUE" POUR LES TRANSACTIONS SPÉCIALES
@@ -94,14 +96,14 @@ const TransactionItem = React.memo(({
               </View>
             )}
           </View>
-          <Text style={[styles.transactionDate, isDark && styles.darkSubtext]}>
+          <Text style={[styles.transactionDate, { color: colors.text.secondary }]}>
             {new Date(transaction.date).toLocaleDateString('fr-FR')}
           </Text>
         </View>
       </View>
       <Text style={[
         styles.transactionAmount,
-        { color: transaction.type === 'income' ? '#34C759' : '#FF3B30' },
+        { color: transaction.type === 'income' ? colors.semantic.success : colors.semantic.error },
         isReadOnly && styles.readOnlyAmount // ✅ STYLE SPÉCIAL POUR MONTANT LECTURE SEULE
       ]}>
         {transaction.type === 'income' ? '+' : '-'}{formatAmount(Math.abs(transaction.amount))}
@@ -120,7 +122,8 @@ const TransactionsSection = React.memo(({
   navigation,
   formatAmount,
   isProcessing,
-  getCategoryName
+  getCategoryName,
+  colors
 }: {
   accountTransactions: Transaction[];
   transactionStats: { totalIncome: number; totalExpenses: number; transactionCount: number };
@@ -131,6 +134,7 @@ const TransactionsSection = React.memo(({
   formatAmount: (amount: number) => string;
   isProcessing: boolean;
   getCategoryName: (categoryId: string) => string;
+  colors: any;
 }) => {
   // ✅ FILTRER LES TRANSACTIONS : TOUTES SAUF CELLES DES CATÉGORIES SPÉCIALES
   const editableTransactions = accountTransactions.filter(
@@ -144,13 +148,13 @@ const TransactionsSection = React.memo(({
 
   if (accountTransactions.length === 0) {
     return (
-      <View style={[styles.emptyContainer, isDark && styles.darkCard]}>
-        <Ionicons name="receipt-outline" size={48} color="#666" />
-        <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
+      <View style={[styles.emptyContainer, { backgroundColor: colors.background.card }]}>
+        <Ionicons name="receipt-outline" size={48} color={colors.text.disabled} />
+        <Text style={[styles.emptyText, { color: colors.text.secondary }]}>
           Aucune transaction
         </Text>
         <TouchableOpacity 
-          style={[styles.addTransactionButton, isProcessing && styles.disabledButton]}
+          style={[styles.addTransactionButton, { backgroundColor: colors.primary[500] }, isProcessing && styles.disabledButton]}
           onPress={() => {
             console.log('🎯 Navigation vers ajout transaction depuis compte:', accountId);
             navigation.navigate('AddTransaction', { 
@@ -160,7 +164,7 @@ const TransactionsSection = React.memo(({
           }}
           disabled={isProcessing}
         >
-          <Text style={styles.addTransactionButtonText}>
+          <Text style={[styles.addTransactionButtonText, { color: colors.text.inverse }]}>
             Ajouter une transaction
           </Text>
         </TouchableOpacity>
@@ -169,14 +173,14 @@ const TransactionsSection = React.memo(({
   }
 
   return (
-    <View style={[styles.transactionsCard, isDark && styles.darkCard]}>
+    <View style={[styles.transactionsCard, { backgroundColor: colors.background.card }]}>
       <View style={styles.sectionHeader}>
         <View>
-          <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
             Transactions ({editableTransactions.length})
           </Text>
           {specialTransactionsCount > 0 && (
-            <Text style={[styles.specialTransactionsInfo, isDark && styles.darkSubtext]}>
+            <Text style={[styles.specialTransactionsInfo, { color: colors.text.secondary }]}>
               + {specialTransactionsCount} transaction(s) automatique(s)
             </Text>
           )}
@@ -240,6 +244,7 @@ const TransactionsSection = React.memo(({
             isProcessing={isProcessing}
             getCategoryName={getCategoryName}
             isReadOnly={READONLY_CATEGORIES.includes(transaction.category)} // ✅ PASSER L'INFO LECTURE SEULE
+            colors={colors}
           />
         ))}
         
@@ -269,6 +274,7 @@ const AccountDetailScreen = () => {
   const navigation = useNavigation<AccountDetailScreenNavigationProp>();
   const route = useRoute<AccountDetailScreenRouteProp>();
   const { theme } = useTheme();
+  const { colors } = useDesignSystem();
   const { formatAmount } = useCurrency();
   const { accounts, updateAccount, deleteAccount, refreshAccounts } = useAccounts();
   const { transactions, refreshTransactions } = useTransactions();
@@ -423,17 +429,17 @@ const AccountDetailScreen = () => {
   }
 
   return (
-    <View style={[styles.container, isDark && styles.darkContainer]}>
+    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
       {/* Header */}
-      <View style={[styles.header, isDark && styles.darkHeader]}>
+      <View style={[styles.header, { backgroundColor: colors.background.primary, borderBottomColor: colors.border.primary }]}>
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => navigation.goBack()}
           disabled={isProcessing}
         >
-          <Ionicons name="arrow-back" size={24} color={isDark ? '#fff' : '#000'} />
+          <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
         </TouchableOpacity>
-        <Text style={[styles.title, isDark && styles.darkText]}>
+        <Text style={[styles.title, { color: colors.text.primary }]}>
           Détails du compte
         </Text>
         <TouchableOpacity 
@@ -442,23 +448,23 @@ const AccountDetailScreen = () => {
           disabled={isProcessing}
         >
           {isProcessing ? (
-            <ActivityIndicator size="small" color={isDark ? '#fff' : '#000'} />
+            <ActivityIndicator size="small" color={colors.primary[500]} />
           ) : (
-            <Ionicons name="create-outline" size={24} color={isDark ? '#fff' : '#000'} />
+            <Ionicons name="create-outline" size={24} color={colors.text.primary} />
           )}
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Carte principale */}
-        <View style={[styles.mainCard, isDark && styles.darkCard]}>
+        <View style={[styles.mainCard, { backgroundColor: colors.background.card }]}>
           <View style={styles.accountHeader}>
             <View style={[styles.colorIndicator, { backgroundColor: account.color }]} />
             <View style={styles.accountInfo}>
-              <Text style={[styles.accountName, isDark && styles.darkText]}>
+              <Text style={[styles.accountName, { color: colors.text.primary }]}>
                 {account.name}
               </Text>
-              <Text style={[styles.accountType, isDark && styles.darkSubtext]}>
+              <Text style={[styles.accountType, { color: colors.text.secondary }]}>
                 {account.type === 'cash' ? 'Espèces' : 
                  account.type === 'bank' ? 'Banque' : 
                  account.type === 'card' ? 'Carte' : 'Épargne'}
@@ -466,14 +472,14 @@ const AccountDetailScreen = () => {
             </View>
           </View>
           
-          <Text style={[styles.balance, isDark && styles.darkText]}>
+          <Text style={[styles.balance, { color: colors.text.primary }]}>
             {formatAmount(account.balance)}
           </Text>
         </View>
 
         {/* Actions rapides */}
-        <View style={[styles.actionsCard, isDark && styles.darkCard]}>
-          <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+        <View style={[styles.actionsCard, { backgroundColor: colors.background.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
             Actions
           </Text>
           
@@ -483,8 +489,8 @@ const AccountDetailScreen = () => {
               onPress={() => handleAddTransaction('expense')}
               disabled={isProcessing}
             >
-              <Ionicons name="arrow-up" size={24} color="#FF3B30" />
-              <Text style={[styles.actionText, isDark && styles.darkText]}>
+              <Ionicons name="arrow-up" size={24} color={colors.semantic.error} />
+              <Text style={[styles.actionText, { color: colors.text.primary }]}>
                 Dépense
               </Text>
             </TouchableOpacity>
@@ -494,8 +500,8 @@ const AccountDetailScreen = () => {
               onPress={() => handleAddTransaction('income')}
               disabled={isProcessing}
             >
-              <Ionicons name="arrow-down" size={24} color="#34C759" />
-              <Text style={[styles.actionText, isDark && styles.darkText]}>
+              <Ionicons name="arrow-down" size={24} color={colors.semantic.success} />
+              <Text style={[styles.actionText, { color: colors.text.primary }]}>
                 Revenu
               </Text>
             </TouchableOpacity>
@@ -505,8 +511,8 @@ const AccountDetailScreen = () => {
               onPress={handleTransfer}
               disabled={isProcessing}
             >
-              <Ionicons name="swap-horizontal" size={24} color="#007AFF" />
-              <Text style={[styles.actionText, isDark && styles.darkText]}>
+              <Ionicons name="swap-horizontal" size={24} color={colors.primary[500]} />
+              <Text style={[styles.actionText, { color: colors.text.primary }]}>
                 Transfert
               </Text>
             </TouchableOpacity>
@@ -524,20 +530,21 @@ const AccountDetailScreen = () => {
           formatAmount={formatAmount}
           isProcessing={isProcessing}
           getCategoryName={getCategoryName}
+          colors={colors}
         />
 
         {/* Informations détaillées */}
-        <View style={[styles.infoCard, isDark && styles.darkCard]}>
-          <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+        <View style={[styles.infoCard, { backgroundColor: colors.background.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
             Informations
           </Text>
           
           <View style={styles.infoList}>
             <View style={styles.infoItem}>
-              <Text style={[styles.infoLabel, isDark && styles.darkSubtext]}>
+              <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>
                 Type de compte
               </Text>
-              <Text style={[styles.infoValue, isDark && styles.darkText]}>
+              <Text style={[styles.infoValue, { color: colors.text.primary }]}>
                 {account.type === 'cash' ? 'Espèces' : 
                  account.type === 'bank' ? 'Compte bancaire' : 
                  account.type === 'card' ? 'Carte' : 'Compte épargne'}
@@ -545,19 +552,19 @@ const AccountDetailScreen = () => {
             </View>
             
             <View style={styles.infoItem}>
-              <Text style={[styles.infoLabel, isDark && styles.darkSubtext]}>
+              <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>
                 Date de création
               </Text>
-              <Text style={[styles.infoValue, isDark && styles.darkText]}>
+              <Text style={[styles.infoValue, { color: colors.text.primary }]}>
                 {new Date(account.createdAt).toLocaleDateString('fr-FR')}
               </Text>
             </View>
 
             <View style={styles.infoItem}>
-              <Text style={[styles.infoLabel, isDark && styles.darkSubtext]}>
+              <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>
                 Nombre de transactions
               </Text>
-              <Text style={[styles.infoValue, isDark && styles.darkText]}>
+              <Text style={[styles.infoValue, { color: colors.text.primary }]}>
                 {accountTransactions.length}
               </Text>
             </View>
@@ -606,28 +613,18 @@ const AccountDetailScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  darkContainer: {
-    backgroundColor: '#1c1c1e',
   },
   center: {
     justifyContent: 'center',
     alignItems: 'center',
   },
   header: {
-    backgroundColor: '#fff',
     padding: 16,
     paddingTop: 60,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  darkHeader: {
-    backgroundColor: '#2c2c2e',
-    borderBottomColor: '#38383a',
   },
   backButton: {
     padding: 4,
@@ -642,7 +639,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#000',
     flex: 1,
     textAlign: 'center',
   },
@@ -651,7 +647,6 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   mainCard: {
-    backgroundColor: '#fff',
     padding: 24,
     borderRadius: 16,
     marginBottom: 16,
@@ -661,9 +656,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
-  },
-  darkCard: {
-    backgroundColor: '#2c2c2e',
   },
   accountHeader: {
     flexDirection: 'row',
@@ -682,21 +674,17 @@ const styles = StyleSheet.create({
   accountName: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#000',
     marginBottom: 4,
   },
   accountType: {
     fontSize: 14,
-    color: '#666',
   },
   balance: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#000',
     marginBottom: 8,
   },
   actionsCard: {
-    backgroundColor: '#fff',
     padding: 20,
     borderRadius: 16,
     marginBottom: 16,
@@ -709,7 +697,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000',
     marginBottom: 16,
   },
   actionsGrid: {
