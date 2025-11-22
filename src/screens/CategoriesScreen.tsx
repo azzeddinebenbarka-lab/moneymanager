@@ -2,19 +2,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
-import { useTheme } from '../context/ThemeContext';
+import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useCategories } from '../hooks/useCategories';
 import { Category } from '../types';
 
@@ -28,6 +28,7 @@ interface CategoryFormData {
 }
 
 const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { colors } = useDesignSystem();
   const { theme } = useTheme();
   const { 
     categories, 
@@ -167,8 +168,8 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const renderCategoryItem = ({ item }: { item: Category }) => (
     <TouchableOpacity 
       style={[
-        styles.categoryItem, 
-        isDark && styles.darkCard,
+        styles.categoryItem,
+        { backgroundColor: colors.background.card },
         item.level === 1 && styles.subCategoryItem
       ]}
       onPress={() => openEditModal(item)}
@@ -176,13 +177,13 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     >
       <View style={styles.categoryInfo}>
         <View style={[styles.colorIndicator, { backgroundColor: item.color }]} />
-        <Ionicons name={item.icon as any} size={20} color={isDark ? '#fff' : '#000'} />
+        <Ionicons name={item.icon as any} size={20} color={colors.text.primary} />
         <View style={styles.categoryTextContainer}>
-          <Text style={[styles.categoryName, isDark && styles.darkText]}>
+          <Text style={[styles.categoryName, { color: colors.text.primary }]}>
             {item.name}
           </Text>
           {item.level === 1 && (
-            <Text style={[styles.subCategoryLabel, isDark && styles.darkSubtext]}>
+            <Text style={[styles.subCategoryLabel, { color: colors.text.secondary }]}>
               Sous-catégorie
             </Text>
           )}
@@ -190,7 +191,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       </View>
       <View style={[
         styles.typeBadge,
-        { backgroundColor: item.type === 'income' ? '#34C759' : '#FF3B30' }
+        { backgroundColor: item.type === 'income' ? colors.semantic.success : colors.semantic.error }
       ]}>
         <Text style={styles.typeBadgeText}>
           {item.type === 'income' ? 'Revenu' : 'Dépense'}
@@ -210,19 +211,19 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         >
           <View style={styles.categoryInfo}>
             <View style={[styles.colorIndicator, { backgroundColor: category.color }]} />
-            <Ionicons name={category.icon as any} size={20} color={isDark ? '#fff' : '#000'} />
+            <Ionicons name={category.icon as any} size={20} color={colors.text.primary} />
             <View style={styles.categoryTextContainer}>
-              <Text style={[styles.categoryName, isDark && styles.darkText]}>
+              <Text style={[styles.categoryName, { color: colors.text.primary }]}>
                 {category.name}
               </Text>
-              <Text style={[styles.mainCategoryLabel, isDark && styles.darkSubtext]}>
+              <Text style={[styles.mainCategoryLabel, { color: colors.text.secondary }]}>
                 Catégorie principale
               </Text>
             </View>
           </View>
           <View style={[
             styles.typeBadge,
-            { backgroundColor: category.type === 'income' ? '#34C759' : '#FF3B30' }
+            { backgroundColor: category.type === 'income' ? colors.semantic.success : colors.semantic.error }
           ]}>
             <Text style={styles.typeBadgeText}>
               {category.type === 'income' ? 'Revenu' : 'Dépense'}
@@ -235,8 +236,8 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           style={styles.addSubCategoryButton}
           onPress={() => openAddModal(category)}
         >
-          <Ionicons name="add-circle" size={20} color="#007AFF" />
-          <Text style={styles.addSubCategoryText}>Sous-catégorie</Text>
+          <Ionicons name="add-circle" size={20} color={colors.primary[500]} />
+          <Text style={[styles.addSubCategoryText, { color: colors.primary[500] }]}>Sous-catégorie</Text>
         </TouchableOpacity>
       </View>
 
@@ -260,9 +261,9 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   if (loading && !refreshing) {
     return (
-      <View style={[styles.container, isDark && styles.darkContainer, styles.center]}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={[styles.loadingText, isDark && styles.darkText]}>
+      <View style={[styles.container, { backgroundColor: colors.background.primary }, styles.center]}>
+        <ActivityIndicator size="large" color={colors.primary[500]} />
+        <Text style={[styles.loadingText, { color: colors.text.primary }]}>
           Chargement des catégories...
         </Text>
       </View>
@@ -271,13 +272,13 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   if (error) {
     return (
-      <View style={[styles.container, isDark && styles.darkContainer, styles.center]}>
-        <Ionicons name="alert-circle-outline" size={64} color="#FF3B30" />
-        <Text style={[styles.errorText, isDark && styles.darkText]}>
+      <View style={[styles.container, { backgroundColor: colors.background.primary }, styles.center]}>
+        <Ionicons name="alert-circle-outline" size={64} color={colors.semantic.error} />
+        <Text style={[styles.errorText, { color: colors.text.primary }]}>
           {error}
         </Text>
-        <TouchableOpacity style={styles.retryButton} onPress={refreshCategories}>
-          <Text style={styles.retryButtonText}>Réessayer</Text>
+        <TouchableOpacity style={[styles.retryButton, { backgroundColor: colors.primary[500] }]} onPress={refreshCategories}>
+          <Text style={[styles.retryButtonText, { color: colors.text.inverse }]}>Réessayer</Text>
         </TouchableOpacity>
       </View>
     );
@@ -285,12 +286,12 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   return (
     <SafeAreaView>
-      <View style={[styles.container, isDark && styles.darkContainer]}>
-        <View style={[styles.header, isDark && styles.darkHeader]}>
-          <Text style={[styles.title, isDark && styles.darkText]}>
+      <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
+        <View style={[styles.header, { backgroundColor: colors.background.primary, borderBottomColor: colors.border.primary }]}>
+          <Text style={[styles.title, { color: colors.text.primary }]}>
             Catégories
           </Text>
-          <Text style={[styles.subtitle, isDark && styles.darkSubtext]}>
+          <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
             Gérez vos catégories et sous-catégories
           </Text>
         </View>
@@ -306,13 +307,13 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               {/* Catégories de Dépenses */}
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+                  <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
                     Dépenses ({expenseCategoriesTree.reduce((acc, item) => acc + 1 + item.subcategories.length, 0)})
                   </Text>
                 </View>
                 {expenseCategoriesTree.map((item) => renderCategoryWithSubcategories(item))}
                 {expenseCategoriesTree.length === 0 && (
-                  <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
+                  <Text style={[styles.emptyText, { color: colors.text.secondary }]}>
                     Aucune catégorie de dépense
                   </Text>
                 )}
@@ -321,13 +322,13 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               {/* Catégories de Revenus */}
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+                  <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
                     Revenus ({incomeCategoriesTree.reduce((acc, item) => acc + 1 + item.subcategories.length, 0)})
                   </Text>
                 </View>
                 {incomeCategoriesTree.map((item) => renderCategoryWithSubcategories(item))}
                 {incomeCategoriesTree.length === 0 && (
-                  <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
+                  <Text style={[styles.emptyText, { color: colors.text.secondary }]}>
                     Aucune catégorie de revenu
                   </Text>
                 )}
@@ -335,11 +336,11 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
               {/* Bouton pour l'ajout multiple */}
               <TouchableOpacity 
-                style={[styles.multipleButton, isDark && styles.darkMultipleButton]}
+                style={[styles.multipleButton, { backgroundColor: colors.background.card, borderColor: colors.primary[500] }]}
                 onPress={() => navigation.navigate('AddMultipleCategories')}
               >
-                <Ionicons name="layers" size={20} color="#007AFF" />
-                <Text style={styles.multipleButtonText}>
+                <Ionicons name="layers" size={20} color={colors.primary[500]} />
+                <Text style={[styles.multipleButtonText, { color: colors.primary[500] }]}>
                   Ajouter plusieurs catégories
                 </Text>
               </TouchableOpacity>
@@ -349,10 +350,10 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         />
 
         <TouchableOpacity 
-          style={styles.fab}
+          style={[styles.fab, { backgroundColor: colors.primary[500] }]}
           onPress={() => openAddModal()}
         >
-          <Ionicons name="add" size={24} color="#fff" />
+          <Ionicons name="add" size={24} color={colors.text.inverse} />
         </TouchableOpacity>
 
         {/* Modal pour ajouter/modifier une catégorie */}
@@ -361,9 +362,9 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           animationType="slide"
           onRequestClose={closeModal}
         >
-          <View style={[styles.modalContainer, isDark && styles.darkContainer]}>
+          <View style={[styles.modalContainer, { backgroundColor: colors.background.primary }]}>
             <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, isDark && styles.darkText]}>
+              <Text style={[styles.modalTitle, { color: colors.text.primary }]}>
                 {editingCategory 
                   ? 'Modifier la catégorie' 
                   : selectedParent 
@@ -372,47 +373,49 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 }
               </Text>
               <TouchableOpacity onPress={closeModal}>
-                <Ionicons name="close" size={24} color={isDark ? '#fff' : '#000'} />
+                <Ionicons name="close" size={24} color={colors.text.primary} />
               </TouchableOpacity>
             </View>
 
             <ScrollView style={styles.modalContent}>
               {/* Indication de la catégorie parente */}
               {selectedParent && (
-                <View style={[styles.parentInfo, isDark && styles.darkCard]}>
-                  <Ionicons name="information-circle" size={20} color="#007AFF" />
-                  <Text style={[styles.parentInfoText, isDark && styles.darkText]}>
+                <View style={[styles.parentInfo, { backgroundColor: colors.background.card }]}>
+                  <Ionicons name="information-circle" size={20} color={colors.primary[500]} />
+                  <Text style={[styles.parentInfoText, { color: colors.text.primary }]}>
                     Sous-catégorie de: {selectedParent.name}
                   </Text>
                 </View>
               )}
 
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, isDark && styles.darkText]}>Nom</Text>
+                <Text style={[styles.label, { color: colors.text.primary }]}>Nom</Text>
                 <TextInput
-                  style={[styles.input, isDark && styles.darkInput]}
+                  style={[styles.input, { backgroundColor: colors.background.card, color: colors.text.primary, borderColor: colors.border.primary }]}
                   value={formData.name}
                   onChangeText={(text: string) => setFormData({ ...formData, name: text })}
                   placeholder={selectedParent ? "Nom de la sous-catégorie" : "Nom de la catégorie"}
-                  placeholderTextColor={isDark ? '#666' : '#999'}
+                  placeholderTextColor={colors.text.disabled}
                 />
               </View>
 
               {/* Type (uniquement pour les catégories principales) */}
               {!selectedParent && (
                 <View style={styles.inputGroup}>
-                  <Text style={[styles.label, isDark && styles.darkText]}>Type</Text>
+                  <Text style={[styles.label, { color: colors.text.primary }]}>Type</Text>
                   <View style={styles.typeContainer}>
                     <TouchableOpacity
                       style={[
                         styles.typeButton,
-                        formData.type === 'expense' && styles.typeButtonSelected,
+                        { backgroundColor: colors.background.card, borderColor: colors.border.primary },
+                        formData.type === 'expense' && { backgroundColor: colors.semantic.error, borderColor: colors.semantic.error },
                       ]}
                       onPress={() => setFormData({ ...formData, type: 'expense' })}
                     >
                       <Text style={[
                         styles.typeButtonText,
-                        formData.type === 'expense' && styles.typeButtonTextSelected,
+                        { color: colors.text.primary },
+                        formData.type === 'expense' && { color: colors.text.inverse },
                       ]}>
                         Dépense
                       </Text>
@@ -420,13 +423,15 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     <TouchableOpacity
                       style={[
                         styles.typeButton,
-                        formData.type === 'income' && styles.typeButtonSelected,
+                        { backgroundColor: colors.background.card, borderColor: colors.border.primary },
+                        formData.type === 'income' && { backgroundColor: colors.semantic.success, borderColor: colors.semantic.success },
                       ]}
                       onPress={() => setFormData({ ...formData, type: 'income' })}
                     >
                       <Text style={[
                         styles.typeButtonText,
-                        formData.type === 'income' && styles.typeButtonTextSelected,
+                        { color: colors.text.primary },
+                        formData.type === 'income' && { color: colors.text.inverse },
                       ]}>
                         Revenu
                       </Text>
@@ -436,7 +441,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               )}
 
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, isDark && styles.darkText]}>Couleur</Text>
+                <Text style={[styles.label, { color: colors.text.primary }]}>Couleur</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   <View style={styles.colorsContainer}>
                     {categoryColors.map((color: string) => (
@@ -450,7 +455,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                         onPress={() => setFormData({ ...formData, color })}
                       >
                         {formData.color === color && (
-                          <Ionicons name="checkmark" size={16} color="#fff" />
+                          <Ionicons name="checkmark" size={16} color={colors.text.inverse} />
                         )}
                       </TouchableOpacity>
                     ))}
@@ -459,7 +464,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, isDark && styles.darkText]}>Icône</Text>
+                <Text style={[styles.label, { color: colors.text.primary }]}>Icône</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   <View style={styles.iconsContainer}>
                     {categoryIcons.map((icon: string) => (
@@ -467,15 +472,15 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                         key={icon}
                         style={[
                           styles.iconButton,
-                          isDark && styles.darkIconButton,
-                          formData.icon === icon && styles.iconButtonSelected,
+                          { backgroundColor: colors.background.card, borderColor: colors.border.primary },
+                          formData.icon === icon && { borderColor: colors.primary[500], backgroundColor: colors.primary[100] },
                         ]}
                         onPress={() => setFormData({ ...formData, icon })}
                       >
                         <Ionicons 
                           name={icon as any} 
                           size={20} 
-                          color={formData.icon === icon ? '#007AFF' : (isDark ? '#fff' : '#000')} 
+                          color={formData.icon === icon ? colors.primary[500] : colors.text.primary} 
                         />
                       </TouchableOpacity>
                     ))}
@@ -484,15 +489,15 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, isDark && styles.darkText]}>Aperçu</Text>
-                <View style={[styles.preview, isDark && styles.darkCard]}>
+                <Text style={[styles.label, { color: colors.text.primary }]}>Aperçu</Text>
+                <View style={[styles.preview, { backgroundColor: colors.background.card }]}>
                   <View style={[styles.colorIndicator, { backgroundColor: formData.color }]} />
-                  <Ionicons name={formData.icon as any} size={20} color={isDark ? '#fff' : '#000'} />
+                  <Ionicons name={formData.icon as any} size={20} color={colors.text.primary} />
                   <View style={styles.previewTextContainer}>
-                    <Text style={[styles.previewText, isDark && styles.darkText]}>
+                    <Text style={[styles.previewText, { color: colors.text.primary }]}>
                       {formData.name || (selectedParent ? 'Sous-catégorie' : 'Catégorie principale')}
                     </Text>
-                    <Text style={[styles.previewType, isDark && styles.darkSubtext]}>
+                    <Text style={[styles.previewType, { color: colors.text.secondary }]}>
                       {selectedParent ? 'Sous-catégorie' : 'Catégorie principale'} • {formData.type === 'income' ? 'Revenu' : 'Dépense'}
                     </Text>
                   </View>
@@ -502,19 +507,23 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
             <View style={styles.modalActions}>
               <TouchableOpacity
-                style={[styles.cancelButton, isDark && styles.darkCancelButton]}
+                style={[styles.cancelButton, { backgroundColor: colors.background.secondary, borderColor: colors.border.primary }]}
                 onPress={closeModal}
               >
-                <Text style={[styles.cancelButtonText, isDark && styles.darkText]}>
+                <Text style={[styles.cancelButtonText, { color: colors.text.primary }]}>
                   Annuler
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.submitButton, !formData.name && styles.submitButtonDisabled]}
+                style={[
+                  styles.submitButton,
+                  { backgroundColor: colors.primary[500] },
+                  !formData.name && { opacity: 0.5 },
+                ]}
                 onPress={handleSubmit}
                 disabled={!formData.name}
               >
-                <Text style={styles.submitButtonText}>
+                <Text style={[styles.submitButtonText, { color: colors.text.inverse }]}>
                   {editingCategory ? 'Modifier' : 'Créer'}
                 </Text>
               </TouchableOpacity>
@@ -529,33 +538,21 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  darkContainer: {
-    backgroundColor: '#1c1c1e',
   },
   center: {
     justifyContent: 'center',
     alignItems: 'center',
   },
   header: {
-    backgroundColor: '#fff',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  darkHeader: {
-    backgroundColor: '#2c2c2e',
-    borderBottomColor: '#38383a',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#000',
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
     marginTop: 4,
   },
   section: {
@@ -568,7 +565,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000',
   },
   categoryGroup: {
     marginBottom: 16,
@@ -580,7 +576,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
     padding: 16,
     borderRadius: 12,
     shadowColor: '#000',
@@ -593,7 +588,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
     padding: 16,
     borderRadius: 12,
     marginBottom: 8,
@@ -605,12 +599,7 @@ const styles = StyleSheet.create({
   },
   subCategoryItem: {
     marginLeft: 20,
-    backgroundColor: '#f8f9fa',
     borderLeftWidth: 3,
-    borderLeftColor: '#007AFF',
-  },
-  darkCard: {
-    backgroundColor: '#2c2c2e',
   },
   categoryInfo: {
     flexDirection: 'row',
@@ -630,16 +619,13 @@ const styles = StyleSheet.create({
   categoryName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#000',
   },
   mainCategoryLabel: {
     fontSize: 12,
-    color: '#666',
     marginTop: 2,
   },
   subCategoryLabel: {
     fontSize: 12,
-    color: '#007AFF',
     marginTop: 2,
     fontWeight: '500',
   },
@@ -659,7 +645,6 @@ const styles = StyleSheet.create({
   addSubCategoryButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#007AFF15',
     padding: 12,
     borderRadius: 8,
     marginTop: 8,
@@ -668,12 +653,10 @@ const styles = StyleSheet.create({
   },
   addSubCategoryText: {
     fontSize: 14,
-    color: '#007AFF',
     fontWeight: '600',
   },
   emptyText: {
     fontSize: 14,
-    color: '#666',
     textAlign: 'center',
     fontStyle: 'italic',
     marginVertical: 20,
@@ -685,7 +668,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#007AFF',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -697,23 +679,19 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
   },
   errorText: {
     fontSize: 16,
-    color: '#FF3B30',
     textAlign: 'center',
     marginTop: 16,
     marginBottom: 24,
   },
   retryButton: {
-    backgroundColor: '#007AFF',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
   },
   retryButtonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -722,7 +700,6 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -730,12 +707,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#000',
   },
   modalContent: {
     flex: 1,
@@ -744,7 +719,6 @@ const styles = StyleSheet.create({
   parentInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#e3f2fd',
     padding: 12,
     borderRadius: 8,
     marginBottom: 16,
@@ -752,7 +726,6 @@ const styles = StyleSheet.create({
   },
   parentInfoText: {
     fontSize: 14,
-    color: '#007AFF',
     fontWeight: '500',
   },
   inputGroup: {
@@ -761,22 +734,13 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#f8f9fa',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    color: '#000',
-  },
-  darkInput: {
-    backgroundColor: '#2c2c2e',
-    borderColor: '#38383a',
-    color: '#fff',
   },
   typeContainer: {
     flexDirection: 'row',
@@ -786,22 +750,12 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     borderRadius: 8,
-    backgroundColor: '#f8f9fa',
     borderWidth: 2,
-    borderColor: '#e0e0e0',
     alignItems: 'center',
-  },
-  typeButtonSelected: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
   },
   typeButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
-  },
-  typeButtonTextSelected: {
-    color: '#fff',
   },
   colorsContainer: {
     flexDirection: 'row',
@@ -833,26 +787,15 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 8,
-    backgroundColor: '#f8f9fa',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  darkIconButton: {
-    backgroundColor: '#2c2c2e',
-  },
-  iconButtonSelected: {
-    backgroundColor: '#e3f2fd',
-    borderWidth: 2,
-    borderColor: '#007AFF',
   },
   preview: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     padding: 16,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
   },
   previewTextContainer: {
     flex: 1,
@@ -861,11 +804,9 @@ const styles = StyleSheet.create({
   previewText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#000',
   },
   previewType: {
     fontSize: 12,
-    color: '#666',
     marginTop: 2,
   },
   modalActions: {
@@ -873,65 +814,42 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
   },
   cancelButton: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  darkCancelButton: {
-    backgroundColor: '#2c2c2e',
-    borderColor: '#38383a',
   },
   cancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
   },
   submitButton: {
     flex: 2,
-    backgroundColor: '#007AFF',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
   },
-  submitButtonDisabled: {
-    backgroundColor: '#ccc',
-  },
   submitButtonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
   multipleButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#007AFF15',
     padding: 16,
     borderRadius: 12,
     margin: 16,
     marginTop: 8,
     gap: 12,
     justifyContent: 'center',
-  },
-  darkMultipleButton: {
-    backgroundColor: '#007AFF20',
+    borderWidth: 2,
   },
   multipleButtonText: {
     fontSize: 16,
-    color: '#007AFF',
     fontWeight: '600',
-  },
-  darkText: {
-    color: '#fff',
-  },
-  darkSubtext: {
-    color: '#888',
   },
 });
 

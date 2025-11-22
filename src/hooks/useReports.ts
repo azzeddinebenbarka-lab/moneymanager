@@ -480,10 +480,18 @@ const generateSpendingAnalysis = (): SpendingAnalysis[] => {
   };
 
   const generateBarChartData = (): ChartData => {
+    // Filtrer les transactions par période
+    const periodTransactions = transactions.filter(t => {
+      const transactionDate = new Date(t.date);
+      const startDate = new Date(currentPeriod.startDate);
+      const endDate = new Date(currentPeriod.endDate);
+      return transactionDate >= startDate && transactionDate <= endDate;
+    });
+
     const categoryData = categories
       .filter(cat => cat.type === 'expense')
       .map(cat => {
-        const amount = transactions
+        const amount = periodTransactions
           .filter(t => t.category === cat.name && t.type === 'expense')
           .reduce((sum, t) => sum + t.amount, 0);
         return { name: cat.name, amount };
@@ -506,10 +514,18 @@ const generateSpendingAnalysis = (): SpendingAnalysis[] => {
   };
 
   const generatePieChartData = (): PieChartData[] => {
+    // Filtrer les transactions par période
+    const periodTransactions = transactions.filter(t => {
+      const transactionDate = new Date(t.date);
+      const startDate = new Date(currentPeriod.startDate);
+      const endDate = new Date(currentPeriod.endDate);
+      return transactionDate >= startDate && transactionDate <= endDate;
+    });
+
     const categoryData = categories
       .filter(cat => cat.type === 'expense')
       .map(cat => {
-        const amount = transactions
+        const amount = periodTransactions
           .filter(t => t.category === cat.name && t.type === 'expense')
           .reduce((sum, t) => sum + t.amount, 0);
         return { name: cat.name, amount, color: cat.color };

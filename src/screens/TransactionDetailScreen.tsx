@@ -3,15 +3,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useCallback, useMemo } from 'react';
 import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { useCurrency } from '../context/CurrencyContext';
-import { useTheme } from '../context/ThemeContext';
+import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useCategories } from '../hooks/useCategories';
 import { useTransactions } from '../hooks/useTransactions';
 
@@ -23,6 +23,7 @@ type TransactionDetailScreenRouteProp = RouteProp<{
 const TransactionDetailScreen = () => {
   const navigation = useNavigation<TransactionDetailScreenNavigationProp>();
   const route = useRoute<TransactionDetailScreenRouteProp>();
+  const { colors } = useDesignSystem();
   const { theme } = useTheme();
   const { formatAmount } = useCurrency();
   const { transactions, deleteTransaction, refreshTransactions } = useTransactions();
@@ -87,21 +88,21 @@ const TransactionDetailScreen = () => {
 
   if (!transaction) {
     return (
-      <View style={[styles.container, isDark && styles.darkContainer, styles.center]}>
+      <View style={[styles.container, { backgroundColor: colors.background.primary }, styles.center]}>
         <View style={styles.errorIconContainer}>
-          <Ionicons name="alert-circle" size={80} color="#FF6B6B" />
+          <Ionicons name="alert-circle" size={80} color={colors.semantic.error} />
         </View>
-        <Text style={[styles.errorText, isDark && styles.darkText]}>
+        <Text style={[styles.errorText, { color: colors.text.primary }]}>
           Transaction non trouvée
         </Text>
-        <Text style={[styles.errorSubtext, isDark && styles.darkSubtext]}>
+        <Text style={[styles.errorSubtext, { color: colors.text.secondary }]}>
           La transaction que vous recherchez n'existe pas ou a été supprimée
         </Text>
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={20} color="#007AFF" />
+          <Ionicons name="arrow-back" size={20} color={colors.primary[500]} />
           <Text style={styles.backButtonText}>Retour à la liste</Text>
         </TouchableOpacity>
       </View>
@@ -112,17 +113,17 @@ const TransactionDetailScreen = () => {
   const isIncome = transaction.type === 'income';
 
   return (
-    <View style={[styles.container, isDark && styles.darkContainer]}>
+    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
       {/* Header modernisé */}
-      <View style={[styles.header, isDark && styles.darkHeader]}>
+      <View style={[styles.header, { backgroundColor: colors.background.card, borderBottomColor: colors.border.primary }]}>
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color={isDark ? '#fff' : '#000'} />
+          <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
-          <Text style={[styles.title, isDark && styles.darkText]}>
+          <Text style={[styles.title, { color: colors.text.primary }]}>
             Détails de la transaction
           </Text>
         </View>
@@ -130,33 +131,32 @@ const TransactionDetailScreen = () => {
           style={styles.editButton}
           onPress={handleEditTransaction}
         >
-          <Ionicons name="create-outline" size={24} color={isDark ? '#fff' : '#000'} />
+          <Ionicons name="create-outline" size={24} color={colors.text.primary} />
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Carte principale modernisée */}
-        <View style={[styles.mainCard, isDark && styles.darkCard]}>
+        <View style={[styles.mainCard, { backgroundColor: colors.background.card }]}>
           <View style={styles.amountSection}>
             <Text style={[
               styles.amount,
-              isDark && styles.darkText,
-              { color: isIncome ? '#2E7D32' : '#D32F2F' }
+              { color: isIncome ? colors.semantic.success : colors.semantic.error }
             ]}>
               {isIncome ? '+' : '-'}{formatAmount(Math.abs(transaction.amount))}
             </Text>
             <View style={[
               styles.typeBadge,
-              { backgroundColor: isIncome ? '#E8F5E8' : '#FFEBEE' }
+              { backgroundColor: isIncome ? colors.semantic.success + '20' : colors.semantic.error + '20' }
             ]}>
               <Ionicons 
                 name={isIncome ? "trending-up" : "trending-down"} 
                 size={16} 
-                color={isIncome ? "#2E7D32" : "#D32F2F"} 
+                color={isIncome ? colors.semantic.success : colors.semantic.error} 
               />
               <Text style={[
                 styles.typeText,
-                { color: isIncome ? '#2E7D32' : '#D32F2F' }
+                { color: isIncome ? colors.semantic.success : colors.semantic.error }
               ]}>
                 {isIncome ? 'Revenu' : 'Dépense'}
               </Text>
@@ -164,16 +164,16 @@ const TransactionDetailScreen = () => {
           </View>
 
           <View style={styles.descriptionSection}>
-            <Ionicons name="document-text" size={20} color="#666" />
-            <Text style={[styles.description, isDark && styles.darkText]}>
+            <Ionicons name="document-text" size={20} color={colors.text.secondary} />
+            <Text style={[styles.description, { color: colors.text.primary }]}>
               {transaction.description || 'Aucune description'}
             </Text>
           </View>
         </View>
 
         {/* Informations détaillées */}
-        <View style={[styles.detailsCard, isDark && styles.darkCard]}>
-          <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+        <View style={[styles.detailsCard, { backgroundColor: colors.background.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
             Informations
           </Text>
           
@@ -184,7 +184,7 @@ const TransactionDetailScreen = () => {
                 <View style={[styles.categoryIcon, { backgroundColor: categoryDetails.color + '20' }]}>
                   <Ionicons name={categoryDetails.icon as any} size={20} color={categoryDetails.color} />
                 </View>
-                <Text style={[styles.detailLabel, isDark && styles.darkSubtext]}>
+                <Text style={[styles.detailLabel, { color: colors.text.secondary }]}>
                   Catégorie
                 </Text>
               </View>
@@ -201,11 +201,11 @@ const TransactionDetailScreen = () => {
                 <View style={[styles.detailIcon, { backgroundColor: '#E3F2FD' }]}>
                   <Ionicons name="calendar" size={20} color="#1976D2" />
                 </View>
-                <Text style={[styles.detailLabel, isDark && styles.darkSubtext]}>
+                <Text style={[styles.detailLabel, { color: colors.text.secondary }]}>
                   Date
                 </Text>
               </View>
-              <Text style={[styles.detailValue, isDark && styles.darkText]}>
+              <Text style={[styles.detailValue, { color: colors.text.primary }]}>
                 {new Date(transaction.date).toLocaleDateString('fr-FR', {
                   weekday: 'long',
                   year: 'numeric',
@@ -221,11 +221,11 @@ const TransactionDetailScreen = () => {
                 <View style={[styles.detailIcon, { backgroundColor: '#FFF3E0' }]}>
                   <Ionicons name="time" size={20} color="#F57C00" />
                 </View>
-                <Text style={[styles.detailLabel, isDark && styles.darkSubtext]}>
+                <Text style={[styles.detailLabel, { color: colors.text.secondary }]}>
                   Heure
                 </Text>
               </View>
-              <Text style={[styles.detailValue, isDark && styles.darkText]}>
+              <Text style={[styles.detailValue, { color: colors.text.primary }]}>
                 {new Date(transaction.createdAt).toLocaleTimeString('fr-FR', {
                   hour: '2-digit',
                   minute: '2-digit'
@@ -239,11 +239,11 @@ const TransactionDetailScreen = () => {
                 <View style={[styles.detailIcon, { backgroundColor: '#F3E5F5' }]}>
                   <Ionicons name="add-circle" size={20} color="#7B1FA2" />
                 </View>
-                <Text style={[styles.detailLabel, isDark && styles.darkSubtext]}>
+                <Text style={[styles.detailLabel, { color: colors.text.secondary }]}>
                   Créée le
                 </Text>
               </View>
-              <Text style={[styles.detailValue, isDark && styles.darkText]}>
+              <Text style={[styles.detailValue, { color: colors.text.primary }]}>
                 {new Date(transaction.createdAt).toLocaleDateString('fr-FR')}
               </Text>
             </View>
@@ -251,8 +251,8 @@ const TransactionDetailScreen = () => {
         </View>
 
         {/* Actions */}
-        <View style={[styles.actionsCard, isDark && styles.darkCard]}>
-          <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+        <View style={[styles.actionsCard, { backgroundColor: colors.background.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
             Actions
           </Text>
           
@@ -299,18 +299,12 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   header: {
-    backgroundColor: '#fff',
     padding: 16,
     paddingTop: 60,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  darkHeader: {
-    backgroundColor: '#2c2c2e',
-    borderBottomColor: '#38383a',
   },
   backButton: {
     padding: 8,
@@ -323,7 +317,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#000',
   },
   editButton: {
     padding: 8,
@@ -338,7 +331,6 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   mainCard: {
-    backgroundColor: '#fff',
     padding: 24,
     borderRadius: 20,
     marginBottom: 16,
@@ -347,9 +339,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 16,
     elevation: 8,
-  },
-  darkCard: {
-    backgroundColor: '#2c2c2e',
   },
   amountSection: {
     alignItems: 'center',
@@ -383,11 +372,9 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#000',
     flex: 1,
   },
   detailsCard: {
-    backgroundColor: '#fff',
     padding: 20,
     borderRadius: 20,
     marginBottom: 16,
@@ -400,7 +387,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000',
     marginBottom: 20,
   },
   detailsList: {
@@ -432,12 +418,10 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 14,
-    color: '#666',
   },
   detailValue: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#000',
   },
   categoryBadge: {
     paddingHorizontal: 12,
@@ -449,7 +433,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   actionsCard: {
-    backgroundColor: '#fff',
     padding: 20,
     borderRadius: 20,
     marginBottom: 16,
@@ -480,27 +463,18 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#FF6B6B',
     marginBottom: 8,
     textAlign: 'center',
   },
   errorSubtext: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 24,
     textAlign: 'center',
   },
   backButtonText: {
-    color: '#007AFF',
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
-  },
-  darkText: {
-    color: '#fff',
-  },
-  darkSubtext: {
-    color: '#888',
   },
 });
 

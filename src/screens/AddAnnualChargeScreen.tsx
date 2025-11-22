@@ -3,18 +3,20 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useState } from 'react';
 import {
-  Alert,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useCurrency } from '../context/CurrencyContext';
-import { useTheme } from '../context/ThemeContext';
+import { useDesignSystem } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useAnnualCharges } from '../hooks/useAnnualCharges';
 import { useCategories } from '../hooks/useCategories';
@@ -38,7 +40,7 @@ interface AnnualChargeFormData {
 }
 
 const AddAnnualChargeScreen = ({ navigation, route }: any) => {
-  const { theme } = useTheme();
+  const { colors } = useDesignSystem();
   const { formatAmount } = useCurrency();
   const { accounts } = useAccounts();
   const { categories } = useCategories();
@@ -63,8 +65,6 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const isDark = theme === 'dark';
 
   const recurrenceOptions = [
     { value: 'yearly' as const, label: 'Annuelle' },
@@ -182,27 +182,33 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
 
   return (
     <SafeAreaView>
-      <ScrollView 
-        style={[styles.container, isDark && styles.darkContainer]}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#000"} />
-          </TouchableOpacity>
-          <Text style={[styles.title, isDark && styles.darkText]}>
-            {form.isIslamic ? 'Nouvelle Charge Islamique' : 'Nouvelle Charge Annuelle'}
-          </Text>
-        </View>
+        <ScrollView 
+          style={[styles.container, { backgroundColor: colors.background.primary }]}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.header}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
+            </TouchableOpacity>
+            <Text style={[styles.title, { color: colors.text.primary }]}>
+              {form.isIslamic ? 'Nouvelle Charge Islamique' : 'Nouvelle Charge Annuelle'}
+            </Text>
+          </View>
 
         {/* Type de charge */}
         {form.isIslamic && (
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, isDark && styles.darkText]}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
               Type de charge islamique *
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.typesContainer}>
@@ -212,7 +218,7 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
                   style={[
                     styles.typeButton,
                     form.type === type.value && styles.typeButtonSelected,
-                    isDark && styles.darkTypeButton
+                    { backgroundColor: form.type === type.value ? colors.primary[500] : colors.background.card }
                   ]}
                   onPress={() => setForm(prev => ({ ...prev, type: type.value }))}
                 >
@@ -230,30 +236,30 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
 
         {/* Nom de la charge */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
+          <Text style={[styles.label, { color: colors.text.primary }]}>
             Nom de la charge *
           </Text>
           <TextInput
-            style={[styles.input, isDark && styles.darkInput]}
+            style={[styles.input, { backgroundColor: colors.background.card, color: colors.text.primary, borderColor: colors.border.primary }]}
             value={form.name}
             onChangeText={(text) => setForm(prev => ({ ...prev, name: text }))}
             placeholder="Ex: Assurance habitation, Impôts, Aïd al-Fitr..."
-            placeholderTextColor={isDark ? "#888" : "#999"}
+            placeholderTextColor={colors.text.disabled}
           />
         </View>
 
         {/* Nom arabe (pour charges islamiques) */}
         {form.isIslamic && (
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, isDark && styles.darkText]}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
               Nom arabe (optionnel)
             </Text>
             <TextInput
-              style={[styles.input, isDark && styles.darkInput]}
+              style={[styles.input, { backgroundColor: colors.background.card, color: colors.text.primary, borderColor: colors.border.primary }]}
               value={form.arabicName}
               onChangeText={(text) => setForm(prev => ({ ...prev, arabicName: text }))}
               placeholder="Ex: عيد الفطر"
-              placeholderTextColor={isDark ? "#888" : "#999"}
+              placeholderTextColor={colors.text.disabled}
               textAlign="right"
             />
           </View>
@@ -261,21 +267,21 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
 
         {/* Montant */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
+          <Text style={[styles.label, { color: colors.text.primary }]}>
             Montant *
           </Text>
           <View style={styles.amountContainer}>
             <TextInput
-              style={[styles.input, styles.amountInput, isDark && styles.darkInput]}
+              style={[styles.input, styles.amountInput, { backgroundColor: colors.background.card, color: colors.text.primary, borderColor: colors.border.primary }]}
               value={form.amount}
               onChangeText={handleAmountChange}
               placeholder="0,00"
-              placeholderTextColor={isDark ? "#888" : "#999"}
+              placeholderTextColor={colors.text.disabled}
               keyboardType="decimal-pad"
             />
           </View>
           {form.amount && (
-            <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+            <Text style={[styles.hint, { color: colors.text.secondary }]}>
               {formatDisplayAmount(form.amount)}
             </Text>
           )}
@@ -283,35 +289,35 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
 
         {/* Catégorie */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
+          <Text style={[styles.label, { color: colors.text.primary }]}>
             Catégorie *
           </Text>
           <TouchableOpacity 
-            style={[styles.selectButton, isDark && styles.darkInput]}
+            style={[styles.selectButton, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
             onPress={() => setShowCategoryModal(true)}
           >
-            <Text style={[styles.selectButtonText, isDark && styles.darkText]}>
+            <Text style={[styles.selectButtonText, { color: colors.text.primary }]}>
               {form.category ? getCategoryName(form.category) : 'Sélectionner une catégorie'}
             </Text>
-            <Ionicons name="chevron-down" size={20} color={isDark ? "#fff" : "#666"} />
+            <Ionicons name="chevron-down" size={20} color={colors.text.secondary} />
           </TouchableOpacity>
         </View>
 
         {/* Compte associé */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
+          <Text style={[styles.label, { color: colors.text.primary }]}>
             Compte associé
           </Text>
           <TouchableOpacity 
-            style={[styles.selectButton, isDark && styles.darkInput]}
+            style={[styles.selectButton, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
             onPress={() => setShowAccountModal(true)}
           >
-            <Text style={[styles.selectButtonText, isDark && styles.darkText]}>
+            <Text style={[styles.selectButtonText, { color: colors.text.primary }]}>
               {getAccountName(form.accountId)}
             </Text>
-            <Ionicons name="chevron-down" size={20} color={isDark ? "#fff" : "#666"} />
+            <Ionicons name="chevron-down" size={20} color={colors.text.secondary} />
           </TouchableOpacity>
-          <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+          <Text style={[styles.hint, { color: colors.text.secondary }]}>
             Sélectionnez le compte pour le prélèvement automatique
           </Text>
         </View>
@@ -320,7 +326,7 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
         {form.accountId && (
           <View style={styles.inputGroup}>
             <View style={styles.switchContainer}>
-              <Text style={[styles.label, isDark && styles.darkText]}>
+              <Text style={[styles.label, { color: colors.text.primary }]}>
                 Prélèvement automatique
               </Text>
               <TouchableOpacity
@@ -336,7 +342,7 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
                 ]} />
               </TouchableOpacity>
             </View>
-            <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+            <Text style={[styles.hint, { color: colors.text.secondary }]}>
               {form.autoDeduct 
                 ? 'Le montant sera automatiquement débité à la date d\'échéance'
                 : 'Paiement manuel requis'
@@ -347,17 +353,17 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
 
         {/* Date d'échéance */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
+          <Text style={[styles.label, { color: colors.text.primary }]}>
             Date d'échéance *
           </Text>
           <TouchableOpacity 
-            style={[styles.dateButton, isDark && styles.darkInput]}
+            style={[styles.dateButton, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
             onPress={() => setShowDatePicker(true)}
           >
-            <Text style={[styles.dateText, isDark && styles.darkText]}>
+            <Text style={[styles.dateText, { color: colors.text.primary }]}>
               {form.dueDate.toLocaleDateString('fr-FR')}
             </Text>
-            <Ionicons name="calendar" size={20} color={isDark ? "#fff" : "#666"} />
+            <Ionicons name="calendar" size={20} color={colors.text.secondary} />
           </TouchableOpacity>
           {showDatePicker && (
             <DateTimePicker
@@ -371,7 +377,7 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
 
         {/* Récurrence */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
+          <Text style={[styles.label, { color: colors.text.primary }]}>
             Récurrence
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.recurrenceContainer}>
@@ -381,7 +387,7 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
                 style={[
                   styles.recurrenceButton,
                   form.recurrence === recurrence.value && styles.recurrenceButtonSelected,
-                  isDark && styles.darkRecurrenceButton
+                  { backgroundColor: form.recurrence === recurrence.value ? colors.primary[500] : colors.background.card, borderColor: colors.border.primary }
                 ]}
                 onPress={() => setForm(prev => ({ ...prev, recurrence: recurrence.value }))}
               >
@@ -398,7 +404,7 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
 
         {/* Méthode de paiement */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
+          <Text style={[styles.label, { color: colors.text.primary }]}>
             Méthode de paiement
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.paymentMethodsContainer}>
@@ -408,7 +414,7 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
                 style={[
                   styles.paymentMethodButton,
                   form.paymentMethod === method && styles.paymentMethodButtonSelected,
-                  isDark && styles.darkPaymentMethodButton
+                  { backgroundColor: form.paymentMethod === method ? colors.primary[500] : colors.background.card, borderColor: colors.border.primary }
                 ]}
                 onPress={() => setForm(prev => ({ ...prev, paymentMethod: method }))}
               >
@@ -425,33 +431,33 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
 
         {/* Jours de rappel */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
+          <Text style={[styles.label, { color: colors.text.primary }]}>
             Rappel (jours avant)
           </Text>
           <TextInput
-            style={[styles.input, isDark && styles.darkInput]}
+            style={[styles.input, { backgroundColor: colors.background.card, color: colors.text.primary, borderColor: colors.border.primary }]}
             value={form.reminderDays}
             onChangeText={(text) => setForm(prev => ({ ...prev, reminderDays: text.replace(/[^0-9]/g, '') }))}
             placeholder="7"
-            placeholderTextColor={isDark ? "#888" : "#999"}
+            placeholderTextColor={colors.text.disabled}
             keyboardType="number-pad"
           />
-          <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+          <Text style={[styles.hint, { color: colors.text.secondary }]}>
             Nombre de jours avant l'échéance pour le rappel
           </Text>
         </View>
 
         {/* Notes */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
+          <Text style={[styles.label, { color: colors.text.primary }]}>
             Notes
           </Text>
           <TextInput
-            style={[styles.input, styles.textArea, isDark && styles.darkInput]}
+            style={[styles.input, styles.textArea, { backgroundColor: colors.background.card, color: colors.text.primary, borderColor: colors.border.primary }]}
             value={form.notes}
             onChangeText={(text) => setForm(prev => ({ ...prev, notes: text }))}
             placeholder="Informations supplémentaires..."
-            placeholderTextColor={isDark ? "#888" : "#999"}
+            placeholderTextColor={colors.text.disabled}
             multiline
             numberOfLines={3}
             textAlignVertical="top"
@@ -461,7 +467,7 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
         {/* Boutons */}
         <View style={styles.buttonsContainer}>
           <TouchableOpacity 
-            style={[styles.cancelButton, isDark && styles.darkCancelButton]}
+            style={[styles.cancelButton, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
             onPress={() => navigation.goBack()}
             disabled={loading}
           >
@@ -492,8 +498,8 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
         onRequestClose={() => setShowAccountModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, isDark && styles.darkModalContent]}>
-            <Text style={[styles.modalTitle, isDark && styles.darkText]}>
+          <View style={[styles.modalContent, { backgroundColor: colors.background.card }]}>
+            <Text style={[styles.modalTitle, { color: colors.text.primary }]}>
               Sélectionner un compte
             </Text>
             <ScrollView style={styles.modalList}>
@@ -503,7 +509,7 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
                   style={[
                     styles.modalItem,
                     form.accountId === account.id && styles.modalItemSelected,
-                    isDark && styles.darkModalItem
+                    { backgroundColor: form.accountId === account.id ? colors.primary[500] + '20' : 'transparent', borderColor: colors.border.primary }
                   ]}
                   onPress={() => {
                     setForm(prev => ({ ...prev, accountId: account.id }));
@@ -515,11 +521,11 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
                     <Text style={[
                       styles.modalItemText,
                       form.accountId === account.id && styles.modalItemTextSelected,
-                      isDark && styles.darkText
+                      { color: colors.text.primary }
                     ]}>
                       {account.name}
                     </Text>
-                    <Text style={[styles.modalItemSubtext, isDark && styles.darkSubtext]}>
+                    <Text style={[styles.modalItemSubtext, { color: colors.text.secondary }]}>
                       {formatAmount(account.balance)} • {account.type}
                     </Text>
                   </View>
@@ -527,7 +533,7 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
               ))}
             </ScrollView>
             <TouchableOpacity 
-              style={[styles.modalCloseButton, isDark && styles.darkModalCloseButton]}
+              style={[styles.modalCloseButton, { backgroundColor: colors.background.secondary }]}
               onPress={() => setShowAccountModal(false)}
             >
               <Text style={styles.modalCloseButtonText}>Fermer</Text>
@@ -544,8 +550,8 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
         onRequestClose={() => setShowCategoryModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, isDark && styles.darkModalContent]}>
-            <Text style={[styles.modalTitle, isDark && styles.darkText]}>
+          <View style={[styles.modalContent, { backgroundColor: colors.background.card }]}>
+            <Text style={[styles.modalTitle, { color: colors.text.primary }]}>
               Sélectionner une catégorie
             </Text>
             <ScrollView style={styles.modalList}>
@@ -555,7 +561,7 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
                   style={[
                     styles.modalItem,
                     form.category === category.id && styles.modalItemSelected,
-                    isDark && styles.darkModalItem
+                    { backgroundColor: form.category === category.id ? colors.primary[500] + '20' : 'transparent', borderColor: colors.border.primary }
                   ]}
                   onPress={() => {
                     setForm(prev => ({ ...prev, category: category.id }));
@@ -570,7 +576,7 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
                   <Text style={[
                     styles.modalItemText,
                     form.category === category.id && styles.modalItemTextSelected,
-                    isDark && styles.darkText
+                    { color: colors.text.primary }
                   ]}>
                     {category.name}
                   </Text>
@@ -578,7 +584,7 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
               ))}
             </ScrollView>
             <TouchableOpacity 
-              style={[styles.modalCloseButton, isDark && styles.darkModalCloseButton]}
+              style={[styles.modalCloseButton, { backgroundColor: colors.background.secondary }]}
               onPress={() => setShowCategoryModal(false)}
             >
               <Text style={styles.modalCloseButtonText}>Fermer</Text>
@@ -586,6 +592,7 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
           </View>
         </View>
       </Modal>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -594,9 +601,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
-  },
-  darkContainer: {
-    backgroundColor: '#1c1c1e',
   },
   content: {
     padding: 20,
@@ -633,11 +637,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
   },
-  darkInput: {
-    backgroundColor: '#2c2c2e',
-    borderColor: '#444',
-    color: '#fff',
-  },
   textArea: {
     minHeight: 80,
   },
@@ -673,10 +672,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     marginRight: 8,
-  },
-  darkTypeButton: {
-    backgroundColor: '#333',
-    borderColor: '#555',
   },
   typeButtonSelected: {
     backgroundColor: '#007AFF',
@@ -715,10 +710,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     marginRight: 8,
-  },
-  darkRecurrenceButton: {
-    backgroundColor: '#333',
-    borderColor: '#555',
   },
   recurrenceButtonSelected: {
     backgroundColor: '#007AFF',
@@ -770,10 +761,6 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     marginRight: 8,
   },
-  darkPaymentMethodButton: {
-    backgroundColor: '#333',
-    borderColor: '#555',
-  },
   paymentMethodButtonSelected: {
     backgroundColor: '#007AFF',
     borderColor: '#007AFF',
@@ -797,9 +784,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
-  },
-  darkCancelButton: {
-    backgroundColor: '#333',
   },
   cancelButtonText: {
     fontSize: 16,
@@ -842,9 +826,6 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     maxHeight: '80%',
   },
-  darkModalContent: {
-    backgroundColor: '#2c2c2e',
-  },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -864,10 +845,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderWidth: 1,
     borderColor: '#ddd',
-  },
-  darkModalItem: {
-    backgroundColor: '#38383a',
-    borderColor: '#555',
   },
   modalItemSelected: {
     backgroundColor: '#007AFF',
@@ -902,19 +879,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 16,
   },
-  darkModalCloseButton: {
-    backgroundColor: '#38383a',
-  },
   modalCloseButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#666',
-  },
-  darkText: {
-    color: '#fff',
-  },
-  darkSubtext: {
-    color: '#888',
   },
 });
 

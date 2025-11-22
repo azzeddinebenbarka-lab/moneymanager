@@ -1,7 +1,6 @@
 // src/screens/MonthDetailScreen.tsx - VERSION COMPLÈTEMENT CORRIGÉE
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     ActivityIndicator,
@@ -17,8 +16,9 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
+import ListTransactionItem from '../components/transaction/ListTransactionItem';
 import { useCurrency } from '../context/CurrencyContext';
-import { useTheme } from '../context/ThemeContext';
+import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import useCategories from '../hooks/useCategories';
 import { useMonthlyData } from '../hooks/useMonthlyData';
 import { useTransactions } from '../hooks/useTransactions';
@@ -39,6 +39,7 @@ type MonthDetailScreenRouteProp = any;
 const MonthDetailScreen: React.FC = () => {
   const navigation = useNavigation() as MonthDetailScreenNavigationProp;
   const route = useRoute() as MonthDetailScreenRouteProp;
+  const { colors } = useDesignSystem();
   const { theme } = useTheme();
   const { formatAmount } = useCurrency();
   const { getMonthlyData } = useMonthlyData();
@@ -47,7 +48,6 @@ const MonthDetailScreen: React.FC = () => {
   const [parentNames, setParentNames] = useState<Map<string, string>>(new Map());
 
   const { year, month } = route.params;
-  const isDark = theme === 'dark';
 
   const [refreshing, setRefreshing] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'income' | 'expense'>('all');
@@ -158,9 +158,9 @@ const MonthDetailScreen: React.FC = () => {
 
   // Header moderne
   const ModernHeader = () => (
-    <View style={[styles.header, isDark && styles.darkHeader]}>
+    <View style={[styles.header, { backgroundColor: colors.background.card, borderBottomColor: colors.border.primary }]}>
       <View style={styles.headerBackground}>
-        <View style={[styles.headerGradient, isDark && styles.darkHeaderGradient]} />
+        <View style={[styles.headerGradient, { backgroundColor: colors.primary[500] + '20' }]} />
       </View>
       
       <View style={styles.headerContent}>
@@ -169,14 +169,14 @@ const MonthDetailScreen: React.FC = () => {
             style={styles.backButton}
             onPress={handleBack}
           >
-            <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#000"} />
+            <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
           </TouchableOpacity>
           
           <View style={styles.headerTitleContainer}>
-            <Text style={[styles.headerTitle, isDark && styles.darkTitle]}>
+            <Text style={[styles.headerTitle, { color: colors.text.primary }]}>
               Détail du Mois
             </Text>
-            <Text style={[styles.headerSubtitle, isDark && styles.darkSubtitle]}>
+            <Text style={[styles.headerSubtitle, { color: colors.text.secondary }]}>
               {monthName}
             </Text>
           </View>
@@ -184,7 +184,7 @@ const MonthDetailScreen: React.FC = () => {
           <View style={styles.headerStats}>
             <View style={styles.miniStat}>
               <Ionicons name="receipt" size={14} color="#007AFF" />
-              <Text style={[styles.miniStatText, isDark && styles.darkSubtext]}>
+              <Text style={[styles.miniStatText, { color: colors.text.secondary }]}>
                 {monthData?.transactionCount || 0} transactions
               </Text>
             </View>
@@ -207,30 +207,30 @@ const MonthDetailScreen: React.FC = () => {
     >
       <View style={styles.statsRow}>
         {/* Revenus */}
-        <View style={[styles.statCard, isDark && styles.darkCard]}>
+        <View style={[styles.statCard, { backgroundColor: colors.background.card }]}>
           <View style={[styles.statIcon, { backgroundColor: '#E8F5E8' }]}>
             <Ionicons name="arrow-down" size={20} color="#10B981" />
           </View>
           <View style={styles.statContent}>
-            <Text style={[styles.statValue, isDark && styles.darkText]}>
+            <Text style={[styles.statValue, { color: colors.text.primary }]}>
               {formatAmount(monthData?.income || 0)}
             </Text>
-            <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+            <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
               Revenus
             </Text>
           </View>
         </View>
 
         {/* Dépenses */}
-        <View style={[styles.statCard, isDark && styles.darkCard]}>
+        <View style={[styles.statCard, { backgroundColor: colors.background.card }]}>
           <View style={[styles.statIcon, { backgroundColor: '#FFE5E5' }]}>
             <Ionicons name="arrow-up" size={20} color="#EF4444" />
           </View>
           <View style={styles.statContent}>
-            <Text style={[styles.statValue, isDark && styles.darkText]}>
+            <Text style={[styles.statValue, { color: colors.text.primary }]}>
               {formatAmount(monthData?.expenses || 0)}
             </Text>
-            <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+            <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
               Dépenses
             </Text>
           </View>
@@ -238,14 +238,14 @@ const MonthDetailScreen: React.FC = () => {
       </View>
 
       {/* Solde net */}
-      <View style={[styles.netFlowCard, isDark && styles.darkCard]}>
+      <View style={[styles.netFlowCard, { backgroundColor: colors.background.card }]}>
         <View style={styles.netFlowHeader}>
           <Ionicons 
             name={monthData?.netFlow >= 0 ? "trending-up" : "trending-down"} 
             size={24} 
             color={monthData?.netFlow >= 0 ? '#10B981' : '#EF4444'} 
           />
-          <Text style={[styles.netFlowLabel, isDark && styles.darkSubtext]}>
+          <Text style={[styles.netFlowLabel, { color: colors.text.secondary }]}>
             Solde du Mois
           </Text>
         </View>
@@ -255,7 +255,7 @@ const MonthDetailScreen: React.FC = () => {
         ]}>
           {formatAmount(monthData?.netFlow || 0)}
         </Text>
-        <Text style={[styles.savingsRate, isDark && styles.darkSubtext]}>
+        <Text style={[styles.savingsRate, { color: colors.text.secondary }]}>
           Taux d'épargne: {monthData?.savingsRate?.toFixed(1) || 0}%
         </Text>
       </View>
@@ -273,7 +273,7 @@ const MonthDetailScreen: React.FC = () => {
         }
       ]}
     >
-      <Text style={[styles.filtersLabel, isDark && styles.darkSubtext]}>
+      <Text style={[styles.filtersLabel, { color: colors.text.secondary }]}>
         Filtrer les transactions
       </Text>
       <View style={styles.filtersRow}>
@@ -286,20 +286,20 @@ const MonthDetailScreen: React.FC = () => {
             key={filter.key}
             style={[
               styles.filterButton,
-              selectedFilter === filter.key && styles.filterButtonActive,
-              isDark && styles.darkFilterButton
+              { backgroundColor: colors.background.card },
+              selectedFilter === filter.key && styles.filterButtonActive
             ]}
             onPress={() => handleFilterChange(filter.key as any)}
           >
             <Ionicons 
               name={filter.icon as any} 
               size={16} 
-              color={selectedFilter === filter.key ? '#fff' : (isDark ? '#94A3B8' : '#64748B')} 
+              color={selectedFilter === filter.key ? '#fff' : colors.text.secondary} 
             />
             <Text style={[
               styles.filterText,
-              selectedFilter === filter.key && styles.filterTextActive,
-              isDark && styles.darkText
+              { color: colors.text.primary },
+              selectedFilter === filter.key && styles.filterTextActive
             ]}>
               {filter.label}
             </Text>
@@ -317,7 +317,7 @@ const MonthDetailScreen: React.FC = () => {
       <Animated.View 
         style={[
           styles.categorySection,
-          isDark && styles.darkCard,
+          { backgroundColor: colors.background.card },
           {
             opacity: fadeAnim,
             transform: [{ translateY: slideAnim }]
@@ -325,10 +325,10 @@ const MonthDetailScreen: React.FC = () => {
         ]}
       >
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, isDark && styles.darkTitle]}>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
             Analyse par Catégorie
           </Text>
-          <Text style={[styles.sectionSubtitle, isDark && styles.darkSubtext]}>
+          <Text style={[styles.sectionSubtitle, { color: colors.text.secondary }]}>
             Dépenses détaillées
           </Text>
         </View>
@@ -381,21 +381,21 @@ const MonthDetailScreen: React.FC = () => {
                 <View style={styles.categoryInfo}>
                   <View style={[styles.categoryColor, { backgroundColor: getCategoryColor(index) }]} />
                   <View style={styles.categoryDetails}>
-                    <Text style={[styles.categoryName, isDark && styles.darkText]}>{parent.name}</Text>
-                    <Text style={[styles.categoryPercentage, isDark && styles.darkSubtext]}>{((parent.amount / total) * 100).toFixed(1)}%</Text>
+                    <Text style={[styles.categoryName, { color: colors.text.primary }]}>{parent.name}</Text>
+                    <Text style={[styles.categoryPercentage, { color: colors.text.secondary }]}>{((parent.amount / total) * 100).toFixed(1)}%</Text>
                     {parent.subItems && parent.subItems.length > 0 && (
                       <View style={styles.subcategoryList}>
                         {parent.subItems.slice(0, 3).map((sub: any) => (
                           <View key={sub.id} style={styles.subcategoryItem}>
-                            <Text style={[styles.subcategoryName, isDark && styles.darkSubtext]}>• {sub.name}</Text>
-                            <Text style={[styles.subcategoryAmount, isDark && styles.darkText]}>{formatAmount(sub.amount)}</Text>
+                            <Text style={[styles.subcategoryName, { color: colors.text.secondary }]}>• {sub.name}</Text>
+                            <Text style={[styles.subcategoryAmount, { color: colors.text.primary }]}>{formatAmount(sub.amount)}</Text>
                           </View>
                         ))}
                       </View>
                     )}
                   </View>
                 </View>
-                <Text style={[styles.categoryAmount, isDark && styles.darkText]}>{formatAmount(parent.amount)}</Text>
+                <Text style={[styles.categoryAmount, { color: colors.text.primary }]}>{formatAmount(parent.amount)}</Text>
               </View>
             ));
           })()}
@@ -420,12 +420,12 @@ const MonthDetailScreen: React.FC = () => {
           <Ionicons 
             name="receipt-outline" 
             size={64} 
-            color={isDark ? '#4B5563' : '#9CA3AF'} 
+            color={colors.text.disabled} 
           />
-          <Text style={[styles.emptyTitle, isDark && styles.darkTitle]}>
+          <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>
             Aucune transaction
           </Text>
-          <Text style={[styles.emptyDescription, isDark && styles.darkSubtext]}>
+          <Text style={[styles.emptyDescription, { color: colors.text.secondary }]}>
             {selectedFilter === 'all' 
               ? `Aucune transaction pour ${monthName}`
               : `Aucune transaction ${selectedFilter === 'income' ? 'de revenu' : 'de dépense'} pour ${monthName}`
@@ -446,10 +446,10 @@ const MonthDetailScreen: React.FC = () => {
         ]}
       >
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, isDark && styles.darkTitle]}>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
             Transactions ({filteredTransactions.length})
           </Text>
-          <Text style={[styles.sectionSubtitle, isDark && styles.darkSubtext]}>
+          <Text style={[styles.sectionSubtitle, { color: colors.text.secondary }]}>
             {selectedFilter === 'all' ? 'Toutes les transactions' : 
              selectedFilter === 'income' ? 'Revenus seulement' : 'Dépenses seulement'}
           </Text>
@@ -458,11 +458,9 @@ const MonthDetailScreen: React.FC = () => {
         <FlatList
           data={filteredTransactions}
           renderItem={({ item }) => (
-            <TransactionCard 
-              transaction={item}
+            <ListTransactionItem 
+              item={item}
               onPress={handleTransactionPress}
-              onDelete={handleDeleteTransaction}
-              isDark={isDark}
             />
           )}
           keyExtractor={(item) => item.id}
@@ -473,34 +471,6 @@ const MonthDetailScreen: React.FC = () => {
       </Animated.View>
     );
   };
-
-  // Carte de transaction en grille (2 par ligne) - carte verticale épurée
-  const TransactionCard = ({ transaction, onPress, onDelete, isDark }: any) => (
-    <TouchableOpacity
-      style={[styles.cardBorder, isDark && styles.darkCardBorder]}
-      onPress={() => onPress(transaction.id)}
-      activeOpacity={0.85}
-    >
-      <LinearGradient
-        colors={transaction.type === 'income' ? ['#F0FBF6', '#FFFFFF'] : ['#FFF5F6', '#FFFFFF']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.cardGradient}
-      >
-        <View style={styles.cardVertical}>
-          <View style={[styles.cardIconLarge, { backgroundColor: transaction.type === 'income' ? '#ECFDF5' : '#FFF1F2' }]}>
-            <Ionicons name={transaction.type === 'income' ? 'arrow-down' : 'arrow-up'} size={20} color={transaction.type === 'income' ? '#059669' : '#DC2626'} />
-          </View>
-
-          <Text style={[styles.cardTitle, isDark && styles.darkText]} numberOfLines={2}>{transaction.description || 'Sans description'}</Text>
-
-          <Text style={[styles.cardAmountLarge, { color: transaction.type === 'income' ? '#059669' : '#DC2626' }]}>{transaction.type === 'income' ? '+' : '-'}{formatAmount(Math.abs(transaction.amount))}</Text>
-
-          <Text style={[styles.cardDateSmall, isDark && styles.darkSubtext]}>{new Date(transaction.date).toLocaleDateString('fr-FR')}</Text>
-        </View>
-      </LinearGradient>
-    </TouchableOpacity>
-  );
 
   // Couleurs pour les catégories
   const getCategoryColor = (index: number) => {
@@ -586,9 +556,9 @@ const MonthDetailScreen: React.FC = () => {
   if (transactionsLoading && !monthData) {
     return (
       <SafeAreaView>
-        <View style={[styles.container, isDark && styles.darkContainer, styles.center]}>
+        <View style={[styles.container, { backgroundColor: colors.background.primary }, styles.center]}>
           <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={[styles.loadingText, isDark && styles.darkText]}>
+          <Text style={[styles.loadingText, { color: colors.text.primary }]}>
             Chargement des données...
           </Text>
         </View>
@@ -598,7 +568,7 @@ const MonthDetailScreen: React.FC = () => {
 
   return (
     <SafeAreaView>
-      <View style={[styles.container, isDark && styles.darkContainer]}>
+      <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
         <ModernHeader />
         
         <ScrollView 
@@ -609,7 +579,7 @@ const MonthDetailScreen: React.FC = () => {
               refreshing={refreshing}
               onRefresh={handleRefresh}
               colors={['#007AFF']}
-              tintColor={isDark ? '#007AFF' : '#007AFF'}
+              tintColor={'#007AFF'}
             />
           }
           contentContainerStyle={styles.scrollContent}
@@ -628,10 +598,6 @@ const MonthDetailScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  darkContainer: {
-    backgroundColor: '#0B1220',
   },
   center: {
     justifyContent: 'center',
@@ -640,13 +606,10 @@ const styles = StyleSheet.create({
   
   // Header
   header: {
-    paddingTop: 60,
+    paddingTop: 50,
     paddingBottom: 20,
     position: 'relative',
     overflow: 'hidden',
-  },
-  darkHeader: {
-    backgroundColor: 'transparent',
   },
   headerBackground: {
     position: 'absolute',
@@ -657,11 +620,6 @@ const styles = StyleSheet.create({
   },
   headerGradient: {
     flex: 1,
-    backgroundColor: 'transparent',
-    opacity: 1,
-  },
-  darkHeaderGradient: {
-    backgroundColor: 'transparent',
     opacity: 1,
   },
   headerContent: {
@@ -682,12 +640,10 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1E293B',
     marginBottom: 4,
   },
   headerSubtitle: {
     fontSize: 16,
-    color: '#64748B',
   },
   headerStats: {
     alignItems: 'flex-end',
@@ -703,7 +659,6 @@ const styles = StyleSheet.create({
   },
   miniStatText: {
     fontSize: 12,
-    color: '#6B7280',
     fontWeight: '500',
   },
   
@@ -718,7 +673,7 @@ const styles = StyleSheet.create({
   // Cartes de statistiques
   statsContainer: {
     paddingHorizontal: 20,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   statsRow: {
     flexDirection: 'row',
@@ -732,9 +687,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  darkCard: {
-    backgroundColor: '#1E293B',
   },
   statIcon: {
     width: 40,
@@ -750,12 +702,10 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#0F172A',
     marginBottom: 2,
   },
   statLabel: {
     fontSize: 11,
-    color: '#94A3B8',
     fontWeight: '600',
   },
   netFlowCard: {
@@ -772,7 +722,6 @@ const styles = StyleSheet.create({
   },
   netFlowLabel: {
     fontSize: 14,
-    color: '#64748B',
     fontWeight: '600',
   },
   netFlowValue: {
@@ -782,7 +731,6 @@ const styles = StyleSheet.create({
   },
   savingsRate: {
     fontSize: 12,
-    color: '#64748B',
   },
   
   // Filtres
@@ -793,7 +741,6 @@ const styles = StyleSheet.create({
   filtersLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#64748B',
     marginBottom: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -802,7 +749,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#F1F5F9',
     borderRadius: 12,
-    padding: 4,
+    padding: 6,
   },
   filterButton: {
     flex: 1,
@@ -810,12 +757,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     borderRadius: 999,
     gap: 6,
-  },
-  darkFilterButton: {
-    backgroundColor: 'transparent',
+    marginHorizontal: 2,
   },
   filterButtonActive: {
     backgroundColor: '#007AFF',
@@ -823,7 +768,6 @@ const styles = StyleSheet.create({
   filterText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#64748B',
   },
   filterTextActive: {
     color: '#FFFFFF',
@@ -843,12 +787,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1E293B',
     marginBottom: 4,
   },
   sectionSubtitle: {
     fontSize: 14,
-    color: '#64748B',
   },
   categoriesList: {
     gap: 12,
@@ -876,17 +818,14 @@ const styles = StyleSheet.create({
   categoryName: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#1E293B',
     marginBottom: 2,
   },
   categoryPercentage: {
     fontSize: 12,
-    color: '#64748B',
   },
   categoryAmount: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1E293B',
   },
   subcategoryList: {
     marginTop: 6,
@@ -899,12 +838,10 @@ const styles = StyleSheet.create({
   },
   subcategoryName: {
     fontSize: 12,
-    color: '#64748B',
   },
   subcategoryAmount: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#1E293B',
   },
 
   // Transaction meta / category badge
@@ -1048,49 +985,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
   },
-  cardBorder: {
-    borderWidth: 1,
-    borderColor: '#E6EEF8',
-    borderRadius: 12,
-    overflow: 'hidden',
-    marginVertical: 6,
-    backgroundColor: 'transparent'
-  },
-  darkCardBorder: {
-    borderColor: '#1F2937'
-  },
-  cardGradient: {
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    alignItems: 'center'
-  },
-  cardVertical: {
-    alignItems: 'center',
-  },
-  cardIconLarge: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  cardTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0F172A',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  cardAmountLarge: {
-    fontSize: 16,
-    fontWeight: '800',
-    marginBottom: 8,
-  },
-  cardDateSmall: {
-    fontSize: 12,
-    color: '#94A3B8',
-  },
   transactionAmountContainer: {
     alignItems: 'flex-end',
   },
@@ -1129,14 +1023,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#111827',
     marginTop: 12,
     marginBottom: 8,
     textAlign: 'center',
   },
   emptyDescription: {
     fontSize: 14,
-    color: '#6B7280',
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -1148,19 +1040,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
-  },
-  darkTitle: {
-    color: '#F1F5F9',
-  },
-  darkSubtitle: {
-    color: '#94A3B8',
-  },
-  darkText: {
-    color: '#F1F5F9',
-  },
-  darkSubtext: {
-    color: '#94A3B8',
   },
 });
 

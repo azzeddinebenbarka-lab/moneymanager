@@ -14,12 +14,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AccountForm from '../components/account/AccountForm';
 import { useCurrency } from '../context/CurrencyContext';
-import { useTheme } from '../context/ThemeContext';
+import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { Account } from '../types';
 
 const AccountsScreen = ({ navigation }: any) => {
   const { formatAmount } = useCurrency();
+  const { colors } = useDesignSystem();
   const { theme } = useTheme();
   const { 
     accounts, 
@@ -106,24 +107,24 @@ const AccountsScreen = ({ navigation }: any) => {
 
   const renderAccountItem = ({ item }: { item: Account }) => (
     <TouchableOpacity 
-      style={[styles.accountCard, isDark && styles.darkCard]}
+      style={[styles.accountCard, { backgroundColor: colors.background.card }]}
       onPress={() => navigation.navigate('AccountDetail', { accountId: item.id })}
     >
       <View style={styles.accountMainInfo}>
         <View style={styles.accountHeader}>
           <View style={[styles.colorIndicator, { backgroundColor: item.color }]} />
           <View style={styles.accountTextContainer}>
-            <Text style={[styles.accountName, isDark && styles.darkText]} numberOfLines={1}>
+            <Text style={[styles.accountName, { color: colors.text.primary }]} numberOfLines={1}>
               {item.name}
             </Text>
-            <Text style={[styles.accountType, isDark && styles.darkSubtext]}>
+            <Text style={[styles.accountType, { color: colors.text.secondary }]}>
               {item.type === 'cash' ? 'Espèces' : 
                item.type === 'bank' ? 'Banque' : 
                item.type === 'card' ? 'Carte' : 'Épargne'}
             </Text>
           </View>
         </View>
-        <Text style={[styles.accountBalance, isDark && styles.darkText]}>
+        <Text style={[styles.accountBalance, { color: colors.text.primary }]}>
           {formatAmount(item.balance)}
         </Text>
       </View>
@@ -134,14 +135,14 @@ const AccountsScreen = ({ navigation }: any) => {
           style={[styles.actionButton, styles.editButton]}
           onPress={() => handleEditAccount(item)}
         >
-          <Ionicons name="create-outline" size={18} color="#007AFF" />
+          <Ionicons name="create-outline" size={18} color={colors.primary[500]} />
         </TouchableOpacity>
         
         <TouchableOpacity 
           style={[styles.actionButton, styles.deleteButton]}
           onPress={() => handleDeleteAccount(item)}
         >
-          <Ionicons name="trash-outline" size={18} color="#FF3B30" />
+          <Ionicons name="trash-outline" size={18} color={colors.semantic.error} />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -151,38 +152,38 @@ const AccountsScreen = ({ navigation }: any) => {
   
   // New header matching design
   const Header = () => (
-    <View style={[styles.topHeader, isDark && styles.darkHeader]}> 
+    <View style={[styles.topHeader, { backgroundColor: colors.background.primary, borderBottomColor: colors.border.primary }]}> 
       <View style={styles.topHeaderRow}>
         <TouchableOpacity style={styles.backWrap} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={20} color={isDark ? '#fff' : '#0F172A'} />
+          <Ionicons name="chevron-back" size={20} color={colors.text.primary} />
         </TouchableOpacity>
 
-        <Text style={[styles.pageTitle, isDark && styles.darkText]}>Mes Comptes</Text>
+        <Text style={[styles.pageTitle, { color: colors.text.primary }]}>Mes Comptes</Text>
 
         <TouchableOpacity style={styles.refreshIcon} onPress={onRefresh} disabled={refreshing}>
-          <Ionicons name="refresh" size={20} color={isDark ? '#fff' : '#0F172A'} />
+          <Ionicons name="refresh" size={20} color={colors.text.primary} />
         </TouchableOpacity>
       </View>
 
-      <View style={[styles.summaryCard, isDark && styles.darkCard]}> 
+      <View style={[styles.summaryCard, { backgroundColor: colors.background.card }]}> 
         <View style={styles.summaryTop}>
           <View>
-            <Text style={[styles.summaryLabel, isDark && styles.darkSubtext]}>TOTAL DES AVOIRS</Text>
-            <Text style={[styles.summaryAmount, isDark && styles.darkText]}>{formatAmount(totalBalance)}</Text>
+            <Text style={[styles.summaryLabel, { color: colors.text.secondary }]}>TOTAL DES AVOIRS</Text>
+            <Text style={[styles.summaryAmount, { color: colors.text.primary }]}>{formatAmount(totalBalance)}</Text>
           </View>
           <View style={styles.summaryIcon}>
-            <Ionicons name="library-outline" size={28} color="#007AFF" />
+            <Ionicons name="library-outline" size={28} color={colors.primary[500]} />
           </View>
         </View>
 
         <View style={styles.summarySplit}>
           <View style={styles.splitItem}>
-            <Text style={[styles.splitLabel, isDark && styles.darkSubtext]}>Comptes courants</Text>
-            <Text style={[styles.splitValue, isDark && styles.darkText]}>{formatAmount(accounts.filter(a => a.type !== 'savings').reduce((s, a) => s + a.balance, 0))}</Text>
+            <Text style={[styles.splitLabel, { color: colors.text.secondary }]}>Comptes courants</Text>
+            <Text style={[styles.splitValue, { color: colors.text.primary }]}>{formatAmount(accounts.filter(a => a.type !== 'savings').reduce((s, a) => s + a.balance, 0))}</Text>
           </View>
           <View style={styles.splitItem}>
-            <Text style={[styles.splitLabel, isDark && styles.darkSubtext]}>Épargne</Text>
-            <Text style={[styles.splitValue, isDark && styles.darkText]}>{formatAmount(accounts.filter(a => a.type === 'savings').reduce((s, a) => s + a.balance, 0))}</Text>
+            <Text style={[styles.splitLabel, { color: colors.text.secondary }]}>Épargne</Text>
+            <Text style={[styles.splitValue, { color: colors.text.primary }]}>{formatAmount(accounts.filter(a => a.type === 'savings').reduce((s, a) => s + a.balance, 0))}</Text>
           </View>
         </View>
       </View>
@@ -191,8 +192,8 @@ const AccountsScreen = ({ navigation }: any) => {
 
   if (loading && accounts.length === 0) {
     return (
-      <View style={[styles.container, isDark && styles.darkContainer, styles.center]}>
-        <Text style={[styles.loadingText, isDark && styles.darkText]}>
+      <View style={[styles.container, { backgroundColor: colors.background.primary }, styles.center]}>
+        <Text style={[styles.loadingText, { color: colors.text.primary }]}>
           Chargement des comptes...
         </Text>
       </View>
@@ -200,7 +201,7 @@ const AccountsScreen = ({ navigation }: any) => {
   }
 
   return (
-    <SafeAreaView style={[styles.container, isDark && styles.darkContainer]} edges={["top"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background.primary }]} edges={["top"]}>
       <Header />
 
       <View style={styles.content}>
@@ -214,8 +215,8 @@ const AccountsScreen = ({ navigation }: any) => {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
-                colors={['#007AFF']}
-                tintColor={isDark ? '#fff' : '#007AFF'}
+                colors={[colors.primary[500]]}
+                tintColor={colors.primary[500]}
               />
             }
             ListEmptyComponent={
@@ -223,12 +224,12 @@ const AccountsScreen = ({ navigation }: any) => {
                 <Ionicons 
                   name="wallet-outline" 
                   size={64} 
-                  color={isDark ? '#555' : '#ccc'} 
+                  color={colors.text.disabled} 
                 />
-                <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
+                <Text style={[styles.emptyText, { color: colors.text.secondary }]}>
                   Aucun compte créé
                 </Text>
-                <Text style={[styles.emptySubtext, isDark && styles.darkSubtext]}>
+                <Text style={[styles.emptySubtext, { color: colors.text.secondary }]}>
                   Ajoutez votre premier compte pour commencer
                 </Text>
               </View>
@@ -236,8 +237,8 @@ const AccountsScreen = ({ navigation }: any) => {
           />
         </View>
 
-        <TouchableOpacity style={[styles.primaryCTA, isDark && styles.darkCTA]} onPress={() => { setEditingAccount(null); setShowAccountForm(true); }}>
-          <Text style={styles.primaryCTAText}>Ajouter un compte</Text>
+        <TouchableOpacity style={[styles.primaryCTA, { backgroundColor: colors.primary[500] }]} onPress={() => { setEditingAccount(null); setShowAccountForm(true); }}>
+          <Text style={[styles.primaryCTAText, { color: colors.text.inverse }]}>Ajouter un compte</Text>
         </TouchableOpacity>
 
         <AccountForm
@@ -257,24 +258,14 @@ const AccountsScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  darkContainer: {
-    backgroundColor: '#1c1c1e',
   },
   center: {
     justifyContent: 'center',
     alignItems: 'center',
   },
   header: {
-    backgroundColor: '#fff',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  darkHeader: {
-    backgroundColor: '#2c2c2e',
-    borderBottomColor: '#38383a',
   },
   headerContent: {
     flexDirection: 'row',
@@ -283,13 +274,11 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     fontSize: 16,
-    color: '#666',
     marginBottom: 8,
   },
   totalAmount: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#000',
   },
   headerActions: {
     flexDirection: 'row',
@@ -299,19 +288,14 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#f8f9fa',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  darkRefreshButton: {
-    backgroundColor: '#38383a',
   },
   listContent: {
     padding: 16,
     paddingBottom: 100,
   },
   accountCard: {
-    backgroundColor: '#fff',
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
@@ -323,9 +307,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  darkCard: {
-    backgroundColor: '#2c2c2e',
   },
   accountMainInfo: {
     flex: 1,
@@ -350,23 +331,14 @@ const styles = StyleSheet.create({
   accountName: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 4,
-  },
-  darkText: {
-    color: '#fff',
   },
   accountBalance: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#007AFF',
   },
   accountType: {
     fontSize: 14,
-    color: '#666',
-  },
-  darkSubtext: {
-    color: '#888',
   },
   accountActions: {
     flexDirection: 'row',
@@ -379,15 +351,12 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f8f9fa',
   },
   editButton: {
     borderWidth: 1,
-    borderColor: '#007AFF',
   },
   deleteButton: {
     borderWidth: 1,
-    borderColor: '#FF3B30',
   },
   emptyState: {
     alignItems: 'center',
@@ -397,13 +366,11 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#666',
     marginTop: 16,
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#999',
     textAlign: 'center',
   },
   addButton: {
@@ -413,7 +380,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#007AFF',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -424,16 +390,13 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: '#666',
   },
   // New header / summary styles
   topHeader: {
-    backgroundColor: '#fff',
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e6e6e6',
   },
   topHeaderRow: {
     flexDirection: 'row',
@@ -450,7 +413,6 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#0F172A',
   },
   refreshIcon: {
     width: 36,
@@ -459,7 +421,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   summaryCard: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 14,
     shadowColor: '#000',
@@ -476,13 +437,11 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 12,
-    color: '#888',
     marginBottom: 4,
   },
   summaryAmount: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#000',
   },
   summaryIcon: {
     width: 48,
@@ -501,12 +460,10 @@ const styles = StyleSheet.create({
   },
   splitLabel: {
     fontSize: 12,
-    color: '#888',
   },
   splitValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000',
     marginTop: 6,
   },
   // Layout helpers
@@ -522,16 +479,11 @@ const styles = StyleSheet.create({
   },
   primaryCTA: {
     marginTop: 12,
-    backgroundColor: '#007AFF',
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
   },
-  darkCTA: {
-    backgroundColor: '#0a84ff',
-  },
   primaryCTAText: {
-    color: '#fff',
     fontWeight: '700',
     fontSize: 16,
   },

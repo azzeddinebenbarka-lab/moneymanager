@@ -2,16 +2,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { useCurrency } from '../context/CurrencyContext'; // ✅ AJOUT: Import du contexte devise
-import { useTheme } from '../context/ThemeContext';
+import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useDebts } from '../hooks/useDebts';
 import { Debt, DebtPayment } from '../types/Debt';
@@ -23,6 +23,7 @@ interface DebtDetailScreenProps {
 
 const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }) => {
   const { debtId } = route.params;
+  const { colors } = useDesignSystem();
   const { theme } = useTheme();
   const { formatAmount } = useCurrency(); // ✅ CORRECTION: Ajout du contexte devise
   const { 
@@ -162,8 +163,8 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
 
   if (loading || !debt) {
     return (
-      <View style={[styles.container, isDark && styles.darkContainer, styles.center]}>
-        <Text style={[styles.loadingText, isDark && styles.darkText]}>
+      <View style={[styles.container, { backgroundColor: colors.background.primary }, styles.center]}>
+        <Text style={[styles.loadingText, { color: colors.text.primary }]}>
           Chargement...
         </Text>
       </View>
@@ -174,46 +175,46 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
   const progressPercentage = Math.max(0, ((debt.initialAmount - debt.currentAmount) / debt.initialAmount) * 100);
 
   return (
-    <View style={[styles.container, isDark && styles.darkContainer]}>
+    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
       {/* Header */}
-      <View style={[styles.header, isDark && styles.darkHeader]}>
+      <View style={[styles.header, { backgroundColor: colors.background.primary, borderBottomColor: colors.border.primary }]}>
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#000"} />
+          <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
         </TouchableOpacity>
-        <Text style={[styles.title, isDark && styles.darkText]}>
+        <Text style={[styles.title, { color: colors.text.primary }]}>
           Détails de la Dette
         </Text>
         <TouchableOpacity 
           style={styles.editButton}
           onPress={() => navigation.navigate('EditDebt', { debtId })}
         >
-          <Ionicons name="create-outline" size={24} color={isDark ? "#fff" : "#000"} />
+          <Ionicons name="create-outline" size={24} color={colors.text.primary} />
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Carte principale */}
-        <View style={[styles.mainCard, isDark && styles.darkCard]}>
+        <View style={[styles.mainCard, { backgroundColor: colors.background.card }]}>
           <View style={styles.debtHeader}>
             <View style={[styles.colorIndicator, { backgroundColor: debt.color }]} />
             <View style={styles.debtInfo}>
-              <Text style={[styles.debtName, isDark && styles.darkText]}>
+              <Text style={[styles.debtName, { color: colors.text.primary }]}>
                 {debt.name}
               </Text>
-              <Text style={[styles.creditor, isDark && styles.darkSubtext]}>
+              <Text style={[styles.creditor, { color: colors.text.secondary }]}>
                 {debt.creditor}
               </Text>
             </View>
           </View>
           
           <View style={styles.amountSection}>
-            <Text style={[styles.currentAmount, isDark && styles.darkText]}>
+            <Text style={[styles.currentAmount, { color: colors.text.primary }]}>
               {formatDisplayAmount(debt.currentAmount)} {/* ✅ CORRECTION: Format devise */}
             </Text>
-            <Text style={[styles.initialAmount, isDark && styles.darkSubtext]}>
+            <Text style={[styles.initialAmount, { color: colors.text.secondary }]}>
               sur {formatDisplayAmount(debt.initialAmount)} initial {/* ✅ CORRECTION: Format devise */}
             </Text>
           </View>
@@ -231,30 +232,30 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
                 ]} 
               />
             </View>
-            <Text style={[styles.progressText, isDark && styles.darkSubtext]}>
+            <Text style={[styles.progressText, { color: colors.text.secondary }]}>
               {progressPercentage.toFixed(1)}% remboursé
             </Text>
           </View>
 
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
-              <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+              <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
                 Taux d'intérêt
               </Text>
-              <Text style={[styles.statValue, isDark && styles.darkText]}>
+              <Text style={[styles.statValue, { color: colors.text.primary }]}>
                 {debt.interestRate}%
               </Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+              <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
                 Mensualité
               </Text>
-              <Text style={[styles.statValue, isDark && styles.darkText]}>
+              <Text style={[styles.statValue, { color: colors.text.primary }]}>
                 {formatDisplayAmount(debt.monthlyPayment)} {/* ✅ CORRECTION: Format devise */}
               </Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+              <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
                 Statut
               </Text>
               <View style={[
@@ -277,11 +278,11 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
               <Ionicons 
                 name={debt.paymentEligibility.isEligible ? "checkmark-circle" : "close-circle"} 
                 size={20} 
-                color={debt.paymentEligibility.isEligible ? "#10B981" : "#EF4444"} 
+                color={debt.paymentEligibility.isEligible ? colors.semantic.success : colors.semantic.error} 
               />
               <Text style={[
                 styles.eligibilityText,
-                isDark && styles.darkText
+                { color: colors.text.primary }
               ]}>
                 {debt.paymentEligibility.isEligible 
                   ? 'Paiement autorisé ce mois' 
@@ -292,8 +293,8 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
         </View>
 
         {/* Actions */}
-        <View style={[styles.actionsCard, isDark && styles.darkCard]}>
-          <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+        <View style={[styles.actionsCard, { backgroundColor: colors.background.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
             Actions
           </Text>
           
@@ -306,8 +307,8 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
               onPress={() => setShowPaymentForm(true)}
               disabled={!debt.paymentEligibility?.isEligible || debt.currentAmount <= 0 || debt.status === 'paid'}
             >
-              <Ionicons name="card" size={24} color="#007AFF" />
-              <Text style={[styles.actionText, isDark && styles.darkText]}>
+              <Ionicons name="card" size={24} color={colors.primary[500]} />
+              <Text style={[styles.actionText, { color: colors.text.primary }]}>
                 Payer
               </Text>
             </TouchableOpacity>
@@ -316,8 +317,8 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
               style={styles.actionButton}
               onPress={() => navigation.navigate('EditDebt', { debtId })}
             >
-              <Ionicons name="create" size={24} color="#F59E0B" />
-              <Text style={[styles.actionText, isDark && styles.darkText]}>
+              <Ionicons name="create" size={24} color={colors.semantic.warning} />
+              <Text style={[styles.actionText, { color: colors.text.primary }]}>
                 Modifier
               </Text>
             </TouchableOpacity>
@@ -325,44 +326,44 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
         </View>
 
         {/* Informations détaillées */}
-        <View style={[styles.infoCard, isDark && styles.darkCard]}>
-          <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+        <View style={[styles.infoCard, { backgroundColor: colors.background.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
             Informations
           </Text>
           
           <View style={styles.infoList}>
             <View style={styles.infoItem}>
-              <Text style={[styles.infoLabel, isDark && styles.darkSubtext]}>
+              <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>
                 Date de début
               </Text>
-              <Text style={[styles.infoValue, isDark && styles.darkText]}>
+              <Text style={[styles.infoValue, { color: colors.text.primary }]}>
                 {new Date(debt.startDate).toLocaleDateString('fr-FR')}
               </Text>
             </View>
             
             <View style={styles.infoItem}>
-              <Text style={[styles.infoLabel, isDark && styles.darkSubtext]}>
+              <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>
                 Date d'échéance
               </Text>
-              <Text style={[styles.infoValue, isDark && styles.darkText]}>
+              <Text style={[styles.infoValue, { color: colors.text.primary }]}>
                 {new Date(debt.dueDate).toLocaleDateString('fr-FR')}
               </Text>
             </View>
             
             <View style={styles.infoItem}>
-              <Text style={[styles.infoLabel, isDark && styles.darkSubtext]}>
+              <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>
                 Catégorie
               </Text>
-              <Text style={[styles.infoValue, isDark && styles.darkText]}>
+              <Text style={[styles.infoValue, { color: colors.text.primary }]}>
                 {debt.category}
               </Text>
             </View>
 
             <View style={styles.infoItem}>
-              <Text style={[styles.infoLabel, isDark && styles.darkSubtext]}>
+              <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>
                 Progression
               </Text>
-              <Text style={[styles.infoValue, isDark && styles.darkText]}>
+              <Text style={[styles.infoValue, { color: colors.text.primary }]}>
                 {progressPercentage.toFixed(1)}%
               </Text>
             </View>
@@ -370,10 +371,10 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
 
           {debt.notes && (
             <View style={styles.notesSection}>
-              <Text style={[styles.notesLabel, isDark && styles.darkSubtext]}>
+              <Text style={[styles.notesLabel, { color: colors.text.secondary }]}>
                 Notes
               </Text>
-              <Text style={[styles.notesValue, isDark && styles.darkText]}>
+              <Text style={[styles.notesValue, { color: colors.text.primary }]}>
                 {debt.notes}
               </Text>
             </View>
@@ -381,17 +382,17 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
         </View>
 
         {/* Historique des paiements */}
-        <View style={[styles.paymentsCard, isDark && styles.darkCard]}>
+        <View style={[styles.paymentsCard, { backgroundColor: colors.background.card }]}>
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
               Historique des Paiements ({payments.length})
             </Text>
           </View>
 
           {payments.length === 0 ? (
             <View style={styles.emptyPayments}>
-              <Ionicons name="receipt-outline" size={48} color="#666" />
-              <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
+              <Ionicons name="receipt-outline" size={48} color={colors.text.disabled} />
+              <Text style={[styles.emptyText, { color: colors.text.secondary }]}>
                 Aucun paiement enregistré
               </Text>
             </View>
@@ -400,21 +401,21 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
               {payments.map((payment) => (
                 <View key={payment.id} style={styles.paymentItem}>
                   <View style={styles.paymentLeft}>
-                    <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+                    <Ionicons name="checkmark-circle" size={20} color={colors.semantic.success} />
                     <View style={styles.paymentDetails}>
-                      <Text style={[styles.paymentAmount, isDark && styles.darkText]}>
+                      <Text style={[styles.paymentAmount, { color: colors.text.primary }]}>
                         {formatDisplayAmount(payment.amount)} {/* ✅ CORRECTION: Format devise */}
                       </Text>
-                      <Text style={[styles.paymentDate, isDark && styles.darkSubtext]}>
+                      <Text style={[styles.paymentDate, { color: colors.text.secondary }]}>
                         {new Date(payment.paymentDate).toLocaleDateString('fr-FR')}
                       </Text>
                     </View>
                   </View>
                   <View style={styles.paymentRight}>
-                    <Text style={[styles.paymentPrincipal, isDark && styles.darkSubtext]}>
+                    <Text style={[styles.paymentPrincipal, { color: colors.text.secondary }]}>
                       Principal: {formatDisplayAmount(payment.principal, false)} {/* ✅ CORRECTION: Format devise */}
                     </Text>
-                    <Text style={[styles.paymentInterest, isDark && styles.darkSubtext]}>
+                    <Text style={[styles.paymentInterest, { color: colors.text.secondary }]}>
                       Intérêts: {formatDisplayAmount(payment.interest, false)} {/* ✅ CORRECTION: Format devise */}
                     </Text>
                   </View>
@@ -425,19 +426,19 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
         </View>
 
         {/* Zone de danger */}
-        <View style={[styles.dangerCard, isDark && styles.darkCard]}>
-          <Text style={[styles.dangerTitle, isDark && styles.darkText]}>
+        <View style={[styles.dangerCard, { backgroundColor: colors.background.card }]}>
+          <Text style={[styles.dangerTitle, { color: colors.semantic.error }]}>
             Zone de danger
           </Text>
-          <Text style={[styles.dangerText, isDark && styles.darkSubtext]}>
+          <Text style={[styles.dangerText, { color: colors.text.secondary }]}>
             La suppression est irréversible et supprimera toutes les données associées à cette dette.
           </Text>
           <TouchableOpacity 
-            style={styles.deleteButton}
+            style={[styles.deleteButton, { backgroundColor: colors.semantic.error + '10', borderLeftColor: colors.semantic.error }]}
             onPress={handleDeleteDebt}
           >
-            <Ionicons name="trash-outline" size={20} color="#FF3B30" />
-            <Text style={styles.deleteButtonText}>Supprimer la dette</Text>
+            <Ionicons name="trash-outline" size={20} color={colors.semantic.error} />
+            <Text style={[styles.deleteButtonText, { color: colors.semantic.error }]}>Supprimer la dette</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -445,38 +446,38 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
       {/* Modal de paiement */}
       {showPaymentForm && (
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, isDark && styles.darkCard]}>
-            <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, isDark && styles.darkText]}>
+          <View style={[styles.modalContent, { backgroundColor: colors.background.primary }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border.primary }]}>
+              <Text style={[styles.modalTitle, { color: colors.text.primary }]}>
                 Effectuer un paiement
               </Text>
               <TouchableOpacity onPress={() => setShowPaymentForm(false)}>
-                <Ionicons name="close" size={24} color={isDark ? "#fff" : "#000"} />
+                <Ionicons name="close" size={24} color={colors.text.primary} />
               </TouchableOpacity>
             </View>
 
             <View style={styles.paymentForm}>
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, isDark && styles.darkText]}>
+                <Text style={[styles.label, { color: colors.text.primary }]}>
                   Montant à payer
                 </Text>
                 <View style={styles.amountContainer}>
                   <TextInput
-                    style={[styles.input, styles.amountInput, isDark && styles.darkInput]}
+                    style={[styles.input, styles.amountInput, { backgroundColor: colors.background.card, color: colors.text.primary, borderColor: colors.border.primary }]}
                     value={paymentAmount}
                     onChangeText={setPaymentAmount}
                     placeholder="0,00"
-                    placeholderTextColor={isDark ? "#888" : "#999"}
+                    placeholderTextColor={colors.text.disabled}
                     keyboardType="decimal-pad"
                   />
                 </View>
-                <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+                <Text style={[styles.hint, { color: colors.text.secondary }]}>
                   Solde restant: {formatDisplayAmount(debt.currentAmount)} {/* ✅ CORRECTION: Format devise */}
                 </Text>
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, isDark && styles.darkText]}>
+                <Text style={[styles.label, { color: colors.text.primary }]}>
                   Compte source
                 </Text>
                 <View style={styles.accountsList}>
@@ -485,28 +486,28 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
                       key={account.id}
                       style={[
                         styles.accountButton,
-                        selectedAccountId === account.id && styles.accountButtonSelected,
-                        isDark && styles.darkAccountButton
+                        { backgroundColor: colors.background.card, borderColor: colors.border.primary },
+                        selectedAccountId === account.id && { borderColor: colors.primary[500], backgroundColor: colors.primary[100] },
                       ]}
                       onPress={() => setSelectedAccountId(account.id)}
                     >
                       <View style={[styles.accountColor, { backgroundColor: account.color }]} />
                       <View style={styles.accountInfo}>
-                        <Text style={[styles.accountName, isDark && styles.darkText]}>
+                        <Text style={[styles.accountName, { color: colors.text.primary }]}>
                           {account.name}
                         </Text>
-                        <Text style={[styles.accountBalance, isDark && styles.darkSubtext]}>
+                        <Text style={[styles.accountBalance, { color: colors.text.secondary }]}>
                           {formatDisplayAmount(account.balance, false)} disponible {/* ✅ CORRECTION: Format devise */}
                         </Text>
                       </View>
                       {selectedAccountId === account.id && (
-                        <Ionicons name="checkmark-circle" size={20} color="#007AFF" />
+                        <Ionicons name="checkmark-circle" size={20} color={colors.primary[500]} />
                       )}
                     </TouchableOpacity>
                   ))}
                 </View>
                 {sourceAccounts.length === 0 && (
-                  <Text style={[styles.warningText, isDark && styles.darkSubtext]}>
+                  <Text style={[styles.warningText, { color: colors.text.secondary }]}>
                     Aucun compte avec un solde suffisant
                   </Text>
                 )}
@@ -514,21 +515,22 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
 
               <View style={styles.modalActions}>
                 <TouchableOpacity 
-                  style={[styles.cancelButton, isDark && styles.darkCancelButton]}
+                  style={[styles.cancelButton, { backgroundColor: colors.background.secondary, borderColor: colors.border.primary }]}
                   onPress={() => setShowPaymentForm(false)}
                 >
-                  <Text style={styles.cancelButtonText}>Annuler</Text>
+                  <Text style={[styles.cancelButtonText, { color: colors.text.primary }]}>Annuler</Text>
                 </TouchableOpacity>
                 
                 <TouchableOpacity 
                   style={[
                     styles.confirmButton,
-                    (!paymentAmount || !selectedAccountId || paymentLoading) && styles.confirmButtonDisabled
+                    { backgroundColor: colors.primary[500] },
+                    (!paymentAmount || !selectedAccountId || paymentLoading) && { opacity: 0.5 },
                   ]}
                   onPress={handleMakePayment}
                   disabled={!paymentAmount || !selectedAccountId || paymentLoading}
                 >
-                  <Text style={styles.confirmButtonText}>
+                  <Text style={[styles.confirmButtonText, { color: colors.text.inverse }]}>
                     {paymentLoading ? 'Paiement...' : 'Confirmer'}
                   </Text>
                 </TouchableOpacity>
@@ -544,10 +546,6 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  darkContainer: {
-    backgroundColor: '#1c1c1e',
   },
   center: {
     justifyContent: 'center',
@@ -555,21 +553,14 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: '#666',
   },
   header: {
-    backgroundColor: '#fff',
     padding: 16,
     paddingTop: 60,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  darkHeader: {
-    backgroundColor: '#2c2c2e',
-    borderBottomColor: '#38383a',
   },
   backButton: {
     padding: 4,
@@ -577,7 +568,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#000',
     flex: 1,
     textAlign: 'center',
   },
@@ -589,7 +579,6 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   mainCard: {
-    backgroundColor: '#fff',
     padding: 24,
     borderRadius: 16,
     marginBottom: 16,
@@ -598,9 +587,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
-  },
-  darkCard: {
-    backgroundColor: '#2c2c2e',
   },
   debtHeader: {
     flexDirection: 'row',
@@ -619,12 +605,10 @@ const styles = StyleSheet.create({
   debtName: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#000',
     marginBottom: 4,
   },
   creditor: {
     fontSize: 14,
-    color: '#666',
   },
   amountSection: {
     alignItems: 'center',
@@ -633,19 +617,16 @@ const styles = StyleSheet.create({
   currentAmount: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#000',
     marginBottom: 4,
   },
   initialAmount: {
     fontSize: 14,
-    color: '#666',
   },
   progressSection: {
     marginBottom: 20,
   },
   progressBar: {
     height: 8,
-    backgroundColor: '#e0e0e0',
     borderRadius: 4,
     overflow: 'hidden',
     marginBottom: 8,
@@ -656,7 +637,6 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 12,
-    color: '#666',
     textAlign: 'center',
   },
   statsGrid: {
@@ -670,13 +650,11 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
-    color: '#666',
     marginBottom: 4,
   },
   statValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000',
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -704,11 +682,9 @@ const styles = StyleSheet.create({
   eligibilityText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#000',
     flex: 1,
   },
   actionsCard: {
-    backgroundColor: '#fff',
     padding: 20,
     borderRadius: 16,
     marginBottom: 16,
@@ -721,7 +697,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000',
     marginBottom: 16,
   },
   actionsGrid: {
@@ -732,7 +707,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#f8f9fa',
     borderRadius: 12,
     gap: 8,
   },
@@ -742,10 +716,8 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#000',
   },
   infoCard: {
-    backgroundColor: '#fff',
     padding: 20,
     borderRadius: 16,
     marginBottom: 16,
@@ -765,12 +737,10 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 14,
-    color: '#666',
   },
   infoValue: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#000',
   },
   notesSection: {
     marginTop: 16,
@@ -833,27 +803,22 @@ const styles = StyleSheet.create({
   paymentAmount: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 2,
   },
   paymentDate: {
     fontSize: 12,
-    color: '#666',
   },
   paymentRight: {
     alignItems: 'flex-end',
   },
   paymentPrincipal: {
     fontSize: 12,
-    color: '#666',
     marginBottom: 2,
   },
   paymentInterest: {
     fontSize: 12,
-    color: '#666',
   },
   dangerCard: {
-    backgroundColor: '#fff',
     padding: 20,
     borderRadius: 16,
     marginBottom: 16,
@@ -958,11 +923,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
   },
-  darkInput: {
-    backgroundColor: '#38383a',
-    borderColor: '#555',
-    color: '#fff',
-  },
   hint: {
     fontSize: 12,
     color: '#666',
@@ -983,14 +943,6 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     borderRadius: 8,
     padding: 12,
-  },
-  darkAccountButton: {
-    backgroundColor: '#38383a',
-    borderColor: '#555',
-  },
-  accountButtonSelected: {
-    borderColor: '#007AFF',
-    borderWidth: 2,
   },
   accountColor: {
     width: 12,
@@ -1022,9 +974,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
   },
-  darkCancelButton: {
-    backgroundColor: '#38383a',
-  },
   cancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
@@ -1037,19 +986,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
   },
-  confirmButtonDisabled: {
-    backgroundColor: '#ccc',
-  },
   confirmButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
-  },
-  darkText: {
-    color: '#fff',
-  },
-  darkSubtext: {
-    color: '#888',
   },
 });
 

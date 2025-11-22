@@ -2,16 +2,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { useTheme } from '../../context/ThemeContext';
+import { useDesignSystem } from '../../context/ThemeContext';
 import { Account, ACCOUNT_TYPES } from '../../types';
 
 interface AccountFormProps {
@@ -27,8 +27,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
   onSubmit,
   editingAccount,
 }) => {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const { colors } = useDesignSystem();
 
   const [form, setForm] = useState({
     name: '',
@@ -69,7 +68,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
     }
   }, [editingAccount, visible]);
 
-  const colors = [
+  const accountColors = [
     '#007AFF', '#34C759', '#FF3B30', '#FF9500', '#5856D6',
     '#AF52DE', '#FF2D55', '#32D74B', '#FFD60A', '#5AC8FA',
   ];
@@ -151,15 +150,15 @@ const AccountForm: React.FC<AccountFormProps> = ({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <View style={[styles.container, isDark && styles.darkContainer]}>
+      <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} disabled={loading}>
-            <Text style={[styles.cancelText, isDark && styles.darkText]}>
+            <Text style={[styles.cancelText, { color: colors.text.primary }]}>
               Annuler
             </Text>
           </TouchableOpacity>
           
-          <Text style={[styles.title, isDark && styles.darkText]}>
+          <Text style={[styles.title, { color: colors.text.primary }]}>
             {editingAccount ? 'Modifier le compte' : 'Nouveau compte'}
           </Text>
           
@@ -173,22 +172,22 @@ const AccountForm: React.FC<AccountFormProps> = ({
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Nom du compte */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, isDark && styles.darkText]}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
               Nom du compte *
             </Text>
             <TextInput
-              style={[styles.input, isDark && styles.darkInput]}
+              style={[styles.input, { backgroundColor: colors.background.card, color: colors.text.primary, borderColor: colors.border.primary }]}
               value={form.name}
               onChangeText={(text) => setForm(prev => ({ ...prev, name: text }))}
               placeholder="Ex: Compte courant, Portefeuille..."
-              placeholderTextColor={isDark ? "#888" : "#999"}
+              placeholderTextColor={colors.text.disabled}
               editable={!loading}
             />
           </View>
 
           {/* Type de compte */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, isDark && styles.darkText]}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
               Type de compte *
             </Text>
             <View style={styles.typesContainer}>
@@ -198,7 +197,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
                   style={[
                     styles.typeButton,
                     form.type === type.value && styles.typeButtonSelected,
-                    isDark && styles.darkTypeButton
+                    { backgroundColor: form.type === type.value ? colors.primary[500] + '20' : colors.background.card, borderColor: colors.border.primary }
                   ]}
                   onPress={() => setForm(prev => ({ 
                     ...prev, 
@@ -210,12 +209,12 @@ const AccountForm: React.FC<AccountFormProps> = ({
                   <Ionicons 
                     name={type.icon as any} 
                     size={24} 
-                    color={form.type === type.value ? '#007AFF' : '#666'} 
+                    color={form.type === type.value ? '#007AFF' : colors.text.secondary} 
                   />
                   <Text style={[
                     styles.typeText,
                     form.type === type.value && styles.typeTextSelected,
-                    isDark && styles.darkText
+                    { color: form.type === type.value ? colors.primary[500] : colors.text.primary }
                   ]}>
                     {type.label}
                   </Text>
@@ -226,23 +225,23 @@ const AccountForm: React.FC<AccountFormProps> = ({
 
           {/* Solde initial */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, isDark && styles.darkText]}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
               Solde initial *
             </Text>
             <View style={styles.amountContainer}>
               <TextInput
-                style={[styles.input, styles.amountInput, isDark && styles.darkInput]}
+                style={[styles.input, styles.amountInput, { backgroundColor: colors.background.card, color: colors.text.primary, borderColor: colors.border.primary }]}
                 value={form.balance}
                 onChangeText={handleAmountChange}
                 placeholder="0,00"
-                placeholderTextColor={isDark ? "#888" : "#999"}
+                placeholderTextColor={colors.text.disabled}
                 keyboardType="decimal-pad"
                 returnKeyType="done"
                 editable={!loading}
               />
             </View>
             {form.balance && (
-              <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+              <Text style={[styles.hint, { color: colors.text.secondary }]}>
                 {formatDisplayAmount(form.balance)}
               </Text>
             )}
@@ -250,7 +249,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
 
           {/* Devise */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, isDark && styles.darkText]}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
               Devise
             </Text>
             <View style={styles.currenciesContainer}>
@@ -258,7 +257,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
                 style={[
                   styles.currencyButton,
                   form.currency === 'MAD' && styles.currencyButtonSelected,
-                  isDark && styles.darkCurrencyButton
+                  { backgroundColor: form.currency === 'MAD' ? colors.primary[500] : colors.background.card, borderColor: colors.border.primary }
                 ]}
                 onPress={() => setForm(prev => ({ ...prev, currency: 'MAD' }))}
                 disabled={loading}
@@ -266,7 +265,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
                 <Text style={[
                   styles.currencyText,
                   form.currency === 'MAD' && styles.currencyTextSelected,
-                  isDark && styles.darkText
+                  { color: form.currency === 'MAD' ? '#fff' : colors.text.primary }
                 ]}>
                   MAD
                 </Text>
@@ -276,7 +275,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
                 style={[
                   styles.currencyButton,
                   form.currency === 'EUR' && styles.currencyButtonSelected,
-                  isDark && styles.darkCurrencyButton
+                  { backgroundColor: form.currency === 'EUR' ? colors.primary[500] : colors.background.card, borderColor: colors.border.primary }
                 ]}
                 onPress={() => setForm(prev => ({ ...prev, currency: 'EUR' }))}
                 disabled={loading}
@@ -284,7 +283,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
                 <Text style={[
                   styles.currencyText,
                   form.currency === 'EUR' && styles.currencyTextSelected,
-                  isDark && styles.darkText
+                  { color: form.currency === 'EUR' ? '#fff' : colors.text.primary }
                 ]}>
                   EUR
                 </Text>
@@ -294,11 +293,11 @@ const AccountForm: React.FC<AccountFormProps> = ({
 
           {/* Couleur */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, isDark && styles.darkText]}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
               Couleur
             </Text>
             <View style={styles.colorsContainer}>
-              {colors.map((color) => (
+              {accountColors.map((color) => (
                 <TouchableOpacity
                   key={color}
                   style={[
@@ -319,7 +318,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
 
           {/* Statut actif/inactif */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, isDark && styles.darkText]}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
               Statut du compte
             </Text>
             <View style={styles.statusContainer}>
@@ -327,7 +326,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
                 style={[
                   styles.statusButton,
                   form.isActive && styles.statusButtonSelected,
-                  isDark && styles.darkStatusButton
+                  { backgroundColor: form.isActive ? '#34C75920' : colors.background.card, borderColor: colors.border.primary }
                 ]}
                 onPress={() => setForm(prev => ({ ...prev, isActive: true }))}
                 disabled={loading}
@@ -335,12 +334,12 @@ const AccountForm: React.FC<AccountFormProps> = ({
                 <Ionicons 
                   name="checkmark-circle" 
                   size={20} 
-                  color={form.isActive ? '#34C759' : '#666'} 
+                  color={form.isActive ? '#34C759' : colors.text.secondary} 
                 />
                 <Text style={[
                   styles.statusText,
                   form.isActive && styles.statusTextSelected,
-                  isDark && styles.darkText
+                  { color: form.isActive ? '#34C759' : colors.text.primary }
                 ]}>
                   Actif
                 </Text>
@@ -350,7 +349,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
                 style={[
                   styles.statusButton,
                   !form.isActive && styles.statusButtonSelected,
-                  isDark && styles.darkStatusButton
+                  { backgroundColor: !form.isActive ? '#FF3B3020' : colors.background.card, borderColor: colors.border.primary }
                 ]}
                 onPress={() => setForm(prev => ({ ...prev, isActive: false }))}
                 disabled={loading}
@@ -358,12 +357,12 @@ const AccountForm: React.FC<AccountFormProps> = ({
                 <Ionicons 
                   name="close-circle" 
                   size={20} 
-                  color={!form.isActive ? '#FF3B30' : '#666'} 
+                  color={!form.isActive ? '#FF3B30' : colors.text.secondary} 
                 />
                 <Text style={[
                   styles.statusText,
                   !form.isActive && styles.statusTextSelected,
-                  isDark && styles.darkText
+                  { color: !form.isActive ? '#FF3B30' : colors.text.primary }
                 ]}>
                   Inactif
                 </Text>
@@ -373,7 +372,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
 
           {/* Aperçu */}
           <View style={styles.previewSection}>
-            <Text style={[styles.label, isDark && styles.darkText]}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
               Aperçu
             </Text>
             <View style={[styles.previewCard, { backgroundColor: form.color }]}>
@@ -408,9 +407,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f9fa',
   },
-  darkContainer: {
-    backgroundColor: '#1c1c1e',
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -420,9 +416,6 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
-  },
-  darkHeader: {
-    borderBottomColor: '#38383a',
   },
   cancelText: {
     fontSize: 16,
@@ -463,11 +456,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
   },
-  darkInput: {
-    backgroundColor: '#2c2c2e',
-    borderColor: '#444',
-    color: '#fff',
-  },
   amountContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -507,10 +495,6 @@ const styles = StyleSheet.create({
     gap: 8,
     minWidth: 120,
   },
-  darkTypeButton: {
-    backgroundColor: '#333',
-    borderColor: '#555',
-  },
   typeButtonSelected: {
     backgroundColor: '#007AFF',
     borderColor: '#007AFF',
@@ -535,10 +519,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#ddd',
-  },
-  darkCurrencyButton: {
-    backgroundColor: '#333',
-    borderColor: '#555',
   },
   currencyButtonSelected: {
     backgroundColor: '#007AFF',
@@ -590,10 +570,6 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     gap: 8,
   },
-  darkStatusButton: {
-    backgroundColor: '#333',
-    borderColor: '#555',
-  },
   statusButtonSelected: {
     backgroundColor: '#007AFF20',
     borderColor: '#007AFF',
@@ -638,12 +614,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     textAlign: 'center',
-  },
-  darkText: {
-    color: '#fff',
-  },
-  darkSubtext: {
-    color: '#888',
   },
 });
 

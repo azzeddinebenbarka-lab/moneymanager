@@ -3,13 +3,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import AccountForm from '../components/account/AccountForm';
 import { useCurrency } from '../context/CurrencyContext';
@@ -194,29 +194,29 @@ const TransactionsSection = React.memo(({
           }}
           disabled={isProcessing}
         >
-          <Text style={[styles.seeAllText, isDark && styles.darkSubtext]}>
+          <Text style={[styles.seeAllText, { color: colors.text.secondary }]}>
             Voir tout
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* Statistiques rapides */}
-      <View style={[styles.statsContainer, isDark && styles.darkStatsContainer]}>
+      <View style={[styles.statsContainer, { backgroundColor: colors.background.secondary }]}>
         <View style={styles.statItem}>
-          <Ionicons name="arrow-down" size={16} color="#34C759" />
-          <Text style={[styles.statText, isDark && styles.darkText]}>
+          <Ionicons name="arrow-down" size={16} color={colors.semantic.success} />
+          <Text style={[styles.statText, { color: colors.text.primary }]}>
             {formatAmount(transactionStats.totalIncome)}
           </Text>
         </View>
         <View style={styles.statItem}>
-          <Ionicons name="arrow-up" size={16} color="#FF3B30" />
-          <Text style={[styles.statText, isDark && styles.darkText]}>
+          <Ionicons name="arrow-up" size={16} color={colors.semantic.error} />
+          <Text style={[styles.statText, { color: colors.text.primary }]}>
             {formatAmount(transactionStats.totalExpenses)}
           </Text>
         </View>
         <View style={styles.statItem}>
-          <Ionicons name="list" size={16} color="#007AFF" />
-          <Text style={[styles.statText, isDark && styles.darkText]}>
+          <Ionicons name="list" size={16} color={colors.primary[500]} />
+          <Text style={[styles.statText, { color: colors.text.primary }]}>
             {accountTransactions.length}
           </Text>
         </View>
@@ -224,9 +224,9 @@ const TransactionsSection = React.memo(({
 
       {/* Information sur les transactions automatiques */}
       {specialTransactionsCount > 0 && (
-        <View style={[styles.specialInfoCard, isDark && styles.darkSpecialInfoCard]}>
-          <Ionicons name="information-circle" size={20} color="#007AFF" />
-          <Text style={[styles.specialInfoText, isDark && styles.darkText]}>
+        <View style={[styles.specialInfoCard, { backgroundColor: colors.primary[100] }]}>
+          <Ionicons name="information-circle" size={20} color={colors.primary[500]} />
+          <Text style={[styles.specialInfoText, { color: colors.text.primary }]}>
             Les transactions de dettes, épargne et charges annuelles sont en lecture seule
           </Text>
         </View>
@@ -259,10 +259,10 @@ const TransactionsSection = React.memo(({
             }}
             disabled={isProcessing}
           >
-            <Text style={[styles.moreTransactionsText, isDark && styles.darkSubtext]}>
+            <Text style={[styles.moreTransactionsText, { color: colors.text.secondary }]}>
               Voir les {accountTransactions.length - 15} transactions restantes
             </Text>
-            <Ionicons name="chevron-forward" size={16} color="#666" />
+            <Ionicons name="chevron-forward" size={16} color={colors.text.secondary} />
           </TouchableOpacity>
         )}
       </View>
@@ -413,16 +413,16 @@ const AccountDetailScreen = () => {
 
   if (!account) {
     return (
-      <View style={[styles.container, isDark && styles.darkContainer, styles.center]}>
-        <Ionicons name="alert-circle" size={64} color="#FF3B30" />
-        <Text style={[styles.errorText, isDark && styles.darkText]}>
+      <View style={[styles.container, { backgroundColor: colors.background.primary }, styles.center]}>
+        <Ionicons name="alert-circle" size={64} color={colors.semantic.error} />
+        <Text style={[styles.errorText, { color: colors.text.primary }]}>
           Compte non trouvé
         </Text>
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backButtonText}>Retour</Text>
+          <Text style={[styles.backButtonText, { color: colors.primary[500] }]}>Retour</Text>
         </TouchableOpacity>
       </View>
     );
@@ -572,11 +572,11 @@ const AccountDetailScreen = () => {
         </View>
 
         {/* Zone de danger */}
-        <View style={[styles.dangerCard, isDark && styles.darkCard]}>
-          <Text style={[styles.dangerTitle, isDark && styles.darkText]}>
+        <View style={[styles.dangerCard, { backgroundColor: colors.background.card }]}>
+          <Text style={[styles.dangerTitle, { color: colors.semantic.error }]}>
             Zone de danger
           </Text>
-          <Text style={[styles.dangerText, isDark && styles.darkSubtext]}>
+          <Text style={[styles.dangerText, { color: colors.text.secondary }]}>
             La suppression est irréversible et supprimera toutes les données associées à ce compte.
           </Text>
           <TouchableOpacity 
@@ -585,7 +585,7 @@ const AccountDetailScreen = () => {
             disabled={isProcessing}
           >
             {isProcessing ? (
-              <ActivityIndicator size="small" color="#FF3B30" />
+              <ActivityIndicator size="small" color={colors.semantic.error} />
             ) : (
               <>
                 <Ionicons name="trash-outline" size={20} color="#FF3B30" />
@@ -711,12 +711,10 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#000',
     marginTop: 8,
     textAlign: 'center',
   },
   transactionsCard: {
-    backgroundColor: '#fff',
     padding: 20,
     borderRadius: 16,
     marginBottom: 16,
@@ -734,13 +732,11 @@ const styles = StyleSheet.create({
   },
   specialTransactionsInfo: {
     fontSize: 12,
-    color: '#666',
     marginTop: 4,
     fontStyle: 'italic',
   },
   seeAllText: {
     fontSize: 14,
-    color: '#007AFF',
     fontWeight: '500',
   },
   statsContainer: {
@@ -748,11 +744,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     marginBottom: 16,
     padding: 12,
-    backgroundColor: '#f8f9fa',
     borderRadius: 12,
-  },
-  darkStatsContainer: {
-    backgroundColor: '#38383a',
   },
   statItem: {
     alignItems: 'center',
@@ -762,24 +754,18 @@ const styles = StyleSheet.create({
   statText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000',
   },
   // ✅ NOUVEAUX STYLES POUR LECTURE SEULE
   specialInfoCard: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    backgroundColor: '#E3F2FD',
     borderRadius: 8,
     marginBottom: 16,
     gap: 8,
   },
-  darkSpecialInfoCard: {
-    backgroundColor: '#1a237e',
-  },
   specialInfoText: {
     fontSize: 12,
-    color: '#1565C0',
     flex: 1,
     fontStyle: 'italic',
   },
@@ -791,11 +777,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 12,
-    backgroundColor: '#f8f9fa',
     borderRadius: 12,
   },
   readOnlyTransaction: {
-    backgroundColor: '#f5f5f5',
     opacity: 0.8,
   },
   transactionLeft: {
@@ -810,7 +794,6 @@ const styles = StyleSheet.create({
   transactionDescription: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#000',
     marginBottom: 2,
   },
   categoryContainer: {
@@ -821,12 +804,10 @@ const styles = StyleSheet.create({
   },
   transactionCategory: {
     fontSize: 12,
-    color: '#666',
   },
   readOnlyBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#e0e0e0',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
@@ -834,12 +815,10 @@ const styles = StyleSheet.create({
   },
   readOnlyBadgeText: {
     fontSize: 10,
-    color: '#666',
     fontWeight: '500',
   },
   transactionDate: {
     fontSize: 11,
-    color: '#666',
   },
   transactionAmount: {
     fontSize: 16,
@@ -849,7 +828,6 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   emptyContainer: {
-    backgroundColor: '#fff',
     padding: 40,
     borderRadius: 16,
     marginBottom: 16,
@@ -862,18 +840,15 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    color: '#666',
     marginTop: 12,
     marginBottom: 20,
   },
   addTransactionButton: {
-    backgroundColor: '#007AFF',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
   },
   addTransactionButtonText: {
-    color: '#fff',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -886,11 +861,9 @@ const styles = StyleSheet.create({
   },
   moreTransactionsText: {
     fontSize: 14,
-    color: '#666',
     marginRight: 4,
   },
   infoCard: {
-    backgroundColor: '#fff',
     padding: 20,
     borderRadius: 16,
     marginBottom: 16,
@@ -910,15 +883,12 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 14,
-    color: '#666',
   },
   infoValue: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#000',
   },
   dangerCard: {
-    backgroundColor: '#fff',
     padding: 20,
     borderRadius: 16,
     marginBottom: 16,
@@ -931,12 +901,10 @@ const styles = StyleSheet.create({
   dangerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#FF3B30',
     marginBottom: 8,
   },
   dangerText: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 16,
     lineHeight: 20,
   },
@@ -946,32 +914,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 16,
     borderRadius: 12,
-    backgroundColor: '#FF3B3010',
     borderLeftWidth: 4,
-    borderLeftColor: '#FF3B30',
     gap: 12,
   },
   deleteButtonText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#FF3B30',
   },
   errorText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FF3B30',
     marginBottom: 20,
   },
   backButtonText: {
-    color: '#007AFF',
     fontSize: 16,
     fontWeight: '600',
-  },
-  darkText: {
-    color: '#fff',
-  },
-  darkSubtext: {
-    color: '#888',
   },
   disabledButton: {
     opacity: 0.5,

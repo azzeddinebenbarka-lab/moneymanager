@@ -14,16 +14,16 @@ import {
     View
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
+import ListTransactionItem from '../components/transaction/ListTransactionItem';
 import { useCurrency } from '../context/CurrencyContext';
-import { useTheme } from '../context/ThemeContext';
+import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
-import useCategories from '../hooks/useCategories';
 import { useTransactions } from '../hooks/useTransactions';
 import { Transaction } from '../types';
-import resolveCategoryLabel from '../utils/categoryResolver';
 
 const TransactionsScreen = ({ navigation }: any) => {
   const { formatAmount } = useCurrency();
+  const { colors } = useDesignSystem();
   const { theme } = useTheme();
   const { 
     transactions, 
@@ -214,13 +214,13 @@ const TransactionsScreen = ({ navigation }: any) => {
 
   // Nouveau header : bouton retour + titre centré + onglets segmentés (Toutes / Revenus / Dépenses / Ce mois)
   const ImageHeader = () => (
-    <View style={[styles.headerImage, isDark && styles.darkHeader]}>
+    <View style={[styles.headerImage, { backgroundColor: colors.background.primary, borderBottomColor: colors.border.primary }]}>
       <View style={styles.headerRow}> 
-        <TouchableOpacity style={[styles.backButton, isDark && styles.darkAddButton]} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={20} color={isDark ? '#fff' : '#0f172a'} />
+        <TouchableOpacity style={[styles.backButton, { backgroundColor: colors.background.secondary }]} onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={20} color={colors.text.primary} />
         </TouchableOpacity>
 
-        <Text style={[styles.titleCentered, isDark && styles.darkText]}>Transactions</Text>
+        <Text style={[styles.titleCentered, { color: colors.text.primary }]}>Transactions</Text>
 
         <View style={{width:44}} />
       </View>
@@ -257,7 +257,7 @@ const TransactionsScreen = ({ navigation }: any) => {
     return (
       <View style={styles.compactFilterContainer}>
         <View style={styles.compactLeft}>
-          <Text style={[styles.currentMonthText, isDark && styles.darkText]}>{selectedMonthObj.name} {selectedYear}</Text>
+          <Text style={[styles.currentMonthText, { color: colors.text.primary }]}>{selectedMonthObj.name} {selectedYear}</Text>
           <TouchableOpacity
             style={[styles.anneePill, yearOnly && styles.anneePillActive]}
             onPress={() => {
@@ -273,12 +273,12 @@ const TransactionsScreen = ({ navigation }: any) => {
 
         <TouchableOpacity style={styles.monthDropdownButton} onPress={() => setMonthDropdownVisible(true)}>
           <Text style={styles.monthDropdownText}>{selectedMonthObj.short}</Text>
-          <Ionicons name="chevron-down" size={18} color={isDark ? '#fff' : '#0f172a'} style={{marginLeft:8}} />
+          <Ionicons name="chevron-down" size={18} color={colors.text.primary} style={{marginLeft:8}} />
         </TouchableOpacity>
 
         <Modal transparent visible={monthDropdownVisible} animationType="fade">
           <Pressable style={styles.modalOverlay} onPress={() => setMonthDropdownVisible(false)}>
-            <View style={[styles.modalContent, isDark && styles.darkCard]}>
+            <View style={[styles.modalContent, { backgroundColor: colors.background.card }]}>
               {months.map((m) => (
                 <TouchableOpacity key={m.number} style={styles.modalItem} onPress={() => {
                   setSelectedMonth(m.number);
@@ -286,7 +286,7 @@ const TransactionsScreen = ({ navigation }: any) => {
                   setSelectedTab('Toutes');
                   setMonthDropdownVisible(false);
                 }}>
-                  <Text style={[styles.modalItemText, isDark && styles.darkText]}>{m.name}</Text>
+                  <Text style={[styles.modalItemText, { color: colors.text.primary }]}>{m.name}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -301,23 +301,23 @@ const TransactionsScreen = ({ navigation }: any) => {
     const currentMonthName = months.find(m => m.number === selectedMonth)?.name || '';
 
     return (
-      <View style={[styles.summaryCard, isDark && styles.darkCard]}>
+      <View style={[styles.summaryCard, { backgroundColor: colors.background.card }]}>
         <View style={styles.summaryHeader}>
-          <Text style={[styles.summaryTitle, isDark && styles.darkText]}>
+          <Text style={[styles.summaryTitle, { color: colors.text.primary }]}>
             {currentMonthName} {selectedYear}
           </Text>
-          <Text style={[styles.transactionCount, isDark && styles.darkSubtext]}>
+          <Text style={[styles.transactionCount, { color: colors.text.secondary }]}>
             {stats.total} transaction{stats.total !== 1 ? 's' : ''}
           </Text>
         </View>
         
         <View style={styles.mainBalanceContainer}>
-          <Text style={[styles.balanceLabel, isDark && styles.darkSubtext]}>
+          <Text style={[styles.balanceLabel, { color: colors.text.secondary }]}>
             Solde du mois
           </Text>
           <Text style={[
             styles.mainBalance,
-            { color: stats.balance >= 0 ? '#10B981' : '#EF4444' }
+            { color: stats.balance >= 0 ? colors.semantic.success : colors.semantic.error }
           ]}>
             {formatAmount(stats.balance)}
           </Text>
@@ -325,14 +325,14 @@ const TransactionsScreen = ({ navigation }: any) => {
 
         <View style={styles.statsGrid}>
           <View style={styles.statItem}>
-            <View style={[styles.statIcon, { backgroundColor: '#10B98120' }]}>
-              <Ionicons name="arrow-down" size={16} color="#10B981" />
+            <View style={[styles.statIcon, { backgroundColor: colors.semantic.success + '20' }]}>
+              <Ionicons name="arrow-down" size={16} color={colors.semantic.success} />
             </View>
             <View style={styles.statInfo}>
-              <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+              <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
                 Revenus
               </Text>
-              <Text style={[styles.statValue, { color: '#10B981' }]}>
+              <Text style={[styles.statValue, { color: colors.semantic.success }]}>
                 {formatAmount(stats.income)}
               </Text>
             </View>
@@ -341,14 +341,14 @@ const TransactionsScreen = ({ navigation }: any) => {
           <View style={styles.statDivider} />
           
           <View style={styles.statItem}>
-            <View style={[styles.statIcon, { backgroundColor: '#EF444420' }]}>
-              <Ionicons name="arrow-up" size={16} color="#EF4444" />
+            <View style={[styles.statIcon, { backgroundColor: colors.semantic.error + '20' }]}>
+              <Ionicons name="arrow-up" size={16} color={colors.semantic.error} />
             </View>
             <View style={styles.statInfo}>
-              <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+              <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
                 Dépenses
               </Text>
-              <Text style={[styles.statValue, { color: '#EF4444' }]}>
+              <Text style={[styles.statValue, { color: colors.semantic.error }]}>
                 {formatAmount(stats.expenses)}
               </Text>
             </View>
@@ -358,61 +358,30 @@ const TransactionsScreen = ({ navigation }: any) => {
     );
   };
 
-  // Nouveau composant : carte horizontale compacte (icone à gauche, détails au centre, montant à droite)
-  const ListTransactionItem = ({ item }: { item: Transaction }) => {
-    const isIncome = item.type === 'income';
-    const { categories } = useCategories();
-    const resolved = resolveCategoryLabel(item.subCategory || item.category, categories || []);
-    const label = resolved.child;
-    return (
-      <TouchableOpacity style={[styles.transactionCard, isDark && styles.darkCard]} onPress={() => handleTransactionPress(item.id)} activeOpacity={0.85}>
-        <View style={styles.transactionMain}>
-          <View style={styles.transactionLeft}>
-            <View style={[styles.iconContainer, { backgroundColor: '#fff', borderColor: '#E6EEF8' }]}>
-              <Ionicons name={isIncome ? 'arrow-down' : 'arrow-up'} size={20} color={isIncome ? '#10B981' : '#EF4444'} />
-            </View>
-
-            <View style={styles.transactionInfo}>
-              <Text style={[styles.transactionDescription, isDark && styles.darkText]} numberOfLines={1}>{item.description || 'Sans description'}</Text>
-              <View style={styles.transactionMeta}>
-                <Text style={[styles.transactionCategory, isDark && styles.darkSubtext]}>{label}</Text>
-                <Text style={[styles.transactionDate, isDark && styles.darkSubtext]}>{new Date(item.date).toLocaleDateString('fr-FR')}</Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.transactionRight}>
-            <Text style={[styles.transactionAmount, { color: isIncome ? '#10B981' : '#EF4444' }]}>{isIncome ? '+' : '-'}{formatAmount(Math.abs(item.amount))}</Text>
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
   // ✅ COMPOSANT : État vide
   const EmptyState = () => {
     const currentMonthName = months.find(m => m.number === selectedMonth)?.name || '';
     
     return (
       <View style={styles.emptyState}>
-        <View style={[styles.emptyIcon, isDark && styles.darkEmptyIcon]}>
+        <View style={[styles.emptyIcon, { backgroundColor: colors.background.secondary }]}>
           <Ionicons 
             name="receipt-outline" 
             size={64} 
-            color={isDark ? '#555' : '#ccc'} 
+            color={colors.text.disabled} 
           />
         </View>
-        <Text style={[styles.emptyTitle, isDark && styles.darkText]}>
+        <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>
           Aucune transaction
         </Text>
-        <Text style={[styles.emptySubtitle, isDark && styles.darkSubtext]}>
+        <Text style={[styles.emptySubtitle, { color: colors.text.secondary }]}>
           {`Aucune transaction trouvée pour ${currentMonthName} ${selectedYear}`}
         </Text>
         <TouchableOpacity 
           style={styles.addEmptyButton}
           onPress={() => navigation.navigate('AddTransaction')}
         >
-          <Ionicons name="add" size={20} color="#fff" />
+          <Ionicons name="add" size={20} color={colors.text.inverse} />
           <Text style={styles.addEmptyButtonText}>
             Nouvelle transaction
           </Text>
@@ -424,8 +393,8 @@ const TransactionsScreen = ({ navigation }: any) => {
   // ✅ COMPOSANT : Chargement
   const LoadingIndicator = () => (
     <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color="#007AFF" />
-      <Text style={[styles.loadingText, isDark && styles.darkText]}>
+      <ActivityIndicator size="large" color={colors.primary[500]} />
+      <Text style={[styles.loadingText, { color: colors.text.primary }]}>
         Chargement des transactions...
       </Text>
     </View>
@@ -433,7 +402,7 @@ const TransactionsScreen = ({ navigation }: any) => {
 
   if (loading && !refreshing && transactions.length === 0) {
     return (
-      <SafeAreaView style={[styles.container, isDark && styles.darkContainer]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background.primary }]}>
         <ImageHeader />
         <LoadingIndicator />
       </SafeAreaView>
@@ -441,20 +410,20 @@ const TransactionsScreen = ({ navigation }: any) => {
   }
 
   return (
-    <SafeAreaView style={[styles.container, isDark && styles.darkContainer]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background.primary }]}>
       <ImageHeader />
       <CompactFilter />
       
       <FlatList
         data={filteredTransactions}
-        renderItem={({ item }) => <ListTransactionItem item={item} />}
+        renderItem={({ item }) => <ListTransactionItem item={item} onPress={handleTransactionPress} />}
         keyExtractor={(item) => item.id}
         refreshControl={
           <RefreshControl 
             refreshing={refreshing} 
             onRefresh={onRefresh}
-            tintColor={isDark ? "#fff" : "#000"}
-            colors={['#007AFF']}
+            tintColor={colors.primary[500]}
+            colors={[colors.primary[500]]}
           />
         }
         contentContainerStyle={styles.listContent}
@@ -479,15 +448,10 @@ const TransactionsScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  darkContainer: {
-    backgroundColor: '#1c1c1e',
   },
   
   // Header
   header: {
-    backgroundColor: '#fff',
     paddingHorizontal: 20,
     paddingTop: 60,
     paddingBottom: 16,
@@ -500,7 +464,6 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   headerImage: {
-    backgroundColor: '#f8f9fa',
     paddingTop: 40,
     paddingBottom: 12,
     paddingHorizontal: 16,
@@ -515,7 +478,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -527,7 +489,6 @@ const styles = StyleSheet.create({
   titleCentered: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#0F172A',
   },
   segmentContainer: {
     flexDirection: 'row',
@@ -558,9 +519,6 @@ const styles = StyleSheet.create({
   segmentTextActive: {
     color: '#fff',
   },
-  darkHeader: {
-    backgroundColor: '#2c2c2e',
-  },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -570,13 +528,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#000',
   },
   addButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#f8f9fa',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -584,9 +540,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-  },
-  darkAddButton: {
-    backgroundColor: '#38383a',
   },
   
   // Filtres
@@ -596,7 +549,6 @@ const styles = StyleSheet.create({
   filterLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
     marginBottom: 8,
     marginLeft: 4,
   },
@@ -625,7 +577,6 @@ const styles = StyleSheet.create({
   currentMonthText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#0F172A',
   },
   anneePill: {
     paddingHorizontal: 10,
@@ -704,7 +655,6 @@ const styles = StyleSheet.create({
   yearButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
   },
   yearButtonTextActive: {
     color: '#fff',
@@ -729,7 +679,6 @@ const styles = StyleSheet.create({
   monthButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
   },
   monthButtonTextActive: {
     color: '#fff',
@@ -737,7 +686,6 @@ const styles = StyleSheet.create({
   
   // Résumé financier
   summaryCard: {
-    backgroundColor: '#fff',
     margin: 16,
     padding: 20,
     borderRadius: 20,
@@ -746,9 +694,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 8,
-  },
-  darkCard: {
-    backgroundColor: '#2c2c2e',
   },
   summaryHeader: {
     flexDirection: 'row',
@@ -759,11 +704,9 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000',
   },
   transactionCount: {
     fontSize: 14,
-    color: '#666',
     fontWeight: '500',
   },
   mainBalanceContainer: {
@@ -775,7 +718,6 @@ const styles = StyleSheet.create({
   },
   balanceLabel: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 8,
     fontWeight: '500',
   },
@@ -806,7 +748,6 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
-    color: '#666',
     marginBottom: 4,
     fontWeight: '500',
   },
@@ -829,7 +770,6 @@ const styles = StyleSheet.create({
   
   // Carte de transaction
   transactionCard: {
-    backgroundColor: '#fff',
     marginHorizontal: 16,
     marginBottom: 12,
     borderRadius: 14,
@@ -879,7 +819,6 @@ const styles = StyleSheet.create({
   transactionDescription: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#0F172A',
     marginBottom: 6,
   },
   transactionMeta: {
@@ -895,7 +834,6 @@ const styles = StyleSheet.create({
   },
   transactionCategory: {
     fontSize: 12,
-    color: '#666',
     fontWeight: '500',
   },
   specialCategoryText: {
@@ -908,7 +846,6 @@ const styles = StyleSheet.create({
   },
   transactionDate: {
     fontSize: 12,
-    color: '#666',
   },
   systemBadge: {
     flexDirection: 'row',
@@ -948,7 +885,6 @@ const styles = StyleSheet.create({
   },
   transactionType: {
     fontSize: 11,
-    color: '#666',
     fontWeight: '500',
   },
   readOnlyIndicator: {
@@ -993,24 +929,18 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#f8f9fa',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
   },
-  darkEmptyIcon: {
-    backgroundColor: '#2c2c2e',
-  },
   emptyTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#666',
     marginBottom: 8,
     textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: 14,
-    color: '#999',
     textAlign: 'center',
     marginBottom: 32,
     lineHeight: 20,
@@ -1045,7 +975,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
   },
   
   // Divers

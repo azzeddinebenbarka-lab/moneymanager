@@ -2,16 +2,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
-import { useTheme } from '../context/ThemeContext';
+import { useDesignSystem } from '../context/ThemeContext';
 import { useCategories } from '../hooks/useCategories';
 
 interface CategoryTemplate {
@@ -33,9 +33,8 @@ interface CategoryHierarchy {
 }
 
 const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { theme } = useTheme();
+  const { colors } = useDesignSystem();
   const { createMultipleCategories, categories: existingCategories } = useCategories();
-  const isDark = theme === 'dark';
 
   const [customCategories, setCustomCategories] = useState<CategoryTemplate[]>([
     { name: '', type: 'expense', icon: 'receipt', color: '#007AFF', isSubCategory: false }
@@ -218,7 +217,7 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
   return (
     <SafeAreaView>
       <ScrollView 
-        style={[styles.container, isDark && styles.darkContainer]}
+        style={[styles.container, { backgroundColor: colors.background.primary }]}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
@@ -228,9 +227,9 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#000"} />
+            <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
           </TouchableOpacity>
-          <Text style={[styles.title, isDark && styles.darkText]}>
+          <Text style={[styles.title, { color: colors.text.primary }]}>
             Ajout Multiple
           </Text>
           <TouchableOpacity 
@@ -243,13 +242,13 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
         </View>
 
         {/* Instructions */}
-        <View style={[styles.infoCard, isDark && styles.darkCard]}>
+        <View style={[styles.infoCard, { backgroundColor: colors.background.card }]}>
           <Ionicons name="information-circle" size={24} color="#007AFF" />
           <View style={styles.infoContent}>
-            <Text style={[styles.infoTitle, isDark && styles.darkText]}>
+            <Text style={[styles.infoTitle, { color: colors.text.primary }]}>
               Système de sous-catégories
             </Text>
-            <Text style={[styles.infoText, isDark && styles.darkSubtext]}>
+            <Text style={[styles.infoText, { color: colors.text.secondary }]}>
               • Créez des catégories principales et leurs sous-catégories{'\n'}
               • Les sous-catégories héritent du type de leur parent{'\n'}
               • Organisez vos dépenses et revenus de manière hiérarchique
@@ -258,28 +257,28 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
         </View>
 
         {/* Compteur et statistiques */}
-        <View style={[styles.statsCard, isDark && styles.darkCard]}>
+        <View style={[styles.statsCard, { backgroundColor: colors.background.card }]}>
           <View style={styles.statItem}>
-            <Text style={[styles.statNumber, isDark && styles.darkText]}>
+            <Text style={[styles.statNumber, { color: colors.text.primary }]}>
               {filledCategoriesCount}
             </Text>
-            <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+            <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
               Prêtes à créer
             </Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={[styles.statNumber, isDark && styles.darkText]}>
+            <Text style={[styles.statNumber, { color: colors.text.primary }]}>
               {totalCategoriesCount}
             </Text>
-            <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+            <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
               Total champs
             </Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={[styles.statNumber, isDark && styles.darkText]}>
+            <Text style={[styles.statNumber, { color: colors.text.primary }]}>
               {customCategories.filter(cat => !cat.isSubCategory).length}
             </Text>
-            <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+            <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
               Principales
             </Text>
           </View>
@@ -293,7 +292,7 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
               <View 
                 style={[
                   styles.categoryCard, 
-                  isDark && styles.darkCard,
+                  { backgroundColor: colors.background.card, borderColor: colors.border.primary },
                   category.isSubCategory && styles.subCategoryCard
                 ]}
               >
@@ -306,12 +305,12 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
                         size={14} 
                         color={category.type === 'income' ? '#10B981' : '#EF4444'} 
                       />
-                      <Text style={[styles.categoryTypeText, isDark && styles.darkSubtext]}>
+                      <Text style={[styles.categoryTypeText, { color: colors.text.secondary }]}>
                         {category.isSubCategory ? 'Sous-catégorie' : 'Catégorie principale'}
                       </Text>
                     </View>
                     {category.name && (
-                      <Text style={[styles.cardPreview, isDark && styles.darkText]}>
+                      <Text style={[styles.cardPreview, { color: colors.text.primary }]}>
                         {category.name}
                       </Text>
                     )}
@@ -327,7 +326,7 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
                         <Ionicons 
                           name="layers" 
                           size={20} 
-                          color={showSubCategoryInput === index ? '#007AFF' : (isDark ? '#888' : '#666')} 
+                          color={showSubCategoryInput === index ? '#007AFF' : colors.text.secondary} 
                         />
                       </TouchableOpacity>
                     )}
@@ -343,24 +342,24 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
 
                 {/* Nom de la catégorie */}
                 <View style={styles.inputGroup}>
-                  <Text style={[styles.label, isDark && styles.darkText]}>
+                  <Text style={[styles.label, { color: colors.text.primary }]}>
                     Nom {category.isSubCategory ? 'de la sous-catégorie' : 'de la catégorie'} *
                   </Text>
                   <TextInput
-                    style={[styles.input, isDark && styles.darkInput]}
+                    style={[styles.input, { backgroundColor: colors.background.card, color: colors.text.primary, borderColor: colors.border.primary }]}
                     value={category.name}
                     onChangeText={(text) => updateCategoryField(index, 'name', text)}
                     placeholder={category.isSubCategory ? 
                       "Ex: Loyer, Électricité, Internet..." : 
                       "Ex: Logement, Transport, Alimentation..."}
-                    placeholderTextColor={isDark ? "#888" : "#999"}
+                    placeholderTextColor={colors.text.disabled}
                   />
                 </View>
 
                 {/* Type (uniquement pour les catégories principales) */}
                 {!category.isSubCategory && (
                   <View style={styles.inputGroup}>
-                    <Text style={[styles.label, isDark && styles.darkText]}>
+                    <Text style={[styles.label, { color: colors.text.primary }]}>
                       Type *
                     </Text>
                     <View style={styles.typeContainer}>
@@ -368,7 +367,7 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
                         style={[
                           styles.typeButton,
                           category.type === 'expense' && styles.typeButtonSelected,
-                          isDark && styles.darkTypeButton,
+                          { backgroundColor: category.type === 'expense' ? '#EF4444' : colors.background.card, borderColor: colors.border.primary },
                         ]}
                         onPress={() => updateCategoryField(index, 'type', 'expense')}
                       >
@@ -389,7 +388,7 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
                         style={[
                           styles.typeButton,
                           category.type === 'income' && styles.typeButtonSelected,
-                          isDark && styles.darkTypeButton,
+                          { backgroundColor: category.type === 'income' ? '#10B981' : colors.background.card, borderColor: colors.border.primary },
                         ]}
                         onPress={() => updateCategoryField(index, 'type', 'income')}
                       >
@@ -411,7 +410,7 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
 
                 {/* Icône */}
                 <View style={styles.inputGroup}>
-                  <Text style={[styles.label, isDark && styles.darkText]}>
+                  <Text style={[styles.label, { color: colors.text.primary }]}>
                     Icône *
                   </Text>
                   <ScrollView 
@@ -425,14 +424,14 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
                         style={[
                           styles.iconButton,
                           category.icon === icon && styles.iconButtonSelected,
-                          isDark && styles.darkIconButton,
+                          { backgroundColor: category.icon === icon ? '#007AFF' : colors.background.secondary, borderColor: colors.border.primary },
                         ]}
                         onPress={() => updateCategoryField(index, 'icon', icon)}
                       >
                         <Ionicons 
                           name={icon as any} 
                           size={20} 
-                          color={category.icon === icon ? '#fff' : (isDark ? '#fff' : '#666')} 
+                          color={category.icon === icon ? '#fff' : colors.text.primary} 
                         />
                       </TouchableOpacity>
                     ))}
@@ -441,7 +440,7 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
 
                 {/* Couleur */}
                 <View style={styles.inputGroup}>
-                  <Text style={[styles.label, isDark && styles.darkText]}>
+                  <Text style={[styles.label, { color: colors.text.primary }]}>
                     Couleur *
                   </Text>
                   <ScrollView 
@@ -469,15 +468,15 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
 
                 {/* Aperçu */}
                 {category.name && (
-                  <View style={[styles.previewContainer, isDark && styles.darkPreview]}>
-                    <Text style={[styles.previewLabel, isDark && styles.darkSubtext]}>
+                  <View style={[styles.previewContainer, { backgroundColor: colors.background.secondary }]}>
+                    <Text style={[styles.previewLabel, { color: colors.text.secondary }]}>
                       Aperçu:
                     </Text>
                     <View style={styles.previewContent}>
                       <View style={[styles.previewIcon, { backgroundColor: category.color }]}>
                         <Ionicons name={category.icon as any} size={16} color="#fff" />
                       </View>
-                      <Text style={[styles.previewText, isDark && styles.darkText]}>
+                      <Text style={[styles.previewText, { color: colors.text.primary }]}>
                         {category.name}
                       </Text>
                       <View style={[
@@ -517,7 +516,7 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
                   {/* Affichage des sous-catégories existantes */}
                   {getSubCategories(index).length > 0 && (
                     <View style={styles.subCategoriesList}>
-                      <Text style={[styles.subCategoriesTitle, isDark && styles.darkSubtext]}>
+                      <Text style={[styles.subCategoriesTitle, { color: colors.text.secondary }]}>
                         Sous-catégories ({getSubCategories(index).length})
                       </Text>
                     </View>
@@ -531,7 +530,7 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
         {/* Boutons d'action */}
         <View style={styles.actionsContainer}>
           <TouchableOpacity 
-            style={[styles.addMainCategoryButton, isDark && styles.darkAddButton]}
+            style={[styles.addMainCategoryButton, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
             onPress={() => addCategoryField(false)}
             disabled={loading}
           >
@@ -543,11 +542,11 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
 
           <View style={styles.mainActions}>
             <TouchableOpacity 
-              style={[styles.cancelButton, isDark && styles.darkCancelButton]}
+              style={[styles.cancelButton, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
               onPress={() => navigation.goBack()}
               disabled={loading}
             >
-              <Text style={styles.cancelButtonText}>Annuler</Text>
+              <Text style={[styles.cancelButtonText, { color: colors.text.primary }]}>Annuler</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
@@ -576,9 +575,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
-  },
-  darkContainer: {
-    backgroundColor: '#1c1c1e',
   },
   content: {
     padding: 16,
@@ -616,9 +612,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderLeftWidth: 4,
     borderLeftColor: '#007AFF',
-  },
-  darkCard: {
-    backgroundColor: '#2c2c2e',
   },
   infoContent: {
     flex: 1,
@@ -737,11 +730,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
   },
-  darkInput: {
-    backgroundColor: '#38383a',
-    borderColor: '#444',
-    color: '#fff',
-  },
   typeContainer: {
     flexDirection: 'row',
     gap: 8,
@@ -757,10 +745,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#e0e0e0',
     gap: 6,
-  },
-  darkTypeButton: {
-    backgroundColor: '#38383a',
-    borderColor: '#444',
   },
   typeButtonSelected: {
     backgroundColor: '#007AFF',
@@ -787,10 +771,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: '#e0e0e0',
-  },
-  darkIconButton: {
-    backgroundColor: '#38383a',
-    borderColor: '#444',
   },
   iconButtonSelected: {
     backgroundColor: '#007AFF',
@@ -823,9 +803,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderLeftWidth: 4,
     borderLeftColor: '#007AFF',
-  },
-  darkPreview: {
-    backgroundColor: '#38383a',
   },
   previewLabel: {
     fontSize: 14,
@@ -899,9 +876,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 8,
   },
-  darkAddButton: {
-    backgroundColor: '#38383a',
-  },
   addMainCategoryText: {
     fontSize: 16,
     color: '#007AFF',
@@ -917,9 +891,6 @@ const styles = StyleSheet.create({
     padding: 18,
     borderRadius: 12,
     alignItems: 'center',
-  },
-  darkCancelButton: {
-    backgroundColor: '#38383a',
   },
   cancelButtonText: {
     fontSize: 16,
@@ -946,12 +917,6 @@ const styles = StyleSheet.create({
   },
   spacer: {
     height: 40,
-  },
-  darkText: {
-    color: '#fff',
-  },
-  darkSubtext: {
-    color: '#888',
   },
 });
 

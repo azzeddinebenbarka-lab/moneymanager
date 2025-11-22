@@ -17,7 +17,7 @@ import {
 import MonthCard from '../components/analytics/MonthCard';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useCurrency } from '../context/CurrencyContext';
-import { useTheme } from '../context/ThemeContext';
+import { useDesignSystem } from '../context/ThemeContext';
 import { useMonthlyData } from '../hooks/useMonthlyData';
 import { useTransactions } from '../hooks/useTransactions';
 
@@ -34,7 +34,7 @@ type MonthsOverviewScreenNavigationProp = StackNavigationProp<RootStackParamList
 
 const MonthsOverviewScreen: React.FC = () => {
   const navigation = useNavigation<MonthsOverviewScreenNavigationProp>();
-  const { theme } = useTheme();
+  const { colors } = useDesignSystem();
   const { formatAmount } = useCurrency();
   const { getMonthlyOverview, getAvailableYears } = useMonthlyData();
   const { refreshTransactions } = useTransactions();
@@ -43,9 +43,6 @@ const MonthsOverviewScreen: React.FC = () => {
   const [activeMetric, setActiveMetric] = useState<'income' | 'expenses' | 'balance'>('balance');
   const [refreshing, setRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // ✅ CORRECTION : Déclarer isDark AVANT son utilisation
-  const isDark = theme === 'dark';
   
   // ✅ CORRECTION : Obtenir le mois et l'année actuels correctement
   const now = new Date();
@@ -161,30 +158,30 @@ const MonthsOverviewScreen: React.FC = () => {
 
   // Header moderne avec dégradé
   const ModernHeader = () => (
-    <View style={[styles.header, isDark && styles.darkHeader]}>
+    <View style={[styles.header, { backgroundColor: colors.background.card }]}>
       <View style={styles.headerBackground}>
-        <View style={[styles.headerGradient, isDark && styles.darkHeaderGradient]} />
+        <View style={[styles.headerGradient, { backgroundColor: colors.primary[500] }]} />
       </View>
       
       <View style={styles.headerContent}>
         <View style={styles.titleContainer}>
           <View style={styles.logo}>
-            <Ionicons name="calendar" size={28} color="#007AFF" />
+            <Ionicons name="calendar" size={28} color={colors.primary[500]} />
           </View>
           <View>
-            <Text style={[styles.title, isDark && styles.darkTitle]}>
+            <Text style={[styles.title, { color: colors.text.primary }]}>
               Vue par Mois
             </Text>
-            <Text style={[styles.subtitle, isDark && styles.darkSubtitle]}>
+            <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
               {new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
             </Text>
           </View>
         </View>
         
         <View style={styles.headerStats}>
-          <View style={styles.miniStat}>
+          <View style={[styles.miniStat, { backgroundColor: colors.background.secondary }]}>
             <Ionicons name="trending-up" size={14} color="#10B981" />
-            <Text style={[styles.miniStatText, isDark && styles.darkSubtext]}>
+            <Text style={[styles.miniStatText, { color: colors.text.secondary }]}>
               {monthlyData.length} mois
             </Text>
           </View>
@@ -204,7 +201,7 @@ const MonthsOverviewScreen: React.FC = () => {
         }
       ]}
     >
-      <Text style={[styles.yearSelectorLabel, isDark && styles.darkSubtext]}>
+      <Text style={[styles.yearSelectorLabel, { color: colors.text.secondary }]}>
         Sélectionnez l'année
       </Text>
       <ScrollView 
@@ -218,19 +215,19 @@ const MonthsOverviewScreen: React.FC = () => {
             style={[
               styles.yearButton,
               selectedYear === year && styles.yearButtonActive,
-              isDark && styles.darkYearButton
+              { backgroundColor: selectedYear === year ? colors.primary[500] : colors.background.secondary }
             ]}
             onPress={() => setSelectedYear(year)}
           >
             <Ionicons 
               name="calendar" 
               size={16} 
-              color={selectedYear === year ? '#fff' : (isDark ? '#94A3B8' : '#64748B')} 
+              color={selectedYear === year ? '#fff' : colors.text.secondary} 
             />
             <Text style={[
               styles.yearButtonText,
               selectedYear === year && styles.yearButtonTextActive,
-              isDark && styles.darkYearButtonText
+              { color: selectedYear === year ? '#fff' : colors.text.primary }
             ]}>
               {year}
             </Text>
@@ -244,7 +241,7 @@ const MonthsOverviewScreen: React.FC = () => {
   const MetricSelector = () => (
     <View style={styles.metricSelector}>
       {[
-        { key: 'balance', label: 'Solde', icon: 'trending-up', color: '#007AFF' },
+        { key: 'balance', label: 'Solde', icon: 'trending-up', color: colors.primary[500] },
         { key: 'income', label: 'Revenus', icon: 'arrow-down', color: '#10B981' },
         { key: 'expenses', label: 'Dépenses', icon: 'arrow-up', color: '#EF4444' },
       ].map(metric => (
@@ -253,8 +250,7 @@ const MonthsOverviewScreen: React.FC = () => {
           style={[
             styles.metricButton,
             activeMetric === metric.key && styles.metricButtonActive,
-            { borderLeftColor: metric.color },
-            isDark && styles.darkMetricButton
+            { borderLeftColor: metric.color, backgroundColor: activeMetric === metric.key ? colors.primary[500] : colors.background.card }
           ]}
           onPress={() => setActiveMetric(metric.key as any)}
         >
@@ -266,7 +262,7 @@ const MonthsOverviewScreen: React.FC = () => {
           <Text style={[
             styles.metricButtonText,
             activeMetric === metric.key && styles.metricButtonTextActive,
-            isDark && styles.darkText
+            { color: activeMetric === metric.key ? '#fff' : colors.text.primary }
           ]}>
             {metric.label}
           </Text>
@@ -280,7 +276,7 @@ const MonthsOverviewScreen: React.FC = () => {
     <Animated.View 
       style={[
         styles.yearlySummary,
-        isDark && styles.darkCard,
+        { backgroundColor: colors.background.card },
         {
           opacity: fadeAnim,
           transform: [{ translateY: slideAnim }]
@@ -289,14 +285,14 @@ const MonthsOverviewScreen: React.FC = () => {
     >
       <View style={styles.summaryHeader}>
         <View>
-          <Text style={[styles.yearlySummaryTitle, isDark && styles.darkTitle]}>
+          <Text style={[styles.yearlySummaryTitle, { color: colors.text.primary }]}>
             Résumé {selectedYear}
           </Text>
-          <Text style={[styles.yearlySummarySubtitle, isDark && styles.darkSubtext]}>
+          <Text style={[styles.yearlySummarySubtitle, { color: colors.text.secondary }]}>
             Performance financière annuelle
           </Text>
         </View>
-        <View style={[styles.yearBadge, isDark && styles.darkYearBadge]}>
+        <View style={[styles.yearBadge, { backgroundColor: colors.background.secondary }]}>
           <Ionicons name="trophy" size={16} color="#F59E0B" />
           <Text style={styles.yearBadgeText}>{selectedYear}</Text>
         </View>
@@ -317,49 +313,49 @@ const MonthsOverviewScreen: React.FC = () => {
             }]}>
               {formatAmount(yearlyTotals.totalNetFlow)}
             </Text>
-            <Text style={[styles.mainStatLabel, isDark && styles.darkSubtext]}>
+            <Text style={[styles.mainStatLabel, { color: colors.text.secondary }]}>
               Solde Annuel
             </Text>
           </View>
         </View>
 
         <View style={styles.statsRow}>
-          <View style={styles.miniStatCard}>
+          <View style={[styles.miniStatCard, { backgroundColor: colors.background.secondary }]}>
             <Ionicons name="arrow-down" size={16} color="#10B981" />
-            <Text style={[styles.miniStatValue, isDark && styles.darkText]}>
+            <Text style={[styles.miniStatValue, { color: colors.text.primary }]}>
               {formatAmount(yearlyTotals.totalIncome)}
             </Text>
-            <Text style={[styles.miniStatLabel, isDark && styles.darkSubtext]}>
+            <Text style={[styles.miniStatLabel, { color: colors.text.secondary }]}>
               Revenus
             </Text>
           </View>
           
-          <View style={styles.miniStatCard}>
+          <View style={[styles.miniStatCard, { backgroundColor: colors.background.secondary }]}>
             <Ionicons name="arrow-up" size={16} color="#EF4444" />
-            <Text style={[styles.miniStatValue, isDark && styles.darkText]}>
+            <Text style={[styles.miniStatValue, { color: colors.text.primary }]}>
               {formatAmount(yearlyTotals.totalExpenses)}
             </Text>
-            <Text style={[styles.miniStatLabel, isDark && styles.darkSubtext]}>
+            <Text style={[styles.miniStatLabel, { color: colors.text.secondary }]}>
               Dépenses
             </Text>
           </View>
           
-          <View style={styles.miniStatCard}>
-            <Ionicons name="repeat" size={16} color="#007AFF" />
-            <Text style={[styles.miniStatValue, isDark && styles.darkText]}>
+          <View style={[styles.miniStatCard, { backgroundColor: colors.background.secondary }]}>
+            <Ionicons name="repeat" size={16} color={colors.primary[500]} />
+            <Text style={[styles.miniStatValue, { color: colors.text.primary }]}>
               {yearlyTotals.totalTransactions}
             </Text>
-            <Text style={[styles.miniStatLabel, isDark && styles.darkSubtext]}>
+            <Text style={[styles.miniStatLabel, { color: colors.text.secondary }]}>
               Transactions
             </Text>
           </View>
         </View>
 
         {/* Indicateur de performance */}
-        <View style={styles.performanceIndicator}>
+        <View style={[styles.performanceIndicator, { backgroundColor: colors.background.secondary }]}>
           <View style={styles.performanceHeader}>
             <Ionicons name="speedometer" size={16} color="#F59E0B" />
-            <Text style={[styles.performanceLabel, isDark && styles.darkSubtext]}>
+            <Text style={[styles.performanceLabel, { color: colors.text.secondary }]}>
               Taux d'épargne
             </Text>
           </View>
@@ -396,17 +392,17 @@ const MonthsOverviewScreen: React.FC = () => {
         }
       ]}
     >
-      <View style={[styles.emptyIcon, isDark && styles.darkEmptyIcon]}>
+      <View style={[styles.emptyIcon, { backgroundColor: colors.background.secondary }]}>
         <Ionicons 
           name="calendar-outline" 
           size={64} 
-          color={isDark ? '#4B5563' : '#9CA3AF'} 
+          color={colors.text.disabled} 
         />
       </View>
-      <Text style={[styles.emptyTitle, isDark && styles.darkTitle]}>
+      <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>
         Aucune donnée pour {selectedYear}
       </Text>
-      <Text style={[styles.emptyDescription, isDark && styles.darkSubtext]}>
+      <Text style={[styles.emptyDescription, { color: colors.text.secondary }]}>
         Les transactions de {selectedYear} apparaîtront ici dès que vous ajouterez des données.
       </Text>
       <TouchableOpacity 
@@ -432,16 +428,16 @@ const MonthsOverviewScreen: React.FC = () => {
     >
       <View style={styles.sectionHeader}>
         <View>
-          <Text style={[styles.sectionTitle, isDark && styles.darkTitle]}>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
             Analyse Mensuelle
           </Text>
-          <Text style={[styles.sectionSubtitle, isDark && styles.darkSubtext]}>
+          <Text style={[styles.sectionSubtitle, { color: colors.text.secondary }]}>
             Détails mois par mois
           </Text>
         </View>
-        <View style={styles.monthCount}>
-          <Ionicons name="layers" size={16} color="#007AFF" />
-          <Text style={[styles.monthCountText, isDark && styles.darkSubtext]}>
+        <View style={[styles.monthCount, { backgroundColor: colors.background.secondary }]}>
+          <Ionicons name="layers" size={16} color={colors.primary[500]} />
+          <Text style={[styles.monthCountText, { color: colors.text.secondary }]}>
             {monthlyData.length} mois
           </Text>
         </View>
@@ -477,13 +473,13 @@ const MonthsOverviewScreen: React.FC = () => {
   if (isLoading) {
     return (
       <SafeAreaView>
-        <View style={[styles.container, isDark && styles.darkContainer, styles.loadingContainer]}>
+        <View style={[styles.container, { backgroundColor: colors.background.primary }, styles.loadingContainer]}>
           <View style={styles.loadingContent}>
-            <Ionicons name="calendar" size={64} color="#007AFF" />
-            <Text style={[styles.loadingText, isDark && styles.darkTitle]}>
+            <Ionicons name="calendar" size={64} color={colors.primary[500]} />
+            <Text style={[styles.loadingText, { color: colors.text.primary }]}>
               Chargement des données...
             </Text>
-            <Text style={[styles.loadingSubtext, isDark && styles.darkSubtext]}>
+            <Text style={[styles.loadingSubtext, { color: colors.text.secondary }]}>
               Analyse des transactions mensuelles
             </Text>
           </View>
@@ -494,7 +490,7 @@ const MonthsOverviewScreen: React.FC = () => {
 
   return (
     <SafeAreaView>
-      <View style={[styles.container, isDark && styles.darkContainer]}>
+      <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
         <ModernHeader />
         
         <ScrollView 
@@ -505,8 +501,8 @@ const MonthsOverviewScreen: React.FC = () => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={['#007AFF']}
-              tintColor={isDark ? '#007AFF' : '#007AFF'}
+              colors={[colors.primary[500]]}
+              tintColor={colors.primary[500]}
             />
           }
         >
@@ -534,9 +530,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
-  darkContainer: {
-    backgroundColor: '#0F172A',
-  },
   
   // État de chargement
   loadingContainer: {
@@ -562,13 +555,10 @@ const styles = StyleSheet.create({
   
   // Header moderne avec dégradé
   header: {
-    paddingTop: 60,
-    paddingBottom: 30,
+    paddingTop: 50,
+    paddingBottom: 20,
     position: 'relative',
     overflow: 'hidden',
-  },
-  darkHeader: {
-    backgroundColor: 'transparent',
   },
   headerBackground: {
     position: 'absolute',
@@ -580,10 +570,6 @@ const styles = StyleSheet.create({
   headerGradient: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    opacity: 0.95,
-  },
-  darkHeaderGradient: {
-    backgroundColor: '#1E293B',
     opacity: 0.95,
   },
   headerContent: {
@@ -617,15 +603,9 @@ const styles = StyleSheet.create({
     color: '#1E293B',
     marginBottom: 4,
   },
-  darkTitle: {
-    color: '#F1F5F9',
-  },
   subtitle: {
     fontSize: 16,
     color: '#64748B',
-  },
-  darkSubtitle: {
-    color: '#94A3B8',
   },
   headerStats: {
     alignItems: 'flex-end',
@@ -655,8 +635,9 @@ const styles = StyleSheet.create({
   
   // Sélecteur d'année moderne
   yearSelectorContainer: {
-    paddingHorizontal: 24,
-    marginBottom: 24,
+    paddingHorizontal: 20,
+    marginBottom: 16,
+    marginTop: 8,
   },
   yearSelectorLabel: {
     fontSize: 14,
@@ -684,9 +665,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  darkYearButton: {
-    backgroundColor: '#334155',
-  },
   yearButtonActive: {
     backgroundColor: '#007AFF',
     shadowColor: '#007AFF',
@@ -700,9 +678,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#64748B',
   },
-  darkYearButtonText: {
-    color: '#94A3B8',
-  },
   yearButtonTextActive: {
     color: '#FFFFFF',
   },
@@ -710,18 +685,15 @@ const styles = StyleSheet.create({
   // Résumé annuel moderne
   yearlySummary: {
     backgroundColor: '#FFFFFF',
-    marginHorizontal: 24,
-    marginBottom: 24,
-    padding: 24,
-    borderRadius: 24,
+    marginHorizontal: 20,
+    marginBottom: 16,
+    padding: 20,
+    borderRadius: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.1,
     shadowRadius: 16,
     elevation: 8,
-  },
-  darkCard: {
-    backgroundColor: '#1E293B',
   },
   summaryHeader: {
     flexDirection: 'row',
@@ -747,9 +719,6 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 12,
     gap: 6,
-  },
-  darkYearBadge: {
-    backgroundColor: '#451A03',
   },
   yearBadgeText: {
     fontSize: 14,
@@ -851,13 +820,13 @@ const styles = StyleSheet.create({
   
   // Section des mois
   monthsSection: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 22,
@@ -898,13 +867,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
     borderRadius: 12,
     gap: 8,
     borderLeftWidth: 3,
-  },
-  darkMetricButton: {
-    backgroundColor: 'transparent',
+    marginHorizontal: 2,
   },
   metricButtonActive: {
     backgroundColor: '#007AFF',
@@ -944,9 +911,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  darkEmptyIcon: {
-    backgroundColor: '#334155',
-  },
   emptyTitle: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -984,12 +948,6 @@ const styles = StyleSheet.create({
   // Divers
   spacer: {
     height: 20,
-  },
-  darkText: {
-    color: '#F1F5F9',
-  },
-  darkSubtext: {
-    color: '#94A3B8',
   },
 });
 

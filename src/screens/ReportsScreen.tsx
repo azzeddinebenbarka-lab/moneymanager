@@ -1,23 +1,24 @@
 ﻿import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    FlatList,
+    RefreshControl,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import BarChart from '../components/charts/BarChart';
 import LineChart from '../components/charts/LineChart';
 import PieChart from '../components/charts/PieChart';
 import { useCurrency } from '../context/CurrencyContext';
-import { useTheme } from '../context/ThemeContext';
+import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useReports } from '../hooks/useReports';
 
 const ReportsScreen = ({ navigation }: any) => {
+  const { colors } = useDesignSystem();
   const { formatAmount } = useCurrency();
   const { theme } = useTheme();
   const {
@@ -49,8 +50,8 @@ const ReportsScreen = ({ navigation }: any) => {
   });
 
   const PeriodSelector = () => (
-    <View style={[styles.periodSelector, isDark && styles.darkCard]}>
-      <Text style={[styles.periodSelectorTitle, isDark && styles.darkText]}>
+    <View style={[styles.periodSelector, { backgroundColor: colors.background.card }]}>
+      <Text style={[styles.periodSelectorTitle, { color: colors.text.primary }]}>
         Période
       </Text>
       {predefinedPeriods.map((period) => (
@@ -67,8 +68,8 @@ const ReportsScreen = ({ navigation }: any) => {
         >
           <Text style={[
             styles.periodOptionText,
-            currentPeriod?.label === period.label && styles.periodOptionTextSelected,
-            isDark && styles.darkText
+            { color: colors.text.primary },
+            currentPeriod?.label === period.label && styles.periodOptionTextSelected
           ]}>
             {period.label}
           </Text>
@@ -93,24 +94,24 @@ const ReportsScreen = ({ navigation }: any) => {
     return (
       <View style={styles.filtersSection}>
         <TouchableOpacity 
-          style={[styles.filtersToggle, isDark && styles.darkCard]}
+          style={[styles.filtersToggle, { backgroundColor: colors.background.card }]}
           onPress={() => setShowAdvancedFilters(!showAdvancedFilters)}
         >
           <Ionicons name="filter" size={20} color="#007AFF" />
-          <Text style={[styles.filtersToggleText, isDark && styles.darkText]}>
+          <Text style={[styles.filtersToggleText, { color: colors.text.primary }]}>
             Filtres avancés
           </Text>
           <Ionicons 
             name={showAdvancedFilters ? "chevron-up" : "chevron-down"} 
             size={16} 
-            color={isDark ? '#888' : '#666'} 
+            color={colors.text.secondary} 
           />
         </TouchableOpacity>
 
         {showAdvancedFilters && (
-          <View style={[styles.advancedFilters, isDark && styles.darkCard]}>
+          <View style={[styles.advancedFilters, { backgroundColor: colors.background.card }]}>
             <View style={styles.filterGroup}>
-              <Text style={[styles.filterLabel, isDark && styles.darkText]}>
+              <Text style={[styles.filterLabel, { color: colors.text.primary }]}>
                 Type de transaction
               </Text>
               <View style={styles.filterOptions}>
@@ -147,16 +148,16 @@ const ReportsScreen = ({ navigation }: any) => {
             </View>
 
             <View style={styles.filterGroup}>
-              <Text style={[styles.filterLabel, isDark && styles.darkText]}>
+              <Text style={[styles.filterLabel, { color: colors.text.primary }]}>
                 Montant
               </Text>
               <View style={styles.amountFilters}>
                 <View style={styles.amountInputContainer}>
-                  <Text style={[styles.amountLabel, isDark && styles.darkSubtext]}>Min</Text>
+                  <Text style={[styles.amountLabel, { color: colors.text.secondary }]}>Min</Text>
                   <TextInput
-                    style={[styles.amountInput, isDark && styles.darkAmountInput]}
+                    style={[styles.amountInput, { backgroundColor: colors.background.secondary, color: colors.text.primary, borderColor: colors.border.primary }]}
                     placeholder="0"
-                    placeholderTextColor={isDark ? '#888' : '#999'}
+                    placeholderTextColor={colors.text.disabled}
                     keyboardType="numeric"
                     value={filters.minAmount?.toString()}
                     onChangeText={(text) => setFilters({ 
@@ -166,11 +167,11 @@ const ReportsScreen = ({ navigation }: any) => {
                   />
                 </View>
                 <View style={styles.amountInputContainer}>
-                  <Text style={[styles.amountLabel, isDark && styles.darkSubtext]}>Max</Text>
+                  <Text style={[styles.amountLabel, { color: colors.text.secondary }]}>Max</Text>
                   <TextInput
-                    style={[styles.amountInput, isDark && styles.darkAmountInput]}
+                    style={[styles.amountInput, { backgroundColor: colors.background.secondary, color: colors.text.primary, borderColor: colors.border.primary }]}
                     placeholder="∞"
-                    placeholderTextColor={isDark ? '#888' : '#999'}
+                    placeholderTextColor={colors.text.disabled}
                     keyboardType="numeric"
                     value={filters.maxAmount?.toString()}
                     onChangeText={(text) => setFilters({ 
@@ -200,28 +201,28 @@ const ReportsScreen = ({ navigation }: any) => {
   };
 
   const QuickStatsCard = () => (
-    <View style={[styles.quickStatsCard, isDark && styles.darkCard]}>
-      <Text style={[styles.cardTitle, isDark && styles.darkText]}>
+    <View style={[styles.quickStatsCard, { backgroundColor: colors.background.card }]}>
+      <Text style={[styles.cardTitle, { color: colors.text.primary }]}>
         Aperçu Financier
       </Text>
       
       <View style={styles.statsGrid}>
         <View style={styles.statItem}>
           <Ionicons name="arrow-down-circle" size={20} color="#34C759" />
-          <Text style={[styles.statValue, isDark && styles.darkText]}>
+          <Text style={[styles.statValue, { color: colors.text.primary }]}>
             {formatAmount(quickStats.totalIncome || 0)}
           </Text>
-          <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+          <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
             Revenus
           </Text>
         </View>
 
         <View style={styles.statItem}>
           <Ionicons name="arrow-up-circle" size={20} color="#FF3B30" />
-          <Text style={[styles.statValue, isDark && styles.darkText]}>
+          <Text style={[styles.statValue, { color: colors.text.primary }]}>
             {formatAmount(quickStats.totalExpenses || 0)}
           </Text>
-          <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+          <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
             Dépenses
           </Text>
         </View>
@@ -238,17 +239,17 @@ const ReportsScreen = ({ navigation }: any) => {
           ]}>
             {formatAmount(quickStats.netCashFlow || 0)}
           </Text>
-          <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+          <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
             Solde
           </Text>
         </View>
 
         <View style={styles.statItem}>
           <Ionicons name="pie-chart" size={20} color="#007AFF" />
-          <Text style={[styles.statValue, isDark && styles.darkText]}>
+          <Text style={[styles.statValue, { color: colors.text.primary }]}>
             {(quickStats.savingsRate || 0).toFixed(1)}%
           </Text>
-          <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
+          <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
             Épargne
           </Text>
         </View>
@@ -283,11 +284,11 @@ const ReportsScreen = ({ navigation }: any) => {
 
     return (
       <TouchableOpacity 
-        style={[styles.healthCard, isDark && styles.darkCard]}
+        style={[styles.healthCard, { backgroundColor: colors.background.card }]}
         onPress={() => navigation.navigate('HealthDetail')}
       >
         <View style={styles.healthHeader}>
-          <Text style={[styles.cardTitle, isDark && styles.darkText]}>
+          <Text style={[styles.cardTitle, { color: colors.text.primary }]}>
             Santé Financière
           </Text>
           <View style={[
@@ -311,10 +312,10 @@ const ReportsScreen = ({ navigation }: any) => {
 
         {financialHealth.recommendations && financialHealth.recommendations.length > 0 && (
           <View style={styles.recommendations}>
-            <Text style={[styles.recommendationsTitle, isDark && styles.darkSubtext]}>
+            <Text style={[styles.recommendationsTitle, { color: colors.text.secondary }]}>
               Recommandations
             </Text>
-            <Text style={[styles.recommendation, isDark && styles.darkSubtext]}>
+            <Text style={[styles.recommendation, { color: colors.text.secondary }]}>
               {financialHealth.recommendations[0]}
             </Text>
           </View>
@@ -325,14 +326,14 @@ const ReportsScreen = ({ navigation }: any) => {
 
   const TopCategoriesCard = () => (
     <TouchableOpacity 
-      style={[styles.categoriesCard, isDark && styles.darkCard]}
+      style={[styles.categoriesCard, { backgroundColor: colors.background.card }]}
       onPress={() => navigation.navigate('CategoryAnalysis')}
     >
       <View style={styles.cardHeader}>
-        <Text style={[styles.cardTitle, isDark && styles.darkText]}>
+        <Text style={[styles.cardTitle, { color: colors.text.primary }]}>
           Top Catégories
         </Text>
-        <Ionicons name="chevron-forward" size={20} color={isDark ? '#888' : '#666'} />
+        <Ionicons name="chevron-forward" size={20} color={colors.text.secondary} />
       </View>
 
       {topCategories.slice(0, 5).map((category: any, index: number) => (
@@ -347,18 +348,18 @@ const ReportsScreen = ({ navigation }: any) => {
             <Ionicons 
               name={category.icon as any || 'pricetag'} 
               size={16} 
-              color={isDark ? '#888' : '#666'} 
+              color={colors.text.secondary} 
             />
-            <Text style={[styles.categoryName, isDark && styles.darkText]}>
+            <Text style={[styles.categoryName, { color: colors.text.primary }]}>
               {category.name || `Catégorie ${index + 1}`}
             </Text>
           </View>
           
           <View style={styles.categoryAmounts}>
-            <Text style={[styles.categoryAmount, isDark && styles.darkText]}>
+            <Text style={[styles.categoryAmount, { color: colors.text.primary }]}>
               {formatAmount(category.amount || 0)}
             </Text>
-            <Text style={[styles.categoryPercentage, isDark && styles.darkSubtext]}>
+            <Text style={[styles.categoryPercentage, { color: colors.text.secondary }]}>
               {(category.percentage || 0).toFixed(1)}%
             </Text>
           </View>
@@ -366,7 +367,7 @@ const ReportsScreen = ({ navigation }: any) => {
       ))}
 
       {topCategories.length === 0 && (
-        <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
+        <Text style={[styles.emptyText, { color: colors.text.secondary }]}>
           Aucune donnée de catégorie
         </Text>
       )}
@@ -375,20 +376,20 @@ const ReportsScreen = ({ navigation }: any) => {
 
   const MonthlyTrendsCard = () => (
     <TouchableOpacity 
-      style={[styles.trendsCard, isDark && styles.darkCard]}
+      style={[styles.trendsCard, { backgroundColor: colors.background.card }]}
       onPress={() => navigation.navigate('MonthlyTrends')}
     >
       <View style={styles.cardHeader}>
-        <Text style={[styles.cardTitle, isDark && styles.darkText]}>
+        <Text style={[styles.cardTitle, { color: colors.text.primary }]}>
           Tendances Mensuelles
         </Text>
-        <Ionicons name="chevron-forward" size={20} color={isDark ? '#888' : '#666'} />
+        <Ionicons name="chevron-forward" size={20} color={colors.text.secondary} />
       </View>
       
       <View style={styles.trendsGrid}>
         {monthlySummaries.slice(-3).map((summary: any, index: number) => (
           <View key={summary.month || `month-${index}`} style={styles.trendItem}>
-            <Text style={[styles.trendMonth, isDark && styles.darkSubtext]}>
+            <Text style={[styles.trendMonth, { color: colors.text.secondary }]}>
               {summary.label || `Mois ${index + 1}`}
             </Text>
             <Text style={[
@@ -402,7 +403,7 @@ const ReportsScreen = ({ navigation }: any) => {
       </View>
 
       {monthlySummaries.length === 0 && (
-        <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
+        <Text style={[styles.emptyText, { color: colors.text.secondary }]}>
           Aucune donnée mensuelle
         </Text>
       )}
@@ -411,7 +412,7 @@ const ReportsScreen = ({ navigation }: any) => {
 
   const ChartsSection = () => (
     <View style={styles.chartsSection}>
-      <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+      <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
         Visualisations
       </Text>
       
@@ -446,9 +447,9 @@ const ReportsScreen = ({ navigation }: any) => {
 
   if (loading.overall && !refreshing && isEmpty) {
     return (
-      <View style={[styles.container, isDark && styles.darkContainer, styles.center]}>
+      <View style={[styles.container, { backgroundColor: colors.background.primary }, styles.center]}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={[styles.loadingText, isDark && styles.darkText]}>
+        <Text style={[styles.loadingText, { color: colors.text.primary }]}>
           Chargement des rapports...
         </Text>
       </View>
@@ -457,9 +458,9 @@ const ReportsScreen = ({ navigation }: any) => {
 
   if (error && isEmpty) {
     return (
-      <View style={[styles.container, isDark && styles.darkContainer, styles.center]}>
+      <View style={[styles.container, { backgroundColor: colors.background.primary }, styles.center]}>
         <Ionicons name="alert-circle-outline" size={64} color="#FF3B30" />
-        <Text style={[styles.errorText, isDark && styles.darkText]}>
+        <Text style={[styles.errorText, { color: colors.text.primary }]}>
           {error}
         </Text>
         <TouchableOpacity style={styles.retryButton} onPress={refreshAllData}>
@@ -471,12 +472,12 @@ const ReportsScreen = ({ navigation }: any) => {
 
   if (isEmpty) {
     return (
-      <View style={[styles.container, isDark && styles.darkContainer, styles.center]}>
-        <Ionicons name="stats-chart" size={64} color={isDark ? '#555' : '#ccc'} />
-        <Text style={[styles.emptyText, isDark && styles.darkText]}>
+      <View style={[styles.container, { backgroundColor: colors.background.primary }, styles.center]}>
+        <Ionicons name="stats-chart" size={64} color={colors.text.disabled} />
+        <Text style={[styles.emptyText, { color: colors.text.primary }]}>
           Aucune donnée financière
         </Text>
-        <Text style={[styles.emptySubtext, isDark && styles.darkSubtext]}>
+        <Text style={[styles.emptySubtext, { color: colors.text.secondary }]}>
           Ajoutez des transactions pour voir vos rapports
         </Text>
         <TouchableOpacity 
@@ -490,23 +491,23 @@ const ReportsScreen = ({ navigation }: any) => {
   }
 
   return (
-    <View style={[styles.container, isDark && styles.darkContainer]}>
-      <View style={[styles.header, isDark && styles.darkHeader]}>
+    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
+      <View style={[styles.header, { backgroundColor: colors.background.card, borderBottomColor: colors.border.primary }]}>
         <View style={styles.headerTop}>
-          <Text style={[styles.title, isDark && styles.darkText]}>
+          <Text style={[styles.title, { color: colors.text.primary }]}>
             Rapports
           </Text>
           <TouchableOpacity 
-            style={[styles.periodButton, isDark && styles.darkPeriodButton]}
+            style={[styles.periodButton, { backgroundColor: colors.background.secondary }]}
             onPress={() => setShowPeriodSelector(!showPeriodSelector)}
           >
-            <Text style={[styles.periodButtonText, isDark && styles.darkText]}>
+            <Text style={[styles.periodButtonText, { color: colors.text.primary }]}>
               {currentPeriod?.label || 'Ce mois'}
             </Text>
             <Ionicons 
               name={showPeriodSelector ? "chevron-up" : "chevron-down"} 
               size={16} 
-              color={isDark ? '#888' : '#666'} 
+              color={colors.text.secondary} 
             />
           </TouchableOpacity>
         </View>
@@ -534,7 +535,7 @@ const ReportsScreen = ({ navigation }: any) => {
             refreshing={refreshing} 
             onRefresh={refreshAllData}
             colors={['#007AFF']}
-            tintColor={isDark ? '#007AFF' : '#007AFF'}
+            tintColor={'#007AFF'}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -542,7 +543,7 @@ const ReportsScreen = ({ navigation }: any) => {
       />
 
       <TouchableOpacity 
-        style={[styles.fab, isDark && styles.darkFab]}
+        style={[styles.fab, { backgroundColor: colors.primary[500] }]}
         onPress={() => navigation.navigate('Export')}
       >
         <Ionicons name="download" size={24} color="#fff" />
@@ -555,9 +556,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
-  },
-  darkContainer: {
-    backgroundColor: '#1c1c1e',
   },
   center: {
     justifyContent: 'center',
@@ -574,9 +572,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
-  },
-  darkHeader: {
-    backgroundColor: '#2c2c2e',
   },
   headerTop: {
     flexDirection: 'row',
@@ -598,9 +593,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     gap: 6,
   },
-  darkPeriodButton: {
-    backgroundColor: '#3a3a3c',
-  },
   periodButtonText: {
     fontSize: 14,
     fontWeight: '600',
@@ -616,9 +608,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
-  },
-  darkCard: {
-    backgroundColor: '#2c2c2e',
   },
   periodSelectorTitle: {
     fontSize: 16,
@@ -735,11 +724,6 @@ const styles = StyleSheet.create({
     color: '#000',
     borderWidth: 1,
     borderColor: '#e0e0e0',
-  },
-  darkAmountInput: {
-    backgroundColor: '#3a3a3c',
-    color: '#fff',
-    borderColor: '#38383a',
   },
   resetButton: {
     backgroundColor: '#FF3B30',
@@ -1004,17 +988,8 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  darkFab: {
-    backgroundColor: '#0A84FF',
-  },
   spacer: {
     height: 100,
-  },
-  darkText: {
-    color: '#fff',
-  },
-  darkSubtext: {
-    color: '#888',
   },
 });
 

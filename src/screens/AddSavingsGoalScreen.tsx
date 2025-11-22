@@ -3,20 +3,20 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useState } from 'react';
 import {
-  Alert,
-  Dimensions,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Dimensions,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useCurrency } from '../context/CurrencyContext';
-import { useTheme } from '../context/ThemeContext';
+import { useDesignSystem } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useSavings } from '../hooks/useSavings';
 import { CreateSavingsGoalData, SavingsGoal } from '../types/Savings';
@@ -42,7 +42,7 @@ interface AddSavingsGoalScreenProps {
 }
 
 const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation }) => {
-  const { theme } = useTheme();
+  const { colors } = useDesignSystem();
   const { formatAmount } = useCurrency();
   const { createGoal } = useSavings();
   const { accounts } = useAccounts();
@@ -62,8 +62,6 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const isDark = theme === 'dark';
-
   const savingsAccounts = accounts.filter(acc => acc.type === 'savings');
   const contributionAccounts = accounts.filter(acc => acc.type !== 'savings');
 
@@ -77,7 +75,7 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
     { value: 'other' as const, label: 'Autre', icon: 'flag' },
   ];
 
-  const colors = [
+  const goalColors = [
     '#007AFF', '#34C759', '#FF3B30', '#FF9500', '#5856D6', 
     '#AF52DE', '#FF2D55', '#32D74B', '#FFD60A'
   ];
@@ -191,7 +189,7 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
       >
         {/* ✅ CORRECTION: ScrollView avec défilement complet */}
         <ScrollView 
-          style={[styles.scrollView, isDark && styles.darkContainer]}
+          style={[styles.scrollView, { backgroundColor: colors.background.primary }]}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={true}
           keyboardShouldPersistTaps="handled"
@@ -201,45 +199,45 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
               style={styles.backButton}
               onPress={() => navigation.goBack()}
             >
-              <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#000"} />
+              <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
             </TouchableOpacity>
-            <Text style={[styles.title, isDark && styles.darkText]}>
+            <Text style={[styles.title, { color: colors.text.primary }]}>
               Nouvel Objectif
             </Text>
           </View>
 
           {/* Nom de l'objectif */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, isDark && styles.darkText]}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
               Nom de l'objectif *
             </Text>
             <TextInput
-              style={[styles.input, isDark && styles.darkInput]}
+              style={[styles.input, { backgroundColor: colors.background.card, color: colors.text.primary, borderColor: colors.border.primary }]}
               value={form.name}
               onChangeText={(text) => setForm(prev => ({ ...prev, name: text }))}
               placeholder="Ex: Achat voiture, Vacances..."
-              placeholderTextColor={isDark ? "#888" : "#999"}
+              placeholderTextColor={colors.text.disabled}
             />
           </View>
 
           {/* Montant cible */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, isDark && styles.darkText]}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
               Montant cible *
             </Text>
             <View style={styles.amountContainer}>
               <TextInput
-                style={[styles.input, styles.amountInput, isDark && styles.darkInput]}
+                style={[styles.input, styles.amountInput, { backgroundColor: colors.background.card, color: colors.text.primary, borderColor: colors.border.primary }]}
                 value={form.targetAmount}
                 onChangeText={(value) => handleAmountChange('targetAmount', value)}
                 placeholder="0,00"
-                placeholderTextColor={isDark ? "#888" : "#999"}
+                placeholderTextColor={colors.text.disabled}
                 keyboardType="decimal-pad"
                 returnKeyType="done"
               />
             </View>
             {form.targetAmount && (
-              <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+              <Text style={[styles.hint, { color: colors.text.secondary }]}>
                 {formatDisplayAmount(form.targetAmount)}
               </Text>
             )}
@@ -247,22 +245,22 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
 
           {/* Épargne actuelle */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, isDark && styles.darkText]}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
               Épargne actuelle
             </Text>
             <View style={styles.amountContainer}>
               <TextInput
-                style={[styles.input, styles.amountInput, isDark && styles.darkInput]}
+                style={[styles.input, styles.amountInput, { backgroundColor: colors.background.card, color: colors.text.primary, borderColor: colors.border.primary }]}
                 value={form.currentAmount}
                 onChangeText={(value) => handleAmountChange('currentAmount', value)}
                 placeholder="0,00"
-                placeholderTextColor={isDark ? "#888" : "#999"}
+                placeholderTextColor={colors.text.disabled}
                 keyboardType="decimal-pad"
                 returnKeyType="done"
               />
             </View>
             {form.currentAmount && (
-              <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+              <Text style={[styles.hint, { color: colors.text.secondary }]}>
                 {formatDisplayAmount(form.currentAmount)}
               </Text>
             )}
@@ -270,27 +268,27 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
 
           {/* Contribution mensuelle */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, isDark && styles.darkText]}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
               Contribution mensuelle *
             </Text>
             <View style={styles.amountContainer}>
               <TextInput
-                style={[styles.input, styles.amountInput, isDark && styles.darkInput]}
+                style={[styles.input, styles.amountInput, { backgroundColor: colors.background.card, color: colors.text.primary, borderColor: colors.border.primary }]}
                 value={form.monthlyContribution}
                 onChangeText={(value) => handleAmountChange('monthlyContribution', value)}
                 placeholder="0,00"
-                placeholderTextColor={isDark ? "#888" : "#999"}
+                placeholderTextColor={colors.text.disabled}
                 keyboardType="decimal-pad"
                 returnKeyType="done"
               />
             </View>
             {form.monthlyContribution && (
-              <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+              <Text style={[styles.hint, { color: colors.text.secondary }]}>
                 {formatDisplayAmount(form.monthlyContribution)}
               </Text>
             )}
             {monthsRemaining > 0 && (
-              <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+              <Text style={[styles.hint, { color: colors.text.secondary }]}>
                 Temps estimé: {monthsRemaining} mois
               </Text>
             )}
@@ -298,17 +296,17 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
 
           {/* Date cible */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, isDark && styles.darkText]}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
               Date cible
             </Text>
             <TouchableOpacity 
-              style={[styles.dateButton, isDark && styles.darkInput]}
+              style={[styles.dateButton, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
               onPress={() => setShowDatePicker(true)}
             >
-              <Text style={[styles.dateText, isDark && styles.darkText]}>
+              <Text style={[styles.dateText, { color: colors.text.primary }]}>
                 {form.targetDate.toLocaleDateString('fr-FR')}
               </Text>
-              <Ionicons name="calendar" size={20} color={isDark ? "#fff" : "#666"} />
+              <Ionicons name="calendar" size={20} color={colors.text.secondary} />
             </TouchableOpacity>
             {showDatePicker && (
               <DateTimePicker
@@ -323,7 +321,7 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
 
           {/* Compte d'épargne */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, isDark && styles.darkText]}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
               Compte d'épargne *
             </Text>
             <View style={styles.accountsContainer}>
@@ -333,16 +331,16 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
                   style={[
                     styles.accountButton,
                     form.savingsAccountId === account.id && styles.accountButtonSelected,
-                    isDark && styles.darkAccountButton
+                    { backgroundColor: form.savingsAccountId === account.id ? colors.primary[500] + '20' : colors.background.card, borderColor: colors.border.primary }
                   ]}
                   onPress={() => setForm(prev => ({ ...prev, savingsAccountId: account.id }))}
                 >
                   <View style={[styles.accountColor, { backgroundColor: account.color }]} />
                   <View style={styles.accountInfo}>
-                    <Text style={[styles.accountName, isDark && styles.darkText]}>
+                    <Text style={[styles.accountName, { color: colors.text.primary }]}>
                       {account.name}
                     </Text>
-                    <Text style={[styles.accountBalance, isDark && styles.darkSubtext]}>
+                    <Text style={[styles.accountBalance, { color: colors.text.secondary }]}>
                       {formatAmount(account.balance, false)}
                     </Text>
                   </View>
@@ -353,7 +351,7 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
               ))}
             </View>
             {savingsAccounts.length === 0 && (
-              <Text style={[styles.warningText, isDark && styles.darkSubtext]}>
+              <Text style={[styles.warningText, { color: colors.text.secondary }]}>
                 Aucun compte d'épargne trouvé. Créez d'abord un compte d'épargne.
               </Text>
             )}
@@ -361,7 +359,7 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
 
           {/* Compte source des contributions */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, isDark && styles.darkText]}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
               Compte source des contributions
             </Text>
             <View style={styles.accountsContainer}>
@@ -371,16 +369,16 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
                   style={[
                     styles.accountButton,
                     form.contributionAccountId === account.id && styles.accountButtonSelected,
-                    isDark && styles.darkAccountButton
+                    { backgroundColor: form.contributionAccountId === account.id ? colors.primary[500] + '20' : colors.background.card, borderColor: colors.border.primary }
                   ]}
                   onPress={() => setForm(prev => ({ ...prev, contributionAccountId: account.id }))}
                 >
                   <View style={[styles.accountColor, { backgroundColor: account.color }]} />
                   <View style={styles.accountInfo}>
-                    <Text style={[styles.accountName, isDark && styles.darkText]}>
+                    <Text style={[styles.accountName, { color: colors.text.primary }]}>
                       {account.name}
                     </Text>
-                    <Text style={[styles.accountBalance, isDark && styles.darkSubtext]}>
+                    <Text style={[styles.accountBalance, { color: colors.text.secondary }]}>
                       {formatAmount(account.balance, false)}
                     </Text>
                   </View>
@@ -390,14 +388,14 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
                 </TouchableOpacity>
               ))}
             </View>
-            <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+            <Text style={[styles.hint, { color: colors.text.secondary }]}>
               Sélectionnez le compte depuis lequel les fonds seront transférés
             </Text>
           </View>
 
           {/* Catégorie */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, isDark && styles.darkText]}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
               Catégorie
             </Text>
             <ScrollView 
@@ -412,7 +410,7 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
                   style={[
                     styles.categoryButton,
                     form.category === category.value && styles.categoryButtonSelected,
-                    isDark && styles.darkCategoryButton
+                    { backgroundColor: form.category === category.value ? colors.primary[500] : colors.background.card, borderColor: colors.border.primary }
                   ]}
                   onPress={() => setForm(prev => ({ 
                     ...prev, 
@@ -423,12 +421,12 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
                   <Ionicons 
                     name={category.icon as any} 
                     size={20} 
-                    color={form.category === category.value ? '#fff' : '#666'} 
+                    color={form.category === category.value ? '#fff' : colors.text.secondary} 
                   />
                   <Text style={[
                     styles.categoryText,
                     form.category === category.value && styles.categoryTextSelected,
-                    isDark && styles.darkText
+                    { color: form.category === category.value ? '#fff' : colors.text.primary }
                   ]}>
                     {category.label}
                   </Text>
@@ -439,11 +437,11 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
 
           {/* Couleur */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, isDark && styles.darkText]}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
               Couleur
             </Text>
             <View style={styles.colorsContainer}>
-              {colors.map((color) => (
+              {goalColors.map((color) => (
                 <TouchableOpacity
                   key={color}
                   style={[
@@ -464,11 +462,11 @@ const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation 
           {/* ✅ CORRECTION: Boutons DANS le ScrollView mais avec un espacement approprié */}
           <View style={styles.buttonsContainer}>
             <TouchableOpacity 
-              style={[styles.cancelButton, isDark && styles.darkCancelButton]}
+              style={[styles.cancelButton, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
               onPress={() => navigation.goBack()}
               disabled={loading}
             >
-              <Text style={styles.cancelButtonText}>Annuler</Text>
+              <Text style={[styles.cancelButtonText, { color: colors.text.primary }]}>Annuler</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
@@ -500,9 +498,6 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     backgroundColor: '#f8f9fa',
-  },
-  darkContainer: {
-    backgroundColor: '#1c1c1e',
   },
   scrollContent: {
     flexGrow: 1,
@@ -539,11 +534,6 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 16,
     color: '#000',
-  },
-  darkInput: {
-    backgroundColor: '#2c2c2e',
-    borderColor: '#444',
-    color: '#fff',
   },
   amountContainer: {
     flexDirection: 'row',
@@ -585,10 +575,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
     marginBottom: 4,
-  },
-  darkAccountButton: {
-    backgroundColor: '#2c2c2e',
-    borderColor: '#444',
   },
   accountButtonSelected: {
     borderColor: '#007AFF',
@@ -638,10 +624,6 @@ const styles = StyleSheet.create({
     marginRight: 8,
     minWidth: 120,
   },
-  darkCategoryButton: {
-    backgroundColor: '#333',
-    borderColor: '#555',
-  },
   categoryButtonSelected: {
     backgroundColor: '#007AFF',
     borderColor: '#007AFF',
@@ -689,9 +671,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
   },
-  darkCancelButton: {
-    backgroundColor: '#333',
-  },
   cancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
@@ -714,12 +693,6 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 40,
-  },
-  darkText: {
-    color: '#fff',
-  },
-  darkSubtext: {
-    color: '#888',
   },
 });
 

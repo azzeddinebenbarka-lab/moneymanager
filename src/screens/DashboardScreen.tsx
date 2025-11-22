@@ -27,6 +27,7 @@ import {
 } from 'react-native';
 import DonutChart from '../components/charts/DonutChart';
 import { SafeAreaView } from '../components/SafeAreaView';
+import ListTransactionItem from '../components/transaction/ListTransactionItem';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { useRefresh } from '../context/RefreshContext';
@@ -43,7 +44,6 @@ import { useSmartAlerts } from '../hooks/useSmartAlerts';
 import { useSync } from '../hooks/useSync';
 import { useTransactions } from '../hooks/useTransactions';
 import { calculationService } from '../services/calculationService';
-import resolveCategoryLabel from '../utils/categoryResolver';
 
 const { width } = Dimensions.get('window');
 const HEADER_BG = require('../../assets/images/interfaces/Dashboard.png');
@@ -299,19 +299,19 @@ const NetWorthCard: React.FC<{ netWorthData?: NetWorthData }> = ({ netWorthData 
         <View style={styles.netWorthBreakdown}>
           <View style={styles.breakdownItem}>
             <View style={[styles.breakdownDot, { backgroundColor: colors.functional.income }]} />
-            <Text style={[styles.breakdownLabel, { color: 'rgba(255, 255, 255, 0.8)' }]}>
+            <Text style={[styles.breakdownLabel, { color: colors.text.primary }]}>
               Actifs
             </Text>
-            <Text style={[styles.breakdownValue, { color: colors.text.inverse }]}>
+            <Text style={[styles.breakdownValue, { color: colors.text.primary }]}>
               {formatAmount(totalAssets)}
             </Text>
           </View>
           <View style={styles.breakdownItem}>
             <View style={[styles.breakdownDot, { backgroundColor: colors.functional.expense }]} />
-            <Text style={[styles.breakdownLabel, { color: 'rgba(255, 255, 255, 0.8)' }]}>
+            <Text style={[styles.breakdownLabel, { color: colors.text.primary }]}>
               Passifs
             </Text>
-            <Text style={[styles.breakdownValue, { color: colors.text.inverse }]}>
+            <Text style={[styles.breakdownValue, { color: colors.text.primary }]}>
               {formatAmount(totalLiabilities)}
             </Text>
           </View>
@@ -699,119 +699,13 @@ const DashboardScreen: React.FC = () => {
           {/* Transactions récentes */}
           <View style={[styles.recentCard, { backgroundColor: 'transparent' }]}> 
             <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Transactions Récentes</Text>
-            {(transactions || []).slice(0,6).map((tx: any) => {
-              const isIncome = tx.type === 'income';
-              const iconName = isIncome ? 'cash' : 'cart';
-              const iconBg = isIncome ? 'rgba(46, 204, 113, 0.12)' : 'rgba(255, 77, 79, 0.08)';
-              const amountText = isIncome ? `+ ${formatAmount(Math.abs(tx.amount))}` : `- ${formatAmount(Math.abs(tx.amount))}`;
-              // Determine category and subcategory names (support categories from annual charges, debts, recurring sources)
-              let categoryName = 'Autre';
-              let parentLabel: string | null = null;
-              let childLabel: string | null = null;
-
-              const allCategories = categories || [];
-
-              // Use centralized resolver which accepts id, name or legacy keywords
-              if (tx.subCategory) {
-                const resolved = resolveCategoryLabel(tx.subCategory, allCategories as any);
-                childLabel = resolved.child;
-                parentLabel = resolved.parent || null;
-              }
-
-              if (!childLabel && tx.category) {
-                const resolved = resolveCategoryLabel(tx.category, allCategories as any);
-                childLabel = resolved.child;
-                parentLabel = parentLabel || resolved.parent || null;
-              }
-
-              // annual charge: prefer showing parent category name only when available
-              if (!childLabel) {
-                const foundCharge = (annualCharges || []).find((c: any) => c.id === tx.annualChargeId || c.id === tx.chargeId || c.id === tx.recurringChargeId);
-                if (foundCharge && foundCharge.category) {
-                  const resolved = resolveCategoryLabel(foundCharge.category, allCategories as any);
-                  if (resolved.parent) {
-                    childLabel = resolved.parent;
-                    parentLabel = null;
-                  } else {
-                    childLabel = resolved.child;
-                  }
-                }
-              }
-
-              if (!childLabel) {
-                const foundDebt = (debts || []).find((d: any) => d.id === tx.debtId || d.id === tx.debt);
-                if (foundDebt && foundDebt.category) {
-                  const resolved = resolveCategoryLabel(foundDebt.category, allCategories as any);
-                  childLabel = resolved.child;
-                  parentLabel = parentLabel || resolved.parent || null;
-                }
-              }
-
-              if (!childLabel) {
-                const foundBudget = (budgets || []).find((b: any) => b.id === tx.budgetId || b.category === tx.category || b.subCategory === tx.subCategory);
-                if (foundBudget) {
-                  const resolved = resolveCategoryLabel(foundBudget.category, allCategories as any);
-                  childLabel = resolved.child;
-                  parentLabel = parentLabel || resolved.parent || null;
-                }
-              }
-
-              if (!childLabel) {
-                const foundGoal = (goals || []).find((g: any) => g.id === tx.savingsGoalId || g.category === tx.category);
-                if (foundGoal) {
-                  const resolved = resolveCategoryLabel(foundGoal.category || foundGoal.name, allCategories as any);
-                  childLabel = resolved.child || foundGoal.name || foundGoal.category;
-                  parentLabel = parentLabel || resolved.parent || null;
-                }
-              }
-
-              if (!childLabel && tx.parentTransactionId) {
-                const parentTx = (transactions || []).find((t: any) => t.id === tx.parentTransactionId);
-                if (parentTx) {
-                  const resolved = resolveCategoryLabel(parentTx.category, allCategories as any);
-                  childLabel = resolved.child;
-                  parentLabel = parentLabel || resolved.parent || null;
-                }
-              }
-
-              if (!childLabel) {
-                const resolved = resolveCategoryLabel(tx.category || tx.description, allCategories as any);
-                childLabel = resolved.child || tx.description || 'Autre';
-                parentLabel = parentLabel || resolved.parent || null;
-              }
-
-              categoryName = childLabel;
-
-              return (
-                <TouchableOpacity
-                  key={tx.id}
-                  style={[styles.txItem, { backgroundColor: colors.background.card }]}
-                  activeOpacity={0.9}
-                  onPress={() => (navigation as any).navigate('Transactions')}
-                >
-                  <View style={[styles.txIconBox, { backgroundColor: iconBg }]}> 
-                    <Ionicons name={iconName as any} size={20} color={isIncome ? colors.functional.income : colors.functional.expense} />
-                  </View>
-
-                  <View style={styles.txInfo}> 
-                    <Text style={[styles.txTitle, { color: colors.text.primary }]} numberOfLines={1}>{tx.description || childLabel || categoryName}</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                      {parentLabel ? (
-                        <>
-                          <Text style={[styles.txSubtitle, { color: colors.text.secondary }]} numberOfLines={1}>{parentLabel}</Text>
-                          <Ionicons name="chevron-forward" size={12} color={colors.text.tertiary} />
-                          <Text style={[styles.txSubtitle, { color: colors.text.secondary }]} numberOfLines={1}>{childLabel}</Text>
-                        </>
-                      ) : (
-                        <Text style={[styles.txSubtitle, { color: colors.text.secondary }]} numberOfLines={1}>{childLabel}</Text>
-                      )}
-                    </View>
-                  </View>
-
-                  <Text style={[styles.txAmount, { color: isIncome ? colors.functional.income : colors.functional.expense }]}>{amountText}</Text>
-                </TouchableOpacity>
-              );
-            })}
+            {(transactions || []).slice(0, 6).map((tx: any) => (
+              <ListTransactionItem 
+                key={tx.id}
+                item={tx}
+                onPress={(id) => (navigation as any).navigate('TransactionDetail', { transactionId: id })}
+              />
+            ))}
           </View>
 
         </View>
@@ -1291,49 +1185,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 8,
-  },
-  txItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 12,
-    marginVertical: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  txIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  txDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 12,
-  },
-  txInfo: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  txTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  txSubtitle: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  txAmount: {
-    fontSize: 14,
-    fontWeight: '800',
-    marginLeft: 12,
   },
   spacer: {
     height: 20,

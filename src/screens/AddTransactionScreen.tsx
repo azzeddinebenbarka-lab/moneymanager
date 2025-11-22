@@ -863,7 +863,7 @@ const styles = StyleSheet.create({
   switchThumb: {
     width: 24,
     height: 24,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     transform: [{ translateX: 0 }],
   },
