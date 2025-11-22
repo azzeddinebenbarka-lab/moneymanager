@@ -2,21 +2,21 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  Modal,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    Modal,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { CURRENCIES, useCurrency } from '../context/CurrencyContext';
 import { useRefresh } from '../context/RefreshContext';
-import { useTheme } from '../context/ThemeContext';
+import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { convertCurrency, getAllRates } from '../services/exchangeRateService';
 
 const { width } = Dimensions.get('window');
@@ -30,6 +30,7 @@ interface CurrencyOption {
 
 const CurrencySettingsScreen = ({ navigation }: any) => {
   const { theme } = useTheme();
+  const { colors } = useDesignSystem();
   const { currency, setCurrency } = useCurrency();
   const { triggerRefresh } = useRefresh();
   const isDark = theme === 'dark';
