@@ -1,8 +1,9 @@
 // src/screens/GeneralSettingsScreen.tsx
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
+import { LanguageSelector } from '../components/settings/LanguageSelector';
 import { useCurrency } from '../context/CurrencyContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
 
@@ -10,34 +11,14 @@ export const GeneralSettingsScreen: React.FC<{ navigation: any }> = ({ navigatio
   const { colors } = useDesignSystem();
   const { theme, setTheme } = useTheme();
   const { currentCurrency } = useCurrency();
-  const [language, setLanguage] = useState('Français');
 
   const themeOptions = [
     { value: 'light', label: 'Clair', icon: 'sunny-outline' },
     { value: 'dark', label: 'Sombre', icon: 'moon-outline' },
   ];
 
-  const languageOptions = ['Français', 'English', 'العربية'];
-
   const handleThemeChange = (newTheme: 'light' | 'dark') => {
     setTheme(newTheme);
-  };
-
-  const handleLanguageSelect = (lang: string) => {
-    Alert.alert(
-      'Changer la langue',
-      `Voulez-vous changer la langue en ${lang} ?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Confirmer',
-          onPress: () => {
-            setLanguage(lang);
-            Alert.alert('Succès', 'Langue modifiée avec succès');
-          },
-        },
-      ]
-    );
   };
 
   return (
@@ -91,27 +72,11 @@ export const GeneralSettingsScreen: React.FC<{ navigation: any }> = ({ navigatio
 
         {/* Section Langue */}
         <Text style={[styles.sectionHeader, { color: colors.text.secondary }]}>
-          LANGUE
+          LANGUE / LANGUAGE / اللغة
         </Text>
-        {languageOptions.map((lang) => (
-          <TouchableOpacity
-            key={lang}
-            style={[styles.settingCard, { backgroundColor: colors.background.secondary }]}
-            onPress={() => handleLanguageSelect(lang)}
-          >
-            <View style={[styles.iconContainer, { backgroundColor: colors.primary[100] }]}>
-              <Ionicons name="language-outline" size={24} color={colors.primary[500]} />
-            </View>
-            <View style={styles.settingContent}>
-              <Text style={[styles.settingTitle, { color: colors.text.primary }]}>
-                {lang}
-              </Text>
-            </View>
-            {language === lang && (
-              <Ionicons name="checkmark-circle" size={24} color={colors.primary[500]} />
-            )}
-          </TouchableOpacity>
-        ))}
+        <View style={styles.languageContainer}>
+          <LanguageSelector />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -160,6 +125,9 @@ const styles = StyleSheet.create({
   settingValue: {
     fontSize: 14,
     marginTop: 2,
+  },
+  languageContainer: {
+    marginHorizontal: 16,
   },
 });
 

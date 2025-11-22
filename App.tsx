@@ -17,6 +17,7 @@ import { BiometricLockScreen } from './src/screens/BiometricLockScreen';
 // Context Providers
 import { DatabaseProvider } from './src/context/DatabaseContext';
 import { IslamicSettingsProvider } from './src/context/IslamicSettingsContext'; // ✅ AJOUT
+import { LanguageProvider } from './src/context/LanguageContext'; // ✅ AJOUT
 import { RefreshProvider } from './src/context/RefreshContext'; // ✅ AJOUT
 import { SecurityProvider, useSecurity } from './src/context/SecurityContext'; // ✅ AJOUT
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
@@ -289,24 +290,26 @@ const AppWithProviders = () => {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <CurrencyProvider>
-          <DatabaseProvider>
-            <AuthProvider>
-              {/* ✅ AJOUT : SecurityProvider pour l'authentification biométrique */}
-              <SecurityProvider>
-                {/* ✅ AJOUT : RefreshProvider pour synchronisation globale */}
-                <RefreshProvider>
-                  {/* ✅ AJOUT : IslamicSettingsProvider */}
-                  <IslamicSettingsProvider>
-                    <DatabaseLoader>
-                      <AppNavigation />
-                    </DatabaseLoader>
-                  </IslamicSettingsProvider>
-                </RefreshProvider>
-              </SecurityProvider>
-            </AuthProvider>
-          </DatabaseProvider>
-        </CurrencyProvider>
+        <LanguageProvider>
+          <CurrencyProvider>
+            <DatabaseProvider>
+              <AuthProvider>
+                {/* ✅ AJOUT : SecurityProvider pour l'authentification biométrique */}
+                <SecurityProvider>
+                  {/* ✅ AJOUT : RefreshProvider pour synchronisation globale */}
+                  <RefreshProvider>
+                    {/* ✅ AJOUT : IslamicSettingsProvider */}
+                    <IslamicSettingsProvider>
+                      <DatabaseLoader>
+                        <AppNavigation />
+                      </DatabaseLoader>
+                    </IslamicSettingsProvider>
+                  </RefreshProvider>
+                </SecurityProvider>
+              </AuthProvider>
+            </DatabaseProvider>
+          </CurrencyProvider>
+        </LanguageProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

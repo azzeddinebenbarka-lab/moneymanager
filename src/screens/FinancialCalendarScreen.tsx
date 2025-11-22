@@ -14,6 +14,7 @@ import { useCategories } from '../hooks/useCategories';
 import { useDebts } from '../hooks/useDebts';
 import { useSavings } from '../hooks/useSavings';
 import { useTransactions } from '../hooks/useTransactions';
+import resolveCategoryLabel from '../utils/categoryResolver';
 
 
 export const FinancialCalendarScreen = ({ navigation }: any) => {
@@ -92,17 +93,11 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
 
   // Fonction pour obtenir le nom complet de la catégorie (parent + sous-catégorie)
   const getCategoryName = (categoryId: string, subCategoryId?: string) => {
-    const category = categories.find(c => c.id === categoryId);
-    if (!category) return 'Non catégorisé';
-    
-    if (subCategoryId) {
-      const subCategory = categories.find(c => c.id === subCategoryId);
-      if (subCategory) {
-        return `${category.name} > ${subCategory.name}`;
-      }
+    const resolved = resolveCategoryLabel(subCategoryId || categoryId, categories);
+    if (resolved.parent) {
+      return `${resolved.parent} > ${resolved.child}`;
     }
-    
-    return category.name;
+    return resolved.child;
   };
 
   // Obtenir toutes les opérations du jour sélectionné (transactions + charges + dettes)
@@ -136,7 +131,7 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
           type: 'expense',
           description: c.name,
           amount: c.amount,
-          category: c.category || 'Charges Annuelles',
+          category: c.category ? getCategoryName(c.category) : 'Charges Annuelles',
           date: c.dueDate,
           icon: 'calendar',
           source: 'charge'
@@ -154,7 +149,7 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
             type: 'expense',
             description: d.name,
             amount: d.monthlyPayment,
-            category: d.category || 'Remboursement Dette',
+            category: d.category ? getCategoryName(d.category) : 'Remboursement Dette',
             date: d.nextDueDate,
             icon: 'trending-down',
             source: 'debt'
