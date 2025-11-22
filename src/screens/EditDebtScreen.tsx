@@ -3,13 +3,13 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useCurrency } from '../context/CurrencyContext';
@@ -44,6 +44,7 @@ interface DebtFormData {
 }
 
 const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) => {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const { formatAmount } = useCurrency();
   const { debts, updateDebt, loading } = useDebts();
@@ -116,7 +117,7 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
 
   const handleSave = async () => {
     if (!form.name || !form.initialAmount || !form.currentAmount || !form.monthlyPayment || !form.creditor) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
+      Alert.alert(t.error, 'Veuillez remplir tous les champs obligatoires');
       return;
     }
 
@@ -126,22 +127,22 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
     const interestRate = parseFloat(form.interestRate);
 
     if (isNaN(initialAmount) || initialAmount <= 0) {
-      Alert.alert('Erreur', 'Le montant initial doit être un nombre positif');
+      Alert.alert(t.error, 'Le montant initial doit être un nombre positif');
       return;
     }
 
     if (isNaN(currentAmount) || currentAmount < 0) {
-      Alert.alert('Erreur', 'Le montant actuel doit être un nombre positif');
+      Alert.alert(t.error, 'Le montant actuel doit être un nombre positif');
       return;
     }
 
     if (isNaN(monthlyPayment) || monthlyPayment <= 0) {
-      Alert.alert('Erreur', 'Le paiement mensuel doit être un nombre positif');
+      Alert.alert(t.error, 'Le paiement mensuel doit être un nombre positif');
       return;
     }
 
     if (currentAmount > initialAmount) {
-      Alert.alert('Erreur', 'Le montant actuel ne peut pas être supérieur au montant initial');
+      Alert.alert(t.error, 'Le montant actuel ne peut pas être supérieur au montant initial');
       return;
     }
 
@@ -174,7 +175,7 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
       );
     } catch (error) {
       console.error('❌ [EditDebtScreen] Error updating debt:', error);
-      Alert.alert('Erreur', 'Impossible de modifier la dette');
+      Alert.alert(t.error, 'Impossible de modifier la dette');
     } finally {
       setSaving(false);
     }

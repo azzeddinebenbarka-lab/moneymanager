@@ -116,17 +116,17 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
 
   const handleSave = async () => {
     if (!form.amount || parseFloat(form.amount) <= 0) {
-      Alert.alert('Erreur', 'Veuillez saisir un montant valide');
+      Alert.alert(t.error, 'Veuillez saisir un montant valide');
       return;
     }
 
     if (!form.category) {
-      Alert.alert('Erreur', 'Veuillez sélectionner une catégorie');
+      Alert.alert(t.error, 'Veuillez sélectionner une catégorie');
       return;
     }
 
     if (!form.accountId) {
-      Alert.alert('Erreur', 'Veuillez sélectionner un compte');
+      Alert.alert(t.error, 'Veuillez sélectionner un compte');
       return;
     }
 
@@ -160,7 +160,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
       );
     } catch (error) {
       console.error('Error creating transaction:', error);
-      Alert.alert('Erreur', 'Impossible d\'ajouter la transaction');
+      Alert.alert(t.error, 'Impossible d\'ajouter la transaction');
     } finally {
       setLoading(false);
     }
@@ -281,7 +281,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
             <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
           </TouchableOpacity>
           <Text style={[styles.title, { color: colors.text.primary }]}>
-            {form.isRecurring ? 'Nouvelle Transaction Récurrente' : 'Nouvelle Transaction'}
+            {form.isRecurring ? t.newRecurringTransaction : t.newTransaction}
           </Text>
         </View>
 
@@ -478,7 +478,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
             style={[styles.input, { backgroundColor: colors.background.secondary, color: colors.text.primary }]}
             value={form.description}
             onChangeText={(text) => setForm(prev => ({ ...prev, description: text }))}
-            placeholder="Ajouter une description..."
+            placeholder={t.enterDescription}
             placeholderTextColor={colors.text.disabled}
             multiline
           />

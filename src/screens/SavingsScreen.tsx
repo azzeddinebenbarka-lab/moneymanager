@@ -1,15 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    RefreshControl,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { AddContributionModal } from '../components/savings/AddContributionModal';
@@ -186,7 +186,7 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la suppression';
-      Alert.alert('Erreur', errorMessage, [{ text: 'OK' }]);
+      Alert.alert(t.error, errorMessage, [{ text: 'OK' }]);
     } finally {
       setActionLoading(false);
     }
@@ -196,10 +196,10 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
     setActionLoading(true);
     try {
       await markGoalAsCompleted(goal.id);
-      Alert.alert('Succès', 'Objectif marqué comme terminé !', [{ text: 'OK' }]);
+      Alert.alert(t.success, 'Objectif marqué comme terminé !', [{ text: 'OK' }]);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-      Alert.alert('Erreur', errorMessage, [{ text: 'OK' }]);
+      Alert.alert(t.error, errorMessage, [{ text: 'OK' }]);
     } finally {
       setActionLoading(false);
     }
@@ -403,7 +403,7 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
           <Ionicons name="search" size={20} color="#8E8E93" style={styles.searchIcon} />
           <TextInput
             style={[styles.searchInput, isDark && styles.darkInput]}
-            placeholder="Rechercher un objectif..."
+            placeholder={t.search + '...'}
             placeholderTextColor="#8E8E93"
             value={searchQuery}
             onChangeText={setSearchQuery}

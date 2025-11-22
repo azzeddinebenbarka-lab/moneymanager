@@ -3,13 +3,13 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import DeleteGoalModal from '../components/savings/DeleteGoalModal';
@@ -96,12 +96,12 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
           contributionAccountId: goal.contributionAccountId || '',
         });
       } else {
-        Alert.alert('Erreur', 'Objectif non trouvé');
+        Alert.alert(t.error, 'Objectif non trouvé');
         navigation.goBack();
       }
     } catch (error) {
       console.error('Error loading goal:', error);
-      Alert.alert('Erreur', 'Impossible de charger l\'objectif');
+      Alert.alert(t.error, 'Impossible de charger l\'objectif');
       navigation.goBack();
     } finally {
       setInitialLoading(false);
@@ -148,7 +148,7 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
 
   const handleSave = async () => {
     if (!form.name || !form.targetAmount || !form.monthlyContribution || !form.savingsAccountId) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
+      Alert.alert(t.error, 'Veuillez remplir tous les champs obligatoires');
       return;
     }
 
@@ -157,12 +157,12 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
     const currentAmount = parseFloat(form.currentAmount || '0');
 
     if (isNaN(targetAmount) || targetAmount <= 0) {
-      Alert.alert('Erreur', 'Le montant cible doit être un nombre positif');
+      Alert.alert(t.error, 'Le montant cible doit être un nombre positif');
       return;
     }
 
     if (isNaN(monthlyContribution) || monthlyContribution <= 0) {
-      Alert.alert('Erreur', 'La contribution mensuelle doit être un nombre positif');
+      Alert.alert(t.error, 'La contribution mensuelle doit être un nombre positif');
       return;
     }
 
@@ -188,7 +188,7 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
       );
     } catch (error) {
       console.error('Erreur modification objectif:', error);
-      Alert.alert('Erreur', 'Impossible de modifier l\'objectif');
+      Alert.alert(t.error, 'Impossible de modifier l\'objectif');
     } finally {
       setLoading(false);
     }
@@ -207,7 +207,7 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
       );
     } catch (error) {
       console.error('Erreur suppression objectif:', error);
-      Alert.alert('Erreur', 'Impossible de supprimer l\'objectif');
+      Alert.alert(t.error, 'Impossible de supprimer l\'objectif');
     } finally {
       setDeleteLoading(false);
       setShowDeleteModal(false);
@@ -531,7 +531,7 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
             disabled={loading || !form.name || !form.targetAmount || !form.monthlyContribution || !form.savingsAccountId}
           >
             <Text style={styles.saveButtonText}>
-              {loading ? 'Modification...' : 'Modifier l\'objectif'}
+              {loading ? t.modifying : t.editSavingsGoal}
             </Text>
           </TouchableOpacity>
         </View>

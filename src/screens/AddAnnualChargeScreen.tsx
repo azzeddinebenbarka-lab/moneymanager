@@ -92,18 +92,18 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
 
   const handleSave = async () => {
     if (!form.name || !form.amount || !form.category || !form.dueDate) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
+      Alert.alert(t.error, 'Veuillez remplir tous les champs obligatoires');
       return;
     }
 
     const amount = parseFloat(form.amount.replace(',', '.'));
     if (isNaN(amount) || amount <= 0) {
-      Alert.alert('Erreur', 'Veuillez saisir un montant valide');
+      Alert.alert(t.error, 'Veuillez saisir un montant valide');
       return;
     }
 
     if (form.autoDeduct && !form.accountId) {
-      Alert.alert('Erreur', 'Veuillez sélectionner un compte pour le prélèvement automatique');
+      Alert.alert(t.error, 'Veuillez sélectionner un compte pour le prélèvement automatique');
       return;
     }
 
@@ -138,7 +138,7 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
       );
     } catch (error) {
       console.error('Error creating annual charge:', error);
-      Alert.alert('Erreur', 'Impossible de créer la charge annuelle');
+      Alert.alert(t.error, 'Impossible de créer la charge annuelle');
     } finally {
       setLoading(false);
     }

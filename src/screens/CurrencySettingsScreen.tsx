@@ -15,6 +15,7 @@ import {
     View,
 } from 'react-native';
 import { CURRENCIES, useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useRefresh } from '../context/RefreshContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { convertCurrency, getAllRates } from '../services/exchangeRateService';
@@ -29,6 +30,7 @@ interface CurrencyOption {
 }
 
 const CurrencySettingsScreen = ({ navigation }: any) => {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const { colors } = useDesignSystem();
   const { currency, setCurrency } = useCurrency();
@@ -140,7 +142,7 @@ const CurrencySettingsScreen = ({ navigation }: any) => {
         console.log(`✅ Devise changée en ${selectedCurrency.code}`);
       } catch (error) {
         console.error('❌ Erreur changement devise:', error);
-        Alert.alert('Erreur', 'Impossible de changer la devise.', [{ text: 'OK' }]);
+        Alert.alert(t.error, 'Impossible de changer la devise.', [{ text: 'OK' }]);
       }
     }
   };

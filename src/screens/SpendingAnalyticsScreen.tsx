@@ -1,12 +1,12 @@
 // /src/screens/SpendingAnalyticsScreen.tsx - VERSION CORRIGÉE
 import React, { useState } from 'react';
 import {
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { Header } from '../components/ui/Header';
 import { LoadingScreen } from '../components/ui/LoadingScreen';

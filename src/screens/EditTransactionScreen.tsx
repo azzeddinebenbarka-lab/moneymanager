@@ -48,7 +48,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
   useEffect(() => {
     const loadTransaction = async () => {
       if (!transactionId) {
-        Alert.alert('Erreur', 'Aucune transaction sélectionnée');
+        Alert.alert(t.error, 'Aucune transaction sélectionnée');
         navigation.goBack();
         return;
       }
@@ -60,7 +60,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
         const transaction = await getTransactionById(transactionId);
         
         if (!transaction) {
-          Alert.alert('Erreur', 'Transaction non trouvée');
+          Alert.alert(t.error, 'Transaction non trouvée');
           navigation.goBack();
           return;
         }
@@ -84,7 +84,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
         console.log('✅ Transaction chargée:', transaction);
       } catch (error) {
         console.error('❌ Erreur chargement transaction:', error);
-        Alert.alert('Erreur', 'Impossible de charger la transaction');
+        Alert.alert(t.error, 'Impossible de charger la transaction');
         navigation.goBack();
       } finally {
         setLoading(false);
@@ -97,17 +97,17 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
 
   const handleSave = async () => {
     if (!form.amount || parseFloat(form.amount) <= 0) {
-      Alert.alert('Erreur', 'Veuillez saisir un montant valide');
+      Alert.alert(t.error, 'Veuillez saisir un montant valide');
       return;
     }
 
     if (!form.category) {
-      Alert.alert('Erreur', 'Veuillez sélectionner une catégorie');
+      Alert.alert(t.error, 'Veuillez sélectionner une catégorie');
       return;
     }
 
     if (!form.accountId) {
-      Alert.alert('Erreur', 'Veuillez sélectionner un compte');
+      Alert.alert(t.error, 'Veuillez sélectionner un compte');
       return;
     }
 
@@ -137,7 +137,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
       );
     } catch (error) {
       console.error('❌ Erreur modification transaction:', error);
-      Alert.alert('Erreur', 'Impossible de modifier la transaction');
+      Alert.alert(t.error, 'Impossible de modifier la transaction');
     } finally {
       setSaving(false);
     }
@@ -148,9 +148,9 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
       'Confirmation',
       'Êtes-vous sûr de vouloir supprimer cette transaction ?',
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         { 
-          text: 'Supprimer', 
+          text: t.delete,
           style: 'destructive',
           onPress: async () => {
             try {
@@ -165,7 +165,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
               );
             } catch (error) {
               console.error('❌ Erreur suppression transaction:', error);
-              Alert.alert('Erreur', 'Impossible de supprimer la transaction');
+              Alert.alert(t.error, 'Impossible de supprimer la transaction');
             }
           }
         }
@@ -399,7 +399,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
             style={[styles.input, isDark && styles.darkInput]}
             value={form.description}
             onChangeText={(text) => setForm(prev => ({ ...prev, description: text }))}
-            placeholder="Ajouter une description..."
+            placeholder={t.enterDescription}
             placeholderTextColor={isDark ? "#888" : "#999"}
             multiline
           />

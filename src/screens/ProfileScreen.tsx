@@ -43,7 +43,7 @@ const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
       'Déconnexion',
       'Êtes-vous sûr de vouloir vous déconnecter ?',
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         {
           text: 'Se déconnecter',
           style: 'destructive',

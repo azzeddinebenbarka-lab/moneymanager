@@ -61,12 +61,12 @@ const TransactionDetailScreen = () => {
     if (!transaction) return;
 
     Alert.alert(
-      'Supprimer la transaction',
+      t.deleteTransaction,
       `Êtes-vous sûr de vouloir supprimer cette transaction ?\n\n"${transaction.description || 'Sans description'}"\n${formatAmount(transaction.amount)}`,
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         {
-          text: 'Supprimer',
+          text: t.delete,
           style: 'destructive',
           onPress: async () => {
             try {
@@ -80,7 +80,7 @@ const TransactionDetailScreen = () => {
               
             } catch (error: any) {
               console.error('❌ [TransactionDetailScreen] Erreur suppression:', error);
-              Alert.alert('Erreur', error.message || 'Impossible de supprimer la transaction');
+              Alert.alert(t.error, error.message || 'Impossible de supprimer la transaction');
             }
           },
         },

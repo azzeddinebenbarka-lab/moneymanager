@@ -11,6 +11,7 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 import { notificationService } from '../services/NotificationService';
@@ -30,6 +31,7 @@ interface NotificationPreferences {
 }
 
 export default function NotificationSettingsScreen() {
+  const { t } = useLanguage();
   const { designSystem } = useTheme();
   const { isInitialized, hasPermission } = usePushNotifications();
   
@@ -118,7 +120,7 @@ export default function NotificationSettingsScreen() {
       'Effacer les notifications',
       'Voulez-vous effacer toutes les notifications programmées ?',
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         {
           text: 'Effacer',
           style: 'destructive',
@@ -149,7 +151,7 @@ export default function NotificationSettingsScreen() {
       
       loadScheduledCount();
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de programmer le rappel');
+      Alert.alert(t.error, 'Impossible de programmer le rappel');
     }
   };
 

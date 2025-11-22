@@ -125,41 +125,41 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   const handleSubmit = async (): Promise<void> => {
     if (!formData.name.trim()) {
-      Alert.alert('Erreur', 'Veuillez saisir un nom pour la catégorie');
+      Alert.alert(t.error, 'Veuillez saisir un nom pour la catégorie');
       return;
     }
 
     try {
       if (editingCategory) {
         await updateCategory(editingCategory.id, formData);
-        Alert.alert('Succès', 'Catégorie modifiée avec succès');
+        Alert.alert(t.success, 'Catégorie modifiée avec succès');
       } else {
         await createCategory(formData);
-        Alert.alert('Succès', 'Catégorie créée avec succès');
+        Alert.alert(t.success, 'Catégorie créée avec succès');
       }
       closeModal();
       await loadCategoryTree();
     } catch (error) {
-      Alert.alert('Erreur', error instanceof Error ? error.message : 'Une erreur est survenue');
+      Alert.alert(t.error, error instanceof Error ? error.message : 'Une erreur est survenue');
     }
   };
 
   const handleDelete = (category: Category): void => {
     Alert.alert(
-      'Supprimer la catégorie',
+      t.deleteCategory,
       `Êtes-vous sûr de vouloir supprimer "${category.name}" ?${category.level === 0 ? '\n\nLes sous-catégories associées seront également supprimées.' : ''}`,
       [
-        { text: 'Annuler', style: 'cancel' },
-        { 
-          text: 'Supprimer', 
+        { text: t.cancel, style: 'cancel' },
+        {
+          text: t.delete, 
           style: 'destructive',
           onPress: async () => {
             try {
               await deleteCategory(category.id);
-              Alert.alert('Succès', 'Catégorie supprimée avec succès');
+              Alert.alert(t.success, 'Catégorie supprimée avec succès');
               await loadCategoryTree();
             } catch (error) {
-              Alert.alert('Erreur', error instanceof Error ? error.message : 'Impossible de supprimer la catégorie');
+              Alert.alert(t.error, error instanceof Error ? error.message : 'Impossible de supprimer la catégorie');
             }
           }
         },
@@ -196,7 +196,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         { backgroundColor: item.type === 'income' ? colors.semantic.success : colors.semantic.error }
       ]}>
         <Text style={styles.typeBadgeText}>
-          {item.type === 'income' ? 'Revenu' : 'Dépense'}
+          {item.type === 'income' ? t.income : t.expense}
         </Text>
       </View>
     </TouchableOpacity>
@@ -368,10 +368,10 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.text.primary }]}>
                 {editingCategory 
-                  ? 'Modifier la catégorie' 
+                  ? t.editCategory
                   : selectedParent 
                     ? `Nouvelle sous-catégorie de ${selectedParent.name}`
-                    : 'Nouvelle catégorie principale'
+                    : t.newMainCategory
                 }
               </Text>
               <TouchableOpacity onPress={closeModal}>

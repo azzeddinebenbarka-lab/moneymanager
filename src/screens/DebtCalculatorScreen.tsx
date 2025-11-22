@@ -1,7 +1,7 @@
 // src/screens/DebtCalculatorScreen.tsx - VERSION COMPLÈTE AVEC EXPORT PAR DÉFAUT
 import { useNavigation } from '@react-navigation/native';
 import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Header } from '../components/ui/Header';
 import { useLanguage } from '../context/LanguageContext';
 import { calculateAmortizationSchedule, calculateDebtFreeDate } from '../utils/debtCalculator';

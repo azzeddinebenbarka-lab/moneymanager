@@ -2,12 +2,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { AddContributionModal } from '../components/savings/AddContributionModal';
@@ -52,7 +52,7 @@ const SavingsDetailScreen: React.FC<SavingsDetailScreenProps> = ({ navigation, r
       }
     } catch (error) {
       console.error('Error loading goal data:', error);
-      Alert.alert('Erreur', 'Impossible de charger les données de l\'objectif');
+      Alert.alert(t.error, 'Impossible de charger les données de l\'objectif');
     } finally {
       setLoading(false);
     }
@@ -83,20 +83,20 @@ const SavingsDetailScreen: React.FC<SavingsDetailScreenProps> = ({ navigation, r
     if (!goal) return;
     
     Alert.alert(
-      'Supprimer l\'objectif',
+      t.deleteSavingsGoal,
       `Êtes-vous sûr de vouloir supprimer "${goal.name}" ? Cette action est irréversible.`,
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         { 
-          text: 'Supprimer', 
+          text: t.delete, 
           style: 'destructive',
           onPress: async () => {
             try {
               await deleteGoal(goalId);
               navigation.goBack();
-              Alert.alert('Succès', 'Objectif supprimé avec succès');
+              Alert.alert(t.success, 'Objectif supprimé avec succès');
             } catch (error) {
-              Alert.alert('Erreur', 'Impossible de supprimer l\'objectif');
+              Alert.alert(t.error, 'Impossible de supprimer l\'objectif');
             }
           }
         }

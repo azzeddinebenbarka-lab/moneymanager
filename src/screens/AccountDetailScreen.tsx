@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import AccountForm from '../components/account/AccountForm';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useCategories } from '../hooks/useCategories';
@@ -273,6 +274,7 @@ const TransactionsSection = React.memo(({
 const AccountDetailScreen = () => {
   const navigation = useNavigation<AccountDetailScreenNavigationProp>();
   const route = useRoute<AccountDetailScreenRouteProp>();
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const { colors } = useDesignSystem();
   const { formatAmount } = useCurrency();
@@ -353,12 +355,12 @@ const AccountDetailScreen = () => {
       setShowAccountForm(false);
       
       setTimeout(() => {
-        Alert.alert('Succès', 'Compte modifié avec succès');
+        Alert.alert(t.success, 'Compte modifié avec succès');
       }, 300);
       
     } catch (error) {
       console.error('❌ [AccountDetailScreen] Erreur modification:', error);
-      Alert.alert('Erreur', 'Impossible de modifier le compte');
+      Alert.alert(t.error, 'Impossible de modifier le compte');
     } finally {
       setIsProcessing(false);
     }
@@ -372,9 +374,9 @@ const AccountDetailScreen = () => {
       'Supprimer le compte',
       `Êtes-vous sûr de vouloir supprimer le compte "${account.name}" ?\n\nCette action est irréversible et supprimera toutes les données associées.`,
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         {
-          text: 'Supprimer',
+          text: t.delete,
           style: 'destructive',
           onPress: async () => {
             try {
@@ -390,7 +392,7 @@ const AccountDetailScreen = () => {
               
             } catch (error: any) {
               console.error('❌ [AccountDetailScreen] Erreur suppression:', error);
-              Alert.alert('Erreur', error.message || 'Impossible de supprimer le compte');
+              Alert.alert(t.error, error.message || 'Impossible de supprimer le compte');
             } finally {
               setIsProcessing(false);
             }

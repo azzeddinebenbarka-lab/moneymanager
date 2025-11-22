@@ -3,14 +3,14 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useLanguage } from '../context/LanguageContext';
@@ -35,6 +35,7 @@ interface AnnualChargeFormData {
 
 const EditAnnualChargeScreen = ({ navigation, route }: any) => {
   const { chargeId } = route.params;
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const { accounts } = useAccounts();
   const { categories } = useCategories();
@@ -100,12 +101,12 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
           recurrence: charge.recurrence || 'none',
         });
       } else {
-        Alert.alert('Erreur', 'Charge annuelle non trouvée');
+        Alert.alert(t.error, 'Charge annuelle non trouvée');
         navigation.goBack();
       }
     } catch (error) {
       console.error('Error loading charge:', error);
-      Alert.alert('Erreur', 'Impossible de charger la charge annuelle');
+      Alert.alert(t.error, 'Impossible de charger la charge annuelle');
       navigation.goBack();
     } finally {
       setInitialLoading(false);
@@ -114,18 +115,18 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
 
   const handleSave = async () => {
     if (!form.name || !form.amount || !form.category) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
+      Alert.alert(t.error, 'Veuillez remplir tous les champs obligatoires');
       return;
     }
 
     const amount = parseFloat(form.amount.replace(',', '.'));
     if (isNaN(amount) || amount <= 0) {
-      Alert.alert('Erreur', 'Veuillez saisir un montant valide');
+      Alert.alert(t.error, 'Veuillez saisir un montant valide');
       return;
     }
 
     if (form.autoDeduct && !form.accountId) {
-      Alert.alert('Erreur', 'Veuillez sélectionner un compte pour le prélèvement automatique');
+      Alert.alert(t.error, 'Veuillez sélectionner un compte pour le prélèvement automatique');
       return;
     }
 
@@ -153,7 +154,7 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
       );
     } catch (error) {
       console.error('❌ [EditAnnualChargeScreen] Error updating charge:', error);
-      Alert.alert('Erreur', 'Impossible de modifier la charge annuelle');
+      Alert.alert(t.error, 'Impossible de modifier la charge annuelle');
     } finally {
       setLoading(false);
     }

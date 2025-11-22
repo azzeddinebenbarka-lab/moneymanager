@@ -1,12 +1,12 @@
 // src/screens/DebtAnalyticsScreen.tsx - VERSION COMPLÈTEMENT CORRIGÉE
 import React from 'react';
 import {
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { Header } from '../components/ui/Header';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
@@ -32,6 +32,7 @@ interface ExtendedUserData {
 }
 
 const DebtAnalyticsScreen = ({ navigation }: any) => {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const { debtAnalytics: rawDebtAnalytics, userData: rawUserData } = useAdvancedAnalytics();
   const [refreshing, setRefreshing] = React.useState(false);

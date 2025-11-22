@@ -1,11 +1,11 @@
 // src/screens/NetWorthScreen.tsx - VERSION COMPLÈTEMENT CORRIGÉE
 import React, { useMemo } from 'react';
 import {
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
 import { AssetAllocationChart } from '../components/analytics/AssetAllocationChart';
 import { FinancialSummaryCard } from '../components/analytics/FinancialSummaryCard';
@@ -31,6 +31,7 @@ interface AssetAllocationData {
 }
 
 export const NetWorthScreen: React.FC = () => {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   

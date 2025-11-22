@@ -36,7 +36,7 @@ const ExportScreen = () => {
         [{ text: 'OK' }]
       );
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible d\'exporter les données');
+      Alert.alert(t.error, 'Impossible d\'exporter les données');
     } finally {
       setExporting(false);
       setExportFormat(null);

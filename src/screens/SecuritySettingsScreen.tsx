@@ -61,7 +61,7 @@ export const SecuritySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
         );
       }
     } catch (error: any) {
-      Alert.alert('Erreur', error?.message || 'Impossible d\'activer la sécurité');
+      Alert.alert(t.error, error?.message || 'Impossible d\'activer la sécurité');
     } finally {
       setIsUpdating(false);
     }
@@ -74,7 +74,7 @@ export const SecuritySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
       setIsUpdating(true);
       await toggleAutoLock(value);
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de modifier le verrouillage automatique');
+      Alert.alert(t.error, 'Impossible de modifier le verrouillage automatique');
     } finally {
       setIsUpdating(false);
     }
@@ -85,14 +85,14 @@ export const SecuritySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
       'Délai de verrouillage',
       `Verrouiller après ${timeout === 0 ? 'sortie immédiate' : timeout === 1 ? '1 minute' : timeout < 60 ? `${timeout} minutes` : '1 heure'} ?`,
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         {
           text: 'Confirmer',
           onPress: async () => {
             try {
               await setAutoLockTimeout(timeout);
             } catch (error) {
-              Alert.alert('Erreur', 'Impossible de modifier le délai');
+              Alert.alert(t.error, 'Impossible de modifier le délai');
             }
           }
         }

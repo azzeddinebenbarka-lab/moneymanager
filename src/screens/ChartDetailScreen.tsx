@@ -1,6 +1,6 @@
 // src/screens/ChartDetailScreen.tsx
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useLanguage } from '../context/LanguageContext';
 
 export const ChartDetailScreen = () => {

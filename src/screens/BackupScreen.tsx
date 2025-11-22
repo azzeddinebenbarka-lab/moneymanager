@@ -67,7 +67,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         );
       }
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de modifier les paramètres');
+      Alert.alert(t.error, 'Impossible de modifier les paramètres');
     }
   };
 
@@ -77,7 +77,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         'Créer une sauvegarde',
         'Voulez-vous créer une sauvegarde complète de vos données ?',
         [
-          { text: 'Annuler', style: 'cancel' },
+          { text: t.cancel, style: 'cancel' },
           {
             text: 'Créer',
             onPress: async () => {
@@ -116,7 +116,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         'Export JSON',
         'Exporter toutes les données au format JSON ?',
         [
-          { text: 'Annuler', style: 'cancel' },
+          { text: t.cancel, style: 'cancel' },
           {
             text: 'Exporter',
             onPress: async () => {
@@ -132,11 +132,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     });
                   }
                   
-                  Alert.alert(
-                    'Export réussi',
-                    `${result.recordsCount || 0} enregistrements exportés`,
-                    [{ text: 'OK' }]
-                  );
+                  Alert.alert(t.success, 'Export terminé', [{ text: 'OK' }]);
                 }
               } catch (error) {
                 Alert.alert(
@@ -159,7 +155,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         'Export CSV',
         'Exporter les transactions au format CSV ?',
         [
-          { text: 'Annuler', style: 'cancel' },
+          { text: t.cancel, style: 'cancel' },
           {
             text: 'Exporter',
             onPress: async () => {
@@ -175,11 +171,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     });
                   }
                   
-                  Alert.alert(
-                    'Export réussi',
-                    `${result.recordsCount || 0} transactions exportées`,
-                    [{ text: 'OK' }]
-                  );
+                  Alert.alert(t.success, 'Export terminé', [{ text: 'OK' }]);
                 }
               } catch (error) {
                 Alert.alert(
@@ -202,7 +194,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         'Importer des données',
         'Cette fonctionnalité remplacera vos données actuelles. Créez une sauvegarde avant de continuer.',
         [
-          { text: 'Annuler', style: 'cancel' },
+          { text: t.cancel, style: 'cancel' },
           {
             text: 'Continuer',
             style: 'destructive',

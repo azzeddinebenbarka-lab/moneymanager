@@ -138,8 +138,8 @@ const MonthDetailScreen: React.FC = () => {
 
   const handleDeleteTransaction = (transactionId: string, description?: string) => {
     Alert.alert('Supprimer la transaction', `Voulez-vous supprimer \"${description || ''}\" ?`, [
-      { text: 'Annuler', style: 'cancel' },
-      { text: 'Supprimer', style: 'destructive', onPress: async () => {
+      { text: t.cancel, style: 'cancel' },
+      { text: t.delete, style: 'destructive', onPress: async () => {
         try {
           await deleteTransaction(transactionId);
           await loadMonthData();

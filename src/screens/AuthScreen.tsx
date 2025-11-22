@@ -27,32 +27,32 @@ const AuthScreen = () => {
     if (isSettingUp) {
       // Mode configuration
       if (pin.length !== 4) {
-        Alert.alert('Erreur', 'Le PIN doit contenir 4 chiffres');
+        Alert.alert(t.error, 'Le PIN doit contenir 4 chiffres');
         return;
       }
       if (pin !== confirmPin) {
-        Alert.alert('Erreur', 'Les PIN ne correspondent pas');
+        Alert.alert(t.error, 'Les PIN ne correspondent pas');
         setConfirmPin('');
         return;
       }
       // Stocker le PIN (version temporaire)
       localStorage.setItem('user_pin', pin);
-      Alert.alert('Succès', 'PIN configuré avec succès');
+      Alert.alert(t.success, 'PIN configuré avec succès');
       setPin('');
       setConfirmPin('');
       setIsSettingUp(false);
     } else {
       // Mode connexion
       if (pin.length !== 4) {
-        Alert.alert('Erreur', 'Le PIN doit contenir 4 chiffres');
+        Alert.alert(t.error, 'Le PIN doit contenir 4 chiffres');
         return;
       }
       const storedPin = localStorage.getItem('user_pin');
       if (pin === storedPin) {
-        Alert.alert('Succès', 'Connexion réussie');
+        Alert.alert(t.success, 'Connexion réussie');
         // Navigation vers l'app principale
       } else {
-        Alert.alert('Erreur', 'PIN incorrect');
+        Alert.alert(t.error, 'PIN incorrect');
         setPin('');
       }
     }

@@ -156,9 +156,9 @@ export const AnnualChargesScreen: React.FC = () => {
       '🗑️ Supprimer la charge',
       `Êtes-vous sûr de vouloir supprimer "${chargeName}" ?\n\n⚠️ Note: Seules les charges du mois courant peuvent être supprimées.\n\n✅ Si la charge était payée :\n  • Le compte sera remboursé automatiquement\n  • La transaction sera supprimée\n  • Toutes les pages seront mises à jour`,
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         {
-          text: 'Supprimer',
+          text: t.delete,
           style: 'destructive',
           onPress: async () => {
             try {
@@ -214,7 +214,7 @@ export const AnnualChargesScreen: React.FC = () => {
       
     } catch (error) {
       console.error('❌ Erreur toggle islamic charges:', error);
-      Alert.alert('Erreur', 'Impossible de modifier les paramètres islamiques');
+      Alert.alert(t.error, 'Impossible de modifier les paramètres islamiques');
     }
   };
 
@@ -452,7 +452,7 @@ export const AnnualChargesScreen: React.FC = () => {
               '💰 Prélèvement Automatique',
               'Traiter automatiquement toutes les charges récurrentes (annuelles + islamiques) avec prélèvement automatique activé ?',
               [
-                { text: 'Annuler', style: 'cancel' },
+                { text: t.cancel, style: 'cancel' },
                 {
                   text: 'Traiter',
                   onPress: async () => {

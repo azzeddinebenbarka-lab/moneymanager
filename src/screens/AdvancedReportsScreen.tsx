@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { FinancialSummaryCard } from '../components/analytics/FinancialSummaryCard';
 import { NetWorthChart } from '../components/analytics/NetWorthChart';
+import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useAdvancedAnalytics } from '../hooks/useAdvancedAnalytics';
 import { CashFlowData, CategoryBreakdown, MonthlyTrend, NetWorthData } from '../types/Analytics';
@@ -98,6 +99,7 @@ const LoadingScreen = ({ colors }: { colors: any }) => (
 );
 
 export const AdvancedReportsScreen = ({ navigation }: any) => {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const { colors } = useDesignSystem();
   const {

@@ -197,7 +197,7 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
       }
     } catch (error) {
       console.error('Erreur création catégories:', error);
-      Alert.alert('Erreur', 'Impossible de créer les catégories');
+      Alert.alert(t.error, 'Impossible de créer les catégories');
     } finally {
       setLoading(false);
     }

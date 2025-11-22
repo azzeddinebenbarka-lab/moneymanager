@@ -69,7 +69,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
       setPayments(paymentData || []);
     } catch (error) {
       console.error('Error loading debt data:', error);
-      Alert.alert('Erreur', 'Impossible de charger les données de la dette');
+      Alert.alert(t.error, 'Impossible de charger les données de la dette');
     } finally {
       setLoading(false);
     }
@@ -77,18 +77,18 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
 
   const handleMakePayment = async () => {
     if (!debt || !paymentAmount || !selectedAccountId) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs');
+      Alert.alert(t.error, 'Veuillez remplir tous les champs');
       return;
     }
 
     const amount = parseFloat(paymentAmount);
     if (isNaN(amount) || amount <= 0) {
-      Alert.alert('Erreur', 'Montant invalide');
+      Alert.alert(t.error, 'Montant invalide');
       return;
     }
 
     if (amount > debt.currentAmount) {
-      Alert.alert('Erreur', 'Le montant ne peut pas dépasser le solde restant');
+      Alert.alert(t.error, 'Le montant ne peut pas dépasser le solde restant');
       return;
     }
 
@@ -101,7 +101,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
     try {
       await makePayment(debtId, amount, selectedAccountId);
       
-      Alert.alert('Succès', 'Paiement effectué avec succès');
+      Alert.alert(t.success, 'Paiement effectué avec succès');
       setShowPaymentForm(false);
       setPaymentAmount('');
       setSelectedAccountId('');
@@ -109,7 +109,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
       await refreshDebts();
     } catch (error: any) {
       console.error('Error making payment:', error);
-      Alert.alert('Erreur', error.message || 'Impossible d\'effectuer le paiement');
+      Alert.alert(t.error, error.message || 'Impossible d\'effectuer le paiement');
     } finally {
       setPaymentLoading(false);
     }
@@ -122,16 +122,16 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
       'Supprimer la dette',
       `Êtes-vous sûr de vouloir supprimer la dette "${debt.name}" ?\n\nCette action est irréversible.`,
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         {
-          text: 'Supprimer',
+          text: t.delete,
           style: 'destructive',
           onPress: async () => {
             try {
               await deleteDebt(debtId);
               navigation.goBack();
             } catch (error: any) {
-              Alert.alert('Erreur', error.message || 'Impossible de supprimer la dette');
+              Alert.alert(t.error, error.message || 'Impossible de supprimer la dette');
             }
           },
         },

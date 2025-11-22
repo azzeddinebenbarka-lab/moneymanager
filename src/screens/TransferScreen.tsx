@@ -2,14 +2,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -39,12 +39,12 @@ const TransferScreen = ({ navigation, route }: any) => {
 
   const handleTransfer = async () => {
     if (!transferData.fromAccountId || !transferData.toAccountId) {
-      Alert.alert('Erreur', 'Veuillez sélectionner les comptes source et destination');
+      Alert.alert(t.error, 'Veuillez sélectionner les comptes source et destination');
       return;
     }
 
     if (!transferData.amount || parseFloat(transferData.amount) <= 0) {
-      Alert.alert('Erreur', 'Veuillez saisir un montant valide');
+      Alert.alert(t.error, 'Veuillez saisir un montant valide');
       return;
     }
 

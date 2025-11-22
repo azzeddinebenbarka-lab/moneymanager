@@ -3,13 +3,13 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useState } from 'react';
 import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useCurrency } from '../context/CurrencyContext';
@@ -76,7 +76,7 @@ const AddDebtScreen = ({ navigation }: any) => {
 
   const handleSave = async () => {
     if (!form.name || !form.initialAmount || !form.monthlyPayment || !form.creditor) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
+      Alert.alert(t.error, 'Veuillez remplir tous les champs obligatoires');
       return;
     }
 
@@ -85,17 +85,17 @@ const AddDebtScreen = ({ navigation }: any) => {
     const interestRate = parseFloat(form.interestRate);
 
     if (isNaN(initialAmount) || initialAmount <= 0) {
-      Alert.alert('Erreur', 'Le montant initial doit être un nombre positif');
+      Alert.alert(t.error, 'Le montant initial doit être un nombre positif');
       return;
     }
 
     if (isNaN(monthlyPayment) || monthlyPayment <= 0) {
-      Alert.alert('Erreur', 'Le paiement mensuel doit être un nombre positif');
+      Alert.alert(t.error, 'Le paiement mensuel doit être un nombre positif');
       return;
     }
 
     if (monthlyPayment > initialAmount) {
-      Alert.alert('Erreur', 'Le paiement mensuel ne peut pas être supérieur au montant initial');
+      Alert.alert(t.error, 'Le paiement mensuel ne peut pas être supérieur au montant initial');
       return;
     }
 
@@ -127,7 +127,7 @@ const AddDebtScreen = ({ navigation }: any) => {
       );
     } catch (error) {
       console.error('❌ [AddDebtScreen] Error creating debt:', error);
-      Alert.alert('Erreur', 'Impossible d\'ajouter la dette');
+      Alert.alert(t.error, 'Impossible d\'ajouter la dette');
     } finally {
       setLoading(false);
     }

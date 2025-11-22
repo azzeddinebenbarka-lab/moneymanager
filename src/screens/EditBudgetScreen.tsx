@@ -2,13 +2,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useLanguage } from '../context/LanguageContext';
@@ -54,13 +54,13 @@ const EditBudgetScreen = ({ navigation, route }: any) => {
         });
       }
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de charger le budget');
+      Alert.alert(t.error, 'Impossible de charger le budget');
     }
   };
 
   const handleSave = async () => {
     if (!form.name || !form.category || !form.amount || parseFloat(form.amount) <= 0) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
+      Alert.alert(t.error, 'Veuillez remplir tous les champs obligatoires');
       return;
     }
 
@@ -85,7 +85,7 @@ const EditBudgetScreen = ({ navigation, route }: any) => {
         }]
       );
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de modifier le budget');
+      Alert.alert(t.error, 'Impossible de modifier le budget');
     } finally {
       setLoading(false);
     }
@@ -256,7 +256,7 @@ const EditBudgetScreen = ({ navigation, route }: any) => {
             disabled={loading || !form.name || !form.category || !form.amount || !form.startDate}
           >
             <Text style={styles.saveButtonText}>
-              {loading ? 'Enregistrement...' : 'Enregistrer'}
+              {loading ? t.saving : t.save}
             </Text>
           </TouchableOpacity>
         </View>

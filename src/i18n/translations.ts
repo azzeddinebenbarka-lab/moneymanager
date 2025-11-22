@@ -17,6 +17,8 @@ export interface Translations {
   edit: string;
   delete: string;
   save: string;
+  saving: string;
+  modifying: string;
   cancel: string;
   confirm: string;
   search: string;
@@ -34,6 +36,8 @@ export interface Translations {
   
   // Transactions
   newTransaction: string;
+  newRecurringTransaction: string;
+  deleteTransaction: string;
   income: string;
   expense: string;
   transfer: string;
@@ -64,11 +68,18 @@ export interface Translations {
   // Catégories
   myCategories: string;
   addCategory: string;
+  editCategory: string;
+  deleteCategory: string;
+  newCategory: string;
+  newMainCategory: string;
   parentCategory: string;
   subCategory: string;
   
   // Épargne
   savingsGoals: string;
+  newSavingsGoal: string;
+  editSavingsGoal: string;
+  deleteSavingsGoal: string;
   goalName: string;
   targetAmount: string;
   currentAmount: string;
@@ -239,6 +250,8 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     edit: 'Modifier',
     delete: 'Supprimer',
     save: 'Enregistrer',
+    saving: 'Enregistrement...',
+    modifying: 'Modification...',
     cancel: 'Annuler',
     confirm: 'Confirmer',
     search: 'Rechercher',
@@ -256,6 +269,8 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     
     // Transactions
     newTransaction: 'Nouvelle Transaction',
+    newRecurringTransaction: 'Nouvelle Transaction Récurrente',
+    deleteTransaction: 'Supprimer la transaction',
     income: 'Revenu',
     expense: 'Dépense',
     transfer: 'Transfert',
@@ -286,11 +301,18 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     // Catégories
     myCategories: 'Mes Catégories',
     addCategory: 'Ajouter une Catégorie',
+    editCategory: 'Modifier la catégorie',
+    deleteCategory: 'Supprimer la catégorie',
+    newCategory: 'Nouvelle catégorie',
+    newMainCategory: 'Nouvelle catégorie principale',
     parentCategory: 'Catégorie Parente',
     subCategory: 'Sous-catégorie',
     
     // Épargne
     savingsGoals: 'Objectifs d\'Épargne',
+    newSavingsGoal: 'Nouvel objectif d\'épargne',
+    editSavingsGoal: 'Modifier l\'objectif',
+    deleteSavingsGoal: 'Supprimer l\'objectif',
     goalName: 'Nom de l\'Objectif',
     targetAmount: 'Montant Cible',
     currentAmount: 'Montant Actuel',
@@ -460,6 +482,8 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     edit: 'Edit',
     delete: 'Delete',
     save: 'Save',
+    saving: 'Saving...',
+    modifying: 'Modifying...',
     cancel: 'Cancel',
     confirm: 'Confirm',
     search: 'Search',
@@ -477,6 +501,8 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     
     // Transactions
     newTransaction: 'New Transaction',
+    newRecurringTransaction: 'New Recurring Transaction',
+    deleteTransaction: 'Delete transaction',
     income: 'Income',
     expense: 'Expense',
     transfer: 'Transfer',
@@ -507,11 +533,18 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     // Categories
     myCategories: 'My Categories',
     addCategory: 'Add Category',
+    editCategory: 'Edit category',
+    deleteCategory: 'Delete category',
+    newCategory: 'New category',
+    newMainCategory: 'New main category',
     parentCategory: 'Parent Category',
     subCategory: 'Sub-category',
     
     // Savings
     savingsGoals: 'Savings Goals',
+    newSavingsGoal: 'New savings goal',
+    editSavingsGoal: 'Edit goal',
+    deleteSavingsGoal: 'Delete goal',
     goalName: 'Goal Name',
     targetAmount: 'Target Amount',
     currentAmount: 'Current Amount',
@@ -676,11 +709,13 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     settings: 'الإعدادات',
     profile: 'الملف الشخصي',
     
-    // إجراءات شائعة
+    // الإجراءات الشائعة
     add: 'إضافة',
     edit: 'تعديل',
     delete: 'حذف',
     save: 'حفظ',
+    saving: 'جاري الحفظ...',
+    modifying: 'جاري التعديل...',
     cancel: 'إلغاء',
     confirm: 'تأكيد',
     search: 'بحث',
@@ -698,6 +733,8 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     
     // المعاملات
     newTransaction: 'معاملة جديدة',
+    newRecurringTransaction: 'معاملة متكررة جديدة',
+    deleteTransaction: 'حذف المعاملة',
     income: 'دخل',
     expense: 'مصروف',
     transfer: 'تحويل',
@@ -728,11 +765,18 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     // الفئات
     myCategories: 'فئاتي',
     addCategory: 'إضافة فئة',
+    editCategory: 'تعديل الفئة',
+    deleteCategory: 'حذف الفئة',
+    newCategory: 'فئة جديدة',
+    newMainCategory: 'فئة رئيسية جديدة',
     parentCategory: 'الفئة الرئيسية',
     subCategory: 'الفئة الفرعية',
     
     // المدخرات
     savingsGoals: 'أهداف الادخار',
+    newSavingsGoal: 'هدف ادخار جديد',
+    editSavingsGoal: 'تعديل الهدف',
+    deleteSavingsGoal: 'حذف الهدف',
     goalName: 'اسم الهدف',
     targetAmount: 'المبلغ المستهدف',
     currentAmount: 'المبلغ الحالي',

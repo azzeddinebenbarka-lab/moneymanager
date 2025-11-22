@@ -62,7 +62,7 @@ const AccountsScreen = ({ navigation }: any) => {
       setEditingAccount(null);
       await refreshAccounts();
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de créer le compte');
+      Alert.alert(t.error, 'Impossible de créer le compte');
     }
   };
 
@@ -74,7 +74,7 @@ const AccountsScreen = ({ navigation }: any) => {
       setEditingAccount(null);
       await refreshAccounts();
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de modifier le compte');
+      Alert.alert(t.error, 'Impossible de modifier le compte');
     }
   };
 
@@ -83,9 +83,9 @@ const AccountsScreen = ({ navigation }: any) => {
       'Supprimer le compte',
       `Êtes-vous sûr de vouloir supprimer le compte "${account.name}" ?\n\nCette action est irréversible.`,
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         {
-          text: 'Supprimer',
+          text: t.delete,
           style: 'destructive',
           onPress: async () => {
             try {

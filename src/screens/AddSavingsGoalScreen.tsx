@@ -108,7 +108,7 @@ export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navi
 
   const handleSave = async () => {
     if (!form.name || !form.targetAmount || !form.monthlyContribution || !form.savingsAccountId) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
+      Alert.alert(t.error, 'Veuillez remplir tous les champs obligatoires');
       return;
     }
 
@@ -117,17 +117,17 @@ export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navi
     const currentAmount = parseFloat(form.currentAmount || '0');
 
     if (isNaN(targetAmount) || targetAmount <= 0) {
-      Alert.alert('Erreur', 'Le montant cible doit être un nombre positif');
+      Alert.alert(t.error, 'Le montant cible doit être un nombre positif');
       return;
     }
 
     if (isNaN(monthlyContribution) || monthlyContribution <= 0) {
-      Alert.alert('Erreur', 'La contribution mensuelle doit être un nombre positif');
+      Alert.alert(t.error, 'La contribution mensuelle doit être un nombre positif');
       return;
     }
 
     if (isNaN(currentAmount) || currentAmount < 0) {
-      Alert.alert('Erreur', 'L\'épargne actuelle doit être un nombre positif ou zéro');
+      Alert.alert(t.error, 'L\'épargne actuelle doit être un nombre positif ou zéro');
       return;
     }
 
@@ -154,7 +154,7 @@ export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navi
       );
     } catch (error) {
       console.error('Erreur création objectif:', error);
-      Alert.alert('Erreur', 'Impossible de créer l\'objectif d\'épargne');
+      Alert.alert(t.error, 'Impossible de créer l\'objectif d\'épargne');
     } finally {
       setLoading(false);
     }

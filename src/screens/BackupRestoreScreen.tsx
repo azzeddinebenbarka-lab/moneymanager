@@ -1,14 +1,14 @@
 // src/screens/BackupRestoreScreen.tsx - VERSION CORRIGÉE
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
@@ -69,7 +69,7 @@ export const BackupRestoreScreen: React.FC = () => {
 
     } catch (error) {
       console.error('Error loading backup data:', error);
-      Alert.alert('Erreur', 'Impossible de charger les sauvegardes');
+      Alert.alert(t.error, 'Impossible de charger les sauvegardes');
     } finally {
       setIsLoading(false);
     }
@@ -91,10 +91,10 @@ export const BackupRestoreScreen: React.FC = () => {
               });
               
               if (result.success) {
-                Alert.alert('Succès', 'Sauvegarde locale créée avec succès');
+                Alert.alert(t.success, 'Sauvegarde locale créée avec succès');
                 await loadBackupData();
               } else {
-                Alert.alert('Erreur', result.error || 'Échec de la sauvegarde');
+                Alert.alert(t.error, result.error || 'Échec de la sauvegarde');
               }
             },
           },
@@ -105,24 +105,24 @@ export const BackupRestoreScreen: React.FC = () => {
               if (localResult.success && localResult.filePath) {
                 const cloudResult = await backup.backupToCloud(localResult.filePath);
                 if (cloudResult.success) {
-                  Alert.alert('Succès', 'Sauvegarde locale et cloud créée avec succès');
+                  Alert.alert(t.success, 'Sauvegarde locale et cloud créée avec succès');
                 } else {
-                  Alert.alert('Succès partiel', 'Sauvegarde locale créée, mais échec cloud');
+                  Alert.alert(t.success + ' partiel', 'Sauvegarde locale créée, mais échec cloud');
                 }
                 await loadBackupData();
               } else {
-                Alert.alert('Erreur', localResult.error || 'Échec de la sauvegarde locale');
+                Alert.alert(t.error, localResult.error || 'Échec de la sauvegarde locale');
               }
             },
           },
           {
-            text: 'Annuler',
+            text: t.cancel,
             style: 'cancel',
           },
         ]
       );
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de créer la sauvegarde');
+      Alert.alert(t.error, 'Impossible de créer la sauvegarde');
     }
   };
 
@@ -131,7 +131,7 @@ export const BackupRestoreScreen: React.FC = () => {
       'Restaurer la sauvegarde',
       `Êtes-vous sûr de vouloir restaurer "${backupItem.fileName}" ?\n\nCette action écrasera vos données actuelles.`,
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         {
           text: 'Sauvegarder et restaurer',
           onPress: async () => {
@@ -146,13 +146,13 @@ export const BackupRestoreScreen: React.FC = () => {
               
               if (result.success) {
                 // ✅ CORRECTION : Utiliser un message générique au lieu de restoredRecords
-                Alert.alert('Succès', 'Sauvegarde restaurée avec succès');
+                Alert.alert(t.success, 'Sauvegarde restaurée avec succès');
                 await loadBackupData();
               } else {
-                Alert.alert('Erreur', result.error || 'Échec de la restauration');
+                Alert.alert(t.error, result.error || 'Échec de la restauration');
               }
             } catch (error) {
-              Alert.alert('Erreur', 'Impossible de restaurer la sauvegarde');
+              Alert.alert(t.error, 'Impossible de restaurer la sauvegarde');
             }
           },
         },
@@ -164,13 +164,13 @@ export const BackupRestoreScreen: React.FC = () => {
               const result = await backup.restoreBackup(backupItem.filePath);
               if (result.success) {
                 // ✅ CORRECTION : Utiliser un message générique au lieu de restoredRecords
-                Alert.alert('Succès', 'Sauvegarde restaurée avec succès');
+                Alert.alert(t.success, 'Sauvegarde restaurée avec succès');
                 await loadBackupData();
               } else {
-                Alert.alert('Erreur', result.error || 'Échec de la restauration');
+                Alert.alert(t.error, result.error || 'Échec de la restauration');
               }
             } catch (error) {
-              Alert.alert('Erreur', 'Impossible de restaurer la sauvegarde');
+              Alert.alert(t.error, 'Impossible de restaurer la sauvegarde');
             }
           },
         },
@@ -180,24 +180,24 @@ export const BackupRestoreScreen: React.FC = () => {
 
   const handleDeleteBackup = async (backupItem: BackupItem) => {
     Alert.alert(
-      'Supprimer la sauvegarde',
+      t.delete + ' la sauvegarde',
       `Êtes-vous sûr de vouloir supprimer "${backupItem.fileName}" ?`,
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         {
-          text: 'Supprimer',
+          text: t.delete,
           style: 'destructive',
           onPress: async () => {
             try {
               const result = await LocalBackupService.deleteBackup(backupItem.filePath);
               if (result.success) {
                 await loadBackupData();
-                Alert.alert('Succès', 'Sauvegarde supprimée');
+                Alert.alert(t.success, 'Sauvegarde supprimée');
               } else {
-                Alert.alert('Erreur', result.error || 'Impossible de supprimer la sauvegarde');
+                Alert.alert(t.error, result.error || 'Impossible de supprimer la sauvegarde');
               }
             } catch (error) {
-              Alert.alert('Erreur', 'Impossible de supprimer la sauvegarde');
+              Alert.alert(t.error, 'Impossible de supprimer la sauvegarde');
             }
           },
         },
@@ -216,7 +216,7 @@ export const BackupRestoreScreen: React.FC = () => {
         await CloudBackupService.scheduleAutoBackup(newConfig.backupFrequency || 'weekly');
       }
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de modifier la configuration cloud');
+      Alert.alert(t.error, 'Impossible de modifier la configuration cloud');
     }
   };
 
