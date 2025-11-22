@@ -25,6 +25,7 @@ import DashboardScreen from '../screens/DashboardScreen';
 import EditAnnualChargeScreen from '../screens/EditAnnualChargeScreen';
 import EditBudgetScreen from '../screens/EditBudgetScreen';
 import EditTransactionScreen from '../screens/EditTransactionScreen';
+import FinancialCalendarScreen from '../screens/FinancialCalendarScreen';
 import { IslamicChargesScreen } from '../screens/islamic/IslamicChargesScreen';
 import MonthDetailScreen from '../screens/MonthDetailScreen';
 import MonthsOverviewScreen from '../screens/MonthsOverviewScreen';
@@ -218,6 +219,15 @@ const MonthsStack = () => (
   </Stack.Navigator>
 );
 
+// Stack pour Calendrier Financier
+const CalendarStack = () => (
+  <Stack.Navigator 
+    screenOptions={{ headerShown: false }}
+  >
+    <Stack.Screen name="FinancialCalendar" component={FinancialCalendarScreen} />
+  </Stack.Navigator>
+);
+
 // ✅ Stack pour Charges Islamiques
 const IslamicChargesStack = () => (
   <Stack.Navigator 
@@ -296,6 +306,20 @@ const ModernDrawerNavigator = () => {
             </View>
           ),
           drawerLabel: "Vue par Mois",
+        }}
+      />
+
+      {/* Calendrier Financier */}
+      <Drawer.Screen
+        name="CalendarStack"
+        component={CalendarStack}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <View style={[styles.iconContainer, { backgroundColor: '#10B981' }]}>
+              <Ionicons name="calendar-outline" size={size-2} color="#FFFFFF" />
+            </View>
+          ),
+          drawerLabel: "Calendrier Dépenses",
         }}
       />
 

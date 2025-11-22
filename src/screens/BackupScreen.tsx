@@ -1,19 +1,19 @@
 // src/screens/BackupScreen.tsx
 import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TouchableOpacity,
-  View
-} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Sharing from 'expo-sharing';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    TouchableOpacity,
+    View
+} from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useDesignSystem } from '../context/ThemeContext';
 import { useBackup } from '../hooks/useBackup';
@@ -257,8 +257,6 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         </View>
       </SafeAreaView>
     );
-  }
-
   }
 
   return (

@@ -124,7 +124,7 @@ export const BiometricLockScreen: React.FC<BiometricLockScreenProps> = ({ onUnlo
         <View style={[styles.securityInfo, { backgroundColor: colors.background.secondary }]}>
           <Ionicons name="shield-checkmark-outline" size={20} color={colors.primary[500]} />
           <Text style={[styles.securityText, { color: colors.text.secondary }]}>
-            Vos données sont protégées par {biometricType}
+            Vos données sont protégées par {biometricType || 'authentification biométrique'}
           </Text>
         </View>
       </View>

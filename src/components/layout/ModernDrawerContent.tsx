@@ -31,6 +31,11 @@ const ModernDrawerContent = (props: any) => {
           icon: 'calendar' as const,
           screen: 'MonthsOverviewStack', // ✅ CORRECTION : Nom unique
         },
+        {
+          label: 'Calendrier Dépenses',
+          icon: 'calendar-outline' as const,
+          screen: 'CalendarStack',
+        },
       ],
     },
     {

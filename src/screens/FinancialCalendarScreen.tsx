@@ -1,239 +1,329 @@
 // src/screens/FinancialCalendarScreen.tsx
+import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo, useState } from 'react';
 import {
-    Dimensions,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from 'react-native';
-import { Header } from '../components/ui/Header';
-import { useTheme } from '../context/ThemeContext';
+import { useDesignSystem } from '../context/ThemeContext';
+import { useAnnualCharges } from '../hooks/useAnnualCharges';
+import { useCategories } from '../hooks/useCategories';
+import { useDebts } from '../hooks/useDebts';
+import { useSavings } from '../hooks/useSavings';
 import { useTransactions } from '../hooks/useTransactions';
 
-const { width } = Dimensions.get('window');
 
 export const FinancialCalendarScreen = ({ navigation }: any) => {
-  const { theme } = useTheme();
+  const { colors } = useDesignSystem();
   const { transactions } = useTransactions();
+  const { charges } = useAnnualCharges();
+  const { debts } = useDebts();
+  const { goals } = useSavings();
+  const { categories } = useCategories();
+  
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('month');
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  const isDark = theme === 'dark';
+  // Obtenir le premier et dernier jour du mois
+  const getMonthDays = () => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startDayOfWeek = firstDay.getDay();
 
-  // Filtrer les transactions pour la période sélectionnée
-  const filteredTransactions = useMemo(() => {
-    const startDate = new Date(selectedDate);
-    const endDate = new Date(selectedDate);
+    return { daysInMonth, startDayOfWeek, year, month };
+  };
 
-    switch (viewMode) {
-      case 'day':
-        endDate.setDate(startDate.getDate() + 1);
-        break;
-      case 'week':
-        startDate.setDate(startDate.getDate() - startDate.getDay());
-        endDate.setDate(startDate.getDate() + 7);
-        break;
-      case 'month':
-        startDate.setDate(1);
-        endDate.setMonth(startDate.getMonth() + 1);
-        endDate.setDate(0);
-        break;
-    }
+  // Calculer les montants par jour
+  const getDayData = (day: number) => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const date = new Date(year, month, day);
+    const dateStr = date.toISOString().split('T')[0];
 
-    return transactions.filter(transaction => {
-      const transactionDate = new Date(transaction.date);
-      return transactionDate >= startDate && transactionDate < endDate;
-    });
-  }, [transactions, selectedDate, viewMode]);
+    let income = 0;
+    let expenses = 0;
 
-  // Calculer les totaux
-  const totals = useMemo(() => {
-    return filteredTransactions.reduce(
-      (acc, transaction) => {
-        if (transaction.type === 'income') {
-          acc.income += transaction.amount;
-        } else if (transaction.type === 'expense') {
-          acc.expenses += Math.abs(transaction.amount);
+    // Transactions
+    transactions.forEach(t => {
+      const tDateStr = new Date(t.date).toISOString().split('T')[0];
+      if (tDateStr === dateStr) {
+        if (t.type === 'income') {
+          income += t.amount;
+        } else if (t.type === 'expense') {
+          expenses += Math.abs(t.amount);
         }
-        return acc;
-      },
-      { income: 0, expenses: 0, balance: 0 }
-    );
-  }, [filteredTransactions]);
+      }
+    });
 
-  totals.balance = totals.income - totals.expenses;
+    // Charges annuelles
+    charges.forEach(c => {
+      const cDateStr = new Date(c.dueDate).toISOString().split('T')[0];
+      if (cDateStr === dateStr && !c.isPaid) {
+        expenses += c.amount;
+      }
+    });
 
-  // Navigation entre les périodes
-  const navigatePeriod = (direction: 'prev' | 'next') => {
-    const newDate = new Date(selectedDate);
-    
-    switch (viewMode) {
-      case 'day':
-        newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
-        break;
-      case 'week':
-        newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
-        break;
-      case 'month':
-        newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
-        break;
-    }
-    
-    setSelectedDate(newDate);
+    // Dettes (échéances)
+    debts.forEach(d => {
+      if (d.nextDueDate) {
+        const dDateStr = new Date(d.nextDueDate).toISOString().split('T')[0];
+        if (dDateStr === dateStr && d.status === 'active') {
+          expenses += d.monthlyPayment || 0;
+        }
+      }
+    });
+
+    const netAmount = income - expenses;
+    return { income, expenses, netAmount };
   };
 
-  // Formater la période affichée
-  const getPeriodLabel = () => {
-    switch (viewMode) {
-      case 'day':
-        return selectedDate.toLocaleDateString('fr-FR', {
-          weekday: 'long',
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
-        });
-      case 'week':
-        const startOfWeek = new Date(selectedDate);
-        startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
-        const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(startOfWeek.getDate() + 6);
-        
-        return `Semaine du ${startOfWeek.toLocaleDateString('fr-FR', { 
-          day: 'numeric', 
-          month: 'short' 
-        })} au ${endOfWeek.toLocaleDateString('fr-FR', { 
-          day: 'numeric', 
-          month: 'short', 
-          year: 'numeric' 
-        })}`;
-      case 'month':
-        return selectedDate.toLocaleDateString('fr-FR', {
-          month: 'long',
-          year: 'numeric'
-        });
-    }
+  // Naviguer entre les mois
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    const newDate = new Date(currentMonth);
+    newDate.setMonth(currentMonth.getMonth() + (direction === 'next' ? 1 : -1));
+    setCurrentMonth(newDate);
   };
+
+  // Fonction pour obtenir le nom complet de la catégorie (parent + sous-catégorie)
+  const getCategoryName = (categoryId: string, subCategoryId?: string) => {
+    const category = categories.find(c => c.id === categoryId);
+    if (!category) return 'Non catégorisé';
+    
+    if (subCategoryId) {
+      const subCategory = categories.find(c => c.id === subCategoryId);
+      if (subCategory) {
+        return `${category.name} > ${subCategory.name}`;
+      }
+    }
+    
+    return category.name;
+  };
+
+  // Obtenir toutes les opérations du jour sélectionné (transactions + charges + dettes)
+  const selectedDayTransactions = useMemo(() => {
+    const dateStr = selectedDate.toISOString().split('T')[0];
+    const items: any[] = [];
+
+    // 1. Transactions normales
+    transactions.forEach(t => {
+      const tDateStr = new Date(t.date).toISOString().split('T')[0];
+      if (tDateStr === dateStr) {
+        items.push({
+          id: t.id,
+          type: t.type,
+          description: t.description,
+          amount: t.amount,
+          category: getCategoryName(t.category, t.subCategory),
+          date: t.date,
+          icon: 'wallet',
+          source: 'transaction'
+        });
+      }
+    });
+
+    // 2. Charges annuelles
+    charges.forEach(c => {
+      const cDateStr = new Date(c.dueDate).toISOString().split('T')[0];
+      if (cDateStr === dateStr && !c.isPaid) {
+        items.push({
+          id: c.id,
+          type: 'expense',
+          description: c.name,
+          amount: c.amount,
+          category: c.category || 'Charges Annuelles',
+          date: c.dueDate,
+          icon: 'calendar',
+          source: 'charge'
+        });
+      }
+    });
+
+    // 3. Échéances de dettes
+    debts.forEach(d => {
+      if (d.nextDueDate) {
+        const dDateStr = new Date(d.nextDueDate).toISOString().split('T')[0];
+        if (dDateStr === dateStr && d.status === 'active') {
+          items.push({
+            id: d.id,
+            type: 'expense',
+            description: d.name,
+            amount: d.monthlyPayment,
+            category: d.category || 'Remboursement Dette',
+            date: d.nextDueDate,
+            icon: 'trending-down',
+            source: 'debt'
+          });
+        }
+      }
+    });
+
+    // Trier par date/heure
+    return items.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [transactions, charges, debts, selectedDate, categories]);
+
+  const { daysInMonth, startDayOfWeek, year, month } = getMonthDays();
+  const today = new Date();
+  const isToday = (day: number) => {
+    return today.getDate() === day && 
+           today.getMonth() === month && 
+           today.getFullYear() === year;
+  };
+
+  const isSelectedDay = (day: number) => {
+    return selectedDate.getDate() === day && 
+           selectedDate.getMonth() === month && 
+           selectedDate.getFullYear() === year;
+  };
+
+  const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
+                      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+  const dayNames = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 
   return (
-    <View style={[styles.container, isDark && styles.darkContainer]}>
-      <Header 
-        title="Calendrier Financier" 
-        onBack={() => navigation.goBack()}
-      />
-
-      {/* Sélecteur de vue */}
-      <View style={[styles.viewSelector, isDark && styles.darkCard]}>
-        {(['day', 'week', 'month'] as const).map(mode => (
-          <TouchableOpacity
-            key={mode}
-            style={[
-              styles.viewButton,
-              viewMode === mode && styles.viewButtonActive,
-              isDark && viewMode === mode && styles.viewButtonActiveDark
-            ]}
-            onPress={() => setViewMode(mode)}
-          >
-            <Text style={[
-              styles.viewButtonText,
-              viewMode === mode && styles.viewButtonTextActive,
-              isDark && styles.darkText
-            ]}>
-              {mode === 'day' ? 'Jour' : mode === 'week' ? 'Semaine' : 'Mois'}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Navigation de période */}
-      <View style={[styles.periodNavigation, isDark && styles.darkCard]}>
-        <TouchableOpacity 
-          style={styles.navButton}
-          onPress={() => navigatePeriod('prev')}
-        >
-          <Text style={[styles.navButtonText, isDark && styles.darkText]}>‹</Text>
+    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: colors.background.card }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
         </TouchableOpacity>
-        
-        <Text style={[styles.periodLabel, isDark && styles.darkText]}>
-          {getPeriodLabel()}
+        <Text style={[styles.headerTitle, { color: colors.text.primary }]}>
+          Calendrier des Dépenses
         </Text>
-        
-        <TouchableOpacity 
-          style={styles.navButton}
-          onPress={() => navigatePeriod('next')}
-        >
-          <Text style={[styles.navButtonText, isDark && styles.darkText]}>›</Text>
-        </TouchableOpacity>
+        <View style={{ width: 40 }} />
       </View>
 
-      {/* Résumé financier */}
-      <View style={[styles.summaryCard, isDark && styles.darkCard]}>
-        <View style={styles.summaryRow}>
-          <View style={styles.summaryItem}>
-            <Text style={[styles.summaryLabel, isDark && styles.darkSubtext]}>Revenus</Text>
-            <Text style={[styles.incomeAmount, isDark && styles.darkText]}>
-              +{totals.income.toFixed(2)}€
+      <ScrollView style={styles.scrollView}>
+        {/* Calendrier */}
+        <View style={[styles.calendarCard, { backgroundColor: colors.background.card }]}>
+          {/* Mois et navigation */}
+          <View style={styles.monthHeader}>
+            <Text style={[styles.monthTitle, { color: colors.text.primary }]}>
+              {monthNames[month]} {year}
             </Text>
+            <View style={styles.monthNavigation}>
+              <TouchableOpacity 
+                onPress={() => navigateMonth('prev')}
+                style={[styles.navButton, { backgroundColor: colors.background.secondary }]}
+              >
+                <Ionicons name="chevron-back" size={20} color={colors.text.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={() => navigateMonth('next')}
+                style={[styles.navButton, { backgroundColor: colors.background.secondary }]}
+              >
+                <Ionicons name="chevron-forward" size={20} color={colors.text.primary} />
+              </TouchableOpacity>
+            </View>
           </View>
-          
-          <View style={styles.summaryItem}>
-            <Text style={[styles.summaryLabel, isDark && styles.darkSubtext]}>Dépenses</Text>
-            <Text style={[styles.expenseAmount, isDark && styles.darkText]}>
-              -{totals.expenses.toFixed(2)}€
-            </Text>
-          </View>
-          
-          <View style={styles.summaryItem}>
-            <Text style={[styles.summaryLabel, isDark && styles.darkSubtext]}>Solde</Text>
-            <Text style={[
-              styles.balanceAmount,
-              totals.balance >= 0 ? styles.positiveBalance : styles.negativeBalance,
-              isDark && styles.darkText
-            ]}>
-              {totals.balance >= 0 ? '+' : ''}{totals.balance.toFixed(2)}€
-            </Text>
-          </View>
-        </View>
-      </View>
 
-      {/* Liste des transactions */}
-      <ScrollView style={styles.transactionsList}>
-        <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
-          Transactions ({filteredTransactions.length})
-        </Text>
-        
-        {filteredTransactions.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
-              Aucune transaction pour cette période
-            </Text>
-          </View>
-        ) : (
-          filteredTransactions.map(transaction => (
-            <View 
-              key={transaction.id} 
-              style={[styles.transactionItem, isDark && styles.darkCard]}
-            >
-              <View style={styles.transactionInfo}>
-                <Text style={[styles.transactionDescription, isDark && styles.darkText]}>
-                  {transaction.description}
-                </Text>
-                <Text style={[styles.transactionDate, isDark && styles.darkSubtext]}>
-                  {new Date(transaction.date).toLocaleDateString('fr-FR')}
+          {/* Jours de la semaine */}
+          <View style={styles.weekDaysRow}>
+            {dayNames.map((day, index) => (
+              <View key={index} style={styles.weekDayCell}>
+                <Text style={[styles.weekDayText, { color: colors.text.secondary }]}>
+                  {day}
                 </Text>
               </View>
-              
-              <Text style={[
-                styles.transactionAmount,
-                transaction.type === 'income' ? styles.incomeAmount : styles.expenseAmount,
-                isDark && styles.darkText
-              ]}>
-                {transaction.type === 'income' ? '+' : '-'}{Math.abs(transaction.amount).toFixed(2)}€
+            ))}
+          </View>
+
+          {/* Grille du calendrier */}
+          <View style={styles.calendarGrid}>
+            {/* Cellules vides avant le premier jour */}
+            {Array.from({ length: startDayOfWeek === 0 ? 6 : startDayOfWeek - 1 }).map((_, i) => (
+              <View key={`empty-${i}`} style={styles.dayCell} />
+            ))}
+
+            {/* Jours du mois */}
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const day = i + 1;
+              const dayData = getDayData(day);
+              const hasData = dayData.netAmount !== 0;
+
+              return (
+                <TouchableOpacity
+                  key={day}
+                  style={[
+                    styles.dayCell,
+                    isSelectedDay(day) && { backgroundColor: colors.primary[500] },
+                  ]}
+                  onPress={() => setSelectedDate(new Date(year, month, day))}
+                >
+                  <Text style={[
+                    styles.dayNumber,
+                    { color: colors.text.primary },
+                    isToday(day) && styles.todayText,
+                    isSelectedDay(day) && { color: '#fff' },
+                  ]}>
+                    {day}
+                  </Text>
+                  {hasData && (
+                    <Text style={[
+                      styles.dayAmount,
+                      dayData.netAmount < 0 ? { color: '#FF3B30' } : { color: '#34C759' },
+                      isSelectedDay(day) && { color: '#fff' },
+                    ]}>
+                      {dayData.netAmount > 0 ? '+' : ''}{Math.round(dayData.netAmount)}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Transactions du jour sélectionné */}
+        <View style={styles.transactionsSection}>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
+            Transactions du {selectedDate.getDate()} {monthNames[selectedDate.getMonth()].toLowerCase()}
+          </Text>
+
+          {selectedDayTransactions.length === 0 ? (
+            <View style={[styles.emptyCard, { backgroundColor: colors.background.card }]}>
+              <Text style={[styles.emptyText, { color: colors.text.secondary }]}>
+                Aucune transaction ce jour
               </Text>
             </View>
-          ))
-        )}
+          ) : (
+            selectedDayTransactions.map(item => (
+              <View 
+                key={`${item.source}-${item.id}`} 
+                style={[styles.transactionCard, { backgroundColor: colors.background.card }]}
+              >
+                <View style={styles.transactionIcon}>
+                  <Ionicons 
+                    name={item.icon as any} 
+                    size={24} 
+                    color={item.type === 'expense' ? '#FF3B30' : '#34C759'} 
+                  />
+                </View>
+                <View style={styles.transactionInfo}>
+                  <Text style={[styles.transactionTitle, { color: colors.text.primary }]}>
+                    {item.description}
+                  </Text>
+                  <Text style={[styles.transactionSubtitle, { color: colors.text.secondary }]}>
+                    {item.category} • {new Date(item.date).toLocaleTimeString('fr-FR', { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
+                  </Text>
+                </View>
+                <Text style={[
+                  styles.transactionAmount,
+                  { color: item.type === 'expense' ? '#FF3B30' : '#34C759' }
+                ]}>
+                  {item.type === 'expense' ? '-' : '+'}{Math.abs(item.amount).toFixed(2)} €
+                </Text>
+              </View>
+            ))
+          )}
+        </View>
       </ScrollView>
     </View>
   );
@@ -242,156 +332,144 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
-  darkContainer: {
-    backgroundColor: '#1c1c1e',
-  },
-  viewSelector: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    margin: 16,
-    borderRadius: 12,
-    padding: 4,
-  },
-  darkCard: {
-    backgroundColor: '#2c2c2e',
-  },
-  viewButton: {
-    flex: 1,
-    paddingVertical: 8,
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  viewButtonActive: {
-    backgroundColor: '#007AFF',
-  },
-  viewButtonActiveDark: {
-    backgroundColor: '#0A84FF',
-  },
-  viewButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#666',
-  },
-  viewButtonTextActive: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  periodNavigation: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingTop: 48,
+    paddingBottom: 16,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  calendarCard: {
+    margin: 16,
+    borderRadius: 16,
     padding: 16,
-    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  monthHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  monthTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  monthNavigation: {
+    flexDirection: 'row',
+    gap: 8,
   },
   navButton: {
-    padding: 8,
-  },
-  navButtonText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#007AFF',
-  },
-  periodLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-  },
-  summaryCard: {
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 20,
-    borderRadius: 12,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  summaryItem: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
     alignItems: 'center',
-    flex: 1,
+    justifyContent: 'center',
   },
-  summaryLabel: {
+  weekDaysRow: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  weekDayCell: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+  },
+  weekDayText: {
     fontSize: 12,
-    color: '#666',
-    marginBottom: 8,
+    fontWeight: '600',
   },
-  incomeAmount: {
+  calendarGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  dayCell: {
+    width: `${100 / 7}%`,
+    aspectRatio: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  dayNumber: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#34C759',
+    fontWeight: '500',
+    marginBottom: 2,
   },
-  expenseAmount: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FF3B30',
-  },
-  balanceAmount: {
-    fontSize: 16,
+  todayText: {
     fontWeight: 'bold',
   },
-  positiveBalance: {
-    color: '#34C759',
+  dayAmount: {
+    fontSize: 11,
+    fontWeight: '600',
   },
-  negativeBalance: {
-    color: '#FF3B30',
-  },
-  transactionsList: {
-    flex: 1,
+  transactionsSection: {
     paddingHorizontal: 16,
+    paddingBottom: 24,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 16,
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
   },
-  transactionItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  emptyCard: {
+    padding: 32,
+    borderRadius: 12,
     alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 8,
+  },
+  emptyText: {
+    fontSize: 14,
+  },
+  transactionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
     marginBottom: 8,
+  },
+  transactionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
   transactionInfo: {
     flex: 1,
   },
-  transactionDescription: {
-    fontSize: 16,
+  transactionTitle: {
+    fontSize: 15,
     fontWeight: '500',
-    color: '#000',
-    marginBottom: 4,
+    marginBottom: 2,
   },
-  transactionDate: {
-    fontSize: 14,
-    color: '#666',
+  transactionSubtitle: {
+    fontSize: 13,
   },
-   transactionAmount: {
+  transactionAmount: {
     fontSize: 16,
     fontWeight: '600',
-    marginLeft: 8,
-  },
-  emptyState: {
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-  },
-  darkText: {
-    color: '#fff',
-  },
-  darkSubtext: {
-    color: '#888',
   },
 });
 

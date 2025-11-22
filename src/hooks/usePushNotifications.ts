@@ -26,7 +26,7 @@ export const usePushNotifications = () => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur initialisation notifications';
       setError(errorMessage);
-      console.error('❌ [usePushNotifications]:', errorMessage);
+      // Erreur silencieuse - les notifications push ne sont pas critiques en dev
     }
   };
 

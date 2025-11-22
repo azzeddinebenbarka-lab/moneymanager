@@ -1,5 +1,6 @@
 // src/hooks/useDashboard.ts - VERSION CORRIGÉE
 import { useEffect, useState } from 'react';
+import { pushNotificationService } from '../services/PushNotificationService';
 import { useAccounts } from './useAccounts';
 import { useAnalytics } from './useAnalytics';
 import { useBudgets } from './useBudgets';
@@ -124,6 +125,18 @@ export const useDashboard = (): DashboardData => {
     savingsLoading, 
     analyticsLoading
   ]);
+
+  // Programmer le résumé quotidien à 20h00
+  useEffect(() => {
+    const scheduleDailySummary = async () => {
+      if (!analyticsLoading && analytics.cashFlow) {
+        const { income, expenses, netFlow } = analytics.cashFlow;
+        await pushNotificationService.scheduleDailySummary(income, expenses, netFlow);
+      }
+    };
+
+    scheduleDailySummary();
+  }, [analytics.cashFlow, analyticsLoading]);
 
   // Données calculées
   const recentTransactions = transactions.slice(0, 5);

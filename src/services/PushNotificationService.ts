@@ -1,8 +1,5 @@
 // src/services/PushNotificationService.ts
-import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
-import { secureStorage } from './storage/secureStorage';
 
 /**
  * Service de gestion des notifications push natives
@@ -51,71 +48,12 @@ class PushNotificationService {
    */
   async initialize(): Promise<void> {
     try {
-      console.log('🔔 [PushNotification] Initialisation...');
+      // Désactivé en développement - nécessite un development build
+      // Les notifications push ne fonctionnent pas dans Expo Go depuis SDK 53
+      return;
 
-      // Vérifier si c'est un appareil physique
-      if (!Device.isDevice) {
-        console.warn('⚠️ [PushNotification] Les notifications push ne fonctionnent que sur un appareil physique');
-        return;
-      }
-
-      // Demander les permissions
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-
-      if (finalStatus !== 'granted') {
-        console.warn('⚠️ [PushNotification] Permission refusée');
-        return;
-      }
-
-      // Obtenir le token Expo Push
-      const token = await this.getExpoPushToken();
-      if (token) {
-        this.expoPushToken = token;
-        await secureStorage.setItem('expoPushToken', token);
-        console.log('✅ [PushNotification] Token:', token);
-      }
-
-      // Configuration Android
-      if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('default', {
-          name: 'Default',
-          importance: Notifications.AndroidImportance.MAX,
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#FF231F7C',
-          sound: 'default',
-        });
-
-        // Canal pour les alertes critiques
-        await Notifications.setNotificationChannelAsync('critical', {
-          name: 'Alertes Critiques',
-          importance: Notifications.AndroidImportance.MAX,
-          vibrationPattern: [0, 500, 250, 500],
-          lightColor: '#FF3B30',
-          sound: 'default',
-        });
-
-        // Canal pour les informations
-        await Notifications.setNotificationChannelAsync('info', {
-          name: 'Informations',
-          importance: Notifications.AndroidImportance.DEFAULT,
-          vibrationPattern: [0, 250],
-          lightColor: '#007AFF',
-          sound: 'default',
-        });
-      }
-
-      // Écouter les notifications reçues
-      this.setupNotificationListeners();
-
-      console.log('✅ [PushNotification] Initialisé avec succès');
     } catch (error) {
-      console.error('❌ [PushNotification] Erreur initialisation:', error);
+      // Erreur silencieuse - les notifications push ne sont pas critiques en dev
     }
   }
 
@@ -129,7 +67,7 @@ class PushNotificationService {
       })).data;
       return token;
     } catch (error) {
-      console.error('❌ [PushNotification] Erreur token:', error);
+      // Erreur silencieuse - les notifications push ne sont pas critiques en dev
       return null;
     }
   }
@@ -532,6 +470,44 @@ class PushNotificationService {
    */
   async resetBadge(): Promise<void> {
     await this.setBadgeCount(0);
+  }
+
+  /**
+   * Programmer le résumé financier quotidien à 20h00
+   */
+  async scheduleDailySummary(income: number = 0, expenses: number = 0, netFlow: number = 0): Promise<string | null> {
+    try {
+      // Annuler toute notification existante de résumé quotidien
+      const scheduled = await this.getScheduledNotifications();
+      for (const notif of scheduled) {
+        if (notif.content.data?.type === 'daily_summary') {
+          await Notifications.cancelScheduledNotificationAsync(notif.identifier);
+        }
+      }
+
+      // Programmer pour 20h00 chaque jour
+      return await this.scheduleNotification({
+        title: '📊 Résumé financier du jour',
+        body: `Aujourd'hui: ${income.toFixed(2)} MAD de revenus, ${expenses.toFixed(2)} MAD de dépenses. Solde: ${netFlow.toFixed(2)} MAD`,
+        data: { 
+          type: 'daily_summary',
+          income,
+          expenses,
+          netFlow,
+          date: new Date().toISOString()
+        },
+        priority: 'default',
+        sound: true,
+        trigger: {
+          hour: 20,
+          minute: 0,
+          repeats: true, // Répéter chaque jour
+        }
+      });
+    } catch (error) {
+      // Erreur silencieuse - notifications pas critiques
+      return null;
+    }
   }
 }
 
