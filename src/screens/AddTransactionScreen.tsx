@@ -190,7 +190,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
     >
       <View style={styles.categoryItemContent}>
         <View style={styles.categoryItemLeft}>
-          <View style={[styles.categoryIconContainer, { backgroundColor: `${item.color}20` }]}>
+          <View style={[styles.categoryIconContainer, { backgroundColor: '#FFFFFF' }]}>
             <Ionicons 
               name={item.icon as any} 
               size={16} 
@@ -199,6 +199,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
           </View>
           <Text style={[
             styles.categoryItemText,
+            { color: colors.text.primary },
             form.category === item.id && styles.categoryItemTextSelected,
             level > 0 && styles.subcategoryItemText,
           ]}>

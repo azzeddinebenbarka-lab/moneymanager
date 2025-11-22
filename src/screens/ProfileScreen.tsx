@@ -9,7 +9,6 @@ import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
-import { useBudgets } from '../hooks/useBudgets';
 import { useCategories } from '../hooks/useCategories';
 import { useTransactions } from '../hooks/useTransactions';
 
@@ -22,7 +21,6 @@ const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
   // Hooks pour récupérer les données
   const { transactions } = useTransactions();
   const { categories } = useCategories();
-  const { stats: budgetStats } = useBudgets();
   const { accountsCount } = useAccounts();
 
   // Modals
@@ -105,28 +103,6 @@ const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
             <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>Catégories actives</Text>
             <Text style={[styles.statValue, isDark && styles.darkText]}>{categories.length}</Text>
           </View>
-        </View>
-
-        {/* Budget mensuel */}
-        <View style={[styles.budgetCard, isDark && styles.darkCard]}>
-          <View style={styles.budgetHeader}>
-            <Ionicons name="wallet-outline" size={24} color="#6C63FF" />
-            <Text style={[styles.budgetTitle, isDark && styles.darkText]}>Budget mensuel</Text>
-          </View>
-          <Text style={[styles.budgetAmount, isDark && styles.darkText]}>
-            {formatAmount(budgetStats.totalBudget)}
-          </Text>
-          <View style={styles.budgetProgress}>
-            <View 
-              style={[
-                styles.budgetProgressBar, 
-                { width: `${Math.min(budgetStats.averageUsage, 100)}%` }
-              ]} 
-            />
-          </View>
-          <Text style={[styles.budgetSubtext, isDark && styles.darkSubtext]}>
-            {budgetStats.averageUsage.toFixed(0)}% utilisé ce mois-ci
-          </Text>
         </View>
 
         {/* Comptes */}
@@ -312,53 +288,6 @@ const styles = StyleSheet.create({
     width: 1,
     backgroundColor: '#E5E7EB',
     marginHorizontal: 8,
-  },
-
-  // Budget card
-  budgetCard: {
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  budgetHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  budgetTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#17233C',
-    marginLeft: 8,
-  },
-  budgetAmount: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#6C63FF',
-    marginBottom: 12,
-  },
-  budgetProgress: {
-    height: 8,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 4,
-    overflow: 'hidden',
-    marginBottom: 8,
-  },
-  budgetProgressBar: {
-    height: '100%',
-    backgroundColor: '#6C63FF',
-    borderRadius: 4,
-  },
-  budgetSubtext: {
-    fontSize: 13,
-    color: '#6B7280',
   },
 
   // Info card (Comptes et Devise)

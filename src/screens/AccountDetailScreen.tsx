@@ -276,7 +276,7 @@ const AccountDetailScreen = () => {
   const { theme } = useTheme();
   const { colors } = useDesignSystem();
   const { formatAmount } = useCurrency();
-  const { accounts, updateAccount, deleteAccount, refreshAccounts } = useAccounts();
+  const { accounts, updateAccount, deleteAccount, refreshAccounts, loading: accountsLoading } = useAccounts();
   const { transactions, refreshTransactions } = useTransactions();
   const { categories } = useCategories();
   const { accountId } = route.params;
@@ -410,6 +410,18 @@ const AccountDetailScreen = () => {
 
     return unsubscribe;
   }, [navigation, refreshAccounts, refreshTransactions]);
+
+  // ✅ AFFICHER UN LOADER PENDANT LE CHARGEMENT INITIAL
+  if (accountsLoading && !account) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background.primary }, styles.center]}>
+        <ActivityIndicator size="large" color={colors.primary[500]} />
+        <Text style={[styles.loadingText, { color: colors.text.secondary }]}>
+          Chargement du compte...
+        </Text>
+      </View>
+    );
+  }
 
   if (!account) {
     return (
@@ -920,6 +932,10 @@ const styles = StyleSheet.create({
   deleteButtonText: {
     fontSize: 16,
     fontWeight: '500',
+  },
+  loadingText: {
+    fontSize: 16,
+    marginTop: 16,
   },
   errorText: {
     fontSize: 18,
