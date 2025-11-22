@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem } from '../context/ThemeContext';
 import { useTransactions } from '../hooks/useTransactions';
 import { notificationService } from '../services/NotificationService';
+import { Transaction } from '../types';
 
 // recurring transactions will be fetched from `useTransactions`
 
@@ -13,6 +14,7 @@ const RecurringTransactionsScreen: React.FC = () => {
   const { t } = useLanguage();
   const { colors } = useDesignSystem();
   const { getRecurringTransactions, refreshTransactions } = useTransactions();
+  const [recurring, setRecurring] = useState<Transaction[]>([]);
 
   useEffect(() => {
     let mounted = true;
@@ -21,11 +23,13 @@ const RecurringTransactionsScreen: React.FC = () => {
       try {
         // Refresh transactions to ensure latest data
         await refreshTransactions();
-        const recurring = getRecurringTransactions();
         if (!mounted) return;
+        
+        const recurringTxs = getRecurringTransactions();
+        setRecurring(recurringTxs);
 
         // Create a lightweight sync notification to inform user data loaded
-        await notificationService.notifySyncSuccess(recurring.length);
+        await notificationService.notifySyncSuccess(recurringTxs.length);
       } catch (err) {
         console.error('❌ Error syncing recurring transactions:', err);
       }
@@ -33,9 +37,8 @@ const RecurringTransactionsScreen: React.FC = () => {
 
     sync();
     return () => { mounted = false; };
-  }, [getRecurringTransactions, refreshTransactions]);
-
-  const recurring = getRecurringTransactions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <SafeAreaView>

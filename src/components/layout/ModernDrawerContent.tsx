@@ -29,12 +29,7 @@ const ModernDrawerContent = (props: any) => {
           screen: 'Dashboard',
         },
         {
-          label: t.insights || 'Conseils & Insights',
-          icon: 'bulb' as const,
-          screen: 'Insights',
-        },
-        {
-          label: t.calendar,
+          label: 'Vue par Mois',
           icon: 'calendar' as const,
           screen: 'MonthsOverviewStack',
         },
@@ -102,11 +97,6 @@ const ModernDrawerContent = (props: any) => {
           label: t.debts,
           icon: 'trending-down' as const,
           screen: 'Debts',
-        },
-        {
-          label: t.recurringTransactions || 'Transactions Récurrentes',
-          icon: 'repeat' as const,
-          screen: 'RecurringTransactions',
         },
       ],
     },

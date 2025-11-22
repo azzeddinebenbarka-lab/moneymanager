@@ -115,12 +115,12 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       const absoluteAmount = Math.abs(amount);
       
-      // Formatage spécifique pour MAD avec symbole à droite
+      // Formatage spécifique pour MAD avec symbole à droite et sans décimales
       if (targetCurrency.code === 'MAD') {
         const formatted = new Intl.NumberFormat('fr-FR', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }).format(absoluteAmount);
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        }).format(Math.round(absoluteAmount));
 
         const symbol = showSymbol ? ` ${targetCurrency.symbol}` : '';
         const sign = amount < 0 ? '-' : '';
@@ -128,7 +128,7 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return `${sign}${formatted}${symbol}`;
       }
 
-      // Pour les autres devises
+      // Pour les autres devises (garder les décimales)
       const formatted = new Intl.NumberFormat(targetCurrency.locale, {
         style: showSymbol ? 'currency' : 'decimal',
         currency: targetCurrency.code,
@@ -144,7 +144,7 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Fallback simple avec symbole à droite pour MAD
       const targetCurrency = currencyCode ? CURRENCIES[currencyCode] : currency;
       const absoluteAmount = Math.abs(amount);
-      const formatted = absoluteAmount.toFixed(2);
+      const formatted = Math.round(absoluteAmount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
       const sign = amount < 0 ? '-' : '';
       
       if (targetCurrency?.code === 'MAD') {

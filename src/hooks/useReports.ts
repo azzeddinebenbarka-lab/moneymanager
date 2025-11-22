@@ -126,7 +126,7 @@ const predefinedPeriods: ReportPeriod[] = [
 
   // === FONCTIONS DE CHARGEMENT ===
 
-  const loadCurrentReport = useCallback(async () => {
+  const loadCurrentReport = async () => {
     if (!currentPeriod) return;
     
     setLoading(prev => ({ ...prev, report: true }));
@@ -160,7 +160,7 @@ const predefinedPeriods: ReportPeriod[] = [
     } finally {
       setLoading(prev => ({ ...prev, report: false }));
     }
-  }, [currentPeriod, transactions, accounts]);
+  };
 
   // Fonction sans cache pour forcer la régénération
   const loadMonthlySummaries = async () => {
@@ -176,7 +176,7 @@ const predefinedPeriods: ReportPeriod[] = [
     }
   };
 
-  const loadSpendingAnalysis = useCallback(async () => {
+  const loadSpendingAnalysis = async () => {
     setLoading(prev => ({ ...prev, analysis: true }));
     
     try {
@@ -190,7 +190,7 @@ const predefinedPeriods: ReportPeriod[] = [
     } finally {
       setLoading(prev => ({ ...prev, analysis: false }));
     }
-  }, [transactions, categories]);
+  };
 
   const loadBudgetPerformance = useCallback(async () => {
     setLoading(prev => ({ ...prev, budgets: true }));
@@ -208,7 +208,7 @@ const predefinedPeriods: ReportPeriod[] = [
     }
   }, []);
 
-  const loadFinancialHealth = useCallback(async () => {
+  const loadFinancialHealth = async () => {
     setLoading(prev => ({ ...prev, health: true }));
     
     try {
@@ -233,9 +233,9 @@ const predefinedPeriods: ReportPeriod[] = [
     } finally {
       setLoading(prev => ({ ...prev, health: false }));
     }
-  }, [transactions, accounts]);
+  };
 
-  const loadChartData = useCallback(async () => {
+  const loadChartData = async () => {
     if (!currentPeriod) return;
     
     setLoading(prev => ({ ...prev, charts: true }));
@@ -254,7 +254,7 @@ const predefinedPeriods: ReportPeriod[] = [
     } finally {
       setLoading(prev => ({ ...prev, charts: false }));
     }
-  }, [currentPeriod, transactions, categories]);
+  };
 
   // === FONCTIONS DE CALCUL ===
 
@@ -545,11 +545,13 @@ const generateSpendingAnalysis = (): SpendingAnalysis[] => {
   // === CHARGEMENT AUTOMATIQUE ===
 
   useEffect(() => {
-    if (transactions.length > 0 && accounts.length > 0) {
-      console.log('🔄 [useReports] Data changed, reloading reports...');
+    // Charger seulement quand la période change, pas à chaque transaction
+    if (currentPeriod && transactions.length > 0) {
+      console.log('🔄 [useReports] Period changed, loading reports...');
       loadAllReports();
     }
-  }, [transactions, accounts, currentPeriod]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPeriod]);
 
   // === FONCTIONS PRINCIPALES ===
 
@@ -605,7 +607,8 @@ const generateSpendingAnalysis = (): SpendingAnalysis[] => {
     } finally {
       setRefreshing(false);
     }
-  }, [refreshTransactions, refreshAccounts, refreshCategories, loadAllReports]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshTransactions, refreshAccounts, refreshCategories]);
 
   const changePeriod = useCallback((period: ReportPeriod) => {
     console.log('📅 [useReports] Changing period to:', period.label);
@@ -647,16 +650,8 @@ const generateSpendingAnalysis = (): SpendingAnalysis[] => {
       budget: bp,
       percentageUsed: bp.percentageUsed,
       daysRemaining: bp.daysRemaining,
-      message: `Budget ${bp.name} à ${bp.percentageUsed}% - ${bp.status === 'over' ? 'Dépassé' : 'En risque'}`
+      message: `Budget ${bp.budget.name} à ${bp.percentageUsed}% - ${bp.status === 'over' ? 'Dépassé' : 'En risque'}`
     }));
-
-  // === EFFET INITIAL ===
-
-  useEffect(() => {
-    if (transactions.length > 0 && accounts.length > 0) {
-      loadAllReports();
-    }
-  }, []);
 
   // === RETURN DU HOOK ===
 

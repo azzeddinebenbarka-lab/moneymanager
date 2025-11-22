@@ -19,7 +19,8 @@ const InsightsScreen: React.FC = () => {
   useEffect(() => {
     // Refresh data once on mount
     refreshReports().catch(err => console.error('❌ [InsightsScreen] refreshReports error', err));
-  }, [refreshReports]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     // Generate insights only once when currentReport becomes available

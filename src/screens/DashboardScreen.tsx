@@ -14,8 +14,9 @@ interface NetWorthData {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
+    ActivityIndicator,
     Animated,
     Dimensions,
     RefreshControl,
@@ -252,7 +253,7 @@ const FinancialHealthCard: React.FC<FinancialHealthCardProps> = ({ score, onPres
 };
 
 // ✅ COMPOSANT : CARTE DE PATRIMOINE NET
-const NetWorthCard: React.FC<{ netWorthData?: NetWorthData }> = ({ netWorthData }) => {
+const NetWorthCard: React.FC<{ netWorthData?: NetWorthData }> = React.memo(({ netWorthData }) => {
   const { colors, spacing } = useDesignSystem();
   const { t } = useLanguage();
   const { formatAmount } = useCurrency();
@@ -277,6 +278,9 @@ const NetWorthCard: React.FC<{ netWorthData?: NetWorthData }> = ({ netWorthData 
       style={[styles.netWorthCard, { backgroundColor: colors.background.card }]}
       activeOpacity={0.9}
       onPress={() => navigation.navigate('Accounts' as never)}
+      accessible={true}
+      accessibilityLabel={`Patrimoine Net: ${formatAmount(netWorth)}, Tendance ${trend.isPositive ? 'positive' : 'négative'} de ${Math.abs(trend.value).toFixed(1)} pourcent`}
+      accessibilityRole="button"
     >
       <LinearGradient
         colors={[colors.primary[500], colors.primary[600]]}
@@ -322,10 +326,10 @@ const NetWorthCard: React.FC<{ netWorthData?: NetWorthData }> = ({ netWorthData 
       </LinearGradient>
     </TouchableOpacity>
   );
-};
+});
 
 // ✅ COMPOSANT : ACTIONS RAPIDES (6 CARTES - 3x2)
-const QuickActionsGrid: React.FC = () => {
+const QuickActionsGrid: React.FC = React.memo(() => {
   const { colors, spacing } = useDesignSystem();
   const { t } = useLanguage();
   const navigation = useNavigation();
@@ -411,7 +415,7 @@ const QuickActionsGrid: React.FC = () => {
       </View>
     </View>
   );
-};
+});
 
 // ✅ COMPOSANT : HEADER MODERNE (restauré)
 interface ModernHeaderProps {
@@ -507,15 +511,47 @@ const DashboardScreen: React.FC = () => {
   const { charges: annualCharges } = useAnnualCharges();
 
   const [refreshing, setRefreshing] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  // ✅ AUTO-REFRESH QUAND refreshKey CHANGE (ex: après suppression de charge)
+  // ✅ Initial loading
   React.useEffect(() => {
-    if (refreshKey > 0) {
-      console.log('🔄 Dashboard: Refresh global détecté, rechargement automatique...');
-      onRefresh();
-    }
-  }, [refreshKey]);
+    // Simule un chargement initial
+    const timer = setTimeout(() => setIsInitialLoading(false), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // ✅ Mémoriser les données du donut chart
+  const donutData = useMemo(() => [
+    { name: 'Revenus', amount: Math.max(0, analytics.cashFlow.income), color: colors.functional.income },
+    { name: 'Dépenses', amount: Math.max(0, Math.abs(analytics.cashFlow.expenses)), color: colors.functional.expense },
+    { name: 'Solde', amount: Math.max(0, Math.abs(analytics.cashFlow.netFlow)), color: analytics.cashFlow.netFlow >= 0 ? colors.functional.savings : colors.functional.debt }
+  ], [analytics.cashFlow, colors]);
+
+  // ✅ Calculer top 3 catégories de dépenses
+  const topExpenseCategories = useMemo(() => {
+    const expenseTransactions = (transactions || []).filter((tx: any) => tx.type === 'expense');
+    const categoryTotals = expenseTransactions.reduce((acc: any, tx: any) => {
+      const cat = tx.category || 'Autre';
+      acc[cat] = (acc[cat] || 0) + Math.abs(tx.amount);
+      return acc;
+    }, {});
+    
+    return Object.entries(categoryTotals)
+      .sort(([, a]: any, [, b]: any) => b - a)
+      .slice(0, 3)
+      .map(([name, amount]) => ({ name, amount: amount as number }));
+  }, [transactions]);
+
+  // ✅ Prochaines charges annuelles (3 prochaines)
+  const upcomingCharges = useMemo(() => {
+    if (!annualCharges) return [];
+    const now = new Date();
+    return (annualCharges as any[])
+      .filter((charge: any) => new Date(charge.nextDueDate) > now)
+      .sort((a: any, b: any) => new Date(a.nextDueDate).getTime() - new Date(b.nextDueDate).getTime())
+      .slice(0, 3);
+  }, [annualCharges]);
 
   // ✅ RECHARGEMENT SYNCHRONISÉ
   const onRefresh = useCallback(async () => {
@@ -561,6 +597,14 @@ const DashboardScreen: React.FC = () => {
     fadeAnim
   ]);
 
+  // ✅ AUTO-REFRESH QUAND refreshKey CHANGE (ex: après suppression de charge)
+  React.useEffect(() => {
+    if (refreshKey > 0) {
+      console.log('🔄 Dashboard: Refresh global détecté, rechargement automatique...');
+      onRefresh();
+    }
+  }, [refreshKey, onRefresh]);
+
   // Calculs pour labels des donuts
   const goalsProgressPercent = (goals && goals.length)
     ? Math.round(
@@ -573,7 +617,22 @@ const DashboardScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background.primary }]}>
-        <ModernHeader unreadCount={unreadCount} />      <ScrollView
+        <ModernHeader unreadCount={unreadCount} />
+        {/* Indicateur de rechargement en haut */}
+        <Animated.View 
+          style={[
+            styles.refreshIndicator, 
+            { 
+              opacity: fadeAnim,
+              backgroundColor: colors.semantic.success 
+            }
+          ]}
+        >
+          <Text style={[styles.refreshText, { color: colors.text.inverse }]}>
+            ✓ Dashboard mis à jour
+          </Text>
+        </Animated.View>
+        <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -585,21 +644,13 @@ const DashboardScreen: React.FC = () => {
         }
         style={styles.scrollView}
       >
-        {/* Indicateur de rechargement */}
-        <Animated.View 
-          style={[
-            styles.refreshIndicator, 
-            { 
-              opacity: fadeAnim,
-              backgroundColor: colors.semantic.success 
-            }
-          ]}
-        >
-          <Text style={[styles.refreshText, { color: colors.text.inverse }]}>
-            ✓ Données mises à jour
-          </Text>
-        </Animated.View>
 
+        {isInitialLoading ? (
+          <View style={[styles.loadingContainer, { backgroundColor: colors.background.primary }]}>
+            <ActivityIndicator size="large" color={colors.primary[500]} />
+            <Text style={[styles.loadingText, { color: colors.text.secondary }]}>Chargement...</Text>
+          </View>
+        ) : (
         <View style={styles.content}>
           {/* Header already rendered above */}
 
@@ -610,100 +661,57 @@ const DashboardScreen: React.FC = () => {
           <QuickActionsGrid />
 
           {/* Donut: Revenus / Dépenses / Solde */}
-          <View style={[styles.row, { gap: 12, justifyContent: 'center' }]}>
-            <View style={[styles.halfCard, { backgroundColor: colors.background.card, maxWidth: 320 }]}> 
+          <View style={{ width: '100%' }}>
+            <Text style={[styles.sectionTitle, { color: colors.text.primary, marginBottom: 12, marginHorizontal: 16 }]}>Aperçu Financier</Text>
+            <View style={[styles.financialOverviewCard, { backgroundColor: colors.background.card }]}> 
               <DonutChart
-                data={[
-                  { name: 'Revenus', amount: Math.max(0, analytics.cashFlow.income), color: colors.functional.income },
-                  { name: 'Dépenses', amount: Math.max(0, Math.abs(analytics.cashFlow.expenses)), color: colors.functional.expense },
-                  { name: 'Solde', amount: Math.max(0, Math.abs(analytics.cashFlow.netFlow)), color: analytics.cashFlow.netFlow >= 0 ? colors.functional.savings : colors.functional.debt }
-                ]}
-                size={160}
-                strokeWidth={28}
+                data={donutData}
+                size={180}
+                strokeWidth={32}
                 centerLabel={`${formatAmount(analytics.cashFlow.netFlow)}`}
                 legendPosition="right"
               />
             </View>
           </View>
 
-          {/* Cartes d'accès rapide - 6 cartes (3x2) */}
-          <View style={[styles.accessCardsContainer, { backgroundColor: 'transparent' }]}>
-            <TouchableOpacity 
-              style={[styles.accessCard, { backgroundColor: colors.background.card }]} 
-              onPress={() => navigation.navigate('Accounts' as never)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.accessCardIcon, { backgroundColor: colors.primary[500] }]}>
-                <Ionicons name="wallet" size={24} color={colors.text.inverse} />
+          {/* Top 3 Catégories de Dépenses */}
+          {topExpenseCategories.length > 0 && (
+            <View style={{ width: '100%' }} accessible={true} accessibilityLabel="Top 3 des catégories de dépenses">
+              <Text style={[styles.sectionTitle, { color: colors.text.primary, marginBottom: 12, marginHorizontal: 16 }]}>Top Dépenses</Text>
+              <View style={[styles.topCategoriesCard, { backgroundColor: colors.background.card }]}>
+                {topExpenseCategories.map((cat, index) => (
+                  <View 
+                    key={index} 
+                    style={styles.topCategoryItem}
+                    accessible={true}
+                    accessibilityLabel={`Position ${index + 1}: ${cat.name}, ${formatAmount(cat.amount)}`}
+                  >
+                    <View style={styles.topCategoryInfo}>
+                      <Text style={[styles.topCategoryRank, { color: colors.text.tertiary }]}>#{index + 1}</Text>
+                      <Text style={[styles.topCategoryName, { color: colors.text.primary }]}>{cat.name}</Text>
+                    </View>
+                    <Text style={[styles.topCategoryAmount, { color: colors.semantic.error }]}>
+                      {formatAmount(cat.amount)}
+                    </Text>
+                  </View>
+                ))}
               </View>
-              <Text style={[styles.accessCardLabel, { color: colors.text.primary }]}>Comptes</Text>
-              <Text style={[styles.accessCardValue, { color: colors.text.secondary }]}>{formatAmount(totalBalance)}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.accessCard, { backgroundColor: colors.background.card }]} 
-              onPress={() => navigation.navigate('Budgets' as never)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.accessCardIcon, { backgroundColor: colors.functional.savings }]}>
-                <Ionicons name="pie-chart" size={24} color={colors.text.inverse} />
-              </View>
-              <Text style={[styles.accessCardLabel, { color: colors.text.primary }]}>Budgets</Text>
-              <Text style={[styles.accessCardValue, { color: colors.text.secondary }]}>{budgetStats.totalBudgets || 0}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.accessCard, { backgroundColor: colors.background.card }]} 
-              onPress={() => navigation.navigate('Debts' as never)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.accessCardIcon, { backgroundColor: colors.functional.debt }]}>
-                <Ionicons name="card" size={24} color={colors.text.inverse} />
-              </View>
-              <Text style={[styles.accessCardLabel, { color: colors.text.primary }]}>Dettes</Text>
-              <Text style={[styles.accessCardValue, { color: colors.text.secondary }]}>{debtStats.totalDebt || 0}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.accessCard, { backgroundColor: colors.background.card }]} 
-              onPress={() => navigation.navigate('Savings' as never)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.accessCardIcon, { backgroundColor: colors.functional.income }]}>
-                <Ionicons name="trending-up" size={24} color={colors.text.inverse} />
-              </View>
-              <Text style={[styles.accessCardLabel, { color: colors.text.primary }]}>Épargne</Text>
-              <Text style={[styles.accessCardValue, { color: colors.text.secondary }]}>{formatAmount(savingsStats.totalSaved || 0)}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.accessCard, { backgroundColor: colors.background.card }]} 
-              onPress={() => navigation.navigate('Analytics' as never, { screen: 'ReportsList' } as never)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.accessCardIcon, { backgroundColor: colors.functional.investment }]}>
-                <Ionicons name="stats-chart" size={24} color={colors.text.inverse} />
-              </View>
-              <Text style={[styles.accessCardLabel, { color: colors.text.primary }]}>Rapports</Text>
-              <Text style={[styles.accessCardValue, { color: colors.text.secondary }]}>Analyses</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.accessCard, { backgroundColor: colors.background.card }]} 
-              onPress={() => navigation.navigate('Transactions' as never)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.accessCardIcon, { backgroundColor: colors.primary[400] }]}>
-                <Ionicons name="list" size={24} color={colors.text.inverse} />
-              </View>
-              <Text style={[styles.accessCardLabel, { color: colors.text.primary }]}>Transactions</Text>
-              <Text style={[styles.accessCardValue, { color: colors.text.secondary }]}>{transactions?.length || 0}</Text>
-            </TouchableOpacity>
-          </View>
+            </View>
+          )}
 
           {/* Transactions récentes */}
-          <View style={[styles.recentCard, { backgroundColor: 'transparent' }]}> 
-            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Transactions Récentes</Text>
+          <View style={{ paddingTop: 12 }}> 
+            <View style={[styles.sectionHeader, { marginHorizontal: 16, marginBottom: 8 }]}>
+              <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Transactions Récentes</Text>
+              <TouchableOpacity 
+                onPress={() => navigation.navigate('Transactions' as never)}
+                accessible={true}
+                accessibilityLabel="Voir toutes les transactions"
+                accessibilityRole="button"
+              >
+                <Text style={[styles.seeMoreButton, { color: colors.primary[500] }]}>Voir plus</Text>
+              </TouchableOpacity>
+            </View>
             {(transactions || []).slice(0, 6).map((tx: any) => (
               <ListTransactionItem 
                 key={tx.id}
@@ -713,7 +721,35 @@ const DashboardScreen: React.FC = () => {
             ))}
           </View>
 
+          {/* Prochaines Charges Annuelles */}
+          {upcomingCharges.length > 0 && (
+            <View style={{ width: '100%', paddingTop: 12 }} accessible={true} accessibilityLabel="Prochaines charges annuelles à venir">
+              <Text style={[styles.sectionTitle, { color: colors.text.primary, marginBottom: 12, marginHorizontal: 16 }]}>Prochaines Charges Annuelles</Text>
+              <View style={[styles.upcomingChargesCard, { backgroundColor: colors.background.card }]}>
+                {upcomingCharges.map((charge: any, index: number) => (
+                  <View 
+                    key={index} 
+                    style={[styles.chargeItem, { borderBottomColor: colors.border.primary, borderBottomWidth: index < upcomingCharges.length - 1 ? 1 : 0 }]}
+                    accessible={true}
+                    accessibilityLabel={`${charge.name}, ${formatAmount(charge.amount)}, échéance le ${new Date(charge.nextDueDate).toLocaleDateString('fr-FR')}`}
+                  >
+                    <View style={styles.chargeInfo}>
+                      <Text style={[styles.chargeName, { color: colors.text.primary }]}>{charge.name}</Text>
+                      <Text style={[styles.chargeDate, { color: colors.text.tertiary }]}>
+                        {new Date(charge.nextDueDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                      </Text>
+                    </View>
+                    <Text style={[styles.chargeAmount, { color: colors.semantic.warning }]}>
+                      {formatAmount(charge.amount)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
         </View>
+        )}
 
         <View style={styles.spacer} />
       </ScrollView>
@@ -1070,11 +1106,12 @@ const styles = StyleSheet.create({
   // Utilitaires
   refreshIndicator: {
     position: 'absolute',
-    top: 100,
+    top: 0,
     left: 0,
     right: 0,
     alignItems: 'center',
     zIndex: 999,
+    paddingVertical: 8,
   },
   
   // Cartes d'accès rapide (6 cartes - 3x2)
@@ -1147,6 +1184,108 @@ const styles = StyleSheet.create({
     padding: 8,
     marginVertical: 4,
     marginHorizontal: 2,
+  },
+  financialOverviewCard: {
+    borderRadius: 20,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+    gap: 16,
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  seeMoreButton: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  topCategoriesCard: {
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
+    gap: 12,
+  },
+  topCategoryItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  topCategoryInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  topCategoryRank: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    width: 24,
+  },
+  topCategoryName: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  topCategoryAmount: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  upcomingChargesCard: {
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  chargeItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  chargeInfo: {
+    flex: 1,
+  },
+  chargeName: {
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  chargeDate: {
+    fontSize: 12,
+  },
+  chargeAmount: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  donutSection: {
+    width: '100%',
+  },
+  donutCard: {
+    borderRadius: 16,
+    padding: 12,
+    alignItems: 'center',
   },
   navCards: {
     flexDirection: 'row',

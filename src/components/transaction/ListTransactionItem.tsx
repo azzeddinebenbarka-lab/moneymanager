@@ -34,6 +34,9 @@ export const ListTransactionItem: React.FC<ListTransactionItemProps> = ({ item, 
   const isTransfer = item.type === 'transfer';
   const resolved = resolveCategoryLabel(item.subCategory || item.category, categories || []);
   const label = resolved.child;
+  
+  // Formater le montant (sans décimales maintenant géré dans formatAmount)
+  const formattedAmount = formatAmount(Math.abs(item.amount));
 
   return (
     <TouchableOpacity 
@@ -42,28 +45,28 @@ export const ListTransactionItem: React.FC<ListTransactionItemProps> = ({ item, 
       activeOpacity={0.85}
     >
       <View style={styles.transactionMain}>
-        <View style={styles.transactionLeft}>
-          <View style={[
-            styles.iconContainer, 
-            { 
-              backgroundColor: colors.background.primary, 
-              borderColor: colors.border.primary 
-            }
-          ]}>
-            <Ionicons 
-              name={isTransfer ? 'swap-horizontal' : (isIncome ? 'arrow-down' : 'arrow-up')} 
-              size={20} 
-              color={isTransfer ? colors.primary[500] : (isIncome ? colors.semantic.success : colors.semantic.error)} 
-            />
-          </View>
+        <View style={[
+          styles.iconContainer, 
+          { 
+            backgroundColor: colors.background.primary, 
+            borderColor: colors.border.primary 
+          }
+        ]}>
+          <Ionicons 
+            name={isTransfer ? 'swap-horizontal' : (isIncome ? 'arrow-down' : 'arrow-up')} 
+            size={20} 
+            color={isTransfer ? colors.primary[500] : (isIncome ? colors.semantic.success : colors.semantic.error)} 
+          />
+        </View>
 
-          <View style={styles.transactionInfo}>
-            <Text 
-              style={[styles.transactionDescription, { color: colors.text.primary }]} 
-              numberOfLines={1}
-            >
-              {item.description || 'Sans description'}
-            </Text>
+        <View style={styles.transactionInfo}>
+          <Text 
+            style={[styles.transactionDescription, { color: colors.text.primary }]} 
+            numberOfLines={2}
+          >
+            {item.description || 'Sans description'}
+          </Text>
+          <View style={styles.transactionBottom}>
             <View style={styles.transactionMeta}>
               <Text style={[styles.transactionCategory, { color: colors.text.secondary }]}>
                 {label}
@@ -72,18 +75,15 @@ export const ListTransactionItem: React.FC<ListTransactionItemProps> = ({ item, 
                 {new Date(item.date).toLocaleDateString('fr-FR')}
               </Text>
             </View>
+            <Text 
+              style={[
+                styles.transactionAmount, 
+                { color: isTransfer ? colors.primary[500] : (isIncome ? colors.semantic.success : colors.semantic.error) }
+              ]}
+            >
+              {isTransfer ? '' : (isIncome ? '+' : '-')}{formattedAmount}
+            </Text>
           </View>
-        </View>
-
-        <View style={styles.transactionRight}>
-          <Text 
-            style={[
-              styles.transactionAmount, 
-              { color: isTransfer ? colors.primary[500] : (isIncome ? colors.semantic.success : colors.semantic.error) }
-            ]}
-          >
-            {isTransfer ? '' : (isIncome ? '+' : '-')}{formatAmount(Math.abs(item.amount))}
-          </Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -93,7 +93,7 @@ export const ListTransactionItem: React.FC<ListTransactionItemProps> = ({ item, 
 const styles = StyleSheet.create({
   transactionCard: {
     borderRadius: 16,
-    marginHorizontal: 20,
+    marginHorizontal: 0,
     marginVertical: 6,
     padding: 16,
     shadowColor: '#000',
@@ -104,13 +104,7 @@ const styles = StyleSheet.create({
   },
   transactionMain: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  transactionLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
+    alignItems: 'flex-start',
   },
   iconContainer: {
     width: 44,
@@ -127,26 +121,26 @@ const styles = StyleSheet.create({
   transactionDescription: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: 6,
+  },
+  transactionBottom: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   transactionMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    flexDirection: 'column',
+    gap: 2,
   },
   transactionCategory: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '500',
   },
   transactionDate: {
-    fontSize: 13,
-  },
-  transactionRight: {
-    alignItems: 'flex-end',
-    marginLeft: 12,
+    fontSize: 12,
   },
   transactionAmount: {
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '700',
   },
 });
