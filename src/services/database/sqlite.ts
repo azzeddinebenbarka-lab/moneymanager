@@ -556,7 +556,7 @@ const initializeDefaultCategories = async (userId: string = 'default-user'): Pro
       console.log('🔄 Initialisation des catégories par défaut...');
       
       // Utiliser categoryService pour initialiser les catégories complètes
-      const { categoryService } = await import('../categoryService.js');
+      const { categoryService } = await import('../categoryService');
       await categoryService.initializeDefaultCategories(userId);
       
       console.log('✅ Catégories par défaut initialisées avec succès');

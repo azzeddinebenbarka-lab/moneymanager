@@ -26,7 +26,7 @@ const InsightsScreen: React.FC = () => {
     const run = async () => {
       try {
         if (!generatedRef.current && currentReport) {
-          const reportService = (await import('../services/reportService.js')).reportService;
+          const reportService = (await import('../services/reportService')).reportService;
           const generated = await reportService.generateInsights(
             currentReport as any,
             spendingAnalysis as any,
