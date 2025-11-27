@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
-    paddingBottom: 100,
+    paddingBottom: 120,
   },
   accountCard: {
     padding: 16,
@@ -490,6 +490,8 @@ const styles = StyleSheet.create({
   },
   primaryCTA: {
     marginTop: 12,
+    marginBottom: 20,
+    marginHorizontal: 16,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',

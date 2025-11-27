@@ -1,6 +1,5 @@
 // src/components/layout/ModernDrawerContent.tsx - VERSION CORRIGÉE
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
 import {
     ScrollView,
     StyleSheet,
@@ -34,7 +33,7 @@ const ModernDrawerContent = (props: any) => {
         {
           label: t.calendarExpenses,
           icon: 'calendar-outline' as const,
-          screen: 'CalendarStack',
+          screen: 'Calendar',
         },
       ],
     },

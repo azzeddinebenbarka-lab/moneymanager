@@ -57,10 +57,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
   const isDark = theme === 'dark';
 
   const frequencyOptions = [
-    { value: 'daily', label: 'Quotidienne' },
-    { value: 'weekly', label: 'Hebdomadaire' },
     { value: 'monthly', label: 'Mensuelle' },
-    { value: 'yearly', label: 'Annuelle' },
   ];
 
   // ✅ CORRECTION : Charger au focus
@@ -385,8 +382,8 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
           
           {form.isRecurring && (
             <>
-              <Text style={[styles.helperText, { color: colors.text.secondary }]}>
-                Cette transaction se répétera automatiquement
+              <Text style={[styles.helperText, { color: colors.text.secondary, marginTop: 8 }]}>
+                💡 Cette transaction sera automatiquement créée à chaque échéance (quotidienne, hebdomadaire, mensuelle ou annuelle)
               </Text>
 
               {/* Fréquence */}

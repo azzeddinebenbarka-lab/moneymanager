@@ -20,6 +20,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useTransactions } from '../hooks/useTransactions';
+import { transactionRecurrenceService } from '../services/transactionRecurrenceService';
 import { Transaction } from '../types';
 
 const TransactionsScreen = ({ navigation }: any) => {
@@ -178,7 +179,19 @@ const TransactionsScreen = ({ navigation }: any) => {
   useEffect(() => { refreshTransactionsRef.current = refreshTransactions; }, [refreshTransactions]);
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
+    const unsubscribe = navigation.addListener('focus', async () => {
+      // Traiter les transactions récurrentes
+      try {
+        console.log('🔄 Traitement des transactions récurrentes...');
+        const result = await transactionRecurrenceService.processRecurringTransactions();
+        if (result.processed > 0) {
+          console.log(`✅ ${result.processed} transactions récurrentes créées`);
+        }
+      } catch (error) {
+        console.error('❌ Erreur traitement récurrences:', error);
+      }
+      
+      // Rafraîchir les transactions
       const fn = refreshTransactionsRef.current;
       if (fn) fn();
     });

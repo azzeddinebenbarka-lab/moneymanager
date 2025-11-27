@@ -235,19 +235,31 @@ export const transactionService = {
       const transactionId = generateId();
       const createdAt = new Date().toISOString();
       
+      // ✅ Gérer les champs de récurrence et sub_category
+      const isRecurring = (transactionData as any).isRecurring ? 1 : 0;
+      const recurrenceType = (transactionData as any).recurrenceType || null;
+      const recurrenceEndDate = (transactionData as any).recurrenceEndDate || null;
+      const subCategory = (transactionData as any).subCategory || null;
+      
       await db.runAsync(
-        `INSERT INTO transactions (id, user_id, amount, type, category, account_id, description, date, created_at) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO transactions (
+          id, user_id, amount, type, category, sub_category, account_id, description, date, created_at,
+          is_recurring, recurrence_type, recurrence_end_date
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           transactionId,
           userId,
           transactionData.amount,
           transactionData.type,
           transactionData.category,
+          subCategory,
           transactionData.accountId,
           transactionData.description || '',
           transactionData.date,
-          createdAt
+          createdAt,
+          isRecurring,
+          recurrenceType,
+          recurrenceEndDate
         ]
       );
 
@@ -366,18 +378,28 @@ export const transactionService = {
           id, 
           amount, 
           type, 
-          category, 
+          category,
+          sub_category as subCategory,
           account_id as accountId,
           description, 
           date, 
           created_at as createdAt,
-          user_id as userId
+          user_id as userId,
+          is_recurring as isRecurring,
+          recurrence_type as recurrenceType,
+          recurrence_end_date as recurrenceEndDate,
+          parent_transaction_id as parentTransactionId
          FROM transactions 
          WHERE user_id = ? 
          ORDER BY date DESC, created_at DESC`,
         [userId]
       );
-      return transactions || [];
+      
+      // ✅ Convertir is_recurring de 0/1 en boolean
+      return (transactions || []).map(tx => ({
+        ...tx,
+        isRecurring: Boolean(tx.isRecurring)
+      }));
     } catch (error) {
       console.error('❌ [transactionService] Erreur récupération transactions:', error);
       return [];
@@ -394,12 +416,17 @@ export const transactionService = {
           id, 
           amount, 
           type, 
-          category, 
+          category,
+          sub_category as subCategory,
           account_id as accountId,
           description, 
           date, 
           created_at as createdAt,
-          user_id as userId
+          user_id as userId,
+          is_recurring as isRecurring,
+          recurrence_type as recurrenceType,
+          recurrence_end_date as recurrenceEndDate,
+          parent_transaction_id as parentTransactionId
          FROM transactions 
          WHERE user_id = ?`;
       
@@ -428,7 +455,12 @@ export const transactionService = {
       query += ` ORDER BY date DESC, created_at DESC`;
       
       const transactions = await db.getAllAsync<any>(query, params);
-      return transactions || [];
+      
+      // ✅ Convertir is_recurring de 0/1 en boolean
+      return (transactions || []).map(tx => ({
+        ...tx,
+        isRecurring: Boolean(tx.isRecurring)
+      }));
     } catch (error) {
       console.error('❌ [transactionService] Erreur récupération transactions filtrées:', error);
       return [];
@@ -443,15 +475,26 @@ export const transactionService = {
           id, 
           amount, 
           type, 
-          category, 
+          category,
+          sub_category as subCategory,
           account_id as accountId,
           description, 
           date, 
-          created_at as createdAt
+          created_at as createdAt,
+          is_recurring as isRecurring,
+          recurrence_type as recurrenceType,
+          recurrence_end_date as recurrenceEndDate,
+          parent_transaction_id as parentTransactionId
          FROM transactions 
          WHERE id = ? AND user_id = ?`,
         [id, userId]
       );
+      
+      // ✅ Convertir is_recurring de 0/1 en boolean
+      if (transaction) {
+        transaction.isRecurring = Boolean(transaction.isRecurring);
+      }
+      
       return transaction;
     } catch (error) {
       console.error('❌ [transactionService] Erreur récupération transaction par ID:', error);
@@ -471,17 +514,27 @@ export const transactionService = {
           id, 
           amount, 
           type, 
-          category, 
+          category,
+          sub_category as subCategory,
           account_id as accountId,
           description, 
           date, 
-          created_at as createdAt
+          created_at as createdAt,
+          is_recurring as isRecurring,
+          recurrence_type as recurrenceType,
+          recurrence_end_date as recurrenceEndDate,
+          parent_transaction_id as parentTransactionId
          FROM transactions 
          WHERE user_id = ? AND date BETWEEN ? AND ? 
          ORDER BY date DESC`,
         [userId, startDate, endDate]
       );
-      return transactions || [];
+      
+      // ✅ Convertir is_recurring de 0/1 en boolean
+      return (transactions || []).map(tx => ({
+        ...tx,
+        isRecurring: Boolean(tx.isRecurring)
+      }));
     } catch (error) {
       console.error('❌ [transactionService] Erreur récupération transactions par date:', error);
       return [];

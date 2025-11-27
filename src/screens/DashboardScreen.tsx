@@ -557,6 +557,15 @@ const DashboardScreen: React.FC = () => {
       .slice(0, 3);
   }, [annualCharges]);
 
+  // ✅ Transactions récentes - même logique que la page Transactions
+  const recentTransactions = useMemo(() => {
+    if (!transactions || transactions.length === 0) return [];
+    
+    // Utiliser directement le tableau de transactions (déjà trié par date DESC dans le service)
+    // Prendre les 6 premières
+    return transactions.slice(0, 6);
+  }, [transactions]);
+
   // ✅ RECHARGEMENT SYNCHRONISÉ
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -693,7 +702,7 @@ const DashboardScreen: React.FC = () => {
                 <Text style={[styles.seeMoreButton, { color: colors.primary[500] }]}>Voir plus</Text>
               </TouchableOpacity>
             </View>
-            {(transactions || []).slice(0, 6).map((tx: any) => (
+            {recentTransactions.map((tx: any) => (
               <ListTransactionItem 
                 key={tx.id}
                 item={tx}

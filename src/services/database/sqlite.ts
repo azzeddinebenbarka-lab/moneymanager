@@ -19,6 +19,7 @@ export interface DatabaseTransaction {
   amount: number;
   type: string;
   category: string;
+  sub_category?: string;
   account_id: string;
   description: string;
   date: string;
@@ -332,6 +333,16 @@ const createTables = async (): Promise<void> => {
       FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE
     );
   `);
+
+  // ✅ Ajouter la colonne sub_category si elle n'existe pas
+  try {
+    await database.execAsync(`ALTER TABLE transactions ADD COLUMN sub_category TEXT`);
+    console.log('✅ Colonne sub_category ajoutée à la table transactions');
+  } catch (error: any) {
+    if (!error.message?.includes('duplicate column name')) {
+      console.error('⚠️ Erreur ajout colonne sub_category:', error);
+    }
+  }
 
   // Table des transactions récurrentes
   await database.execAsync(`

@@ -1,249 +1,301 @@
-// src/screens/AnnualChargesScreen.tsx - VERSION SIMPLIFIÉE SANS CHARGES ISLAMIQUES
-import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import React, { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
+import React, { useState, useCallback, useMemo } from 'react';
+import { 
+  View, 
+  Text, 
+  ScrollView, 
+  TouchableOpacity, 
+  StyleSheet, 
+  Alert, 
+  Switch,
   RefreshControl,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+  ActivityIndicator 
 } from 'react-native';
-import { SafeAreaView } from '../components/SafeAreaView';
-import { useCurrency } from '../context/CurrencyContext';
-import { useRefresh } from '../context/RefreshContext';
-import { useDesignSystem, useTheme } from '../context/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '../context/ThemeContext';
 import { useAnnualCharges } from '../hooks/useAnnualCharges';
-import { useLanguage } from '../context/LanguageContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { AnnualCharge } from '../types/AnnualCharge';
+import { recurrenceService } from '../services/recurrenceService';
 
-export const AnnualChargesScreen: React.FC = () => {
-  const navigation = useNavigation();
-  const { colors } = useDesignSystem();
-  const { theme } = useTheme();
+type FilterType = 'all' | 'pending' | 'paid' | 'upcoming';
+
+interface AnnualChargesScreenProps {
+  navigation: any;
+}
+
+export default function AnnualChargesScreen({ navigation }: AnnualChargesScreenProps) {
+  const { designSystem } = useTheme();
+  const colors = designSystem.colors;
   const { formatAmount } = useCurrency();
   const { 
     charges, 
     loading, 
-    error, 
-    getStats, 
+    error,
     refreshAnnualCharges,
-    togglePaidStatus,
-    payCharge
+    updateAnnualCharge,
+    processAutoDeductCharges
   } = useAnnualCharges();
-
-  const [stats, setStats] = useState<any>(null);
+  
+  const [selectedFilter, setSelectedFilter] = useState<FilterType>('all');
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<'all' | 'paid' | 'pending' | 'upcoming'>('all');
-  const [filteredCharges, setFilteredCharges] = useState<any[]>([]);
 
-  const currentYear = new Date().getFullYear();
-  const isDark = theme === 'dark';
+  // Charger les données au focus de l'écran (hook unique)
+  useFocusEffect(
+    useCallback(() => {
+      const loadData = async () => {
+        await refreshAnnualCharges();
+        
+        // Traiter les récurrences des charges payées
+        try {
+          const recurringResult = await recurrenceService.processRecurringCharges();
+          if (recurringResult.processed > 0) {
+            console.log(`✅ Created ${recurringResult.processed} recurring charge occurrences`);
+            await refreshAnnualCharges(); // Recharger pour afficher les nouvelles occurrences
+          }
+        } catch (error) {
+          console.error('Error processing recurring charges:', error);
+        }
+        
+        // Traiter les prélèvements automatiques après chargement
+        if (processAutoDeductCharges) {
+          try {
+            const result = await processAutoDeductCharges();
+            if (result.processed > 0) {
+              console.log(`✅ Processed ${result.processed} auto-deduct charges`);
+            }
+          } catch (error) {
+            console.error('Error processing auto-deduct:', error);
+          }
+        }
+      };
+      loadData();
+    }, [refreshAnnualCharges, processAutoDeductCharges])
+  );
 
-  // ✅ CHARGER LES DONNÉES
-  const loadData = useCallback(async () => {
-    try {
-      setRefreshing(true);
-      console.log('🔄 Chargement des statistiques...');
-      const chargesStats = await getStats();
-      setStats(chargesStats);
-    } catch (error) {
-      console.error('Error loading annual charges data:', error);
-    } finally {
-      setRefreshing(false);
-    }
-  }, [getStats]);
-
-  // ✅ CHARGER AU MOUNT
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // ✅ APPLIQUER FILTRES QUAND CHARGES OU STATUS CHANGENT
-  useEffect(() => {
-    if (!charges) {
-      setFilteredCharges([]);
-      return;
-    }
-
-    const filtered = charges.filter(charge => {
-      if (selectedStatus === 'paid') {
-        return charge.isPaid;
-      } else if (selectedStatus === 'pending') {
-        return !charge.isPaid;
-      } else if (selectedStatus === 'upcoming') {
-        const today = new Date();
-        const dueDate = new Date(charge.dueDate);
-        return !charge.isPaid && dueDate > today;
+  // Filtres disponibles avec compteurs
+  const filters = useMemo(() => {
+    const now = new Date();
+    return [
+      { key: 'all' as FilterType, label: 'Toutes', count: charges.length, icon: 'list-outline' },
+      { 
+        key: 'pending' as FilterType, 
+        label: 'En attente', 
+        count: charges.filter(c => !c.isPaid && new Date(c.dueDate) <= now).length,
+        icon: 'time-outline'
+      },
+      { 
+        key: 'paid' as FilterType, 
+        label: 'Payées', 
+        count: charges.filter(c => c.isPaid).length,
+        icon: 'checkmark-circle-outline'
+      },
+      { 
+        key: 'upcoming' as FilterType, 
+        label: 'À venir', 
+        count: charges.filter(c => !c.isPaid && new Date(c.dueDate) > now).length,
+        icon: 'calendar-outline'
       }
-      return true; // 'all'
-    });
-    
-    setFilteredCharges(filtered);
-  }, [charges, selectedStatus]);
+    ];
+  }, [charges]);
 
-  // ✅ PULL TO REFRESH
-  const handlePullToRefresh = useCallback(async () => {
+  // Filtrage des charges
+  const filteredCharges = useMemo(() => {
+    if (!charges) return [];
+    
+    const now = new Date();
+    
+    switch (selectedFilter) {
+      case 'pending':
+        return charges.filter(charge => !charge.isPaid && new Date(charge.dueDate) <= now);
+      case 'paid':
+        return charges.filter(charge => charge.isPaid);
+      case 'upcoming':
+        return charges.filter(charge => !charge.isPaid && new Date(charge.dueDate) > now);
+      default:
+        return charges;
+    }
+  }, [charges, selectedFilter]);
+
+  // Calculer les statistiques pour la carte budget
+  const budgetCard = useMemo(() => {
+    if (!charges || charges.length === 0) return null;
+    
+    const totalCharges = charges.reduce((sum, charge) => sum + charge.amount, 0);
+    const paidAmount = charges.filter(c => c.isPaid).reduce((sum, charge) => sum + charge.amount, 0);
+    const remainingAmount = totalCharges - paidAmount;
+    
+    return {
+      totalCharges,
+      paidAmount,
+      remainingAmount
+    };
+  }, [charges]);
+
+  // Gestion de l'auto-déduction
+  const handleAutoDeductToggle = useCallback(async (charge: AnnualCharge, enabled: boolean) => {
+    try {
+      await updateAnnualCharge(charge.id, { autoDeduct: enabled });
+      Alert.alert(
+        'Succès',
+        enabled ? 'Prélèvement automatique activé' : 'Prélèvement automatique désactivé'
+      );
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de modifier le prélèvement automatique');
+    }
+  }, [updateAnnualCharge]);
+
+  // Pull to refresh
+  const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
       await refreshAnnualCharges();
-      const chargesStats = await getStats();
-      setStats(chargesStats);
+      
+      // Traiter les récurrences
+      await recurrenceService.processRecurringCharges();
+      
+      // Traiter les prélèvements automatiques
+      if (processAutoDeductCharges) {
+        await processAutoDeductCharges();
+      }
+      
+      // Recharger pour afficher les changements
+      await refreshAnnualCharges();
     } catch (error) {
       console.error('Error refreshing:', error);
-    } finally {
-      setRefreshing(false);
     }
-  }, [refreshAnnualCharges, getStats]);
+    setRefreshing(false);
+  }, [refreshAnnualCharges, processAutoDeductCharges]);
 
-  // ✅ HELPERS POUR ICÔNES ET COULEURS
+  // Obtenir l'icône de catégorie
   const getCategoryIcon = (category: string): string => {
-    const categoryLower = category.toLowerCase();
-    
-    if (categoryLower.includes('habitation') || categoryLower.includes('logement')) return 'home';
-    if (categoryLower.includes('transport') || categoryLower.includes('voiture')) return 'car';
-    if (categoryLower.includes('santé') || categoryLower.includes('medical')) return 'medical';
-    if (categoryLower.includes('éducation') || categoryLower.includes('école')) return 'school';
-    if (categoryLower.includes('loisir') || categoryLower.includes('divertissement')) return 'game-controller';
-    if (categoryLower.includes('professionnel') || categoryLower.includes('travail')) return 'briefcase';
-    if (categoryLower.includes('technologie') || categoryLower.includes('internet')) return 'phone-portrait';
-    if (categoryLower.includes('autre')) return 'ellipsis-horizontal';
-    
-    return 'card';
+    const iconMap: { [key: string]: string } = {
+      'Logement': 'home-outline',
+      'Transport': 'car-outline',
+      'Assurance': 'shield-checkmark-outline',
+      'Santé': 'medical-outline',
+      'Education': 'school-outline',
+      'Loisirs': 'game-controller-outline',
+      'Autres': 'ellipsis-horizontal-outline'
+    };
+    return iconMap[category] || 'document-outline';
   };
 
-  const getCategoryColor = (category: string): string => {
-    const categoryLower = category.toLowerCase();
+  // Obtenir la couleur de statut
+  const getStatusColor = (charge: AnnualCharge) => {
+    const successColor = '#10B981';
+    const errorColor = '#EF4444';
+    const warningColor = '#F59E0B';
+    const secondaryColor = colors.neutral?.[500] || '#6B7280';
     
-    if (categoryLower.includes('habitation') || categoryLower.includes('logement')) return '#10B981';
-    if (categoryLower.includes('transport') || categoryLower.includes('voiture')) return '#3B82F6';
-    if (categoryLower.includes('santé') || categoryLower.includes('medical')) return '#EF4444';
-    if (categoryLower.includes('éducation') || categoryLower.includes('école')) return '#F59E0B';
-    if (categoryLower.includes('loisir') || categoryLower.includes('divertissement')) return '#8B5CF6';
-    if (categoryLower.includes('professionnel') || categoryLower.includes('travail')) return '#6B7280';
-    if (categoryLower.includes('technologie') || categoryLower.includes('internet')) return '#06B6D4';
-    if (categoryLower.includes('autre')) return '#9CA3AF';
-    
-    return colors.primary[500];
-  };
-
-  // ✅ ACTIONS
-  const handleTogglePaid = async (chargeId: string, currentStatus: boolean) => {
-    try {
-      await togglePaidStatus(chargeId, !currentStatus);
-      await loadData(); // Recharger les stats
-    } catch (error) {
-      Alert.alert('Erreur', 'Impossible de modifier le statut');
-    }
-  };
-
-  const handlePayCharge = async (chargeId: string) => {
-    Alert.alert(
-      'Payer la charge',
-      'Voulez-vous payer cette charge maintenant ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Payer',
-          onPress: async () => {
-            try {
-              await payCharge(chargeId);
-              await loadData();
-              Alert.alert('✅ Payé', 'Charge payée avec succès');
-            } catch (error) {
-              Alert.alert('Erreur', 'Impossible de payer la charge');
-            }
-          }
-        }
-      ]
-    );
-  };
-
-  // ✅ RENDER CHARGE CARD
-  const renderChargeCard = ({ item: charge }: { item: AnnualCharge }) => {
+    if (charge.isPaid) return successColor;
+    const now = new Date();
     const dueDate = new Date(charge.dueDate);
-    const isOverdue = !charge.isPaid && dueDate < new Date();
-    const categoryColor = getCategoryColor(charge.category);
-    const categoryIcon = getCategoryIcon(charge.category);
+    
+    if (dueDate < now) return errorColor;
+    if (dueDate.getTime() - now.getTime() <= 7 * 24 * 60 * 60 * 1000) return warningColor;
+    return secondaryColor;
+  };
 
-    return (
-      <View style={[styles.modernChargeCard, { backgroundColor: colors.background.card }]}>
-        <View style={styles.modernCardContent}>
-          {/* En-tête avec icône et infos */}
-          <View style={styles.modernCardHeader}>
-            <View style={[styles.modernCategoryIcon, { backgroundColor: `${categoryColor}20` }]}>
-              <Ionicons name={categoryIcon as any} size={20} color={categoryColor} />
-            </View>
-            <View style={styles.modernChargeInfo}>
-              <Text style={[styles.modernChargeName, { color: colors.text.primary }]} numberOfLines={1}>
+  // Obtenir les couleurs sûres
+  const safeColors = {
+    background: colors.background?.[50] || '#FFFFFF',
+    card: colors.background?.[100] || '#F9FAFB',
+    border: colors.neutral?.[200] || '#E5E7EB',
+    primary: colors.primary?.[500] || '#007AFF',
+    text: {
+      primary: colors.neutral?.[900] || '#111827',
+      secondary: colors.neutral?.[600] || '#6B7280'
+    },
+    success: '#10B981',
+    warning: '#F59E0B',
+    error: '#EF4444'
+  };
+
+  // Composant carte de charge
+  const ChargeCard = ({ charge }: { charge: AnnualCharge }) => (
+    <TouchableOpacity
+      style={[styles.chargeCard, { backgroundColor: safeColors.card, borderColor: safeColors.border }]}
+      onPress={() => navigation.navigate('EditAnnualCharge', { chargeId: charge.id })}
+    >
+      <View style={styles.cardHeader}>
+        <View style={styles.cardLeft}>
+          <View style={[styles.iconContainer, { backgroundColor: safeColors.primary + '20' }]}>
+            <Ionicons 
+              name={getCategoryIcon(charge.category) as any}
+              size={24}
+              color={safeColors.primary}
+            />
+          </View>
+          <View style={styles.chargeInfo}>
+            <View style={styles.chargeNameRow}>
+              <Text style={[styles.chargeName, { color: safeColors.text.primary }]} numberOfLines={1}>
                 {charge.name}
               </Text>
-              <Text style={[styles.modernChargeCategory, { color: colors.text.secondary }]}>
-                {charge.category}
-              </Text>
-            </View>
-            <View style={styles.modernChargeAmount}>
-              <Text style={[styles.modernAmountText, { color: colors.text.primary }]}>
-                {formatAmount(charge.amount)}
-              </Text>
-              <Text style={[styles.modernDueDate, { 
-                color: isOverdue ? '#EF4444' : colors.text.secondary 
-              }]}>
-                {dueDate.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
-              </Text>
-            </View>
-          </View>
-
-          {/* Actions */}
-          <View style={styles.modernCardActions}>
-            {charge.isPaid ? (
-              <View style={[styles.modernPaidBadge, { backgroundColor: '#10B98120' }]}>
-                <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-                <Text style={[styles.modernPaidText, { color: '#10B981' }]}>Payé</Text>
-              </View>
-            ) : (
-              <View style={styles.modernActionButtons}>
-                <TouchableOpacity
-                  style={[styles.modernActionButton, { backgroundColor: colors.primary[100] }]}
-                  onPress={() => handlePayCharge(charge.id)}
-                >
-                  <Ionicons name="card" size={16} color={colors.primary[500]} />
-                  <Text style={[styles.modernActionText, { color: colors.primary[500] }]}>
-                    Payer
+              {charge.isRecurring && charge.recurrence && (
+                <View style={[styles.recurrenceBadge, { backgroundColor: '#8B5CF6' + '15', borderWidth: 1, borderColor: '#8B5CF6' + '40' }]}>
+                  <Ionicons name="repeat" size={12} color="#8B5CF6" />
+                  <Text style={[styles.recurrenceText, { color: '#8B5CF6' }]}>
+                    {charge.recurrence === 'monthly' ? '📅 Mensuel' : 
+                     charge.recurrence === 'quarterly' ? '📅 Trimestriel' : 
+                     '📅 Annuel'}
                   </Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  style={[styles.modernActionButton, { backgroundColor: '#10B98120' }]}
-                  onPress={() => handleTogglePaid(charge.id, charge.isPaid)}
-                >
-                  <Ionicons name="checkmark" size={16} color="#10B981" />
-                </TouchableOpacity>
-              </View>
-            )}
+                </View>
+              )}
+            </View>
+            <Text style={[styles.chargeCategory, { color: safeColors.text.secondary }]}>
+              {charge.category}
+            </Text>
           </View>
         </View>
-
-        {/* Badge en retard */}
-        {isOverdue && (
-          <View style={styles.modernOverdueBadge}>
-            <Text style={styles.modernOverdueText}>En retard</Text>
-          </View>
-        )}
+        
+        <View style={styles.cardRight}>
+          <Text style={[styles.chargeAmount, { color: safeColors.text.primary }]}>
+            {formatAmount(charge.amount)}
+          </Text>
+          <Text style={[styles.chargeDueDate, { color: getStatusColor(charge) }]}>
+            {new Date(charge.dueDate).toLocaleDateString('fr-FR', { 
+              day: '2-digit', 
+              month: 'short' 
+            })}
+          </Text>
+        </View>
       </View>
-    );
-  };
+
+      <View style={styles.cardFooter}>
+        <View style={styles.badgesContainer}>
+          {charge.autoDeduct && charge.accountId && (
+            <View style={[styles.infoBadge, { backgroundColor: '#10B981' + '15', borderWidth: 1, borderColor: '#10B981' + '40' }]}>
+              <Ionicons name="flash" size={12} color="#10B981" />
+              <Text style={[styles.infoBadgeText, { color: '#10B981' }]}>Auto</Text>
+            </View>
+          )}
+          {charge.isPaid && (
+            <View style={[styles.infoBadge, { backgroundColor: safeColors.success + '20', borderWidth: 1, borderColor: safeColors.success + '40' }]}>
+              <Ionicons name="checkmark-circle" size={12} color={safeColors.success} />
+              <Text style={[styles.infoBadgeText, { color: safeColors.success }]}>Payée</Text>
+            </View>
+          )}
+        </View>
+        
+        <Switch
+          value={charge.autoDeduct || false}
+          onValueChange={(enabled) => handleAutoDeductToggle(charge, enabled)}
+          trackColor={{ false: safeColors.border, true: safeColors.primary + '30' }}
+          thumbColor={charge.autoDeduct ? safeColors.primary : safeColors.text.secondary}
+        />
+      </View>
+    </TouchableOpacity>
+  );
 
   if (loading && !refreshing) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background.primary }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: safeColors.background }]} edges={['top']}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary[500]} />
-          <Text style={[styles.loadingText, { color: colors.text.secondary }]}>
-            Chargement des charges annuelles...
+          <ActivityIndicator size="large" color={safeColors.primary} />
+          <Text style={[styles.loadingText, { color: safeColors.text.secondary }]}>
+            Chargement...
           </Text>
         </View>
       </SafeAreaView>
@@ -251,52 +303,54 @@ export const AnnualChargesScreen: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background.primary }]}>
-      {/* Header */}
+    <SafeAreaView style={[styles.container, { backgroundColor: safeColors.background }]} edges={['top']}>
+      {/* En-tête avec bouton d'ajout */}
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={[styles.title, { color: colors.text.primary }]}>
-          Charges Annuelles {currentYear}
+        <Text style={[styles.title, { color: safeColors.text.primary }]}>
+          Charges Annuelles
         </Text>
-        <TouchableOpacity 
-          style={styles.addButton}
-          onPress={() => navigation.navigate('AddAnnualCharge' as never)}
+        <TouchableOpacity
+          style={[styles.addButton, { backgroundColor: safeColors.primary }]}
+          onPress={() => navigation.navigate('EditAnnualCharge')}
         >
-          <Ionicons name="add" size={24} color={colors.primary[500]} />
+          <Ionicons name="add" size={24} color="white" />
         </TouchableOpacity>
       </View>
 
-      {/* Statistiques */}
-      {stats && (
-        <View style={[styles.statsContainer, { backgroundColor: colors.background.card }]}>
-          <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: colors.primary[500] }]}>
-                {formatAmount(stats.totalAmount)}
-              </Text>
-              <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
-                Total
+      {/* Message informatif */}
+      <View style={[styles.infoMessage, { backgroundColor: safeColors.primary + '10', borderColor: safeColors.primary + '30' }]}>
+        <Ionicons name="information-circle" size={20} color={safeColors.primary} />
+        <Text style={[styles.infoMessageText, { color: safeColors.text.primary }]}>
+          <Text style={{ fontWeight: '600' }}>💡 Astuce :</Text> Les charges avec 📅 sont récurrentes, ⚡ indique un prélèvement automatique actif
+        </Text>
+      </View>
+
+      {/* Carte budget */}
+      {budgetCard && (
+        <View style={[styles.budgetCard, { backgroundColor: safeColors.card, borderColor: safeColors.border }]}>
+          <View style={styles.budgetHeader}>
+            <Ionicons name="wallet-outline" size={24} color={safeColors.primary} />
+            <Text style={[styles.budgetTitle, { color: safeColors.text.primary }]}>
+              Budget Annuel
+            </Text>
+          </View>
+          <View style={styles.budgetContent}>
+            <View style={styles.budgetRow}>
+              <Text style={[styles.budgetLabel, { color: safeColors.text.secondary }]}>Total charges</Text>
+              <Text style={[styles.budgetAmount, { color: safeColors.text.primary }]}>
+                {formatAmount(budgetCard.totalCharges)}
               </Text>
             </View>
-            <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: '#10B981' }]}>
-                {formatAmount(stats.paidAmount)}
-              </Text>
-              <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
-                Payé
+            <View style={styles.budgetRow}>
+              <Text style={[styles.budgetLabel, { color: safeColors.text.secondary }]}>Payées</Text>
+              <Text style={[styles.budgetAmount, { color: safeColors.success }]}>
+                {formatAmount(budgetCard.paidAmount)}
               </Text>
             </View>
-            <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: '#F59E0B' }]}>
-                {formatAmount(stats.pendingAmount)}
-              </Text>
-              <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
-                Restant
+            <View style={styles.budgetRow}>
+              <Text style={[styles.budgetLabel, { color: safeColors.text.secondary }]}>Restantes</Text>
+              <Text style={[styles.budgetAmount, { color: safeColors.warning }]}>
+                {formatAmount(budgetCard.remainingAmount)}
               </Text>
             </View>
           </View>
@@ -304,78 +358,111 @@ export const AnnualChargesScreen: React.FC = () => {
       )}
 
       {/* Filtres */}
-      <View style={[styles.filtersContainer, { backgroundColor: colors.background.card }]}>
-        <View style={styles.filtersRow}>
-          {[
-            { key: 'all', label: 'Toutes', icon: 'list' },
-            { key: 'pending', label: 'En attente', icon: 'time' },
-            { key: 'paid', label: 'Payées', icon: 'checkmark-circle' },
-            { key: 'upcoming', label: 'Prochaines', icon: 'calendar' }
-          ].map((filter) => (
-            <TouchableOpacity
-              key={filter.key}
-              style={[
-                styles.filterButton,
-                {
-                  backgroundColor: selectedStatus === filter.key 
-                    ? colors.primary[500] 
-                    : colors.background.secondary
-                }
-              ]}
-              onPress={() => setSelectedStatus(filter.key as any)}
-            >
-              <Ionicons 
-                name={filter.icon as any} 
-                size={16} 
-                color={selectedStatus === filter.key ? 'white' : colors.text.secondary} 
-              />
-              <Text style={[
-                styles.filterText,
-                {
-                  color: selectedStatus === filter.key ? 'white' : colors.text.secondary
-                }
-              ]}>
-                {filter.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+      <View style={[styles.filtersWrapper, { backgroundColor: safeColors.card }]}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filtersContent}
+        >
+          {filters.map((filter) => {
+            const isSelected = selectedFilter === filter.key;
+            return (
+              <TouchableOpacity
+                key={filter.key}
+                style={[
+                  styles.filterChip,
+                  { 
+                    backgroundColor: isSelected ? safeColors.primary : 'transparent',
+                    borderColor: isSelected ? safeColors.primary : safeColors.border
+                  }
+                ]}
+                onPress={() => setSelectedFilter(filter.key)}
+              >
+                <Ionicons 
+                  name={filter.icon as any} 
+                  size={18} 
+                  color={isSelected ? 'white' : safeColors.text.secondary}
+                  style={styles.filterIcon}
+                />
+                <Text style={[
+                  styles.filterText,
+                  { 
+                    color: isSelected ? 'white' : safeColors.text.primary 
+                  }
+                ]}>
+                  {filter.label}
+                </Text>
+                {filter.count > 0 && (
+                  <View style={[
+                    styles.filterBadge,
+                    { backgroundColor: isSelected ? 'rgba(255,255,255,0.3)' : safeColors.primary + '15' }
+                  ]}>
+                    <Text style={[
+                      styles.filterBadgeText,
+                      { color: isSelected ? 'white' : safeColors.primary }
+                    ]}>
+                      {filter.count}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       </View>
 
       {/* Liste des charges */}
-      <FlatList
-        data={filteredCharges}
-        renderItem={renderChargeCard}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
+      <ScrollView
+        style={styles.scrollContainer}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handlePullToRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[safeColors.primary]}
+            tintColor={safeColors.primary}
+          />
         }
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="document-outline" size={64} color={colors.text.secondary} />
-            <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>
-              Aucune charge trouvée
-            </Text>
-            <Text style={[styles.emptyDescription, { color: colors.text.secondary }]}>
-              {selectedStatus === 'all' 
-                ? 'Commencez par ajouter vos premières charges annuelles'
-                : `Aucune charge ${selectedStatus === 'paid' ? 'payée' : selectedStatus === 'pending' ? 'en attente' : 'prochaine'} trouvée`
-              }
-            </Text>
-          </View>
-        }
-      />
+      >
+        <View style={styles.content}>
+          {filteredCharges.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="document-outline" size={64} color={safeColors.text.secondary} />
+              <Text style={[styles.emptyTitle, { color: safeColors.text.primary }]}>
+                Aucune charge
+              </Text>
+              <Text style={[styles.emptyDescription, { color: safeColors.text.secondary }]}>
+                {selectedFilter === 'all' 
+                  ? 'Ajoutez votre première charge annuelle'
+                  : `Aucune charge ${filters.find(f => f.key === selectedFilter)?.label.toLowerCase()}`
+                }
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.chargesList}>
+              <Text style={[styles.sectionTitle, { color: safeColors.text.primary }]}>
+                {selectedFilter === 'all' ? 'Toutes les charges' :
+                 selectedFilter === 'pending' ? 'Charges en attente' :
+                 selectedFilter === 'paid' ? 'Charges payées' :
+                 selectedFilter === 'upcoming' ? 'Charges à venir' : 'Charges'}
+              </Text>
+              
+              {filteredCharges.map((charge) => (
+                <ChargeCard key={charge.id} charge={charge} />
+              ))}
+            </View>
+          )}
+        </View>
+      </ScrollView>
 
+      {/* Message d'erreur */}
       {error && (
-        <View style={[styles.errorContainer, { backgroundColor: '#FEE2E2' }]}>
-          <Text style={[styles.errorText, { color: '#DC2626' }]}>{error}</Text>
+        <View style={[styles.errorContainer, { backgroundColor: safeColors.error + '20' }]}>
+          <Text style={[styles.errorText, { color: safeColors.error }]}>{error}</Text>
         </View>
       )}
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -392,174 +479,123 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  backButton: {
-    padding: 8,
+    paddingTop: 20,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '600',
-    flex: 1,
-    textAlign: 'center',
+    fontSize: 28,
+    fontWeight: 'bold',
   },
   addButton: {
-    padding: 8,
-  },
-  statsContainer: {
-    marginHorizontal: 20,
-    marginTop: 16,
-    borderRadius: 12,
-    padding: 20,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    textTransform: 'uppercase',
-  },
-  filtersContainer: {
-    marginHorizontal: 20,
-    marginTop: 16,
-    borderRadius: 12,
-    padding: 16,
-  },
-  filtersRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  filterButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    gap: 6,
-    flex: 1,
-    justifyContent: 'center',
-  },
-  filterText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  listContainer: {
-    padding: 20,
-  },
-  modernChargeCard: {
-    borderRadius: 16,
-    marginBottom: 12,
-    overflow: 'hidden',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-  },
-  modernCardContent: {
-    padding: 16,
-  },
-  modernCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  modernCategoryIcon: {
     width: 44,
     height: 44,
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
   },
-  modernChargeInfo: {
-    flex: 1,
-  },
-  modernChargeName: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  modernChargeCategory: {
-    fontSize: 14,
-  },
-  modernChargeAmount: {
-    alignItems: 'flex-end',
-  },
-  modernAmountText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 2,
-  },
-  modernDueDate: {
-    fontSize: 12,
-  },
-  modernCardActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
-  modernPaidBadge: {
+  infoMessage: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    marginHorizontal: 20,
+    marginBottom: 16,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 10,
+  },
+  infoMessageText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  budgetCard: {
+    marginHorizontal: 20,
+    marginBottom: 20,
+    padding: 16,
     borderRadius: 16,
-    gap: 6,
+    borderWidth: 1,
   },
-  modernPaidText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  modernActionButtons: {
+  budgetHeader: {
     flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  budgetTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginLeft: 12,
+  },
+  budgetContent: {
     gap: 8,
   },
-  modernActionButton: {
+  budgetRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  budgetLabel: {
+    fontSize: 14,
+  },
+  budgetAmount: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  filtersWrapper: {
+    marginBottom: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  filtersContent: {
+    paddingHorizontal: 20,
+    gap: 10,
+  },
+  filterChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1.5,
     gap: 6,
   },
-  modernActionText: {
-    fontSize: 12,
-    fontWeight: '500',
+  filterIcon: {
+    marginRight: 2,
   },
-  modernOverdueBadge: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    backgroundColor: '#FEE2E2',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+  filterText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
-  modernOverdueText: {
-    color: '#DC2626',
-    fontSize: 10,
-    fontWeight: '500',
+  filterBadge: {
+    marginLeft: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    minWidth: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  content: {
+    paddingBottom: 100,
   },
   emptyContainer: {
+    padding: 40,
     alignItems: 'center',
-    paddingVertical: 60,
+    justifyContent: 'center',
   },
   emptyTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '600',
     marginTop: 16,
     marginBottom: 8,
@@ -568,7 +604,103 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
-    paddingHorizontal: 32,
+  },
+  chargesList: {
+    paddingHorizontal: 20,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  chargeCard: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  cardLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  chargeInfo: {
+    flex: 1,
+  },
+  chargeNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 2,
+  },
+  chargeName: {
+    fontSize: 16,
+    fontWeight: '600',
+    flex: 1,
+  },
+  recurrenceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    gap: 4,
+  },
+  recurrenceText: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  chargeCategory: {
+    fontSize: 14,
+  },
+  cardRight: {
+    alignItems: 'flex-end',
+  },
+  chargeAmount: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  chargeDueDate: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  badgesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  infoBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+    gap: 4,
+  },
+  infoBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
   },
   errorContainer: {
     margin: 20,
@@ -581,4 +713,3 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AnnualChargesScreen;

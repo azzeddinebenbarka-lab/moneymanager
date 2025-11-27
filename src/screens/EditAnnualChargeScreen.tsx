@@ -33,12 +33,12 @@ interface AnnualChargeFormData {
 }
 
 const EditAnnualChargeScreen = ({ navigation, route }: any) => {
-  const { chargeId } = route.params;
+  const { chargeId } = route.params || {};
   const { t } = useLanguage();
   const { theme } = useTheme();
   const { accounts } = useAccounts();
   const subcategories = getAllSubcategories();
-  const { getChargeById, updateAnnualCharge } = useAnnualCharges();
+  const { getChargeById, updateAnnualCharge, createCharge } = useAnnualCharges();
   
   const [form, setForm] = useState<AnnualChargeFormData>({
     name: '',
@@ -73,6 +73,12 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
   }, [chargeId]);
 
   const loadChargeData = async () => {
+    if (!chargeId) {
+      // Mode création - initialiser avec des valeurs par défaut
+      setInitialLoading(false);
+      return;
+    }
+    
     try {
       setInitialLoading(true);
       const charge = await getChargeById(chargeId);
@@ -122,7 +128,7 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
 
     setLoading(true);
     try {
-      const updates: UpdateAnnualChargeData = {
+      const chargeData = {
         name: form.name.trim(),
         amount: amount,
         dueDate: form.dueDate.toISOString().split('T')[0],
@@ -135,16 +141,26 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
         recurrence: form.recurrence !== 'none' ? form.recurrence : undefined,
       };
 
-      await updateAnnualCharge(chargeId, updates);
-      
-      Alert.alert(
-        'Succès',
-        'Charge annuelle modifiée avec succès',
-        [{ text: 'OK', onPress: () => navigation.goBack() }]
-      );
+      if (chargeId) {
+        // Mode édition
+        await updateAnnualCharge(chargeId, chargeData);
+        Alert.alert(
+          'Succès',
+          'Charge annuelle modifiée avec succès',
+          [{ text: 'OK', onPress: () => navigation.goBack() }]
+        );
+      } else {
+        // Mode création
+        await createCharge(chargeData);
+        Alert.alert(
+          'Succès',
+          'Charge annuelle créée avec succès',
+          [{ text: 'OK', onPress: () => navigation.goBack() }]
+        );
+      }
     } catch (error) {
-      console.error('❌ [EditAnnualChargeScreen] Error updating charge:', error);
-      Alert.alert(t.error, 'Impossible de modifier la charge annuelle');
+      console.error('❌ [EditAnnualChargeScreen] Error saving charge:', error);
+      Alert.alert(t.error, chargeId ? 'Impossible de modifier la charge annuelle' : 'Impossible de créer la charge annuelle');
     } finally {
       setLoading(false);
     }
@@ -211,7 +227,7 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
             <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#000"} />
           </TouchableOpacity>
           <Text style={[styles.title, isDark && styles.darkText]}>
-            Modifier la Charge
+            {chargeId ? 'Modifier la Charge' : 'Nouvelle Charge'}
           </Text>
         </View>
 
@@ -289,6 +305,9 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
           <Text style={[styles.label, isDark && styles.darkText]}>
             Compte associé
           </Text>
+          <Text style={[styles.hint, isDark && styles.darkSubtext, { marginBottom: 8 }]}>
+            ⚡ Sélectionnez un compte pour activer le prélèvement automatique à la date d'échéance
+          </Text>
           <TouchableOpacity 
             style={[styles.selectButton, isDark && styles.darkInput]}
             onPress={() => setShowAccountModal(true)}
@@ -325,8 +344,8 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
             </View>
             <Text style={[styles.hint, isDark && styles.darkSubtext]}>
               {form.autoDeduct 
-                ? 'Le montant sera automatiquement débité à la date d\'échéance'
-                : 'Paiement manuel requis'
+                ? 'Le montant sera automatiquement débité du compte sélectionné à la date d\'\u00e9chéance'
+                : 'Activez pour débiter automatiquement le compte à l\'\u00e9chéance'
               }
             </Text>
           </View>
@@ -336,6 +355,9 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
             Récurrence
+          </Text>
+          <Text style={[styles.hint, isDark && styles.darkSubtext, { marginBottom: 8 }]}>
+            💡 Quand vous payez une charge récurrente, une nouvelle occurrence sera automatiquement créée pour la prochaine échéance
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.recurrenceContainer}>
             {recurrenceOptions.map((recurrence) => (
@@ -357,35 +379,6 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
               </TouchableOpacity>
             ))}
           </ScrollView>
-        </View>
-
-        {/* Prélèvement automatique */}
-        <View style={styles.inputGroup}>
-          <View style={styles.switchContainer}>
-            <Text style={[styles.label, isDark && styles.darkText]}>
-              Prélèvement automatique
-            </Text>
-            <TouchableOpacity
-              style={[
-                styles.switch,
-                form.paymentMethod === 'Prélèvement automatique' ? styles.switchActive : styles.switchInactive,
-              ]}
-              onPress={() => setForm(prev => ({ 
-                ...prev, 
-                paymentMethod: prev.paymentMethod === 'Prélèvement automatique' ? 'Autre' : 'Prélèvement automatique' 
-              }))}
-            >
-              <View
-                style={[
-                  styles.switchThumb,
-                  form.paymentMethod === 'Prélèvement automatique' && styles.switchThumbActive,
-                ]}
-              />
-            </TouchableOpacity>
-          </View>
-          <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-            Les charges avec prélèvement automatique seront automatiquement débitées à leur date d'échéance
-          </Text>
         </View>
 
         {/* Jours de rappel */}

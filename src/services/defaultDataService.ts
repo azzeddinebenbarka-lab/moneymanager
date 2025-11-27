@@ -13,15 +13,15 @@ export const defaultDataService = {
       const defaultAccounts = [
         {
           id: 'default_acc_1', user_id: userId, name: 'Espèces', type: 'cash', 
-          balance: 1250.50, currency: 'EUR', color: '#10B981', created_at: new Date().toISOString()
+          balance: 1250.50, currency: 'MAD', color: '#10B981', created_at: new Date().toISOString()
         },
         {
-          id: 'default_acc_2', user_id: userId, name: 'Compte Courant', type: 'bank', 
-          balance: 4500.75, currency: 'EUR', color: '#3B82F6', created_at: new Date().toISOString()
+          id: 'default_acc_2', user_id: userId, name: 'Salaire', type: 'bank', 
+          balance: 4500.75, currency: 'MAD', color: '#3B82F6', created_at: new Date().toISOString()
         },
         {
-          id: 'default_acc_3', user_id: userId, name: 'Épargne', type: 'savings', 
-          balance: 12000.00, currency: 'EUR', color: '#8B5CF6', created_at: new Date().toISOString()
+          id: 'default_acc_3', user_id: userId, name: 'Epargne', type: 'savings', 
+          balance: 12000.00, currency: 'MAD', color: '#8B5CF6', created_at: new Date().toISOString()
         }
       ];
 

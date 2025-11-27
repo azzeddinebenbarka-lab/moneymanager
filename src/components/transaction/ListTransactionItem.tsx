@@ -18,6 +18,9 @@ interface Transaction {
   subCategory?: string;
   date: string;
   createdAt?: string;
+  isRecurring?: boolean;
+  recurrenceType?: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  parentTransactionId?: string;
 }
 
 interface ListTransactionItemProps {
@@ -80,12 +83,29 @@ export const ListTransactionItem: React.FC<ListTransactionItemProps> = ({ item, 
         </View>
 
         <View style={styles.transactionInfo}>
-          <Text 
-            style={[styles.transactionDescription, { color: colors.text.primary }]} 
-            numberOfLines={2}
-          >
-            {item.description || 'Sans description'}
-          </Text>
+          <View style={styles.descriptionRow}>
+            <Text 
+              style={[styles.transactionDescription, { color: colors.text.primary }]} 
+              numberOfLines={2}
+            >
+              {item.description || 'Sans description'}
+            </Text>
+            {item.isRecurring && item.recurrenceType && (
+              <View style={[styles.recurrenceBadge, { backgroundColor: '#8B5CF6' + '15', borderColor: '#8B5CF6' + '40' }]}>
+                <Ionicons name="repeat" size={10} color="#8B5CF6" />
+                <Text style={[styles.recurrenceText, { color: '#8B5CF6' }]}>
+                  {item.recurrenceType === 'daily' ? 'J' : 
+                   item.recurrenceType === 'weekly' ? 'S' : 
+                   item.recurrenceType === 'monthly' ? 'M' : 'A'}
+                </Text>
+              </View>
+            )}
+            {item.parentTransactionId && (
+              <View style={[styles.recurrenceBadge, { backgroundColor: '#34C759' + '15', borderColor: '#34C759' + '40' }]}>
+                <Ionicons name="calendar" size={10} color="#34C759" />
+              </View>
+            )}
+          </View>
           <View style={styles.transactionBottom}>
             <View style={styles.transactionMeta}>
               <Text style={[styles.transactionCategory, { color: colors.text.secondary }]}>
@@ -140,6 +160,26 @@ const styles = StyleSheet.create({
   },
   transactionInfo: {
     flex: 1,
+  },
+  descriptionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
+  },
+  recurrenceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 2,
+  },
+  recurrenceText: {
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
   transactionDescription: {
     fontSize: 16,
