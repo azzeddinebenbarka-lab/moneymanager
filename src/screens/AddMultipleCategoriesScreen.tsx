@@ -548,7 +548,8 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
               onPress={() => navigation.navigate('SettingsScreen')}
               disabled={loading}
             >
-              <Text style={[styles.cancelButtonText, { color: colors.text.primary }]}>Annuler</Text>
+              <Ionicons name="close" size={20} color={colors.text.primary} style={{ marginRight: 8 }} />
+              <Text style={[styles.cancelButtonText, { color: colors.text.primary }]}>Fermer</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 

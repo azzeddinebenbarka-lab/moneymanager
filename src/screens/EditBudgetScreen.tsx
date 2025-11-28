@@ -249,10 +249,11 @@ const EditBudgetScreen = ({ navigation, route }: any) => {
         <View style={styles.buttonsContainer}>
           <TouchableOpacity 
             style={[styles.cancelButton, isDark && styles.darkCancelButton]}
-            onPress={() => navigation.goBack()}
+            onPress={() => navigation.navigate('BudgetsScreen')}
             disabled={loading}
           >
-            <Text style={styles.cancelButtonText}>Annuler</Text>
+            <Ionicons name="close" size={20} color={isDark ? '#fff' : '#000'} style={{ marginRight: 8 }} />
+            <Text style={styles.cancelButtonText}>Fermer</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 

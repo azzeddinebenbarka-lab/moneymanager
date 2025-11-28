@@ -682,7 +682,8 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
             onPress={() => navigation.navigate('DebtsScreen')}
             disabled={saving}
           >
-            <Text style={styles.cancelButtonText}>Annuler</Text>
+            <Ionicons name="close" size={20} color={isDark ? '#fff' : '#000'} style={{ marginRight: 8 }} />
+            <Text style={styles.cancelButtonText}>Fermer</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
