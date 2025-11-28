@@ -1,6 +1,6 @@
 // src/screens/FinancialCalendarScreen.tsx
 import { Ionicons } from '@expo/vector-icons';
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
     ScrollView,
     StyleSheet,
@@ -112,12 +112,12 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
 
   // Obtenir toutes les opérations du jour sélectionné (transactions + charges + dettes)
   const selectedDayTransactions = useMemo(() => {
-    const dateStr = selectedDate.toISOString().split('T')[0];
+    const dateStr = formatDateLocal(selectedDate); // ✅ CORRECTION : Format local
     const items: any[] = [];
 
     // 1. Transactions normales
     transactions.forEach(t => {
-      const tDateStr = new Date(t.date).toISOString().split('T')[0];
+      const tDateStr = formatDateLocal(new Date(t.date)); // ✅ CORRECTION : Format local
       if (tDateStr === dateStr) {
         items.push({
           id: t.id,
@@ -134,7 +134,7 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
 
     // 2. Charges annuelles
     charges.forEach(c => {
-      const cDateStr = new Date(c.dueDate).toISOString().split('T')[0];
+      const cDateStr = formatDateLocal(new Date(c.dueDate)); // ✅ CORRECTION : Format local
       if (cDateStr === dateStr && !c.isPaid) {
         items.push({
           id: c.id,
@@ -152,7 +152,7 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
     // 3. Échéances de dettes
     debts.forEach(d => {
       if (d.nextDueDate) {
-        const dDateStr = new Date(d.nextDueDate).toISOString().split('T')[0];
+        const dDateStr = formatDateLocal(new Date(d.nextDueDate)); // ✅ CORRECTION : Format local
         if (dDateStr === dateStr && d.status === 'active') {
           items.push({
             id: d.id,

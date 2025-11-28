@@ -1,6 +1,6 @@
 // /src/components/savings/ContributionHistory.tsx
-import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCurrency } from '../../context/CurrencyContext';
 import { SavingsContribution, SavingsGoal } from '../../types/Savings';
 
 interface Props {
@@ -9,6 +9,8 @@ interface Props {
 }
 
 export const ContributionHistory = ({ contributions, goal }: Props) => {
+  const { formatAmount } = useCurrency();
+
   if (contributions.length === 0) {
     return (
       <View style={styles.container}>
@@ -52,7 +54,7 @@ export const ContributionHistory = ({ contributions, goal }: Props) => {
             <View key={monthYear} style={styles.monthGroup}>
               <View style={styles.monthHeader}>
                 <Text style={styles.monthTitle}>{monthYear}</Text>
-                <Text style={styles.monthTotal}>€{totalMonth.toLocaleString()}</Text>
+                <Text style={styles.monthTotal}>{formatAmount(totalMonth)}</Text>
               </View>
               
               {monthContributions.map((contribution) => (
@@ -79,7 +81,7 @@ export const ContributionHistory = ({ contributions, goal }: Props) => {
                   
                   <View style={styles.contributionRight}>
                     <Text style={styles.contributionAmount}>
-                      +€{contribution.amount.toLocaleString()}
+                      +{formatAmount(contribution.amount)}
                     </Text>
                     <Text style={styles.contributionProgress}>
                       {((contribution.amount / goal.targetAmount) * 100).toFixed(1)}%
@@ -97,7 +99,7 @@ export const ContributionHistory = ({ contributions, goal }: Props) => {
         <View style={styles.summaryItem}>
           <Text style={styles.summaryLabel}>Total contribué</Text>
           <Text style={styles.summaryValue}>
-            €{goal.currentAmount.toLocaleString()}
+            {formatAmount(goal.currentAmount)}
           </Text>
         </View>
         
@@ -109,7 +111,7 @@ export const ContributionHistory = ({ contributions, goal }: Props) => {
         <View style={styles.summaryItem}>
           <Text style={styles.summaryLabel}>Moyenne par contribution</Text>
           <Text style={styles.summaryValue}>
-            €{(goal.currentAmount / Math.max(contributions.length, 1)).toFixed(0)}
+            {formatAmount(goal.currentAmount / Math.max(contributions.length, 1))}
           </Text>
         </View>
       </View>

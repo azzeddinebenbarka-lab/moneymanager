@@ -10,6 +10,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import BudgetCard from '../components/budget/BudgetCard';
 import BudgetForm from '../components/budget/BudgetForm';
 import { useCurrency } from '../context/CurrencyContext';
@@ -85,18 +86,18 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
   // États de chargement et d'erreur
   if (loading && !refreshing) {
     return (
-      <View style={[styles.container, isDark && styles.darkContainer, styles.center]}>
+      <SafeAreaView style={[styles.container, isDark && styles.darkContainer, styles.center]} edges={['top', 'left', 'right']}>
         <ActivityIndicator size="large" color="#007AFF" />
         <Text style={[styles.loadingText, isDark && styles.darkText]}>
           Chargement des budgets...
         </Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <View style={[styles.container, isDark && styles.darkContainer, styles.center]}>
+      <SafeAreaView style={[styles.container, isDark && styles.darkContainer, styles.center]} edges={['top', 'left', 'right']}>
         <Ionicons name="alert-circle-outline" size={64} color="#FF3B30" />
         <Text style={[styles.errorText, isDark && styles.darkText]}>
           {error}
@@ -104,7 +105,7 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
         <TouchableOpacity style={styles.retryButton} onPress={refreshBudgets}>
           <Text style={styles.retryButtonText}>Réessayer</Text>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -112,7 +113,7 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
   const inactiveBudgets = budgets.filter(budget => !budget.isActive);
 
   return (
-    <View style={[styles.container, isDark && styles.darkContainer]}>
+    <SafeAreaView style={[styles.container, isDark && styles.darkContainer]} edges={['top', 'left', 'right']}>
       {/* Header avec statistiques */}
       <View style={[styles.header, isDark && styles.darkHeader]}>
         <View style={styles.headerTop}>
@@ -247,7 +248,7 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
         onClose={() => setShowBudgetForm(false)}
         onSubmit={handleCreateBudget}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -265,7 +266,9 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#fff',
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
@@ -331,7 +334,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#e0e0e0',
   },
   section: {
-    padding: 16,
+    paddingHorizontal: 20,
+    paddingTop: 16,
     paddingBottom: 0,
   },
   sectionHeader: {

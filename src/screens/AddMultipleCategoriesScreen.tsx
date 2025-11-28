@@ -186,7 +186,7 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
         Alert.alert(
           'Succès',
           `${result.created} catégorie(s) créée(s) avec succès`,
-          [{ text: 'OK', onPress: () => navigation.goBack() }]
+          [{ text: 'OK', onPress: () => navigation.navigate('CategoriesList') }]
         );
       } else {
         Alert.alert(
@@ -227,7 +227,7 @@ const AddMultipleCategoriesScreen: React.FC<{ navigation: any }> = ({ navigation
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton}
-            onPress={() => navigation.goBack()}
+            onPress={() => navigation.navigate('CategoriesList')}
           >
             <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
           </TouchableOpacity>

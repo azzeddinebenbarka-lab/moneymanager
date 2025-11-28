@@ -149,8 +149,8 @@ export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navi
       
       Alert.alert(
         'Succès',
-        'Objectif d\'épargne créé avec succès',
-        [{ text: 'OK', onPress: () => navigation.goBack() }]
+        'Objectif d\'\u00e9pargne créé avec succès',
+        [{ text: 'OK', onPress: () => navigation.navigate('SavingsList') }]
       );
     } catch (error) {
       console.error('Erreur création objectif:', error);
@@ -199,7 +199,7 @@ export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navi
           <View style={styles.header}>
             <TouchableOpacity 
               style={styles.backButton}
-              onPress={() => navigation.goBack()}
+              onPress={() => navigation.navigate('SavingsList')}
             >
               <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
             </TouchableOpacity>

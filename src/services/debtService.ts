@@ -218,11 +218,6 @@ export const debtService = {
         throw new Error('Dette non trouvée');
       }
 
-      // ✅ VÉRIFICATION STRICTE DE L'ÉLIGIBILITÉ
-      if (!debt.paymentEligibility.isEligible) {
-        throw new Error(debt.paymentEligibility.reason || 'Paiement non autorisé');
-      }
-
       let effectiveFromAccountId = fromAccountId;
 
       // ✅ SI AUCUN COMPTE SPÉCIFIÉ, UTILISER CELUI DE LA DETTE
@@ -566,48 +561,10 @@ export const debtService = {
       };
     }
 
-    const isCurrentMonth = params.dueMonth === currentMonth;
-    const isPastDue = dueDate < now && !isCurrentMonth;
-    const isFutureDue = dueDate > now && !isCurrentMonth;
-
-    if (isCurrentMonth) {
-      return { 
-        isEligible: true,
-        reason: 'Paiement autorisé pendant le mois d\'échéance',
-        dueMonth: params.dueMonth,
-        isCurrentMonth: true,
-        isPastDue: false,
-        isFutureDue: false
-      };
-    }
-
-    if (isPastDue) {
-      return { 
-        isEligible: false, 
-        reason: 'Période de paiement expirée. Cette dette est en retard et nécessite une régularisation manuelle.',
-        dueMonth: params.dueMonth,
-        isCurrentMonth: false,
-        isPastDue: true,
-        isFutureDue: false
-      };
-    }
-
-    if (isFutureDue) {
-      const nextEligibleDate = new Date(params.dueMonth + '-01');
-      return { 
-        isEligible: false, 
-        reason: 'Paiement disponible seulement pendant le mois d\'échéance',
-        nextEligibleDate: nextEligibleDate.toISOString().split('T')[0],
-        dueMonth: params.dueMonth,
-        isCurrentMonth: false,
-        isPastDue: false,
-        isFutureDue: true
-      };
-    }
-
+    // ✅ PAIEMENT TOUJOURS AUTORISÉ - Pas de restriction de date
     return { 
-      isEligible: false, 
-      reason: 'Paiement non autorisé pour cette période',
+      isEligible: true,
+      reason: 'Paiement autorisé',
       dueMonth: params.dueMonth,
       isCurrentMonth: false,
       isPastDue: false,

@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from '../components/SafeAreaView';
 import { AddContributionModal } from '../components/savings/AddContributionModal';
 import { DeleteGoalModal } from '../components/savings/DeleteGoalModal';
+import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
@@ -28,6 +29,7 @@ interface SavingsScreenProps {
 const SavingsScreen: React.FC<SavingsScreenProps> = ({ navigation }) => {
   const { t } = useLanguage();
   const { theme } = useTheme();
+  const { formatAmount } = useCurrency();
   const { 
     goals, 
     loading, 
@@ -140,7 +142,7 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
     
     return { 
       success: true, 
-      message: `Contribution de ${amount.toFixed(2)}€ ajoutée avec succès !` 
+      message: `Contribution de ${formatAmount(amount)} ajoutée avec succès !` 
     };
     
   } catch (error: any) {
@@ -176,7 +178,7 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
       Alert.alert(
         'Succès',
         withRefund ? 
-          `Objectif supprimé et ${selectedGoal.currentAmount}€ remboursés !` :
+          `Objectif supprimé et ${formatAmount(selectedGoal.currentAmount)} remboursés !` :
           'Objectif supprimé avec succès',
         [{ text: 'OK' }]
       );
@@ -216,7 +218,7 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
 
   // ✅ FORMATAGE
   const formatCurrency = (amount: number): string => {
-    return `${amount.toFixed(2)}€`;
+    return formatAmount(amount);
   };
 
   const filteredGoals = goals.filter(goal =>

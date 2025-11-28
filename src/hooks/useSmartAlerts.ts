@@ -108,23 +108,22 @@ export const useSmartAlerts = (userId: string = 'default-user'): UseSmartAlertsR
       const { alertService } = await import('../services/alertService');
       await alertService.markAsRead(alertId);
       
-      setAlerts(prevAlerts => 
-        prevAlerts.map(alert => 
+      setAlerts(prevAlerts => {
+        const updatedAlerts = prevAlerts.map(alert => 
           alert.id === alertId ? { ...alert, read: true } : alert
-        )
-      );
-
-      // Sauvegarder la modification localement
-      const updatedAlerts = alerts.map(alert => 
-        alert.id === alertId ? { ...alert, read: true } : alert
-      );
-      await secureStorage.setItem(`alerts_${userId}`, JSON.stringify(updatedAlerts));
+        );
+        
+        // Sauvegarder la modification localement dans le callback setState
+        secureStorage.setItem(`alerts_${userId}`, JSON.stringify(updatedAlerts));
+        
+        return updatedAlerts;
+      });
 
       console.log(`✅ Alerte marquée comme lue (DB + local): ${alertId}`);
     } catch (error) {
       console.error('❌ Erreur markAsRead:', error);
     }
-  }, [alerts, userId]);
+  }, [userId]);
 
   const markAllAsRead = useCallback(async () => {
     try {
@@ -132,17 +131,20 @@ export const useSmartAlerts = (userId: string = 'default-user'): UseSmartAlertsR
       const { alertService } = await import('../services/alertService');
       await alertService.markAllAsRead(userId);
       
-      const updatedAlerts = alerts.map(alert => ({ ...alert, read: true }));
-      setAlerts(updatedAlerts);
-      
-      // Sauvegarder les modifications localement
-      await secureStorage.setItem(`alerts_${userId}`, JSON.stringify(updatedAlerts));
+      setAlerts(prevAlerts => {
+        const updatedAlerts = prevAlerts.map(alert => ({ ...alert, read: true }));
+        
+        // Sauvegarder les modifications localement dans le callback setState
+        secureStorage.setItem(`alerts_${userId}`, JSON.stringify(updatedAlerts));
+        
+        return updatedAlerts;
+      });
       
       console.log('✅ Toutes les alertes marquées comme lues (DB + local)');
     } catch (error) {
       console.error('❌ Erreur markAllAsRead:', error);
     }
-  }, [alerts, userId]);
+  }, [userId]);
 
   const dismissAlert = useCallback((alertId: string) => {
     const updatedAlerts = alerts.filter(alert => alert.id !== alertId);

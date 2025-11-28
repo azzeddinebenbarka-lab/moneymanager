@@ -1,6 +1,7 @@
 // /src/components/savings/SavingsGoalDetail.tsx
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useCurrency } from '../../context/CurrencyContext';
 import { useSavings } from '../../hooks/useSavings';
 import { SavingsGoal } from '../../types/Savings';
 import { ProgressBar } from '../ui/ProgressBar';
@@ -12,6 +13,7 @@ interface Props {
 
 export const SavingsGoalDetail = ({ goal, onAddContribution }: Props) => {
   const { calculateGoalAchievementDate } = useSavings();
+  const { formatAmount } = useCurrency();
 
   const progress = (goal.currentAmount / goal.targetAmount) * 100;
   const remainingAmount = goal.targetAmount - goal.currentAmount;
@@ -80,8 +82,8 @@ export const SavingsGoalDetail = ({ goal, onAddContribution }: Props) => {
         <Text style={styles.goalName}>{goal.name}</Text>
         
         <View style={styles.amountSection}>
-          <Text style={styles.currentAmount}>€{goal.currentAmount.toLocaleString()}</Text>
-          <Text style={styles.targetAmount}>sur €{goal.targetAmount.toLocaleString()}</Text>
+          <Text style={styles.currentAmount}>{formatAmount(goal.currentAmount)}</Text>
+          <Text style={styles.targetAmount}>sur {formatAmount(goal.targetAmount)}</Text>
         </View>
       </View>
 
@@ -98,10 +100,10 @@ export const SavingsGoalDetail = ({ goal, onAddContribution }: Props) => {
         />
         <View style={styles.progressFooter}>
           <Text style={styles.progressText}>
-            €{goal.currentAmount.toLocaleString()} épargnés
+            {formatAmount(goal.currentAmount)} épargnés
           </Text>
           <Text style={styles.progressText}>
-            €{remainingAmount.toLocaleString()} restants
+            {formatAmount(remainingAmount)} restants
           </Text>
         </View>
       </View>
@@ -110,7 +112,7 @@ export const SavingsGoalDetail = ({ goal, onAddContribution }: Props) => {
       <View style={styles.statsGrid}>
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>Contribution mensuelle</Text>
-          <Text style={styles.statValue}>€{goal.monthlyContribution.toLocaleString()}</Text>
+          <Text style={styles.statValue}>{formatAmount(goal.monthlyContribution)}</Text>
         </View>
         
         <View style={styles.statItem}>

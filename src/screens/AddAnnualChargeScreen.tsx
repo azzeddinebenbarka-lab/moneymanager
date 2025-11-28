@@ -1,7 +1,7 @@
 // src/screens/AddAnnualChargeScreen.tsx - VERSION COMPLÈTEMENT CORRIGÉE
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
     Alert,
     KeyboardAvoidingView,
@@ -124,7 +124,7 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
       Alert.alert(
         'Succès',
         'Charge annuelle créée avec succès',
-        [{ text: 'OK', onPress: () => navigation.goBack() }]
+        [{ text: 'OK', onPress: () => navigation.navigate('AnnualChargesList') }]
       );
     } catch (error) {
       console.error('Error creating annual charge:', error);
@@ -187,7 +187,7 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
           <View style={styles.header}>
             <TouchableOpacity 
               style={styles.backButton}
-              onPress={() => navigation.goBack()}
+              onPress={() => navigation.navigate('AnnualChargesList')}
             >
               <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
             </TouchableOpacity>

@@ -31,52 +31,10 @@ export class DebtCalculator {
       };
     }
 
-    // RÈGLE PRINCIPALE : Paiement uniquement pendant le mois d'échéance
-    const isCurrentMonth = debt.dueMonth === currentMonth;
-    const isPastDue = dueDate < now && !isCurrentMonth;
-    const isFutureDue = dueDate > now && !isCurrentMonth;
-
-    // DETTE DU MOIS EN COURS : Sera traitée normalement
-    if (isCurrentMonth) {
-      return { 
-        isEligible: true,
-        reason: 'Paiement autorisé pendant le mois d\'échéance',
-        dueMonth: debt.dueMonth,
-        isCurrentMonth: true,
-        isPastDue: false,
-        isFutureDue: false
-      };
-    }
-
-    // DETTE ANCIENNE : Ne sera PAS traitée avant son mois d'échéance
-    if (isPastDue) {
-      return { 
-        isEligible: false, 
-        reason: 'Période de paiement expirée. Cette dette est en retard et nécessite une régularisation manuelle.',
-        dueMonth: debt.dueMonth,
-        isCurrentMonth: false,
-        isPastDue: true,
-        isFutureDue: false
-      };
-    }
-
-    // DETTE FUTURE : Attend son mois d'échéance
-    if (isFutureDue) {
-      const nextEligibleDate = new Date(debt.dueMonth + '-01');
-      return { 
-        isEligible: false, 
-        reason: 'Paiement disponible seulement pendant le mois d\'échéance',
-        nextEligibleDate: nextEligibleDate.toISOString().split('T')[0],
-        dueMonth: debt.dueMonth,
-        isCurrentMonth: false,
-        isPastDue: false,
-        isFutureDue: true
-      };
-    }
-
+    // ✅ PAIEMENT TOUJOURS AUTORISÉ - Pas de restriction de date
     return { 
-      isEligible: false, 
-      reason: 'Paiement non autorisé pour cette période',
+      isEligible: true,
+      reason: 'Paiement autorisé',
       dueMonth: debt.dueMonth,
       isCurrentMonth: false,
       isPastDue: false,

@@ -9,8 +9,6 @@ export interface Debt {
   interestRate: number;
   monthlyPayment: number;
   startDate: string;
-  dueDate: string;
-  dueMonth: string;
   status: 'active' | 'overdue' | 'paid' | 'future';
   category: string;
   color: string;
@@ -20,6 +18,7 @@ export interface Debt {
   type: DebtType;
   autoPay: boolean;
   paymentAccountId?: string;
+  paymentDay?: number;
   paymentEligibility: PaymentEligibility;
 }
 
@@ -30,13 +29,13 @@ export interface CreateDebtData {
   interestRate: number;
   monthlyPayment: number;
   startDate: string;
-  dueDate: string;
   type: DebtType;
   category: string;
   color: string;
   notes?: string;
   autoPay?: boolean;
   paymentAccountId?: string;
+  paymentDay?: number;
 }
 
 export interface UpdateDebtData {
@@ -47,8 +46,6 @@ export interface UpdateDebtData {
   interestRate?: number;
   monthlyPayment?: number;
   startDate?: string;
-  dueDate?: string;
-  dueMonth?: string;
   status?: Debt['status'];
   category?: string;
   color?: string;
@@ -56,6 +53,7 @@ export interface UpdateDebtData {
   type?: DebtType;
   autoPay?: boolean;
   paymentAccountId?: string;
+  paymentDay?: number;
 }
 
 export interface DebtPayment {

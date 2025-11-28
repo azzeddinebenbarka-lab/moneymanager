@@ -1,6 +1,6 @@
 // src/screens/EditBudgetScreen.tsx
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     Alert,
     KeyboardAvoidingView,
@@ -83,7 +83,7 @@ const EditBudgetScreen = ({ navigation, route }: any) => {
         'Budget modifié avec succès',
         [{ 
           text: 'OK', 
-          onPress: () => navigation.goBack()
+          onPress: () => navigation.navigate('BudgetsList')
         }]
       );
     } catch (error) {
@@ -113,7 +113,7 @@ const EditBudgetScreen = ({ navigation, route }: any) => {
           <View style={styles.header}>
             <TouchableOpacity 
               style={styles.backButton}
-              onPress={() => navigation.goBack()}
+              onPress={() => navigation.navigate('BudgetsList')}
             >
               <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#000"} />
             </TouchableOpacity>

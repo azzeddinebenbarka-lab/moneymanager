@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    Alert,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
+import { useCurrency } from '../../context/CurrencyContext';
 import { useAccounts } from '../../hooks/useAccounts';
 import { SavingsGoal } from '../../types/Savings';
 
@@ -25,6 +26,7 @@ const QUICK_AMOUNTS = [10, 25, 50, 100, 200, 500];
 
 export const AddContributionModal: React.FC<Props> = ({ visible, onClose, onSubmit, goal }) => {
   const { accounts, refreshAccounts } = useAccounts();
+  const { formatAmount, currencySymbol } = useCurrency();
   
   const [amount, setAmount] = useState<string>('');
   const [customAmount, setCustomAmount] = useState<string>('');
@@ -128,7 +130,7 @@ const processContribution = async (contributionAmount: number) => {
     // ✅ UNE SEULE ALERTE DE SUCCÈS
     Alert.alert(
       'Succès', 
-      result?.message || `Contribution de ${contributionAmount.toFixed(2)}€ ajoutée avec succès !`,
+      result?.message || `Contribution de ${formatAmount(contributionAmount)} ajoutée avec succès !`,
       [{ text: 'OK', onPress: handleClose }]
     );
     
@@ -176,7 +178,7 @@ const processContribution = async (contributionAmount: number) => {
     if (selectedAccount && contributionAmount > selectedAccount.balance) {
       Alert.alert(
         'Solde insuffisant',
-        `Le solde de ${selectedAccount.name} est de ${selectedAccount.balance.toFixed(2)}€. Vous ne pouvez pas transférer ${contributionAmount.toFixed(2)}€.`
+        `Le solde de ${selectedAccount.name} est de ${formatAmount(selectedAccount.balance)}. Vous ne pouvez pas transférer ${formatAmount(contributionAmount)}.`
       );
       return;
     }
@@ -185,7 +187,7 @@ const processContribution = async (contributionAmount: number) => {
     if (contributionAmount + goal.currentAmount > goal.targetAmount) {
       Alert.alert(
         'Attention',
-        `Cette contribution dépassera votre objectif de ${goal.targetAmount.toFixed(2)}€. Souhaitez-vous continuer ?`,
+        `Cette contribution dépassera votre objectif de ${formatAmount(goal.targetAmount)}. Souhaitez-vous continuer ?`,
         [
           { text: 'Annuler', style: 'cancel' },
           { 
@@ -239,9 +241,9 @@ const processContribution = async (contributionAmount: number) => {
             {/* Montant actuel */}
             <View style={styles.currentAmountSection}>
               <Text style={styles.currentAmountLabel}>Montant actuel</Text>
-              <Text style={styles.currentAmount}>{goal.currentAmount.toFixed(2)}€</Text>
+              <Text style={styles.currentAmount}>{formatAmount(goal.currentAmount)}</Text>
               <Text style={styles.targetAmount}>
-                Objectif: {goal.targetAmount.toFixed(2)}€
+                Objectif: {formatAmount(goal.targetAmount)}
               </Text>
             </View>
 
@@ -263,7 +265,7 @@ const processContribution = async (contributionAmount: number) => {
                     <View style={styles.accountInfo}>
                       <Text style={styles.accountName}>{account.name}</Text>
                       <Text style={styles.accountBalance}>
-                        Solde: {account.balance.toFixed(2)}€
+                        Solde: {formatAmount(account.balance)}
                       </Text>
                     </View>
                     {selectedAccountId === account.id && (
@@ -299,7 +301,7 @@ const processContribution = async (contributionAmount: number) => {
                     <View style={styles.accountInfo}>
                       <Text style={styles.accountName}>{account.name}</Text>
                       <Text style={styles.accountBalance}>
-                        Solde: {account.balance.toFixed(2)}€
+                        Solde: {formatAmount(account.balance)}
                       </Text>
                     </View>
                     {selectedSavingsAccountId === account.id && (
@@ -317,38 +319,11 @@ const processContribution = async (contributionAmount: number) => {
               )}
             </View>
 
-            {/* Montants rapides */}
-            <View style={styles.quickAmountsSection}>
-              <Text style={styles.sectionLabel}>Montants rapides</Text>
-              <View style={styles.quickAmountsGrid}>
-                {QUICK_AMOUNTS.map((quickAmount) => (
-                  <TouchableOpacity
-                    key={quickAmount}
-                    style={[
-                      styles.quickAmountButton,
-                      amount === quickAmount.toString() && styles.quickAmountButtonActive,
-                      !canSelectAmount && styles.quickAmountButtonDisabled
-                    ]}
-                    onPress={() => handleQuickAmount(quickAmount)}
-                    disabled={!canSelectAmount}
-                  >
-                    <Text style={[
-                      styles.quickAmountText,
-                      amount === quickAmount.toString() && styles.quickAmountTextActive,
-                      !canSelectAmount && styles.quickAmountTextDisabled
-                    ]}>
-                      {quickAmount}€
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
             {/* Montant personnalisé */}
             <View style={styles.customAmountSection}>
               <Text style={styles.sectionLabel}>Montant personnalisé</Text>
               <View style={styles.customAmountInput}>
-                <Text style={styles.currencySymbol}>€</Text>
+                <Text style={styles.currencySymbol}>{currencySymbol}</Text>
                 <TextInput
                   style={[
                     styles.customAmountTextInput,
@@ -370,7 +345,7 @@ const processContribution = async (contributionAmount: number) => {
               <View style={styles.previewSection}>
                 <View style={styles.previewRow}>
                   <Text style={styles.previewLabel}>Montant à transférer:</Text>
-                  <Text style={styles.previewAmount}>{selectedAmount.toFixed(2)}€</Text>
+                  <Text style={styles.previewAmount}>{formatAmount(selectedAmount)}</Text>
                 </View>
                 
                 <View style={styles.previewRow}>
@@ -389,7 +364,7 @@ const processContribution = async (contributionAmount: number) => {
                 
                 <View style={styles.previewRow}>
                   <Text style={styles.previewLabel}>Nouveau total:</Text>
-                  <Text style={styles.previewTotal}>{newTotal.toFixed(2)}€</Text>
+                  <Text style={styles.previewTotal}>{formatAmount(newTotal)}</Text>
                 </View>
                 
                 <View style={styles.previewRow}>
@@ -432,7 +407,7 @@ const processContribution = async (contributionAmount: number) => {
                 disabled={!selectedAmount || !selectedAccountId || !selectedSavingsAccountId || loading}
               >
                 <Text style={styles.submitButtonText}>
-                  {loading ? 'Transfert...' : `Transférer ${selectedAmount.toFixed(2)}€`}
+                  {loading ? 'Transfert...' : `Transférer ${formatAmount(selectedAmount)}`}
                 </Text>
               </TouchableOpacity>
             </View>

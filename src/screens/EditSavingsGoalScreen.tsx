@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import DeleteGoalModal from '../components/savings/DeleteGoalModal';
+import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
@@ -28,6 +29,7 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
   const { goalId } = route.params;
   const { t } = useLanguage();
   const { theme } = useTheme();
+  const { formatAmount, currencySymbol } = useCurrency();
   const { getGoalById, updateGoal, deleteGoalWithTransactions, getRelatedTransactionsCount } = useSavings();
   const { accounts } = useAccounts();
   
@@ -97,12 +99,12 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
         });
       } else {
         Alert.alert(t.error, 'Objectif non trouvé');
-        navigation.goBack();
+        navigation.navigate('SavingsList');
       }
     } catch (error) {
       console.error('Error loading goal:', error);
       Alert.alert(t.error, 'Impossible de charger l\'objectif');
-      navigation.goBack();
+      navigation.navigate('SavingsList');
     } finally {
       setInitialLoading(false);
     }
@@ -134,16 +136,9 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
 
   const formatDisplayAmount = (value: string): string => {
     if (!value) return '';
-    
     const num = parseFloat(value);
     if (isNaN(num)) return '';
-    
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'MAD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(num);
+    return formatAmount(num);
   };
 
   const handleSave = async () => {
@@ -184,7 +179,7 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
       Alert.alert(
         'Succès',
         'Objectif modifié avec succès',
-        [{ text: 'OK', onPress: () => navigation.goBack() }]
+        [{ text: 'OK', onPress: () => navigation.navigate('SavingsList') }]
       );
     } catch (error) {
       console.error('Erreur modification objectif:', error);
@@ -203,7 +198,7 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
       Alert.alert(
         'Succès',
         'Objectif supprimé avec succès',
-        [{ text: 'OK', onPress: () => navigation.goBack() }]
+        [{ text: 'OK', onPress: () => navigation.navigate('SavingsList') }]
       );
     } catch (error) {
       console.error('Erreur suppression objectif:', error);
@@ -234,15 +229,16 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
   }
 
   return (
-    <SafeAreaView>
+    <SafeAreaView style={{ flex: 1 }}>
       <ScrollView 
         style={[styles.container, isDark && styles.darkContainer]}
         contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton}
-            onPress={() => navigation.goBack()}
+            onPress={() => navigation.navigate('SavingsList')}
           >
             <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#000"} />
           </TouchableOpacity>
@@ -294,7 +290,7 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
             Montant cible *
           </Text>
           <View style={styles.amountContainer}>
-            <Text style={[styles.currencySymbol, isDark && styles.darkText]}>MAD</Text>
+            <Text style={[styles.currencySymbol, isDark && styles.darkText]}>{currencySymbol}</Text>
             <TextInput
               style={[styles.input, styles.amountInput, isDark && styles.darkInput]}
               value={form.targetAmount}
@@ -317,7 +313,7 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
             Épargne actuelle
           </Text>
           <View style={styles.amountContainer}>
-            <Text style={[styles.currencySymbol, isDark && styles.darkText]}>MAD</Text>
+            <Text style={[styles.currencySymbol, isDark && styles.darkText]}>{currencySymbol}</Text>
             <TextInput
               style={[styles.input, styles.amountInput, isDark && styles.darkInput]}
               value={form.currentAmount}
@@ -340,7 +336,7 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
             Contribution mensuelle *
           </Text>
           <View style={styles.amountContainer}>
-            <Text style={[styles.currencySymbol, isDark && styles.darkText]}>MAD</Text>
+            <Text style={[styles.currencySymbol, isDark && styles.darkText]}>{currencySymbol}</Text>
             <TextInput
               style={[styles.input, styles.amountInput, isDark && styles.darkInput]}
               value={form.monthlyContribution}
@@ -665,7 +661,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   currencySymbol: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: '#000',
     marginRight: 12,
@@ -674,7 +670,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   amountInput: {
-    paddingLeft: 60,
+    paddingLeft: 70,
   },
   hint: {
     fontSize: 12,

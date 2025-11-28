@@ -1,11 +1,12 @@
 // src/screens/AddDebtScreen.tsx - VERSION CORRIGÉE POUR PHASE 2
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
     Alert,
     ScrollView,
     StyleSheet,
+    Switch,
     Text,
     TextInput,
     TouchableOpacity,
@@ -15,6 +16,7 @@ import { SafeAreaView } from '../components/SafeAreaView';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
+import { useAccounts } from '../hooks/useAccounts';
 import { useDebts } from '../hooks/useDebts';
 import { CreateDebtData, DEBT_TYPES, DebtType } from '../types/Debt';
 
@@ -23,12 +25,14 @@ interface DebtFormData {
   initialAmount: string;
   interestRate: string;
   monthlyPayment: string;
-  dueDate: Date;
   startDate: Date;
   creditor: string;
   type: DebtType;
   category: string;
   color: string;
+  autoPay: boolean;
+  paymentAccountId: string;
+  paymentDay: number;
 }
 
 const AddDebtScreen = ({ navigation }: any) => {
@@ -36,20 +40,22 @@ const AddDebtScreen = ({ navigation }: any) => {
   const { theme } = useTheme();
   const { formatAmount } = useCurrency();
   const { createDebt } = useDebts();
+  const { accounts } = useAccounts();
   
   const [form, setForm] = useState<DebtFormData>({
     name: '',
     initialAmount: '',
     interestRate: '0',
     monthlyPayment: '',
-    dueDate: new Date(),
     startDate: new Date(),
     creditor: '',
     type: 'personal',
     category: 'Prêt personnel',
     color: '#007AFF',
+    autoPay: false,
+    paymentAccountId: '',
+    paymentDay: 1,
   });
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -59,14 +65,12 @@ const AddDebtScreen = ({ navigation }: any) => {
   const debtTypes = DEBT_TYPES;
 
   const categories = [
-    'Prêt personnel',
-    'Hypothèque', 
-    'Voiture',
-    'Éducation',
-    'Carte de crédit',
-    'Médical',
-    'Familial',
-    'Autre'
+    { value: 'personal', label: 'Personnel', icon: 'person' },
+    { value: 'mortgage', label: 'Hypothèque', icon: 'home' },
+    { value: 'car', label: 'Voiture', icon: 'car' },
+    { value: 'education', label: 'Études', icon: 'school' },
+    { value: 'credit_card', label: 'Carte crédit', icon: 'card' },
+    { value: 'other', label: 'Autre', icon: 'ellipsis-horizontal' },
   ];
 
   const colors = [
@@ -77,6 +81,11 @@ const AddDebtScreen = ({ navigation }: any) => {
   const handleSave = async () => {
     if (!form.name || !form.initialAmount || !form.monthlyPayment || !form.creditor) {
       Alert.alert(t.error, 'Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
+    if (form.autoPay && !form.paymentAccountId) {
+      Alert.alert(t.error, 'Veuillez sélectionner un compte de paiement pour le paiement automatique');
       return;
     }
 
@@ -109,12 +118,14 @@ const AddDebtScreen = ({ navigation }: any) => {
         initialAmount: initialAmount,
         interestRate: interestRate,
         monthlyPayment: monthlyPayment,
-        dueDate: form.dueDate.toISOString().split('T')[0],
         startDate: form.startDate.toISOString().split('T')[0],
         creditor: form.creditor,
         type: form.type,
         category: form.category,
         color: form.color,
+        autoPay: form.autoPay,
+        paymentAccountId: form.autoPay ? form.paymentAccountId : undefined,
+        paymentDay: form.autoPay ? form.paymentDay : undefined,
       };
 
       await createDebt(debtData);
@@ -123,20 +134,13 @@ const AddDebtScreen = ({ navigation }: any) => {
       Alert.alert(
         'Succès',
         'Dette ajoutée avec succès',
-        [{ text: 'OK', onPress: () => navigation.goBack() }]
+        [{ text: 'OK', onPress: () => navigation.navigate('DebtsList') }]
       );
     } catch (error) {
       console.error('❌ [AddDebtScreen] Error creating debt:', error);
       Alert.alert(t.error, 'Impossible d\'ajouter la dette');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setForm(prev => ({ ...prev, dueDate: selectedDate }));
     }
   };
 
@@ -237,16 +241,6 @@ const AddDebtScreen = ({ navigation }: any) => {
     }));
   };
 
-  // ✅ COMPOSANT D'INFORMATION SUR LE SYSTÈME D'ÉCHÉANCES
-  const EligibilityInfoMessage = () => (
-    <View style={styles.infoMessage}>
-      <Text style={styles.infoIcon}>💡</Text>
-      <Text style={styles.infoText}>
-        Le paiement sera uniquement autorisé pendant le mois d'échéance
-      </Text>
-    </View>
-  );
-
   return (
     <SafeAreaView>
       <ScrollView 
@@ -256,7 +250,7 @@ const AddDebtScreen = ({ navigation }: any) => {
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton}
-            onPress={() => navigation.goBack()}
+            onPress={() => navigation.navigate('DebtsList')}
           >
             <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#000"} />
           </TouchableOpacity>
@@ -264,6 +258,12 @@ const AddDebtScreen = ({ navigation }: any) => {
             Nouvelle Dette
           </Text>
         </View>
+
+        {/* Section: Informations de base */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+            📋 Informations de base
+          </Text>
 
         {/* Nom de la dette */}
         <View style={styles.inputGroup}>
@@ -292,32 +292,38 @@ const AddDebtScreen = ({ navigation }: any) => {
             placeholderTextColor={isDark ? "#888" : "#999"}
           />
         </View>
+        </View>
+
+        {/* Section: Type et catégorie */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+            🏷️ Type et catégorie
+          </Text>
 
         {/* Type de dette */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
             Type de dette
           </Text>
-          <View style={styles.typesContainer}>
-            {debtTypes.map((type) => (
-              <TouchableOpacity
-                key={type.value}
-                style={[
-                  styles.typeButton,
-                  form.type === type.value && styles.typeButtonSelected,
-                  isDark && styles.darkTypeButton
-                ]}
-                onPress={() => handleTypeChange(type.value)}
-              >
-                <Text style={[
-                  styles.typeText,
-                  form.type === type.value && styles.typeTextSelected,
-                  isDark && styles.darkText
-                ]}>
-                  {type.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          <View style={[styles.dropdownContainer, isDark && styles.darkInput]}>
+            <TouchableOpacity
+              style={styles.dropdownButton}
+              onPress={() => {
+                Alert.alert(
+                  'Sélectionner le type',
+                  '',
+                  debtTypes.map(type => ({
+                    text: type.label,
+                    onPress: () => handleTypeChange(type.value)
+                  }))
+                );
+              }}
+            >
+              <Text style={[styles.dropdownText, isDark && styles.darkText]}>
+                {debtTypes.find(t => t.value === form.type)?.label || 'Sélectionner'}
+              </Text>
+              <Ionicons name="chevron-down" size={20} color={isDark ? "#888" : "#666"} />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -326,28 +332,41 @@ const AddDebtScreen = ({ navigation }: any) => {
           <Text style={[styles.label, isDark && styles.darkText]}>
             Catégorie
           </Text>
-          <View style={styles.categoriesContainer}>
-            {categories.map((category) => (
-              <TouchableOpacity
-                key={category}
-                style={[
-                  styles.categoryButton,
-                  form.category === category && styles.categoryButtonSelected,
-                  isDark && styles.darkCategoryButton
-                ]}
-                onPress={() => handleCategoryChange(category)}
-              >
-                <Text style={[
-                  styles.categoryText,
-                  form.category === category && styles.categoryTextSelected,
-                  isDark && styles.darkText
-                ]}>
-                  {category}
+          <View style={[styles.dropdownContainer, isDark && styles.darkInput]}>
+            <TouchableOpacity
+              style={styles.dropdownButton}
+              onPress={() => {
+                Alert.alert(
+                  'Sélectionner la catégorie',
+                  '',
+                  categories.map(cat => ({
+                    text: cat.label,
+                    onPress: () => handleCategoryChange(cat.value)
+                  }))
+                );
+              }}
+            >
+              <View style={styles.dropdownContent}>
+                <Ionicons 
+                  name={categories.find(c => c.value === form.category)?.icon as any} 
+                  size={20} 
+                  color={isDark ? "#fff" : "#000"} 
+                />
+                <Text style={[styles.dropdownText, isDark && styles.darkText]}>
+                  {categories.find(c => c.value === form.category)?.label || 'Sélectionner'}
                 </Text>
-              </TouchableOpacity>
-            ))}
+              </View>
+              <Ionicons name="chevron-down" size={20} color={isDark ? "#888" : "#666"} />
+            </TouchableOpacity>
           </View>
         </View>
+        </View>
+
+        {/* Section: Détails financiers */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+            💰 Détails financiers
+          </Text>
 
         {/* Montant initial */}
         <View style={styles.inputGroup}>
@@ -440,41 +459,99 @@ const AddDebtScreen = ({ navigation }: any) => {
               mode="date"
               display="default"
               onChange={handleStartDateChange}
-              maximumDate={form.dueDate}
             />
           )}
+          <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+            Date à laquelle la dette a commencé
+          </Text>
+        </View>
         </View>
 
-        {/* Date d'échéance */}
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
-            Date d'échéance
+        {/* Section: Options de paiement */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+            💳 Options de paiement
           </Text>
-          <TouchableOpacity 
-            style={[styles.dateButton, isDark && styles.darkInput]}
-            onPress={() => setShowDatePicker(true)}
-          >
-            <Text style={[styles.dateText, isDark && styles.darkText]}>
-              {form.dueDate.toLocaleDateString('fr-FR')}
-            </Text>
-            <Ionicons name="calendar" size={20} color={isDark ? "#fff" : "#666"} />
-          </TouchableOpacity>
-          {showDatePicker && (
-            <DateTimePicker
-              value={form.dueDate}
-              mode="date"
-              display="default"
-              onChange={handleDateChange}
-              minimumDate={form.startDate}
+
+        {/* Paiement automatique */}
+        <View style={[styles.autoPaySection, isDark && styles.darkAutoPaySection]}>
+          <View style={styles.switchRow}>
+            <View style={styles.switchLabelCompact}>
+              <Ionicons name="card-outline" size={20} color={isDark ? "#fff" : "#000"} />
+              <Text style={[styles.labelBold, isDark && styles.darkText]}>
+                Paiement automatique
+              </Text>
+            </View>
+            <Switch
+              value={form.autoPay}
+              onValueChange={(value) => setForm(prev => ({ ...prev, autoPay: value }))}
+              trackColor={{ false: '#767577', true: '#34C759' }}
+              thumbColor={form.autoPay ? '#fff' : '#f4f3f4'}
             />
+          </View>
+
+          {form.autoPay && (
+            <View style={styles.accountSelectorCompact}>
+              <Text style={[styles.sublabel, isDark && styles.darkSubtext]}>
+                Sélectionnez le compte qui paiera automatiquement
+              </Text>
+              
+              {/* Jour du mois pour le paiement */}
+              <View style={styles.paymentDayContainer}>
+                <Text style={[styles.label, isDark && styles.darkText]}>
+                  Jour du mois pour le paiement
+                </Text>
+                <TextInput
+                  style={[styles.input, styles.dayInput, isDark && styles.darkInput]}
+                  value={form.paymentDay.toString()}
+                  onChangeText={(value) => {
+                    const day = parseInt(value) || 1;
+                    if (day >= 1 && day <= 31) {
+                      setForm(prev => ({ ...prev, paymentDay: day }));
+                    }
+                  }}
+                  placeholder="1-31"
+                  placeholderTextColor={isDark ? "#888" : "#999"}
+                  keyboardType="number-pad"
+                  maxLength={2}
+                />
+                <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+                  Le paiement sera effectué automatiquement le {form.paymentDay} de chaque mois
+                </Text>
+              </View>
+
+              {accounts.length === 0 ? (
+                <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+                  Aucun compte disponible. Créez d'abord un compte.
+                </Text>
+              ) : (
+                <View style={styles.accountsRow}>
+                  {accounts.map((account) => (
+                    <TouchableOpacity
+                      key={account.id}
+                      style={[
+                        styles.accountChip,
+                        form.paymentAccountId === account.id && styles.accountChipSelected,
+                        isDark && styles.darkAccountChip
+                      ]}
+                      onPress={() => setForm(prev => ({ ...prev, paymentAccountId: account.id }))}
+                    >
+                      <Text style={[
+                        styles.accountChipText,
+                        form.paymentAccountId === account.id && styles.accountChipTextSelected,
+                        isDark && styles.darkText
+                      ]}>
+                        {account.name}
+                      </Text>
+                      {form.paymentAccountId === account.id && (
+                        <Ionicons name="checkmark-circle" size={16} color="#34C759" />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
           )}
-          
-          {/* ✅ MESSAGE D'INFORMATION SUR LES ÉCHÉANCES */}
-          <EligibilityInfoMessage />
-          
-          <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-            Mois d'échéance: {form.dueDate.toISOString().slice(0, 7)}
-          </Text>
         </View>
 
         {/* Couleur */}
@@ -499,6 +576,7 @@ const AddDebtScreen = ({ navigation }: any) => {
               </TouchableOpacity>
             ))}
           </View>
+        </View>
         </View>
 
         {/* Boutons */}
@@ -579,6 +657,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
+  dropdownContainer: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+  },
+  dropdownContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  dropdownText: {
+    fontSize: 16,
+    color: '#000',
+    flex: 1,
+  },
+  section: {
+    marginTop: 24,
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+    marginBottom: 16,
+  },
   calculateButton: {
     backgroundColor: '#007AFF',
     paddingHorizontal: 16,
@@ -647,6 +759,40 @@ const styles = StyleSheet.create({
   },
   categoryTextSelected: {
     color: '#fff',
+  },
+  categoryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  categoryCard: {
+    width: '30%',
+    minWidth: 100,
+    backgroundColor: '#f8f9fa',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  categoryCardSelected: {
+    backgroundColor: 'rgba(0, 122, 255, 0.1)',
+    borderColor: '#007AFF',
+  },
+  darkCategoryCard: {
+    backgroundColor: '#2c2c2e',
+  },
+  categoryCardText: {
+    fontSize: 13,
+    color: '#666',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  categoryCardTextSelected: {
+    color: '#007AFF',
+    fontWeight: '600',
   },
   dateButton: {
     flexDirection: 'row',
@@ -753,6 +899,126 @@ const styles = StyleSheet.create({
   },
   darkSubtext: {
     color: '#888',
+  },
+  autoPaySection: {
+    backgroundColor: '#f8f9fa',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  darkAutoPaySection: {
+    backgroundColor: '#2c2c2e',
+  },
+  switchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  switchLabel: {
+    flex: 1,
+    marginRight: 16,
+  },
+  switchLabelCompact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  labelBold: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+  },
+  sublabel: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 12,
+  },
+  accountSelector: {
+    marginTop: 16,
+  },
+  accountSelectorCompact: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  paymentDayContainer: {
+    marginTop: 12,
+    marginBottom: 16,
+  },
+  dayInput: {
+    marginTop: 8,
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  accountsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  accountChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+  },
+  accountChipSelected: {
+    backgroundColor: 'rgba(52, 199, 89, 0.1)',
+    borderColor: '#34C759',
+  },
+  darkAccountChip: {
+    backgroundColor: '#1c1c1e',
+    borderColor: '#38383a',
+  },
+  accountChipText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#000',
+  },
+  accountChipTextSelected: {
+    color: '#34C759',
+    fontWeight: '600',
+  },
+  accountButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    marginBottom: 8,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  accountButtonSelected: {
+    backgroundColor: 'rgba(52, 199, 89, 0.1)',
+    borderColor: '#34C759',
+  },
+  darkAccountButton: {
+    backgroundColor: '#2c2c2e',
+  },
+  accountInfo: {
+    flex: 1,
+  },
+  accountName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+    marginBottom: 4,
+  },
+  accountNameSelected: {
+    color: '#34C759',
+  },
+  accountBalance: {
+    fontSize: 14,
+    color: '#666',
   },
 });
 

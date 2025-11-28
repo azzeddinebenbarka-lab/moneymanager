@@ -92,11 +92,6 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
       return;
     }
 
-    if (debt.paymentEligibility && !debt.paymentEligibility.isEligible) {
-      Alert.alert('Paiement non autorisé', debt.paymentEligibility.reason);
-      return;
-    }
-
     setPaymentLoading(true);
     try {
       await makePayment(debtId, amount, selectedAccountId);
@@ -270,28 +265,6 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
               </View>
             </View>
           </View>
-
-          {/* Éligibilité au paiement */}
-          {debt.paymentEligibility && (
-            <View style={[
-              styles.eligibilitySection,
-              debt.paymentEligibility.isEligible ? styles.eligible : styles.notEligible
-            ]}>
-              <Ionicons 
-                name={debt.paymentEligibility.isEligible ? "checkmark-circle" : "close-circle"} 
-                size={20} 
-                color={debt.paymentEligibility.isEligible ? colors.semantic.success : colors.semantic.error} 
-              />
-              <Text style={[
-                styles.eligibilityText,
-                { color: colors.text.primary }
-              ]}>
-                {debt.paymentEligibility.isEligible 
-                  ? 'Paiement autorisé ce mois' 
-                  : debt.paymentEligibility.reason}
-              </Text>
-            </View>
-          )}
         </View>
 
         {/* Actions */}
@@ -304,10 +277,10 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
             <TouchableOpacity 
               style={[
                 styles.actionButton,
-                (!debt.paymentEligibility?.isEligible || debt.currentAmount <= 0 || debt.status === 'paid') && styles.actionButtonDisabled
+                (debt.currentAmount <= 0 || debt.status === 'paid') && styles.actionButtonDisabled
               ]}
               onPress={() => setShowPaymentForm(true)}
-              disabled={!debt.paymentEligibility?.isEligible || debt.currentAmount <= 0 || debt.status === 'paid'}
+              disabled={debt.currentAmount <= 0 || debt.status === 'paid'}
             >
               <Ionicons name="card" size={24} color={colors.primary[500]} />
               <Text style={[styles.actionText, { color: colors.text.primary }]}>

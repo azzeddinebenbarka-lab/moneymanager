@@ -17,7 +17,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useAnnualCharges } from '../hooks/useAnnualCharges';
-import { UpdateAnnualChargeData, getAllSubcategories } from '../types/AnnualCharge';
+import { getAllSubcategories } from '../types/AnnualCharge';
 
 interface AnnualChargeFormData {
   name: string;
@@ -98,12 +98,12 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
         });
       } else {
         Alert.alert(t.error, 'Charge annuelle non trouvée');
-        navigation.goBack();
+        navigation.navigate('AnnualChargesList');
       }
     } catch (error) {
       console.error('Error loading charge:', error);
       Alert.alert(t.error, 'Impossible de charger la charge annuelle');
-      navigation.goBack();
+      navigation.navigate('AnnualChargesList');
     } finally {
       setInitialLoading(false);
     }
@@ -147,7 +147,7 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
         Alert.alert(
           'Succès',
           'Charge annuelle modifiée avec succès',
-          [{ text: 'OK', onPress: () => navigation.goBack() }]
+          [{ text: 'OK', onPress: () => navigation.navigate('AnnualChargesList') }]
         );
       } else {
         // Mode création
@@ -155,7 +155,7 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
         Alert.alert(
           'Succès',
           'Charge annuelle créée avec succès',
-          [{ text: 'OK', onPress: () => navigation.goBack() }]
+          [{ text: 'OK', onPress: () => navigation.navigate('AnnualChargesList') }]
         );
       }
     } catch (error) {
@@ -222,7 +222,7 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton}
-            onPress={() => navigation.goBack()}
+            onPress={() => navigation.navigate('AnnualChargesList')}
           >
             <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#000"} />
           </TouchableOpacity>

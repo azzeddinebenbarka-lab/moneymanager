@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
     RefreshControl,
     ScrollView,
@@ -42,8 +42,6 @@ export default function AlertsScreen() {
       all: alerts.length,
       critical: alerts.filter(a => a.priority === 'critical').length,
       high: alerts.filter(a => a.priority === 'high').length,
-      medium: alerts.filter(a => a.priority === 'medium').length,
-      low: alerts.filter(a => a.priority === 'low').length,
       unread: alerts.filter(a => !a.read).length,
     };
   }, [alerts]);
@@ -89,15 +87,23 @@ export default function AlertsScreen() {
     { key: 'all', label: 'Toutes', color: colors.primary[500] },
     { key: 'critical', label: 'Critiques', color: colors.semantic.error },
     { key: 'high', label: 'Élevées', color: colors.semantic.warning },
-    { key: 'medium', label: 'Moyennes', color: colors.primary[500] },
-    { key: 'low', label: 'Faibles', color: colors.text.disabled },
   ];
+
+  // Debug log
+  console.log('📊 [AlertsScreen] Alertes:', alerts.length, '| Non lues:', counts.unread);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text.primary }]}>Alertes</Text>
+        <View>
+          <Text style={[styles.title, { color: colors.text.primary }]}>Alertes</Text>
+          {counts.unread > 0 && (
+            <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
+              {counts.unread} non lue{counts.unread > 1 ? 's' : ''}
+            </Text>
+          )}
+        </View>
         {counts.unread > 0 && (
           <TouchableOpacity
             style={[styles.markAllButton, { backgroundColor: colors.primary[500] + '15' }]}
@@ -311,6 +317,10 @@ const styles = StyleSheet.create({
     fontSize: 34,
     fontWeight: 'bold',
     letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 14,
+    marginTop: 4,
   },
   markAllButton: {
     flexDirection: 'row',

@@ -52,7 +52,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
     const loadTransaction = async () => {
       if (!transactionId) {
         Alert.alert(t.error, 'Aucune transaction sélectionnée');
-        navigation.goBack();
+        navigation.navigate('Transactions');
         return;
       }
 
@@ -64,7 +64,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
         
         if (!transaction) {
           Alert.alert(t.error, 'Transaction non trouvée');
-          navigation.goBack();
+          navigation.navigate('Transactions');
           return;
         }
 
@@ -88,7 +88,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
       } catch (error) {
         console.error('❌ Erreur chargement transaction:', error);
         Alert.alert(t.error, 'Impossible de charger la transaction');
-        navigation.goBack();
+        navigation.navigate('Transactions');
       } finally {
         setLoading(false);
       }
