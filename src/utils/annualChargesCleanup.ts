@@ -1,6 +1,5 @@
 // src/utils/annualChargesCleanup.ts
 import { getDatabase } from '../services/database/sqlite';
-import { emergencyDatabaseFix } from './emergencyDatabaseFix';
 
 export async function runAnnualChargesCleanup(): Promise<{
   normalized: number;
@@ -54,10 +53,11 @@ export async function runAnnualChargesCleanup(): Promise<{
     console.warn('⚠️ Cleanup: duplicate purge failed', e);
   }
 
-  // 3) Recalculer les soldes des comptes
+  // 3) Recalculer les soldes des comptes - DÉSACTIVÉ pour éviter corruption
   try {
-    await emergencyDatabaseFix.recalculateAllBalances();
-    return { normalized, deleted, recalculated: true };
+    // await emergencyDatabaseFix.recalculateAllBalances(); // ⚠️ DÉSACTIVÉ - causait corruption des soldes
+    console.log('ℹ️ [CLEANUP] Recalcul automatique des soldes désactivé');
+    return { normalized, deleted, recalculated: false };
   } catch (e) {
     console.warn('⚠️ Cleanup: balance recalculation failed', e);
     return { normalized, deleted, recalculated: false };

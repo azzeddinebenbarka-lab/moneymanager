@@ -1,6 +1,5 @@
 // src/context/DatabaseContext.tsx - VERSION COMPLÈTEMENT CORRIGÉE
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-import { accountService } from '../services/accountService';
 import { categoryService } from '../services/categoryService';
 import { checkDatabaseStatus, initDatabase, resetDatabase } from '../services/database/sqlite';
 import { runAnnualChargesCleanup } from '../utils/annualChargesCleanup';
@@ -62,11 +61,11 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({ children }) 
         console.warn('⚠️ [DB CONTEXT] Annual charges cleanup had issues, continuing...', cleanupError);
       }
 
-      // 3ter. Recalage final des soldes des comptes d'après l'historique
+      // 3ter. Recalage final des soldes des comptes d'après l'historique - DÉSACTIVÉ
       try {
-        console.log('🧮 [DB CONTEXT] Updating all account balances from transactions...');
-        await accountService.updateAllAccountBalances();
-        console.log('✅ [DB CONTEXT] Account balances synced');
+        console.log('ℹ️ [DB CONTEXT] Recalcul automatique des soldes désactivé (évite corruption)');
+        // await accountService.updateAllAccountBalances(); // ⚠️ DÉSACTIVÉ - causait corruption des soldes
+        console.log('✅ [DB CONTEXT] Account balances preserved (no automatic recalculation)');
       } catch (balanceError) {
         console.warn('⚠️ [DB CONTEXT] Could not sync account balances, continuing...', balanceError);
       }
