@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import ListTransactionItem from '../components/transaction/ListTransactionItem';
+import { TransactionDetailModal } from '../components/modals/TransactionDetailModal';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
@@ -55,6 +56,8 @@ const MonthDetailScreen: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [monthData, setMonthData] = useState<any>(null);
   const [filteredTransactions, setFilteredTransactions] = useState<any[]>([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
 
   // Animations
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
@@ -152,6 +155,18 @@ const MonthDetailScreen: React.FC = () => {
     return labels[category.toLowerCase()] || category;
   };
 
+  // ✅ OBTENIR L'ICÔNE DES CATÉGORIES SPÉCIALES
+  const getSpecialCategoryIcon = (category: string): string => {
+    const icons: { [key: string]: string } = {
+      'dette': 'card',
+      'épargne': 'trending-up',
+      'charges_annuelles': 'calendar',
+      'transfert': 'swap-horizontal',
+      'remboursement épargne': 'cash'
+    };
+    return icons[category.toLowerCase()] || 'document';
+  };
+
   const handleTransactionPress = async (transactionId: string) => {
     try {
       const transaction = transactions.find(t => t.id === transactionId);
@@ -159,15 +174,8 @@ const MonthDetailScreen: React.FC = () => {
 
       // Si c'est une transaction spéciale, afficher uniquement les détails
       if (isSpecialTransaction(transaction)) {
-        Alert.alert(
-          `Transaction ${getSpecialCategoryLabel(transaction.category)}`,
-          `Cette transaction est automatiquement générée par le système.\n\n` +
-          `• Montant: ${formatAmount(transaction.amount)}\n` +
-          `• Catégorie: ${getSpecialCategoryLabel(transaction.category)}\n` +
-          `• Date: ${new Date(transaction.date).toLocaleDateString('fr-FR')}\n` +
-          `• Description: ${transaction.description || 'Aucune description'}`,
-          [{ text: 'OK', style: 'default' }]
-        );
+        setSelectedTransaction(transaction);
+        setModalVisible(true);
         return;
       }
 
@@ -635,6 +643,18 @@ const MonthDetailScreen: React.FC = () => {
           <View style={styles.spacer} />
         </ScrollView>
       </View>
+
+      {/* Modal de détails pour transactions spéciales */}
+      {selectedTransaction && (
+        <TransactionDetailModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          transaction={selectedTransaction}
+          categoryLabel={getSpecialCategoryLabel(selectedTransaction.category)}
+          categoryIcon={getSpecialCategoryIcon(selectedTransaction.category)}
+          formatAmount={formatAmount}
+        />
+      )}
     </SafeAreaView>
   );
 };

@@ -29,6 +29,7 @@ import {
 import DonutChart from '../components/charts/DonutChart';
 import { SafeAreaView } from '../components/SafeAreaView';
 import ListTransactionItem from '../components/transaction/ListTransactionItem';
+import { TransactionDetailModal } from '../components/modals/TransactionDetailModal';
 import { Alert } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
@@ -521,8 +522,22 @@ const DashboardScreen: React.FC = () => {
     return labels[category.toLowerCase()] || category;
   };
 
+  // ✅ OBTENIR L'ICÔNE DES CATÉGORIES SPÉCIALES
+  const getSpecialCategoryIcon = (category: string): string => {
+    const icons: { [key: string]: string } = {
+      'dette': 'card',
+      'épargne': 'trending-up',
+      'charges_annuelles': 'calendar',
+      'transfert': 'swap-horizontal',
+      'remboursement épargne': 'cash'
+    };
+    return icons[category.toLowerCase()] || 'document';
+  };
+
   const [refreshing, setRefreshing] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   // ✅ Initial loading + Auto-debit processing (via annualChargeService only)
@@ -736,15 +751,8 @@ const DashboardScreen: React.FC = () => {
 
                 // Si c'est une transaction spéciale, afficher uniquement les détails
                 if (isSpecialTransaction(transaction)) {
-                  Alert.alert(
-                    `Transaction ${getSpecialCategoryLabel(transaction.category)}`,
-                    `Cette transaction est automatiquement générée par le système.\\n\\n` +
-                    `• Montant: ${formatAmount(transaction.amount)}\\n` +
-                    `• Catégorie: ${getSpecialCategoryLabel(transaction.category)}\\n` +
-                    `• Date: ${new Date(transaction.date).toLocaleDateString('fr-FR')}\\n` +
-                    `• Description: ${transaction.description || 'Aucune description'}`,
-                    [{ text: 'OK', style: 'default' }]
-                  );
+                  setSelectedTransaction(transaction);
+                  setModalVisible(true);
                   return;
                 }
 
@@ -794,6 +802,18 @@ const DashboardScreen: React.FC = () => {
 
         <View style={styles.spacer} />
       </ScrollView>
+
+      {/* Modal de détails pour transactions spéciales */}
+      {selectedTransaction && (
+        <TransactionDetailModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          transaction={selectedTransaction}
+          categoryLabel={getSpecialCategoryLabel(selectedTransaction.category)}
+          categoryIcon={getSpecialCategoryIcon(selectedTransaction.category)}
+          formatAmount={formatAmount}
+        />
+      )}
     </SafeAreaView>
   );
 };

@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import ListTransactionItem from '../components/transaction/ListTransactionItem';
+import { TransactionDetailModal } from '../components/modals/TransactionDetailModal';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
@@ -43,6 +44,8 @@ const TransactionsScreen = ({ navigation }: any) => {
   const [selectedMonth, setSelectedMonth] = useState<number | null>(new Date().getMonth() + 1); // null = whole year
   const [yearOnly, setYearOnly] = useState<boolean>(false);
   const [selectedTab, setSelectedTab] = useState<string>(t.all);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
 
   const isDark = theme === 'dark';
 
@@ -112,7 +115,17 @@ const TransactionsScreen = ({ navigation }: any) => {
 
   // ✅ VÉRIFIER SI UNE TRANSACTION EST SPÉCIALE
   const isSpecialTransaction = (transaction: Transaction): boolean => {
-    return SPECIAL_CATEGORIES.includes(transaction.category.toLowerCase());
+    const categoryLower = transaction.category.toLowerCase();
+    const isSpecial = SPECIAL_CATEGORIES.includes(categoryLower);
+    console.log('🔍 [TransactionsScreen] Vérification transaction:', {
+      id: transaction.id,
+      category: transaction.category,
+      categoryLower,
+      isSpecial,
+      amount: transaction.amount,
+      description: transaction.description
+    });
+    return isSpecial;
   };
 
   // ✅ NAVIGATION CONDITIONNELLE
@@ -122,15 +135,8 @@ const TransactionsScreen = ({ navigation }: any) => {
       if (!transaction) return;
 
       if (isSpecialTransaction(transaction)) {
-        Alert.alert(
-          `Transaction ${getSpecialCategoryLabel(transaction.category)}`,
-          `Cette transaction est automatiquement générée par le système.\n\n` +
-          `• Montant: ${formatAmount(transaction.amount)}\n` +
-          `• Catégorie: ${getSpecialCategoryLabel(transaction.category)}\n` +
-          `• Date: ${new Date(transaction.date).toLocaleDateString('fr-FR')}\n` +
-          `• Description: ${transaction.description || 'Aucune description'}`,
-          [{ text: 'OK', style: 'default' }]
-        );
+        setSelectedTransaction(transaction);
+        setModalVisible(true);
         return;
       }
       
@@ -456,6 +462,18 @@ const TransactionsScreen = ({ navigation }: any) => {
       >
         <Ionicons name="add" size={24} color="#fff" />
       </TouchableOpacity>
+
+      {/* Modal de détails pour transactions spéciales */}
+      {selectedTransaction && (
+        <TransactionDetailModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          transaction={selectedTransaction}
+          categoryLabel={getSpecialCategoryLabel(selectedTransaction.category)}
+          categoryIcon={getSpecialCategoryIcon(selectedTransaction.category)}
+          formatAmount={formatAmount}
+        />
+      )}
     </SafeAreaView>
   );
 };
