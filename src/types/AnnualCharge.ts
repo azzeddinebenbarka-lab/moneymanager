@@ -197,8 +197,21 @@ export const ANNUAL_CHARGE_CATEGORIES: AnnualChargeCategory[] = [
       { value: 'sadaqah', label: 'Sadaqah' },
       { value: 'eid_expenses', label: 'Dépenses Aïd' },
       { value: 'hajj_umrah', label: 'Hajj / Omra' },
+      { value: 'ramadan', label: 'Ramadan' },
       { value: 'ramadan_expenses', label: 'Dépenses Ramadan' },
       { value: 'islamic_charity', label: 'Œuvres de charité' }
+    ]
+  },
+  {
+    value: 'vehicle',
+    label: 'Véhicule',
+    icon: 'car-outline',
+    color: '#E74C3C',
+    subcategories: [
+      { value: 'vehicle_registration', label: 'Vignette voiture' },
+      { value: 'vehicle_insurance', label: 'Assurance véhicule' },
+      { value: 'vehicle_tax', label: 'Taxe véhicule' },
+      { value: 'technical_inspection', label: 'Contrôle technique' }
     ]
   }
 ];
