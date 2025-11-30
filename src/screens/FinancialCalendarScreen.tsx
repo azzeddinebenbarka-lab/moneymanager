@@ -290,10 +290,52 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
     let totalExpenses = 0;
 
     // Parcourir tous les jours du mois
-    for (let day = 1; day <= new Date(year, month + 1, 0).getDate(); day++) {
-      const dayData = getDayData(day);
-      totalIncome += dayData.income;
-      totalExpenses += dayData.expenses;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const dateStr = formatDateLocal(date);
+
+      // Transactions normales
+      transactions.forEach(t => {
+        const tDateStr = formatDateLocal(new Date(t.date));
+        if (tDateStr === dateStr) {
+          if (t.type === 'income') {
+            totalIncome += t.amount;
+          } else if (t.type === 'expense') {
+            totalExpenses += Math.abs(t.amount);
+          }
+        }
+      });
+
+      // Transactions récurrentes virtuelles
+      getRecurringTransactionsForMonth.forEach(t => {
+        if (t.date === dateStr) {
+          if (t.type === 'income') {
+            totalIncome += t.amount;
+          } else if (t.type === 'expense') {
+            totalExpenses += Math.abs(t.amount);
+          }
+        }
+      });
+
+      // Charges annuelles
+      charges.forEach(c => {
+        const cDateStr = formatDateLocal(new Date(c.dueDate));
+        if (cDateStr === dateStr && !c.isPaid) {
+          totalExpenses += c.amount;
+        }
+      });
+
+      // Dettes (échéances)
+      debts.forEach(d => {
+        if (d.nextDueDate) {
+          const dDateStr = formatDateLocal(new Date(d.nextDueDate));
+          if (dDateStr === dateStr && d.status === 'active') {
+            totalExpenses += d.monthlyPayment || 0;
+          }
+        }
+      });
     }
 
     const balance = totalIncome - totalExpenses;
