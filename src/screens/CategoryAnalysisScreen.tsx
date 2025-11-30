@@ -19,6 +19,7 @@ import { useTransactions } from '../hooks/useTransactions';
 const { width: screenWidth } = Dimensions.get('window');
 
 type PeriodType = '1month' | '6months' | 'year';
+type ExpenseType = 'all' | 'transactions' | 'debts' | 'charges';
 
 const CategoryAnalysisScreen = ({ navigation }: any) => {
   const { t } = useLanguage();
@@ -28,6 +29,7 @@ const CategoryAnalysisScreen = ({ navigation }: any) => {
   const { categories } = useCategories();
 
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('1month');
+  const [selectedType, setSelectedType] = useState<ExpenseType>('all');
   const [refreshing, setRefreshing] = useState(false);
   const isDark = theme === 'dark';
 
@@ -37,7 +39,7 @@ const CategoryAnalysisScreen = ({ navigation }: any) => {
     setRefreshing(false);
   };
 
-  // Filtrer les transactions par période
+  // Filtrer les transactions par période et type
   const filteredTransactions = useMemo(() => {
     const now = new Date();
     const currentMonth = now.getMonth();
@@ -47,6 +49,29 @@ const CategoryAnalysisScreen = ({ navigation }: any) => {
       // Filtrer seulement les dépenses avec catégorie
       if (t.type !== 'expense') return false;
       if (!t.category || t.category.trim() === '') return false;
+      
+      // Filtrer par type de dépense
+      if (selectedType !== 'all') {
+        const description = t.description?.toLowerCase() || '';
+        
+        switch (selectedType) {
+          case 'transactions':
+            // Exclure les dettes et charges annuelles
+            if (description.includes('remboursement dette') || 
+                description.includes('paiement:') ||
+                description.includes('charge annuelle')) return false;
+            break;
+          case 'debts':
+            // Uniquement les remboursements de dettes
+            if (!description.includes('remboursement dette')) return false;
+            break;
+          case 'charges':
+            // Uniquement les charges annuelles
+            if (!description.includes('paiement:') && 
+                !description.includes('charge annuelle')) return false;
+            break;
+        }
+      }
       
       const tDate = new Date(t.date);
       const tMonth = tDate.getMonth();
@@ -64,7 +89,7 @@ const CategoryAnalysisScreen = ({ navigation }: any) => {
           return true;
       }
     });
-  }, [transactions, selectedPeriod]);
+  }, [transactions, selectedPeriod, selectedType]);
 
   // Calculer le total dépensé
   const totalExpenses = useMemo(() => {
@@ -177,6 +202,43 @@ const CategoryAnalysisScreen = ({ navigation }: any) => {
                 ]}
               >
                 {period.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Filtres type de dépense */}
+        <View style={styles.typeFilters}>
+          {[
+            { key: 'all' as ExpenseType, label: 'Tout', icon: 'apps-outline' },
+            { key: 'transactions' as ExpenseType, label: 'Dépenses', icon: 'cart-outline' },
+            { key: 'debts' as ExpenseType, label: 'Dettes', icon: 'card-outline' },
+            { key: 'charges' as ExpenseType, label: 'Charges', icon: 'calendar-outline' },
+          ].map((type) => (
+            <TouchableOpacity
+              key={type.key}
+              style={[
+                styles.typeButton,
+                selectedType === type.key && styles.typeButtonActive,
+                isDark && styles.darkPeriodButton,
+                selectedType === type.key && isDark && styles.darkPeriodButtonActive,
+              ]}
+              onPress={() => setSelectedType(type.key)}
+            >
+              <Ionicons 
+                name={type.icon as any} 
+                size={16} 
+                color={selectedType === type.key ? '#fff' : (isDark ? '#aaa' : '#666')}
+                style={{ marginRight: 4 }}
+              />
+              <Text
+                style={[
+                  styles.typeButtonText,
+                  selectedType === type.key && styles.typeButtonTextActive,
+                  isDark && styles.darkText,
+                ]}
+              >
+                {type.label}
               </Text>
             </TouchableOpacity>
           ))}
@@ -366,6 +428,32 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   periodButtonTextActive: {
+    color: '#fff',
+  },
+  typeFilters: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  typeButton: {
+    flex: 1,
+    flexDirection: 'row',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    backgroundColor: '#F0F0F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  typeButtonActive: {
+    backgroundColor: '#007AFF',
+  },
+  typeButtonText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+  },
+  typeButtonTextActive: {
     color: '#fff',
   },
   totalCard: {
