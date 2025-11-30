@@ -75,28 +75,47 @@ export default function AnnualChargesScreen({ navigation }: AnnualChargesScreenP
     }, [refreshAnnualCharges, processAutoDeductCharges])
   );
 
-  // Filtres disponibles avec compteurs
+  // Filtres disponibles avec compteurs et montants
   const filters = useMemo(() => {
     const now = new Date();
+    
+    // Calculer les montants pour chaque catégorie
+    const allTotal = charges.reduce((sum, c) => sum + c.amount, 0);
+    const pendingCharges = charges.filter(c => !c.isPaid && new Date(c.dueDate) <= now);
+    const pendingTotal = pendingCharges.reduce((sum, c) => sum + c.amount, 0);
+    const paidCharges = charges.filter(c => c.isPaid);
+    const paidTotal = paidCharges.reduce((sum, c) => sum + c.amount, 0);
+    const upcomingCharges = charges.filter(c => !c.isPaid && new Date(c.dueDate) > now);
+    const upcomingTotal = upcomingCharges.reduce((sum, c) => sum + c.amount, 0);
+    
     return [
-      { key: 'all' as FilterType, label: 'Toutes', count: charges.length, icon: 'list-outline' },
+      { 
+        key: 'all' as FilterType, 
+        label: 'Toutes', 
+        count: charges.length, 
+        icon: 'list-outline',
+        amount: allTotal
+      },
       { 
         key: 'pending' as FilterType, 
         label: 'En attente', 
-        count: charges.filter(c => !c.isPaid && new Date(c.dueDate) <= now).length,
-        icon: 'time-outline'
+        count: pendingCharges.length,
+        icon: 'time-outline',
+        amount: pendingTotal
       },
       { 
         key: 'paid' as FilterType, 
         label: 'Payées', 
-        count: charges.filter(c => c.isPaid).length,
-        icon: 'checkmark-circle-outline'
+        count: paidCharges.length,
+        icon: 'checkmark-circle-outline',
+        amount: paidTotal
       },
       { 
         key: 'upcoming' as FilterType, 
         label: 'À venir', 
-        count: charges.filter(c => !c.isPaid && new Date(c.dueDate) > now).length,
-        icon: 'calendar-outline'
+        count: upcomingCharges.length,
+        icon: 'calendar-outline',
+        amount: upcomingTotal
       }
     ];
   }, [charges]);
@@ -431,7 +450,7 @@ export default function AnnualChargesScreen({ navigation }: AnnualChargesScreenP
                     color: isSelected ? 'white' : safeColors.text.primary 
                   }
                 ]}>
-                  {filter.label}
+                  {filter.label}: {formatAmount(filter.amount)}
                 </Text>
                 {filter.count > 0 && (
                   <View style={[
