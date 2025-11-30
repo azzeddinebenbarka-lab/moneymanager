@@ -438,33 +438,45 @@ export default function AnnualChargesScreen({ navigation }: AnnualChargesScreenP
                 ]}
                 onPress={() => setSelectedFilter(filter.key)}
               >
-                <Ionicons 
-                  name={filter.icon as any} 
-                  size={18} 
-                  color={isSelected ? 'white' : safeColors.text.secondary}
-                  style={styles.filterIcon}
-                />
-                <Text style={[
-                  styles.filterText,
-                  { 
-                    color: isSelected ? 'white' : safeColors.text.primary 
-                  }
-                ]}>
-                  {filter.label}: {formatAmount(filter.amount)}
-                </Text>
-                {filter.count > 0 && (
-                  <View style={[
-                    styles.filterBadge,
-                    { backgroundColor: isSelected ? 'rgba(255,255,255,0.3)' : safeColors.primary + '15' }
-                  ]}>
+                <View style={styles.filterContent}>
+                  <View style={styles.filterHeader}>
+                    <Ionicons 
+                      name={filter.icon as any} 
+                      size={18} 
+                      color={isSelected ? 'white' : safeColors.text.secondary}
+                      style={styles.filterIcon}
+                    />
                     <Text style={[
-                      styles.filterBadgeText,
-                      { color: isSelected ? 'white' : safeColors.primary }
+                      styles.filterText,
+                      { 
+                        color: isSelected ? 'white' : safeColors.text.primary 
+                      }
                     ]}>
-                      {filter.count}
+                      {filter.label}
                     </Text>
+                    {filter.count > 0 && (
+                      <View style={[
+                        styles.filterBadge,
+                        { backgroundColor: isSelected ? 'rgba(255,255,255,0.3)' : safeColors.primary + '15' }
+                      ]}>
+                        <Text style={[
+                          styles.filterBadgeText,
+                          { color: isSelected ? 'white' : safeColors.primary }
+                        ]}>
+                          {filter.count}
+                        </Text>
+                      </View>
+                    )}
                   </View>
-                )}
+                  <Text style={[
+                    styles.filterAmount,
+                    { 
+                      color: isSelected ? 'rgba(255,255,255,0.9)' : safeColors.text.secondary 
+                    }
+                  ]}>
+                    {formatAmount(filter.amount)}
+                  </Text>
+                </View>
               </TouchableOpacity>
             );
           })}
@@ -615,12 +627,21 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   filterChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column',
+    alignItems: 'stretch',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 1.5,
+    gap: 6,
+  },
+  filterContent: {
+    flexDirection: 'column',
+    gap: 4,
+  },
+  filterHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 6,
   },
   filterIcon: {
@@ -629,6 +650,12 @@ const styles = StyleSheet.create({
   filterText: {
     fontSize: 14,
     fontWeight: '600',
+    flex: 1,
+  },
+  filterAmount: {
+    fontSize: 13,
+    fontWeight: '500',
+    marginLeft: 24,
   },
   filterBadge: {
     marginLeft: 4,
