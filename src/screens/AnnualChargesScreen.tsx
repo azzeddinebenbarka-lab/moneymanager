@@ -511,12 +511,20 @@ export default function AnnualChargesScreen({ navigation }: AnnualChargesScreenP
             </View>
           ) : (
             <View style={styles.chargesList}>
-              <Text style={[styles.sectionTitle, { color: safeColors.text.primary }]}>
-                {selectedFilter === 'all' ? 'Toutes les charges' :
-                 selectedFilter === 'pending' ? 'Charges en attente' :
-                 selectedFilter === 'paid' ? 'Charges payées' :
-                 selectedFilter === 'upcoming' ? 'Charges à venir' : 'Charges'}
-              </Text>
+              <View style={styles.sectionHeader}>
+                <Text style={[styles.sectionTitle, { color: safeColors.text.primary }]}>
+                  {selectedFilter === 'all' ? 'Toutes les charges' :
+                   selectedFilter === 'pending' ? 'Charges en attente' :
+                   selectedFilter === 'paid' ? 'Charges payées' :
+                   selectedFilter === 'upcoming' ? 'Charges à venir' : 'Charges'}
+                </Text>
+                <View style={[styles.sectionBadge, { backgroundColor: safeColors.primary }]}>
+                  <Text style={styles.sectionBadgeText}>ici</Text>
+                </View>
+                <Text style={[styles.sectionAmount, { color: safeColors.text.primary }]}>
+                  {formatAmount(filters.find(f => f.key === selectedFilter)?.amount || 0)}
+                </Text>
+              </View>
               
               {filteredCharges.map((charge) => (
                 <ChargeCard key={charge.id} charge={charge} />
@@ -695,10 +703,30 @@ const styles = StyleSheet.create({
   chargesList: {
     paddingHorizontal: 20,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 8,
+  },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
-    marginBottom: 16,
+    flex: 1,
+  },
+  sectionBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  sectionBadgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  sectionAmount: {
+    fontSize: 18,
+    fontWeight: '700',
   },
   chargeCard: {
     borderRadius: 16,
