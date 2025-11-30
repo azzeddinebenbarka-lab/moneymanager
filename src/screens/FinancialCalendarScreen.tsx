@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem } from '../context/ThemeContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { useAnnualCharges } from '../hooks/useAnnualCharges';
 import { useCategories } from '../hooks/useCategories';
 import { useDebts } from '../hooks/useDebts';
@@ -21,6 +22,7 @@ import resolveCategoryLabel from '../utils/categoryResolver';
 export const FinancialCalendarScreen = ({ navigation }: any) => {
   const { t } = useLanguage();
   const { colors } = useDesignSystem();
+  const { formatAmount } = useCurrency();
   const { transactions } = useTransactions();
   const { charges } = useAnnualCharges();
   const { debts } = useDebts();
@@ -280,6 +282,29 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
     return items.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [transactions, getRecurringTransactionsForMonth, charges, debts, selectedDate, categories]);
 
+  // ✅ NOUVEAU : Calculer les statistiques du mois affiché
+  const monthStats = useMemo(() => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    let totalIncome = 0;
+    let totalExpenses = 0;
+
+    // Parcourir tous les jours du mois
+    for (let day = 1; day <= new Date(year, month + 1, 0).getDate(); day++) {
+      const dayData = getDayData(day);
+      totalIncome += dayData.income;
+      totalExpenses += dayData.expenses;
+    }
+
+    const balance = totalIncome - totalExpenses;
+
+    return {
+      income: totalIncome,
+      expenses: totalExpenses,
+      balance
+    };
+  }, [currentMonth, transactions, getRecurringTransactionsForMonth, charges, debts]);
+
   const { daysInMonth, startDayOfWeek, year, month } = getMonthDays();
   const today = new Date();
   const isToday = (day: number) => {
@@ -312,6 +337,47 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
       </View>
 
       <ScrollView style={styles.scrollView}>
+        {/* Section Statistiques du mois */}
+        <View style={[styles.statsCard, { backgroundColor: colors.background.card }]}>
+          <Text style={[styles.statsTitle, { color: colors.text.secondary }]}>
+            Solde du mois
+          </Text>
+          <Text style={[
+            styles.statsBalance, 
+            { color: monthStats.balance >= 0 ? colors.success[500] : colors.error[500] }
+          ]}>
+            {formatAmount(monthStats.balance)}
+          </Text>
+          
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <View style={[styles.statIcon, { backgroundColor: colors.success[500] + '15' }]}>
+                <Ionicons name="arrow-down" size={20} color={colors.success[500]} />
+              </View>
+              <View style={styles.statInfo}>
+                <Text style={[styles.statLabel, { color: colors.text.secondary }]}>Revenus</Text>
+                <Text style={[styles.statValue, { color: colors.text.primary }]}>
+                  {formatAmount(monthStats.income)}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.statDivider} />
+
+            <View style={styles.statItem}>
+              <View style={[styles.statIcon, { backgroundColor: colors.error[500] + '15' }]}>
+                <Ionicons name="arrow-up" size={20} color={colors.error[500]} />
+              </View>
+              <View style={styles.statInfo}>
+                <Text style={[styles.statLabel, { color: colors.text.secondary }]}>Dépenses</Text>
+                <Text style={[styles.statValue, { color: colors.text.primary }]}>
+                  {formatAmount(monthStats.expenses)}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
         {/* Calendrier */}
         <View style={[styles.calendarCard, { backgroundColor: colors.background.card }]}>
           {/* Mois et navigation */}
@@ -466,6 +532,65 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  statsCard: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  statsTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  statsBalance: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  statItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  statInfo: {
+    flex: 1,
+  },
+  statLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  statValue: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  statDivider: {
+    width: 1,
+    height: 44,
+    backgroundColor: '#E5E5EA',
+    marginHorizontal: 16,
   },
   calendarCard: {
     margin: 16,
