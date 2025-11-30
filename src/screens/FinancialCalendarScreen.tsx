@@ -1,6 +1,6 @@
 // src/screens/FinancialCalendarScreen.tsx
 import { Ionicons } from '@expo/vector-icons';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
     RefreshControl,
     ScrollView,
@@ -29,9 +29,6 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
   const { debts, refreshDebts } = useDebts();
   const { goals } = useSavings();
   const { categories } = useCategories();
-  
-  // Debug: Afficher la devise actuelle
-  console.log('💰 [Calendar] Devise actuelle:', currency?.code, currency?.symbol);
   
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -196,7 +193,9 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
       if (d.nextDueDate) {
         const dDateStr = formatDateLocal(new Date(d.nextDueDate)); // ✅ CORRECTION : Format local
         if (dDateStr === dateStr && d.status === 'active') {
-          expenses += d.monthlyPayment || 0;
+          // Prendre le minimum entre la mensualité et le montant restant
+          const paymentAmount = Math.min(d.monthlyPayment || 0, d.currentAmount);
+          expenses += paymentAmount;
         }
       }
     });
@@ -284,11 +283,13 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
       if (d.nextDueDate) {
         const dDateStr = formatDateLocal(new Date(d.nextDueDate)); // ✅ CORRECTION : Format local
         if (dDateStr === dateStr && d.status === 'active') {
+          // Prendre le minimum entre la mensualité et le montant restant
+          const paymentAmount = Math.min(d.monthlyPayment || 0, d.currentAmount);
           items.push({
             id: d.id,
             type: 'expense',
             description: d.name,
-            amount: d.monthlyPayment,
+            amount: paymentAmount,
             category: d.category ? getCategoryName(d.category) : 'Remboursement Dette',
             date: d.nextDueDate,
             icon: 'trending-down',
@@ -352,7 +353,9 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
         if (d.nextDueDate) {
           const dDateStr = formatDateLocal(new Date(d.nextDueDate));
           if (dDateStr === dateStr && d.status === 'active') {
-            totalExpenses += d.monthlyPayment || 0;
+            // Prendre le minimum entre la mensualité et le montant restant
+            const paymentAmount = Math.min(d.monthlyPayment || 0, d.currentAmount);
+            totalExpenses += paymentAmount;
           }
         }
       });
@@ -568,7 +571,7 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
                   styles.transactionAmount,
                   { color: item.type === 'expense' ? '#FF3B30' : '#34C759' }
                 ]}>
-                  {item.type === 'expense' ? '-' : '+'}{Math.abs(item.amount).toFixed(2)} €
+                  {formatAmount(item.amount)}
                 </Text>
               </View>
             ))

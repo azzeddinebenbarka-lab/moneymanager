@@ -131,7 +131,6 @@ const CurrencySettingsScreen = ({ navigation }: any) => {
     if (selectedCurrency) {
       try {
         await setCurrency(selectedCurrency);
-        triggerRefresh();
         
         Alert.alert(
           'Devise changée',
