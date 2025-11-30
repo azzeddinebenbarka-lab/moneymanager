@@ -46,31 +46,40 @@ const CategoryAnalysisScreen = ({ navigation }: any) => {
     const currentYear = now.getFullYear();
 
     return transactions.filter(t => {
-      // Filtrer seulement les dépenses avec catégorie
+      // Filtrer seulement les dépenses
       if (t.type !== 'expense') return false;
-      if (!t.category || t.category.trim() === '') return false;
       
       // Filtrer par type de dépense
       if (selectedType !== 'all') {
         const description = t.description?.toLowerCase() || '';
+        const category = t.category?.toLowerCase() || '';
         
         switch (selectedType) {
           case 'transactions':
-            // Exclure les dettes et charges annuelles
-            if (description.includes('paiement dette:') || 
+            // Exclure les dettes et charges annuelles (par catégorie OU description)
+            if (category === 'dette' || 
+                category === 'charges_annuelles' ||
+                description.includes('paiement dette:') || 
                 description.includes('remboursement dette') ||
                 description.startsWith('paiement:')) return false;
+            // Doit avoir une catégorie non vide
+            if (!t.category || t.category.trim() === '') return false;
             break;
           case 'debts':
-            // Uniquement les remboursements de dettes
-            if (!description.includes('paiement dette:') && 
+            // Uniquement les remboursements de dettes (par catégorie OU description)
+            if (category !== 'dette' && 
+                !description.includes('paiement dette:') && 
                 !description.includes('remboursement dette')) return false;
             break;
           case 'charges':
-            // Uniquement les charges annuelles
-            if (!description.startsWith('paiement:')) return false;
+            // Uniquement les charges annuelles (par catégorie OU description)
+            if (category !== 'charges_annuelles' && 
+                !description.startsWith('paiement:')) return false;
             break;
         }
+      } else {
+        // Pour "Tout", exclure les transactions sans catégorie
+        if (!t.category || t.category.trim() === '') return false;
       }
       
       const tDate = new Date(t.date);
