@@ -386,15 +386,15 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
           </Text>
           <Text style={[
             styles.statsBalance, 
-            { color: monthStats.balance >= 0 ? colors.success[500] : colors.error[500] }
+            { color: monthStats.balance >= 0 ? '#34C759' : '#FF3B30' }
           ]}>
             {formatAmount(monthStats.balance)}
           </Text>
           
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <View style={[styles.statIcon, { backgroundColor: colors.success[500] + '15' }]}>
-                <Ionicons name="arrow-down" size={20} color={colors.success[500]} />
+              <View style={[styles.statIcon, { backgroundColor: '#34C75915' }]}>
+                <Ionicons name="arrow-down" size={20} color="#34C759" />
               </View>
               <View style={styles.statInfo}>
                 <Text style={[styles.statLabel, { color: colors.text.secondary }]}>Revenus</Text>
@@ -407,8 +407,8 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
             <View style={styles.statDivider} />
 
             <View style={styles.statItem}>
-              <View style={[styles.statIcon, { backgroundColor: colors.error[500] + '15' }]}>
-                <Ionicons name="arrow-up" size={20} color={colors.error[500]} />
+              <View style={[styles.statIcon, { backgroundColor: '#FF3B3015' }]}>
+                <Ionicons name="arrow-up" size={20} color="#FF3B30" />
               </View>
               <View style={styles.statInfo}>
                 <Text style={[styles.statLabel, { color: colors.text.secondary }]}>Dépenses</Text>
