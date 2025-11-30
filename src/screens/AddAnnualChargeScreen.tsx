@@ -394,35 +394,6 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
           </ScrollView>
         </View>
 
-        {/* Prélèvement automatique */}
-        <View style={styles.inputGroup}>
-          <View style={styles.switchContainer}>
-            <Text style={[styles.label, { color: colors.text.primary }]}>
-              Prélèvement automatique
-            </Text>
-            <TouchableOpacity
-              style={[
-                styles.switch,
-                { backgroundColor: form.paymentMethod === 'Prélèvement automatique' ? colors.primary[500] : '#ccc' }
-              ]}
-              onPress={() => setForm(prev => ({ 
-                ...prev, 
-                paymentMethod: prev.paymentMethod === 'Prélèvement automatique' ? 'Autre' : 'Prélèvement automatique' 
-              }))}
-            >
-              <View
-                style={[
-                  styles.switchThumb,
-                  form.paymentMethod === 'Prélèvement automatique' && styles.switchThumbActive,
-                ]}
-              />
-            </TouchableOpacity>
-          </View>
-          <Text style={[styles.hint, { color: colors.text.secondary }]}>
-            Les charges avec prélèvement automatique seront automatiquement débitées à leur date d'échéance
-          </Text>
-        </View>
-
         {/* Jours de rappel */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: colors.text.primary }]}>
