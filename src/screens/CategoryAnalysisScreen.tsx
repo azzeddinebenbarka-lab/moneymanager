@@ -126,8 +126,32 @@ const CategoryAnalysisScreen = ({ navigation }: any) => {
 
     filteredTransactions.forEach(t => {
       // Trouver la catégorie (peut être sous-catégorie ou catégorie principale)
-      const category = categories.find(c => c.id === t.category);
-      if (!category) return;
+      let category = categories.find(c => c.id === t.category);
+      
+      // Si la catégorie n'existe pas, créer une catégorie virtuelle pour dette/charges
+      if (!category) {
+        if (t.category === 'dette') {
+          category = {
+            id: 'dette',
+            name: 'Dettes',
+            icon: 'card-outline',
+            color: '#EF4444',
+            budget: 0,
+            parentId: null
+          };
+        } else if (t.category === 'charges_annuelles') {
+          category = {
+            id: 'charges_annuelles',
+            name: 'Charges Annuelles',
+            icon: 'calendar-outline',
+            color: '#8B5CF6',
+            budget: 0,
+            parentId: null
+          };
+        } else {
+          return; // Ignorer les autres catégories non reconnues
+        }
+      }
 
       // Si c'est une sous-catégorie, trouver la catégorie parente
       let parentCategory = category;
