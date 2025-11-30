@@ -11,7 +11,8 @@ export const useCurrencyInitialization = () => {
   const [needsMigration, setNeedsMigration] = useState(false);
 
   useEffect(() => {
-    initializeCurrency();
+    // Désactiver l'initialisation automatique pour éviter les boucles infinies
+    // initializeCurrency();
   }, []);
 
   const initializeCurrency = async () => {
