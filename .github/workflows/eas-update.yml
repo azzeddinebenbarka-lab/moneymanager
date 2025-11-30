@@ -6,7 +6,6 @@ on:
       - rollback/v6
     paths-ignore:
       - '**.md'
-      - '.github/**'
 
 jobs:
   update:
