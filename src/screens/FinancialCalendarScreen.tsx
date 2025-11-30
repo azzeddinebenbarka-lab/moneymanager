@@ -2,6 +2,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
 import {
+    RefreshControl,
     ScrollView,
     StyleSheet,
     Text,
@@ -23,14 +24,30 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
   const { t } = useLanguage();
   const { colors } = useDesignSystem();
   const { formatAmount } = useCurrency();
-  const { transactions } = useTransactions();
-  const { charges } = useAnnualCharges();
-  const { debts } = useDebts();
+  const { transactions, refreshTransactions } = useTransactions();
+  const { charges, refreshAnnualCharges } = useAnnualCharges();
+  const { debts, refreshDebts } = useDebts();
   const { goals } = useSavings();
   const { categories } = useCategories();
   
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Pull to refresh
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        refreshTransactions(),
+        refreshAnnualCharges(),
+        refreshDebts()
+      ]);
+    } catch (error) {
+      console.error('Error refreshing calendar:', error);
+    }
+    setRefreshing(false);
+  };
 
   // Obtenir le premier et dernier jour du mois
   const getMonthDays = () => {
@@ -378,7 +395,16 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView style={styles.scrollView}>
+      <ScrollView 
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary[500] || '#007AFF'}
+          />
+        }
+      >
         {/* Section Statistiques du mois */}
         <View style={[styles.statsCard, { backgroundColor: colors.background.card }]}>
           <Text style={[styles.statsTitle, { color: colors.text.secondary }]}>
