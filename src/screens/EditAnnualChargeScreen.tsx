@@ -568,6 +568,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
+    paddingBottom: 100,
   },
   center: {
     flex: 1,

@@ -99,12 +99,12 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
         });
       } else {
         Alert.alert(t.error, 'Objectif non trouvé');
-        navigation.navigate('SavingsList');
+        navigation.navigate('Savings');
       }
     } catch (error) {
       console.error('Error loading goal:', error);
       Alert.alert(t.error, 'Impossible de charger l\'objectif');
-      navigation.navigate('SavingsList');
+      navigation.navigate('Savings');
     } finally {
       setInitialLoading(false);
     }
@@ -179,7 +179,7 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
       Alert.alert(
         'Succès',
         'Objectif modifié avec succès',
-        [{ text: 'OK', onPress: () => navigation.navigate('SavingsList') }]
+        [{ text: 'OK', onPress: () => navigation.navigate('Savings') }]
       );
     } catch (error) {
       console.error('Erreur modification objectif:', error);
@@ -198,7 +198,7 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
       Alert.alert(
         'Succès',
         'Objectif supprimé avec succès',
-        [{ text: 'OK', onPress: () => navigation.navigate('SavingsList') }]
+        [{ text: 'OK', onPress: () => navigation.navigate('Savings') }]
       );
     } catch (error) {
       console.error('Erreur suppression objectif:', error);
@@ -238,7 +238,7 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton}
-            onPress={() => navigation.navigate('SavingsList')}
+            onPress={() => navigation.navigate('Savings')}
           >
             <Ionicons name="close" size={24} color={isDark ? "#fff" : "#000"} />
           </TouchableOpacity>
