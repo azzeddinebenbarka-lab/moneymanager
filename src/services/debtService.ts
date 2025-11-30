@@ -794,51 +794,68 @@ export const debtService = {
    * ✅ MISE À JOUR D'UNE DETTE
    */
   async updateDebt(id: string, updates: UpdateDebtData, userId: string = 'default-user'): Promise<void> {
-    try {
-      const db = await getDatabase();
-      
-      const fields = Object.keys(updates);
-      if (fields.length === 0) return;
+    const maxRetries = 3;
+    let lastError: Error | null = null;
 
-      const dbFields = fields.map(field => {
-        const mapping: { [key: string]: string } = {
-          'initialAmount': 'initial_amount',
-          'currentAmount': 'current_amount',
-          'interestRate': 'interest_rate',
-          'monthlyPayment': 'monthly_payment',
-          'startDate': 'start_date',
-          'dueDate': 'due_date',
-          'dueMonth': 'due_month',
-          'autoPay': 'auto_pay',
-          'paymentAccountId': 'payment_account_id',
-          'paymentDay': 'payment_day',
-          'startPaymentNextMonth': 'start_payment_next_month'
-        };
-        return mapping[field] || field;
-      });
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const db = await getDatabase();
+        
+        const fields = Object.keys(updates);
+        if (fields.length === 0) return;
 
-      const setClause = dbFields.map(field => `${field} = ?`).join(', ');
+        const dbFields = fields.map(field => {
+          const mapping: { [key: string]: string } = {
+            'initialAmount': 'initial_amount',
+            'currentAmount': 'current_amount',
+            'interestRate': 'interest_rate',
+            'monthlyPayment': 'monthly_payment',
+            'startDate': 'start_date',
+            'dueDate': 'due_date',
+            'dueMonth': 'due_month',
+            'autoPay': 'auto_pay',
+            'paymentAccountId': 'payment_account_id',
+            'paymentDay': 'payment_day',
+            'startPaymentNextMonth': 'start_payment_next_month'
+          };
+          return mapping[field] || field;
+        });
 
-      const values = fields.map(field => {
-        const value = (updates as any)[field];
-        if (field === 'autoPay' || field === 'startPaymentNextMonth') {
-          return value ? 1 : 0;
+        const setClause = dbFields.map(field => `${field} = ?`).join(', ');
+
+        const values = fields.map(field => {
+          const value = (updates as any)[field];
+          if (field === 'autoPay' || field === 'startPaymentNextMonth') {
+            return value ? 1 : 0;
+          }
+          return value;
+        });
+
+        values.push(id, userId);
+
+        await db.runAsync(
+          `UPDATE debts SET ${setClause} WHERE id = ? AND user_id = ?`,
+          values
+        );
+
+        console.log('✅ [debtService] Debt updated successfully');
+        return;
+      } catch (error) {
+        lastError = error as Error;
+        const isLockError = error && (error as any).message?.includes('database is locked');
+        
+        if (isLockError && attempt < maxRetries) {
+          console.warn(`⚠️ [debtService] Database locked, retry ${attempt}/${maxRetries}...`);
+          await new Promise(resolve => setTimeout(resolve, 100 * attempt));
+          continue;
         }
-        return value;
-      });
-
-      values.push(id, userId);
-
-      await db.runAsync(
-        `UPDATE debts SET ${setClause} WHERE id = ? AND user_id = ?`,
-        values
-      );
-
-      console.log('✅ [debtService] Debt updated successfully');
-    } catch (error) {
-      console.error('❌ [debtService] Error in updateDebt:', error);
-      throw error;
+        
+        console.error('❌ [debtService] Error in updateDebt:', error);
+        throw error;
+      }
     }
+
+    throw lastError || new Error('Failed to update debt after retries');
   },
 
   /**
