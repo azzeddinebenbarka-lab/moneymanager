@@ -7,8 +7,7 @@
     "clean": "rm -rf node_modules package-lock.json && npm install",
     "clean:win": "rmdir /s node_modules && del package-lock.json && npm install",
     "doctor": "expo-doctor",
-    "install:clean": "npm run clean && npx expo install --fix",
-    "preinstall": "npx expo install --check || true"
+    "install:clean": "npm run clean && npx expo install --fix"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
