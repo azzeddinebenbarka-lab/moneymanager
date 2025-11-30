@@ -1,0 +1,22 @@
+# Fichiers à ignorer lors du build EAS
+node_modules/
+.expo/
+.expo-shared/
+dist/
+npm-debug.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+.vscode/
+.idea/
+*.log
+.DS_Store
+android/app/build/
+android/.gradle/
+android/app/src/main/assets/
+ios/build/
+ios/Pods/
