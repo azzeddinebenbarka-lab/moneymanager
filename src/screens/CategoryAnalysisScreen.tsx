@@ -57,18 +57,18 @@ const CategoryAnalysisScreen = ({ navigation }: any) => {
         switch (selectedType) {
           case 'transactions':
             // Exclure les dettes et charges annuelles
-            if (description.includes('remboursement dette') || 
-                description.includes('paiement:') ||
-                description.includes('charge annuelle')) return false;
+            if (description.includes('paiement dette:') || 
+                description.includes('remboursement dette') ||
+                description.startsWith('paiement:')) return false;
             break;
           case 'debts':
             // Uniquement les remboursements de dettes
-            if (!description.includes('remboursement dette')) return false;
+            if (!description.includes('paiement dette:') && 
+                !description.includes('remboursement dette')) return false;
             break;
           case 'charges':
             // Uniquement les charges annuelles
-            if (!description.includes('paiement:') && 
-                !description.includes('charge annuelle')) return false;
+            if (!description.startsWith('paiement:')) return false;
             break;
         }
       }
