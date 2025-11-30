@@ -50,6 +50,84 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
     return `${year}-${month}-${day}`;
   };
 
+  // ✅ NOUVELLE FONCTION : Générer les occurrences récurrentes pour le mois affiché
+  const getRecurringTransactionsForMonth = useMemo(() => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const recurringOccurrences: any[] = [];
+
+    // Filtrer les transactions récurrentes actives
+    const recurringTransactions = transactions.filter(t => 
+      t.isRecurring && 
+      t.recurrenceType && 
+      (!t.recurrenceEndDate || new Date(t.recurrenceEndDate) >= new Date(year, month, 1))
+    );
+
+    recurringTransactions.forEach(t => {
+      const originalDate = new Date(t.date);
+      const occurrences: Date[] = [];
+
+      switch (t.recurrenceType) {
+        case 'daily':
+          // Générer une occurrence par jour du mois
+          for (let day = 1; day <= new Date(year, month + 1, 0).getDate(); day++) {
+            occurrences.push(new Date(year, month, day));
+          }
+          break;
+
+        case 'weekly':
+          // Générer une occurrence par semaine (même jour de la semaine)
+          const dayOfWeek = originalDate.getDay();
+          for (let day = 1; day <= new Date(year, month + 1, 0).getDate(); day++) {
+            const date = new Date(year, month, day);
+            if (date.getDay() === dayOfWeek && date >= originalDate) {
+              occurrences.push(date);
+            }
+          }
+          break;
+
+        case 'monthly':
+          // Une occurrence le même jour du mois
+          const dayOfMonth = originalDate.getDate();
+          const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+          const targetDay = Math.min(dayOfMonth, lastDayOfMonth);
+          const monthDate = new Date(year, month, targetDay);
+          if (monthDate >= originalDate) {
+            occurrences.push(monthDate);
+          }
+          break;
+
+        case 'yearly':
+          // Une occurrence si c'est le même mois et jour
+          if (originalDate.getMonth() === month) {
+            const yearDate = new Date(year, month, originalDate.getDate());
+            if (yearDate >= originalDate) {
+              occurrences.push(yearDate);
+            }
+          }
+          break;
+      }
+
+      // Ajouter les occurrences générées
+      occurrences.forEach(occDate => {
+        // Vérifier si ce n'est pas la transaction originale
+        const occDateStr = formatDateLocal(occDate);
+        const originalDateStr = formatDateLocal(originalDate);
+        
+        if (occDateStr !== originalDateStr) {
+          recurringOccurrences.push({
+            ...t,
+            date: occDateStr,
+            isVirtualRecurrence: true, // Marquer comme occurrence virtuelle
+            originalTransactionId: t.id
+          });
+        }
+      });
+    });
+
+    return recurringOccurrences;
+  }, [transactions, currentMonth]);
+
   // Calculer les montants par jour
   const getDayData = (day: number) => {
     const year = currentMonth.getFullYear();
@@ -60,10 +138,21 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
     let income = 0;
     let expenses = 0;
 
-    // Transactions
+    // Transactions normales
     transactions.forEach(t => {
       const tDateStr = formatDateLocal(new Date(t.date)); // ✅ CORRECTION : Format local
       if (tDateStr === dateStr) {
+        if (t.type === 'income') {
+          income += t.amount;
+        } else if (t.type === 'expense') {
+          expenses += Math.abs(t.amount);
+        }
+      }
+    });
+
+    // ✅ NOUVEAU : Transactions récurrentes virtuelles
+    getRecurringTransactionsForMonth.forEach(t => {
+      if (t.date === dateStr) {
         if (t.type === 'income') {
           income += t.amount;
         } else if (t.type === 'expense') {
@@ -110,7 +199,7 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
     return resolved.child;
   };
 
-  // Obtenir toutes les opérations du jour sélectionné (transactions + charges + dettes)
+  // Obtenir toutes les opérations du jour sélectionné (transactions + récurrentes + charges + dettes)
   const selectedDayTransactions = useMemo(() => {
     const dateStr = formatDateLocal(selectedDate); // ✅ CORRECTION : Format local
     const items: any[] = [];
@@ -127,7 +216,26 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
           category: getCategoryName(t.category, t.subCategory),
           date: t.date,
           icon: 'wallet',
-          source: 'transaction'
+          source: 'transaction',
+          isRecurring: t.isRecurring || false
+        });
+      }
+    });
+
+    // 1b. ✅ NOUVEAU : Transactions récurrentes virtuelles
+    getRecurringTransactionsForMonth.forEach(t => {
+      if (t.date === dateStr) {
+        items.push({
+          id: `recurring_${t.id}_${dateStr}`,
+          type: t.type,
+          description: `${t.description} (récurrent)`,
+          amount: t.amount,
+          category: getCategoryName(t.category, t.subCategory),
+          date: t.date,
+          icon: 'repeat',
+          source: 'recurring',
+          isRecurring: true,
+          recurrenceType: t.recurrenceType
         });
       }
     });
@@ -170,7 +278,7 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
 
     // Trier par date/heure
     return items.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [transactions, charges, debts, selectedDate, categories]);
+  }, [transactions, getRecurringTransactionsForMonth, charges, debts, selectedDate, categories]);
 
   const { daysInMonth, startDayOfWeek, year, month } = getMonthDays();
   const today = new Date();
