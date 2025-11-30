@@ -172,11 +172,11 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
   };
 
   return (
-    <SafeAreaView>
+    <SafeAreaView style={{ flex: 1 }}>
       <KeyboardAvoidingView 
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <ScrollView 
           style={[styles.container, { backgroundColor: colors.background.primary }]}
@@ -184,6 +184,7 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           bounces={true}
+          nestedScrollEnabled={true}
         >
           <View style={styles.header}>
             <TouchableOpacity 
@@ -577,7 +578,8 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingBottom: 100,
+    paddingBottom: 120,
+    flexGrow: 1,
   },
   header: {
     flexDirection: 'row',

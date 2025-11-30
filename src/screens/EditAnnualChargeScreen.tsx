@@ -4,7 +4,9 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useEffect, useState } from 'react';
 import {
     Alert,
+    KeyboardAvoidingView,
     Modal,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
@@ -214,11 +216,20 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
   }
 
   return (
-    <SafeAreaView>
-      <ScrollView 
-        style={[styles.container, isDark && styles.darkContainer]}
-        contentContainerStyle={styles.content}
+    <SafeAreaView style={{ flex: 1 }}>
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
+        <ScrollView 
+          style={[styles.container, isDark && styles.darkContainer]}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          bounces={true}
+          nestedScrollEnabled={true}
+        >
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton}
@@ -438,6 +449,7 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* ✅ CORRIGÉ : Modal de sélection de compte */}
       <Modal
@@ -568,7 +580,8 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    paddingBottom: 100,
+    paddingBottom: 120,
+    flexGrow: 1,
   },
   center: {
     flex: 1,
