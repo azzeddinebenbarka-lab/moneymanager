@@ -11,11 +11,36 @@ export class ImportService {
       
       // Lire le fichier
       const fileContent = await FileSystem.readAsStringAsync(fileUri);
-      const backupData: BackupData = JSON.parse(fileContent);
+      let backupData: any = JSON.parse(fileContent);
       
-      // Validation améliorée du format
+      // 🔧 AUTO-FIX: Détecter et corriger l'ancien format (sans wrapper "data")
       if (!backupData.data) {
-        throw new Error('Format de sauvegarde invalide : propriété "data" manquante');
+        console.log('🔄 Ancien format détecté, conversion automatique...');
+        
+        // Vérifier si c'est un ancien format avec les données directement à la racine
+        const hasOldFormatKeys = backupData.accounts || backupData.transactions || 
+                                  backupData.categories || backupData.budgets;
+        
+        if (hasOldFormatKeys) {
+          // Convertir vers le nouveau format
+          backupData = {
+            version: backupData.version || '1.0.0',
+            timestamp: backupData.timestamp || new Date().toISOString(),
+            data: {
+              accounts: backupData.accounts || [],
+              transactions: backupData.transactions || [],
+              categories: backupData.categories || [],
+              budgets: backupData.budgets || [],
+              debts: backupData.debts || [],
+              savingsGoals: backupData.savingsGoals || [],
+              annualCharges: backupData.annualCharges || [],
+              recurringTransactions: backupData.recurringTransactions || []
+            }
+          };
+          console.log('✅ Format converti automatiquement');
+        } else {
+          throw new Error('Format de sauvegarde invalide : propriété "data" manquante et pas de données détectées');
+        }
       }
       
       // Vérifier que data contient au moins une propriété
