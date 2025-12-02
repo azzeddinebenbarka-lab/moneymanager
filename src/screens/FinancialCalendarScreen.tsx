@@ -1,6 +1,6 @@
 // src/screens/FinancialCalendarScreen.tsx
 import { Ionicons } from '@expo/vector-icons';
-import { useMemo, useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
     RefreshControl,
     ScrollView,
@@ -9,9 +9,9 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem } from '../context/ThemeContext';
-import { useCurrency } from '../context/CurrencyContext';
 import { useAnnualCharges } from '../hooks/useAnnualCharges';
 import { useCategories } from '../hooks/useCategories';
 import { useDebts } from '../hooks/useDebts';
@@ -33,6 +33,71 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [refreshing, setRefreshing] = useState(false);
+
+  // 🔍 DIAGNOSTIC : Afficher les transactions de novembre ET décembre
+  useEffect(() => {
+    if (transactions.length > 0) {
+      // NOVEMBRE
+      const novTransactions = transactions.filter(t => {
+        const date = new Date(t.date);
+        return date.getMonth() === 10 && date.getFullYear() === 2025; // novembre = mois 10
+      });
+      
+      console.log('🗓️ [FinancialCalendar] Transactions de NOVEMBRE 2025:', {
+        total: transactions.length,
+        novembre: novTransactions.length,
+        dates: [...new Set(novTransactions.map(t => t.date.split('T')[0]))].sort()
+      });
+      
+      // Grouper novembre par date
+      const byDateNov = novTransactions.reduce((acc: any, t) => {
+        const dateKey = t.date.split('T')[0];
+        if (!acc[dateKey]) acc[dateKey] = [];
+        acc[dateKey].push({ 
+          desc: t.description, 
+          amount: t.amount, 
+          recurring: t.isRecurring,
+          parentId: t.parentTransactionId 
+        });
+        return acc;
+      }, {});
+      
+      console.log('📅 [FinancialCalendar] Novembre groupé par date:', byDateNov);
+
+      // DÉCEMBRE
+      const decTransactions = transactions.filter(t => {
+        const date = new Date(t.date);
+        return date.getMonth() === 11 && date.getFullYear() === 2025; // décembre = mois 11
+      });
+      
+      console.log('🗓️ [FinancialCalendar] Transactions de DÉCEMBRE 2025:', {
+        total: transactions.length,
+        decembre: decTransactions.length,
+        dates: [...new Set(decTransactions.map(t => t.date.split('T')[0]))].sort()
+      });
+      
+      // Grouper décembre par date avec détails
+      const byDateDec = decTransactions.reduce((acc: any, t) => {
+        const dateKey = t.date.split('T')[0];
+        if (!acc[dateKey]) acc[dateKey] = [];
+        acc[dateKey].push({ 
+          desc: t.description, 
+          amount: t.amount, 
+          recurring: t.isRecurring,
+          parentId: t.parentTransactionId,
+          id: t.id
+        });
+        return acc;
+      }, {});
+      
+      console.log('📅 [FinancialCalendar] Décembre groupé par date:', byDateDec);
+      
+      // Détail du 2 décembre si présent
+      if (byDateDec['2025-12-02']) {
+        console.log('🔍 [FinancialCalendar] DÉTAIL 2 DÉCEMBRE:', byDateDec['2025-12-02']);
+      }
+    }
+  }, [transactions]);
 
   // Pull to refresh
   const onRefresh = async () => {
@@ -69,83 +134,10 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
     return `${year}-${month}-${day}`;
   };
 
-  // ✅ NOUVELLE FONCTION : Générer les occurrences récurrentes pour le mois affiché
-  const getRecurringTransactionsForMonth = useMemo(() => {
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-    const recurringOccurrences: any[] = [];
-
-    // Filtrer les transactions récurrentes actives
-    const recurringTransactions = transactions.filter(t => 
-      t.isRecurring && 
-      t.recurrenceType && 
-      (!t.recurrenceEndDate || new Date(t.recurrenceEndDate) >= new Date(year, month, 1))
-    );
-
-    recurringTransactions.forEach(t => {
-      const originalDate = new Date(t.date);
-      const occurrences: Date[] = [];
-
-      switch (t.recurrenceType) {
-        case 'daily':
-          // Générer une occurrence par jour du mois
-          for (let day = 1; day <= new Date(year, month + 1, 0).getDate(); day++) {
-            occurrences.push(new Date(year, month, day));
-          }
-          break;
-
-        case 'weekly':
-          // Générer une occurrence par semaine (même jour de la semaine)
-          const dayOfWeek = originalDate.getDay();
-          for (let day = 1; day <= new Date(year, month + 1, 0).getDate(); day++) {
-            const date = new Date(year, month, day);
-            if (date.getDay() === dayOfWeek && date >= originalDate) {
-              occurrences.push(date);
-            }
-          }
-          break;
-
-        case 'monthly':
-          // Une occurrence le même jour du mois
-          const dayOfMonth = originalDate.getDate();
-          const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
-          const targetDay = Math.min(dayOfMonth, lastDayOfMonth);
-          const monthDate = new Date(year, month, targetDay);
-          if (monthDate >= originalDate) {
-            occurrences.push(monthDate);
-          }
-          break;
-
-        case 'yearly':
-          // Une occurrence si c'est le même mois et jour
-          if (originalDate.getMonth() === month) {
-            const yearDate = new Date(year, month, originalDate.getDate());
-            if (yearDate >= originalDate) {
-              occurrences.push(yearDate);
-            }
-          }
-          break;
-      }
-
-      // Ajouter les occurrences générées
-      occurrences.forEach(occDate => {
-        // Vérifier si ce n'est pas la transaction originale
-        const occDateStr = formatDateLocal(occDate);
-        const originalDateStr = formatDateLocal(originalDate);
-        
-        if (occDateStr !== originalDateStr) {
-          recurringOccurrences.push({
-            ...t,
-            date: occDateStr,
-            isVirtualRecurrence: true, // Marquer comme occurrence virtuelle
-            originalTransactionId: t.id
-          });
-        }
-      });
-    });
-
-    return recurringOccurrences;
-  }, [transactions, currentMonth]);
+  // ❌ SUPPRIMÉ : getRecurringTransactionsForMonth
+  // Les transactions récurrentes sont automatiquement créées dans la DB par transactionRecurrenceService
+  // au démarrage de l'app, donc elles apparaissent déjà dans la liste `transactions`
+  // Pas besoin de générer des occurrences virtuelles ici (causait des doublons)
 
   // Calculer les montants par jour
   const getDayData = (day: number) => {
@@ -157,10 +149,29 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
     let income = 0;
     let expenses = 0;
 
-    // Transactions normales
+    // ✅ LOGIQUE INTELLIGENTE : Afficher occurrences OU templates (pas les deux)
+    // Pour chaque transaction template, vérifier si une occurrence existe déjà pour ce jour
+    const templateIds = new Set<string>();
+    
+    // 1. D'abord, collecter les IDs des templates qui ont déjà une occurrence ce jour
     transactions.forEach(t => {
-      const tDateStr = formatDateLocal(new Date(t.date)); // ✅ CORRECTION : Format local
+      const tDateStr = formatDateLocal(new Date(t.date));
+      if (tDateStr === dateStr && !t.isRecurring && t.parentTransactionId) {
+        // C'est une occurrence, noter son template parent
+        templateIds.add(t.parentTransactionId);
+      }
+    });
+
+    // 2. Ensuite, afficher les transactions
+    transactions.forEach(t => {
+      const tDateStr = formatDateLocal(new Date(t.date));
       if (tDateStr === dateStr) {
+        // Si c'est un template ET qu'une occurrence existe déjà, l'ignorer
+        if (t.isRecurring && templateIds.has(t.id)) {
+          return; // Skip ce template, son occurrence sera affichée
+        }
+        
+        // Sinon afficher (que ce soit template ou occurrence ou transaction normale)
         if (t.type === 'income') {
           income += t.amount;
         } else if (t.type === 'expense') {
@@ -169,16 +180,34 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
       }
     });
 
-    // ✅ NOUVEAU : Transactions récurrentes virtuelles
-    getRecurringTransactionsForMonth.forEach(t => {
-      if (t.date === dateStr) {
-        if (t.type === 'income') {
-          income += t.amount;
-        } else if (t.type === 'expense') {
-          expenses += Math.abs(t.amount);
+    // 🔮 APERÇU FUTUR : Afficher les templates récurrents dans les mois futurs pour planification
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const viewingMonthStart = new Date(year, month, 1);
+    
+    if (viewingMonthStart > currentMonthStart) {
+      // On regarde un mois futur, afficher les templates comme aperçu
+      transactions.forEach(t => {
+        if (t.isRecurring && t.recurrenceType === 'monthly') {
+          // Vérifier si ce template devrait apparaître ce jour
+          const templateDate = new Date(t.date);
+          const templateDay = templateDate.getDate();
+          
+          if (templateDay === day) {
+            // Ce template récurrent tombe ce jour dans le mois futur
+            if (t.type === 'income') {
+              income += t.amount;
+            } else if (t.type === 'expense') {
+              expenses += Math.abs(t.amount);
+            }
+          }
         }
-      }
-    });
+      });
+    }
+
+    // ❌ SUPPRIMÉ : Les occurrences récurrentes virtuelles (double comptage)
+    // Les transactions récurrentes sont déjà créées dans la DB par transactionRecurrenceService
+    // Donc elles sont déjà dans la liste `transactions` ci-dessus
 
     // Charges annuelles
     charges.forEach(c => {
@@ -225,10 +254,27 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
     const dateStr = formatDateLocal(selectedDate); // ✅ CORRECTION : Format local
     const items: any[] = [];
 
-    // 1. Transactions normales
+    // ✅ LOGIQUE INTELLIGENTE : Afficher occurrences OU templates (pas les deux)
+    const templateIds = new Set<string>();
+    
+    // 1. D'abord, identifier les templates qui ont déjà une occurrence ce jour
     transactions.forEach(t => {
-      const tDateStr = formatDateLocal(new Date(t.date)); // ✅ CORRECTION : Format local
+      const tDateStr = formatDateLocal(new Date(t.date));
+      if (tDateStr === dateStr && !t.isRecurring && t.parentTransactionId) {
+        templateIds.add(t.parentTransactionId);
+      }
+    });
+
+    // 2. Ensuite, ajouter les transactions
+    transactions.forEach(t => {
+      const tDateStr = formatDateLocal(new Date(t.date));
       if (tDateStr === dateStr) {
+        // Si c'est un template ET qu'une occurrence existe déjà, l'ignorer
+        if (t.isRecurring && templateIds.has(t.id)) {
+          return; // Skip ce template
+        }
+        
+        // Sinon afficher (template, occurrence ou transaction normale)
         items.push({
           id: t.id,
           type: t.type,
@@ -238,28 +284,48 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
           date: t.date,
           icon: 'wallet',
           source: 'transaction',
-          isRecurring: t.isRecurring || false
+          isRecurring: t.isRecurring, // Garder l'info pour savoir si c'est un template
+          isPreview: false // Transaction réelle
         });
       }
     });
 
-    // 1b. ✅ NOUVEAU : Transactions récurrentes virtuelles
-    getRecurringTransactionsForMonth.forEach(t => {
-      if (t.date === dateStr) {
-        items.push({
-          id: `recurring_${t.id}_${dateStr}`,
-          type: t.type,
-          description: `${t.description} (récurrent)`,
-          amount: t.amount,
-          category: getCategoryName(t.category, t.subCategory),
-          date: t.date,
-          icon: 'repeat',
-          source: 'recurring',
-          isRecurring: true,
-          recurrenceType: t.recurrenceType
-        });
-      }
-    });
+    // 🔮 APERÇU FUTUR : Afficher les templates récurrents dans les mois futurs pour planification
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const selectedMonthStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+    
+    if (selectedMonthStart > currentMonthStart) {
+      // On regarde un mois futur, afficher les templates comme aperçu
+      const selectedDay = selectedDate.getDate();
+      
+      transactions.forEach(t => {
+        if (t.isRecurring && t.recurrenceType === 'monthly') {
+          // Vérifier si ce template devrait apparaître ce jour
+          const templateDate = new Date(t.date);
+          const templateDay = templateDate.getDate();
+          
+          if (templateDay === selectedDay) {
+            // Ce template récurrent tombe ce jour dans le mois futur
+            items.push({
+              id: `preview_${t.id}`,
+              type: t.type,
+              description: t.description,
+              amount: t.amount,
+              category: getCategoryName(t.category, t.subCategory),
+              date: dateStr,
+              icon: 'time-outline',
+              source: 'transaction',
+              isRecurring: true,
+              isPreview: true // Marqueur pour affichage différent
+            });
+          }
+        }
+      });
+    }
+
+    // ❌ SUPPRIMÉ : Transactions récurrentes virtuelles (causaient doublons)
+    // Les occurrences sont déjà dans la liste `transactions` ci-dessus
 
     // 2. Charges annuelles
     charges.forEach(c => {
@@ -288,7 +354,7 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
           items.push({
             id: d.id,
             type: 'expense',
-            description: d.name,
+            description: `${d.name} (Reste: ${formatAmount(d.currentAmount)})`,
             amount: paymentAmount,
             category: d.category ? getCategoryName(d.category) : 'Remboursement Dette',
             date: d.nextDueDate,
@@ -301,65 +367,37 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
 
     // Trier par date/heure
     return items.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [transactions, getRecurringTransactionsForMonth, charges, debts, selectedDate, categories]);
+  }, [transactions, charges, debts, selectedDate, categories]);
 
-  // ✅ NOUVEAU : Calculer les statistiques du mois affiché
+  // 🔍 DIAGNOSTIC : Log quand selectedDayTransactions change
+  useEffect(() => {
+    const dateStr = formatDateLocal(selectedDate);
+    console.log('📅 [FinancialCalendar] selectedDayTransactions updated:', {
+      date: dateStr,
+      count: selectedDayTransactions.length,
+      items: selectedDayTransactions.map(i => ({ desc: i.description, amount: i.amount, source: i.source }))
+    });
+  }, [selectedDayTransactions, selectedDate]);
+
+  // ✅ NOUVEAU : Calculer les statistiques du mois affiché (SEULEMENT les transactions réelles)
   const monthStats = useMemo(() => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     let totalIncome = 0;
     let totalExpenses = 0;
 
-    // Parcourir tous les jours du mois
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month, day);
-      const dateStr = formatDateLocal(date);
-
-      // Transactions normales
-      transactions.forEach(t => {
-        const tDateStr = formatDateLocal(new Date(t.date));
-        if (tDateStr === dateStr) {
-          if (t.type === 'income') {
-            totalIncome += t.amount;
-          } else if (t.type === 'expense') {
-            totalExpenses += Math.abs(t.amount);
-          }
+    // ✅ Compter UNIQUEMENT les transactions réelles du mois (comme dans TransactionsScreen)
+    // Ne PAS compter les charges annuelles ou dettes (ce sont des prévisions, pas des transactions réalisées)
+    transactions.forEach(t => {
+      const tDate = new Date(t.date);
+      if (tDate.getFullYear() === year && tDate.getMonth() === month) {
+        if (t.type === 'income') {
+          totalIncome += t.amount;
+        } else if (t.type === 'expense') {
+          totalExpenses += Math.abs(t.amount);
         }
-      });
-
-      // Transactions récurrentes virtuelles
-      getRecurringTransactionsForMonth.forEach(t => {
-        if (t.date === dateStr) {
-          if (t.type === 'income') {
-            totalIncome += t.amount;
-          } else if (t.type === 'expense') {
-            totalExpenses += Math.abs(t.amount);
-          }
-        }
-      });
-
-      // Charges annuelles
-      charges.forEach(c => {
-        const cDateStr = formatDateLocal(new Date(c.dueDate));
-        if (cDateStr === dateStr && !c.isPaid) {
-          totalExpenses += c.amount;
-        }
-      });
-
-      // Dettes (échéances)
-      debts.forEach(d => {
-        if (d.nextDueDate) {
-          const dDateStr = formatDateLocal(new Date(d.nextDueDate));
-          if (dDateStr === dateStr && d.status === 'active') {
-            // Prendre le minimum entre la mensualité et le montant restant
-            const paymentAmount = Math.min(d.monthlyPayment || 0, d.currentAmount);
-            totalExpenses += paymentAmount;
-          }
-        }
-      });
-    }
+      }
+    });
 
     const balance = totalIncome - totalExpenses;
 
@@ -368,7 +406,7 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
       expenses: totalExpenses,
       balance
     };
-  }, [currentMonth, transactions, getRecurringTransactionsForMonth, charges, debts]);
+  }, [currentMonth, transactions]);
 
   const { daysInMonth, startDayOfWeek, year, month } = getMonthDays();
   const today = new Date();
@@ -547,7 +585,11 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
             selectedDayTransactions.map(item => (
               <View 
                 key={`${item.source}-${item.id}`} 
-                style={[styles.transactionCard, { backgroundColor: colors.background.card }]}
+                style={[
+                  styles.transactionCard, 
+                  { backgroundColor: colors.background.card },
+                  item.isPreview && { opacity: 0.6, borderLeftWidth: 3, borderLeftColor: colors.primary[500] }
+                ]}
               >
                 <View style={styles.transactionIcon}>
                   <Ionicons 
@@ -559,6 +601,7 @@ export const FinancialCalendarScreen = ({ navigation }: any) => {
                 <View style={styles.transactionInfo}>
                   <Text style={[styles.transactionTitle, { color: colors.text.primary }]}>
                     {item.description}
+                    {item.isPreview && <Text style={{ fontSize: 12, color: colors.primary[500] }}> 🔮 Prévu</Text>}
                   </Text>
                   <Text style={[styles.transactionSubtitle, { color: colors.text.secondary }]}>
                     {item.category} • {new Date(item.date).toLocaleTimeString('fr-FR', { 

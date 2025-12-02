@@ -2,7 +2,6 @@
 import { Transaction } from '../types';
 import { generateId } from '../utils/numberUtils';
 import { getDatabase } from './database/sqlite';
-import { transactionService } from './transactionService';
 
 export const transactionRecurrenceService = {
   // ✅ CALCULER LA PROCHAINE DATE SELON LA FRÉQUENCE
@@ -55,40 +54,45 @@ export const transactionRecurrenceService = {
         }
       }
 
-      // Vérifier si l'occurrence existe déjà (vérification très stricte)
-      const existingTransaction = await db.getFirstAsync(
-        `SELECT id FROM transactions 
-         WHERE user_id = ? 
-         AND description = ? 
-         AND date = ? 
-         AND amount = ?
-         AND category = ?
-         AND account_id = ?
-         AND type = ?
-         AND parent_transaction_id = ?`,
-        [
-          userId,
-          parentTransaction.description,
-          nextDate,
-          parentTransaction.amount,
-          parentTransaction.category,
-          parentTransaction.accountId,
-          parentTransaction.type,
-          parentTransaction.id
-        ]
-      );
+      // ✅ PROTECTION CONTRE LES DOUBLONS : Utiliser une transaction
+      try {
+        await db.execAsync('BEGIN IMMEDIATE');
 
-      if (existingTransaction) {
-        console.log(`ℹ️ Occurrence déjà existante pour le ${nextDate}`);
-        return null;
-      }
+        // Vérifier si l'occurrence existe déjà (vérification très stricte)
+        const existingTransaction = await db.getFirstAsync(
+          `SELECT id FROM transactions 
+           WHERE user_id = ? 
+           AND description = ? 
+           AND date = ? 
+           AND amount = ?
+           AND category = ?
+           AND account_id = ?
+           AND type = ?
+           AND parent_transaction_id = ?`,
+          [
+            userId,
+            parentTransaction.description,
+            nextDate,
+            parentTransaction.amount,
+            parentTransaction.category,
+            parentTransaction.accountId,
+            parentTransaction.type,
+            parentTransaction.id
+          ]
+        );
 
-      // Créer la nouvelle occurrence
-      const newTransactionId = generateId();
-      const createdAt = new Date().toISOString();
+        if (existingTransaction) {
+          await db.execAsync('ROLLBACK');
+          console.log(`ℹ️ Occurrence déjà existante pour le ${nextDate}`);
+          return null;
+        }
 
-      await db.runAsync(
-        `INSERT INTO transactions (
+        // Créer la nouvelle occurrence
+        const newTransactionId = generateId();
+        const createdAt = new Date().toISOString();
+
+        await db.runAsync(
+          `INSERT INTO transactions (
           id, user_id, amount, type, category, sub_category, account_id, description,
           date, created_at, is_recurring, recurrence_type, recurrence_end_date,
           parent_transaction_id
@@ -118,8 +122,14 @@ export const transactionRecurrenceService = {
         [accountUpdateAmount, parentTransaction.accountId]
       );
 
+      await db.execAsync('COMMIT');
       console.log(`✅ Occurrence créée: ${parentTransaction.description} pour ${nextDate}`);
       return newTransactionId;
+
+      } catch (innerError) {
+        await db.execAsync('ROLLBACK');
+        throw innerError;
+      }
     } catch (error) {
       console.error('❌ Erreur génération occurrence transaction:', error);
       throw error;
@@ -144,6 +154,11 @@ export const transactionRecurrenceService = {
 
       console.log(`🔄 Traitement de ${recurringTransactions.length} transactions récurrentes`);
 
+      if (recurringTransactions.length === 0) {
+        console.log('ℹ️ Aucune transaction récurrente trouvée dans la base de données');
+        console.log('💡 Astuce: Créez une transaction avec is_recurring=1 et recurrence_type (daily/weekly/monthly/yearly)');
+      }
+
       const results = {
         processed: 0,
         errors: [] as string[]
@@ -166,6 +181,8 @@ export const transactionRecurrenceService = {
             recurrenceEndDate: dbTransaction.recurrence_end_date
           };
 
+          console.log(`📋 Analyse: ${transaction.description} (${transaction.recurrenceType}, date: ${transaction.date})`);
+
           // ✅ Trouver la dernière occurrence créée pour cette transaction parent
           const lastOccurrence = await db.getFirstAsync<any>(
             `SELECT date FROM transactions 
@@ -181,12 +198,32 @@ export const transactionRecurrenceService = {
             transaction.recurrenceType as 'daily' | 'weekly' | 'monthly' | 'yearly'
           );
 
-          // Si la prochaine date est aujourd'hui ou dans le passé, générer l'occurrence
-          if (nextExpectedDate <= today) {
+          console.log(`   📅 Base: ${baseDate}, Prochaine: ${nextExpectedDate}, Aujourd'hui: ${today}`);
+          
+          if (lastOccurrence) {
+            console.log(`   📝 Dernière occurrence trouvée: ${lastOccurrence.date}`);
+          } else {
+            console.log(`   ℹ️ Aucune occurrence trouvée, première génération`);
+          }
+
+          // ✅ AMÉLIORATION : Créer les occurrences jusqu'à la fin du mois en cours
+          // Calculer la fin du mois actuel
+          const todayDate = new Date(today);
+          const endOfMonth = new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0);
+          const endOfMonthStr = endOfMonth.toISOString().split('T')[0];
+
+          // Si la prochaine date est dans le mois en cours ou dans le passé, générer l'occurrence
+          if (nextExpectedDate <= endOfMonthStr) {
+            console.log(`   ✅ Génération d'occurrence pour ${nextExpectedDate} (dans le mois en cours)`);
             const newId = await this.generateNextOccurrence(transaction, userId);
             if (newId) {
               results.processed++;
+              console.log(`   🎉 Occurrence créée avec succès: ${newId}`);
+            } else {
+              console.log(`   ⚠️ Échec de création d'occurrence (probablement déjà existante)`);
             }
+          } else {
+            console.log(`   ⏭️ Pas encore le moment (prochaine date: ${nextExpectedDate}, fin du mois: ${endOfMonthStr})`);
           }
         } catch (error) {
           const errorMessage = `Erreur avec ${dbTransaction.description}: ${error}`;

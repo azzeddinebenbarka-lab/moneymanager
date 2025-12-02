@@ -1,9 +1,8 @@
 ﻿// src/screens/TransactionsScreen.tsx - VERSION SIMPLIFIÉE AVEC FILTRES ANNÉE/MOIS
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
     FlatList,
     Modal,
     Pressable,
@@ -13,15 +12,14 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import { TransactionDetailModal } from '../components/modals/TransactionDetailModal';
 import { SafeAreaView } from '../components/SafeAreaView';
 import ListTransactionItem from '../components/transaction/ListTransactionItem';
-import { TransactionDetailModal } from '../components/modals/TransactionDetailModal';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useTransactions } from '../hooks/useTransactions';
-import { transactionRecurrenceService } from '../services/transactionRecurrenceService';
 import { Transaction } from '../types';
 
 const TransactionsScreen = ({ navigation }: any) => {
@@ -186,16 +184,8 @@ const TransactionsScreen = ({ navigation }: any) => {
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', async () => {
-      // Traiter les transactions récurrentes
-      try {
-        console.log('🔄 Traitement des transactions récurrentes...');
-        const result = await transactionRecurrenceService.processRecurringTransactions();
-        if (result.processed > 0) {
-          console.log(`✅ ${result.processed} transactions récurrentes créées`);
-        }
-      } catch (error) {
-        console.error('❌ Erreur traitement récurrences:', error);
-      }
+      // Les transactions récurrentes sont déjà traitées par useTransactionRecurrence
+      // Pas besoin de les traiter ici pour éviter les doublons
       
       // Rafraîchir les transactions
       const fn = refreshTransactionsRef.current;

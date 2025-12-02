@@ -1,18 +1,20 @@
 // src/screens/GeneralSettingsScreen.tsx
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { LanguageSelector } from '../components/settings/LanguageSelector';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
+import { cleanupService } from '../services/cleanupService';
 
 export const GeneralSettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { t } = useLanguage();
   const { colors } = useDesignSystem();
   const { theme, setTheme } = useTheme();
   const { currentCurrency } = useCurrency();
+  const [isCleaningDuplicates, setIsCleaningDuplicates] = useState(false);
 
   const themeOptions = [
     { value: 'light', label: 'Clair', icon: 'sunny-outline' },
@@ -21,6 +23,35 @@ export const GeneralSettingsScreen: React.FC<{ navigation: any }> = ({ navigatio
 
   const handleThemeChange = (newTheme: 'light' | 'dark') => {
     setTheme(newTheme);
+  };
+
+  const handleCleanDuplicates = async () => {
+    Alert.alert(
+      'Nettoyer les doublons',
+      'Supprimer les transactions récurrentes en double ? Cette action est irréversible.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Nettoyer',
+          style: 'destructive',
+          onPress: async () => {
+            setIsCleaningDuplicates(true);
+            try {
+              const result = await cleanupService.cleanDuplicateRecurringTransactions();
+              Alert.alert(
+                'Terminé',
+                `${result.deleted} transaction(s) en double supprimée(s).\n${result.errors.length > 0 ? `\n⚠️ ${result.errors.length} erreur(s)` : ''}`,
+                [{ text: 'OK' }]
+              );
+            } catch (error) {
+              Alert.alert('Erreur', 'Impossible de nettoyer les doublons');
+            } finally {
+              setIsCleaningDuplicates(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -79,6 +110,29 @@ export const GeneralSettingsScreen: React.FC<{ navigation: any }> = ({ navigatio
         <View style={styles.languageContainer}>
           <LanguageSelector />
         </View>
+
+        {/* Section Maintenance (temporaire) */}
+        <Text style={[styles.sectionHeader, { color: colors.text.secondary }]}>
+          MAINTENANCE
+        </Text>
+        <TouchableOpacity
+          style={[styles.settingCard, { backgroundColor: colors.background.secondary }]}
+          onPress={handleCleanDuplicates}
+          disabled={isCleaningDuplicates}
+        >
+          <View style={[styles.iconContainer, { backgroundColor: '#FFE5E5' }]}>
+            <Ionicons name="trash-outline" size={24} color="#FF6B6B" />
+          </View>
+          <View style={styles.settingContent}>
+            <Text style={[styles.settingTitle, { color: colors.text.primary }]}>
+              {isCleaningDuplicates ? 'Nettoyage...' : 'Nettoyer les doublons'}
+            </Text>
+            <Text style={[styles.settingValue, { color: colors.text.secondary }]}>
+              Supprimer les transactions récurrentes en double
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );

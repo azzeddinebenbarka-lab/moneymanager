@@ -3,14 +3,14 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
 import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useCurrency } from '../context/CurrencyContext';
@@ -18,7 +18,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useDebts } from '../hooks/useDebts';
-import { CreateDebtData, DEBT_TYPES, DEBT_CATEGORIES, DebtType, DebtCategory } from '../types/Debt';
+import { CreateDebtData, DEBT_CATEGORIES, DEBT_TYPES, DebtCategory, DebtType } from '../types/Debt';
 
 interface DebtFormData {
   name: string;
@@ -479,6 +479,48 @@ const AddDebtScreen = ({ navigation }: any) => {
             Date à laquelle la dette a commencé
           </Text>
         </View>
+
+        {/* Date d'échéance calculée (affichage uniquement) */}
+        {form.autoPay && (
+          <View style={[styles.inputGroup, styles.calculatedDateGroup]}>
+            <Text style={[styles.label, isDark && styles.darkText]}>
+              📅 Date d'échéance (première échéance)
+            </Text>
+            <View style={[styles.calculatedDateBox, isDark && styles.darkInput]}>
+              <Text style={[styles.calculatedDateText, isDark && styles.darkText]}>
+                {(() => {
+                  const startDate = new Date(form.startDate);
+                  const paymentDay = form.paymentDay;
+                  let dueYear = startDate.getFullYear();
+                  let dueMonth = startDate.getMonth(); // 0-11
+                  
+                  if (form.startPaymentNextMonth) {
+                    // Option "Mois prochain" : passer au mois suivant
+                    dueMonth += 1;
+                    if (dueMonth > 11) {
+                      dueMonth = 0;
+                      dueYear += 1;
+                    }
+                  }
+                  // Option "Dès que possible" : rester dans le mois actuel
+                  
+                  const dueDate = new Date(dueYear, dueMonth, paymentDay);
+                  return dueDate.toLocaleDateString('fr-FR', { 
+                    weekday: 'long', 
+                    day: 'numeric', 
+                    month: 'long', 
+                    year: 'numeric' 
+                  });
+                })()}
+              </Text>
+            </View>
+            <Text style={[styles.hint, isDark && styles.darkSubtext]}>
+              {form.startPaymentNextMonth 
+                ? "Premier paiement le mois prochain" 
+                : "Premier paiement dès que possible"}
+            </Text>
+          </View>
+        )}
         </View>
 
         {/* Section: Options de paiement */}
@@ -1023,6 +1065,27 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#666',
     lineHeight: 18,
+  },
+  calculatedDateGroup: {
+    backgroundColor: '#f0f8ff',
+    padding: 12,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#007AFF',
+  },
+  calculatedDateBox: {
+    backgroundColor: '#fff',
+    padding: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    marginVertical: 8,
+  },
+  calculatedDateText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#007AFF',
+    textAlign: 'center',
   },
   horizontalScroll: {
     marginTop: 8,

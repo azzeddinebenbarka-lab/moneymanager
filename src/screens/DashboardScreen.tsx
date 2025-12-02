@@ -27,10 +27,9 @@ import {
     View
 } from 'react-native';
 import DonutChart from '../components/charts/DonutChart';
+import { TransactionDetailModal } from '../components/modals/TransactionDetailModal';
 import { SafeAreaView } from '../components/SafeAreaView';
 import ListTransactionItem from '../components/transaction/ListTransactionItem';
-import { TransactionDetailModal } from '../components/modals/TransactionDetailModal';
-import { Alert } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -548,7 +547,10 @@ const DashboardScreen: React.FC = () => {
     // ✅ Traiter les prélèvements automatiques au démarrage (une seule source)
     const processDebits = async () => {
       try {
-        // Traiter les charges annuelles
+        // ✅ Les transactions récurrentes sont déjà traitées par DatabaseContext au démarrage
+        // Pas besoin de les traiter ici pour éviter les doublons
+        
+        // ✅ Traiter les charges annuelles
         const chargesResult = await processAutoDeductCharges();
         
         // Traiter les paiements automatiques de dettes
@@ -603,19 +605,29 @@ const DashboardScreen: React.FC = () => {
       .slice(0, 3);
   }, [annualCharges]);
 
-  // ✅ Transactions récentes - même logique que la page Transactions
+  // ✅ Transactions récentes - UNIQUEMENT DU MOIS COURANT
   const recentTransactions = useMemo(() => {
     if (!transactions || transactions.length === 0) return [];
     
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    
+    // Filtrer les transactions du mois courant et supprimer les doublons
+    const currentMonthTransactions = transactions.filter((tx: any) => {
+      const txDate = new Date(tx.date);
+      return txDate.getFullYear() === currentYear && txDate.getMonth() === currentMonth;
+    });
+    
     // Supprimer les doublons potentiels basés sur l'ID
-    const uniqueTransactions = transactions.reduce((acc: any[], tx: any) => {
+    const uniqueTransactions = currentMonthTransactions.reduce((acc: any[], tx: any) => {
       if (!acc.find(t => t.id === tx.id)) {
         acc.push(tx);
       }
       return acc;
     }, []);
     
-    // Prendre les 6 premières transactions uniques
+    // Prendre les 6 premières transactions uniques du mois courant
     return uniqueTransactions.slice(0, 6);
   }, [transactions]);
 

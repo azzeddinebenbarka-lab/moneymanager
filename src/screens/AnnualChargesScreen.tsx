@@ -336,7 +336,6 @@ export default function AnnualChargesScreen({ navigation }: AnnualChargesScreenP
             onValueChange={(enabled) => handleAutoDeductToggle(charge, enabled)}
             trackColor={{ false: safeColors.border, true: safeColors.primary + '30' }}
             thumbColor={charge.autoDeduct ? safeColors.primary : safeColors.text.secondary}
-            style={styles.switchStyle}
           />
         </View>
       </View>

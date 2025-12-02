@@ -514,6 +514,26 @@ export const annualChargeService = {
         return { canPay: false, reason: 'Charge inactive' };
       }
 
+      // ✅ NOUVEAU : Vérifier le solde du compte si un compte est spécifié
+      if (charge.accountId) {
+        try {
+          const account = await accountService.getAccountById(charge.accountId, userId);
+          if (!account) {
+            return { canPay: false, reason: 'Compte non trouvé' };
+          }
+
+          if (account.balance < charge.amount) {
+            return { 
+              canPay: false, 
+              reason: `Solde insuffisant (${account.balance.toFixed(2)} MAD disponible, ${charge.amount.toFixed(2)} MAD requis)` 
+            };
+          }
+        } catch (accountError) {
+          console.error('❌ [annualChargeService] Error checking account balance:', accountError);
+          return { canPay: false, reason: 'Erreur lors de la vérification du solde' };
+        }
+      }
+
       return { canPay: true };
 
     } catch (error) {

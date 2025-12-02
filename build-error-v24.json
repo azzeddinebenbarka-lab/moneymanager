@@ -1,0 +1,53 @@
+﻿{
+  "id": "ee79baa6-6972-4640-bce7-8edd6d83d260",
+  "status": "ERRORED",
+  "platform": "ANDROID",
+  "error": {
+    "errorCode": "EAS_BUILD_UNKNOWN_GRADLE_ERROR",
+    "message": "Gradle build failed with unknown error. See logs for the \"Run gradlew\" phase for more information."
+  },
+  "artifacts": {},
+  "fingerprint": {
+    "id": "3a1457dd-69f6-49eb-9d28-472aed967a9d",
+    "hash": "acbb5980c54f9c6b5f541dec6d96b26a4ca362e4"
+  },
+  "initiatingActor": {
+    "id": "f821ca87-907a-444d-ba94-53cc1464f81f",
+    "displayName": "azzeddine2025"
+  },
+  "logFiles": [
+    "https://job-logs.eascdn.net/production/ee79baa6-6972-4640-bce7-8edd6d83d260/1764659168879-98e4ce2f-54e7-4358-9f67-3acb87472769.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20251202%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20251202T071845Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=9d2f69b8890122830ea91c3a82b67c1fb16676a4870e9a31982d7d409eea2f26472cfdeacefde244ccc546421935333e38e45554cb7db6df7f29f92eefb495b29963ca5c07ea2769dd5f17831923cdcacbedaaa1dc8b1e96f85df943dfb678a9dd4f4ea00fa7a699e20096555c33ddc5f377755139e4b3d9d4973166bef72bf93a2ad8c031ce54a9b83a86ff9914eaf2e5ca46d52861cb6b1f5e50cdf243242f8a426fbd1456478f93808c74f2a112e6415663c6019ce7cfbd6e922b5ad74be85f42c3b22535e87517cb1b55f207b2add5cf2f47a4cd2e57901a873018bd0c12db852b72c9fe10616a87ed060d7874a619abd769ed6e09fb2c2510c6cb908bb1",
+    "https://job-logs.eascdn.net/production/ee79baa6-6972-4640-bce7-8edd6d83d260/1764659175299-f66b8242-8ef4-43c3-ab99-1a410fd19d6c.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20251202%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20251202T071845Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=55e791b81d94a22de5a5e8f7c16790e211e6c62774f019b8e0f80fc8c216fcfe9335e1831773e00137b8f52cfe6f45ae8633bc6bfac696c7511c68b284723d7dde00e8762961e3fcca709cbaa970571439fb26fc8bcc5ff5082d27f3f553e3b4767630d69d086c07f06921a6af73f7c2aad9b890e184919e4c2b4a98be18c66a576b636bb053a7e16e4f545026910c5474cc5c2b216ea4bb3394208557a5b7019f6e2920f2d9d6c9ba463346fe536e6db16ec6d010bb6b3b67915e422c41dd61bce39588d180e239900d7662176560d2519678c502bcb939754af9b0b3a896f99693b3ce5b68e62ea12d7d52ff64ba392e7902e8ea4b3624c805e4e4326e3e92",
+    "https://job-logs.eascdn.net/production/ee79baa6-6972-4640-bce7-8edd6d83d260/1764659175498-afa2bc17-17b0-4c3d-a36a-5ffb28d2aa2e.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20251202%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20251202T071845Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=26ddb6dd6797dd6e4599ac409df1c77066f63598fff5a4b214a4d7ff8c8c48184395e6f68cba7288fe902a4cc96ebd591c3d7178db0914f16c4e78774846deb7f0b90c324aa8dfe8dee846dd09573b73d0bf812987f68139e902e3d0b873ca4d841123a4ee0bf77a662cb163f80cf1b567209e065ab8d8d5d25e62e00d0f40d202c7ebc488550c3afb79ea8d5d92f4a2f7a70e9ec8c7fa2da81c1b11c9956c473cacf8f128fee554f876f1a0cd5d6da0e3d23590397e0fde766ddf9b4dea3a46b4e3b022bb9f96f726b97aa297b19562f72b2f3063615eff173c6ea0a4e3d9c6db6fe0e1c5325c9f16956768ef73fda1b253869cbad7ecd8f460cf385d5d7d55",
+    "https://job-logs.eascdn.net/production/ee79baa6-6972-4640-bce7-8edd6d83d260/1764659175659-cacb0f23-3523-4ef9-958e-0d58dfffd05c.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20251202%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20251202T071845Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=8bf9393e8beef31cbd5462b2a32423669fa3ec0833e78ee87fff3b85064d5796539dc62b92d14a2e86defae4109d4cccf0e42f3b0a217ffcd4340652ac29ad9fbf8223c03c0e5e0f8749a168b08d3445e84b69c1edaaba0a98e534f654057022b0eba89be6c99dd2def4bed70228074d3f70b77b66ed4ea52f91e5a5e2875a6aea11c7f8dcac5c14f57e1a37743d1c9e4043457a5fcb0b89e91319b0a7898259223f0408e5c7bc01022664e3f4aa25ad13436d448dadbbb5c0eeaaeb2ed58d1f3b9c61c4a313f107d654b639d2b3f8e73de34227dd90c599fb9c950b637f0147bf72476db3569e46c877d714583a4cacdf378fad61ded11b25af6441e00fa35f"
+  ],
+  "project": {
+    "id": "2ab5a079-3691-42d2-8980-2febb8773dc4",
+    "name": "Moneymanager",
+    "slug": "moneymanager",
+    "ownerAccount": {
+      "id": "21446212-4894-4075-89ae-e390a6a8f36b",
+      "name": "azzeddine2025"
+    }
+  },
+  "channel": "production",
+  "distribution": "INTERNAL",
+  "buildProfile": "production-apk",
+  "sdkVersion": "54.0.0",
+  "appVersion": "1.0.0",
+  "appBuildVersion": "24",
+  "runtimeVersion": "1.0.0",
+  "gitCommitHash": "bf0d21afa5db5923d254b06dfb74abbe8e3efc7a",
+  "gitCommitMessage": "Fix: Add notification icon and Google Drive backup files",
+  "priority": "NORMAL",
+  "createdAt": "2025-12-02T07:06:08.551Z",
+  "updatedAt": "2025-12-02T07:16:40.771Z",
+  "completedAt": "2025-12-02T07:16:31.225Z",
+  "expirationDate": "2025-12-16T07:06:08.582Z",
+  "isForIosSimulator": false,
+  "metrics": {
+    "buildWaitTime": 188,
+    "buildQueueTime": 48739,
+    "buildDuration": 573440
+  }
+}

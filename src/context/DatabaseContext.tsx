@@ -81,6 +81,18 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({ children }) 
       console.log('👑 [DB CONTEXT] INITIALISATION AUTORITAIRE des 20 catégories...');
       await categoryService.initializeDefaultCategories();
       
+      // 7. Traitement automatique des transactions récurrentes (UNE SEULE FOIS au démarrage)
+      try {
+        console.log('🔄 [DB CONTEXT] Processing recurring transactions...');
+        const { transactionRecurrenceService } = await import('../services/transactionRecurrenceService');
+        const result = await transactionRecurrenceService.processRecurringTransactions();
+        if (result.processed > 0) {
+          console.log(`✅ [DB CONTEXT] ${result.processed} recurring transaction(s) created`);
+        }
+      } catch (recurringError) {
+        console.warn('⚠️ [DB CONTEXT] Recurring transactions processing had issues, continuing...', recurringError);
+      }
+      
       setDbInitialized(true);
       console.log('✅ [DB CONTEXT] Database initialized with repair successfully');
     } catch (err) {

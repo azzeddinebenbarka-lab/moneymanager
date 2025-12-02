@@ -23,23 +23,12 @@ const DebtsScreen = ({ navigation }: any) => {
 
   const [filter, setFilter] = useState<'all' | 'active' | 'overdue' | 'paid' | 'future'>('all');
 
-  // Charger les dettes au démarrage et traiter les paiements automatiques
+  // Charger les dettes au démarrage (le traitement automatique est géré dans DashboardScreen)
   useEffect(() => {
     const loadData = async () => {
       await refreshDebts();
-      
-      // Traiter les paiements automatiques
-      if (processAutoPayDebts) {
-        try {
-          const result = await processAutoPayDebts();
-          if (result.processed > 0) {
-            console.log(`✅ Processed ${result.processed} automatic debt payments`);
-            await refreshDebts(); // Recharger pour afficher les changements
-          }
-        } catch (error) {
-          console.error('Error processing auto-pay debts:', error);
-        }
-      }
+      // ℹ️ Note : processAutoPayDebts est déjà appelé dans DashboardScreen
+      // pour éviter les duplications de paiements
     };
     loadData();
   }, []);
