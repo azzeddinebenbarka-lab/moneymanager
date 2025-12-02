@@ -1,9 +1,22 @@
 // src/services/backup/importService.ts
 import * as FileSystem from 'expo-file-system/legacy';
 import { getDatabase } from '../database/sqlite';
-import { BackupData } from './localBackup';
 
 export class ImportService {
+  // Helper pour mapper camelCase vers snake_case
+  private static mapField(obj: any, camelCase: string, snakeCase: string, defaultValue?: any): any {
+    // Essayer d'abord la version camelCase
+    if (obj[camelCase] !== undefined) {
+      return obj[camelCase];
+    }
+    // Sinon essayer snake_case
+    if (obj[snakeCase] !== undefined) {
+      return obj[snakeCase];
+    }
+    // Valeur par défaut
+    return defaultValue;
+  }
+
   // Importer et restaurer depuis un fichier JSON
   static async importFromJSON(fileUri: string): Promise<{ success: boolean; error?: string; imported?: any }> {
     try {
@@ -173,21 +186,21 @@ export class ImportService {
               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 account.id || `acc_${Date.now()}`,
-                account.user_id || 'default-user',
+                this.mapField(account, 'userId', 'user_id', 'default-user'),
                 account.name,
                 account.type,
                 account.balance || 0,
                 account.currency || 'MAD',
                 account.color || '#6C63FF',
                 account.icon || 'wallet',
-                account.is_active !== false ? 1 : 0,
-                account.created_at || new Date().toISOString(),
+                this.mapField(account, 'isActive', 'is_active', true) ? 1 : 0,
+                this.mapField(account, 'createdAt', 'created_at', new Date().toISOString()),
                 new Date().toISOString()
               ]
             );
             result.accounts++;
           } catch (err) {
-            console.warn('⚠️ Erreur import compte:', err);
+            console.warn('⚠️ Erreur import compte:', account, err);
           }
         }
       }
@@ -205,24 +218,24 @@ export class ImportService {
               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 transaction.id || `trx_${Date.now()}`,
-                transaction.user_id || 'default-user',
+                this.mapField(transaction, 'userId', 'user_id', 'default-user'),
                 transaction.amount,
                 transaction.type,
                 transaction.category,
-                transaction.sub_category || null,
-                transaction.account_id,
+                this.mapField(transaction, 'subCategory', 'sub_category', null),
+                this.mapField(transaction, 'accountId', 'account_id'),
                 transaction.description || '',
                 transaction.date,
-                transaction.is_recurring ? 1 : 0,
-                transaction.recurrence_type || null,
-                transaction.recurrence_end_date || null,
-                transaction.parent_transaction_id || null,
-                transaction.created_at || new Date().toISOString()
+                this.mapField(transaction, 'isRecurring', 'is_recurring', false) ? 1 : 0,
+                this.mapField(transaction, 'recurrenceType', 'recurrence_type', null),
+                this.mapField(transaction, 'recurrenceEndDate', 'recurrence_end_date', null),
+                this.mapField(transaction, 'parentTransactionId', 'parent_transaction_id', null),
+                this.mapField(transaction, 'createdAt', 'created_at', new Date().toISOString())
               ]
             );
             result.transactions++;
           } catch (err) {
-            console.warn('⚠️ Erreur import transaction:', err);
+            console.warn('⚠️ Erreur import transaction:', transaction, err);
           }
         }
       }
@@ -238,19 +251,19 @@ export class ImportService {
               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 category.id || `cat_${Date.now()}`,
-                category.user_id || 'default-user',
+                this.mapField(category, 'userId', 'user_id', 'default-user'),
                 category.name,
                 category.type,
                 category.color || '#6C63FF',
                 category.icon || 'help-circle',
-                category.parent_id || null,
-                category.is_active !== false ? 1 : 0,
-                category.created_at || new Date().toISOString()
+                this.mapField(category, 'parentId', 'parent_id', null),
+                this.mapField(category, 'isActive', 'is_active', true) ? 1 : 0,
+                this.mapField(category, 'createdAt', 'created_at', new Date().toISOString())
               ]
             );
             result.categories++;
           } catch (err) {
-            console.warn('⚠️ Erreur import catégorie:', err);
+            console.warn('⚠️ Erreur import catégorie:', category, err);
           }
         }
       }
@@ -266,18 +279,18 @@ export class ImportService {
               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 budget.id || `bdg_${Date.now()}`,
-                budget.user_id || 'default-user',
-                budget.category_id,
+                this.mapField(budget, 'userId', 'user_id', 'default-user'),
+                this.mapField(budget, 'categoryId', 'category_id'),
                 budget.amount,
                 budget.period || 'monthly',
-                budget.start_date,
-                budget.end_date || null,
-                budget.created_at || new Date().toISOString()
+                this.mapField(budget, 'startDate', 'start_date'),
+                this.mapField(budget, 'endDate', 'end_date', null),
+                this.mapField(budget, 'createdAt', 'created_at', new Date().toISOString())
               ]
             );
             result.budgets++;
           } catch (err) {
-            console.warn('⚠️ Erreur import budget:', err);
+            console.warn('⚠️ Erreur import budget:', budget, err);
           }
         }
       }
@@ -294,20 +307,20 @@ export class ImportService {
               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 charge.id || `chg_${Date.now()}`,
-                charge.user_id || 'default-user',
+                this.mapField(charge, 'userId', 'user_id', 'default-user'),
                 charge.name,
                 charge.amount,
                 charge.category || 'Autre',
-                charge.due_date,
-                charge.is_paid ? 1 : 0,
-                charge.auto_deduct ? 1 : 0,
-                charge.account_id || null,
-                charge.created_at || new Date().toISOString()
+                this.mapField(charge, 'dueDate', 'due_date'),
+                this.mapField(charge, 'isPaid', 'is_paid', false) ? 1 : 0,
+                this.mapField(charge, 'autoDeduct', 'auto_deduct', false) ? 1 : 0,
+                this.mapField(charge, 'accountId', 'account_id', null),
+                this.mapField(charge, 'createdAt', 'created_at', new Date().toISOString())
               ]
             );
             result.annualCharges++;
           } catch (err) {
-            console.warn('⚠️ Erreur import charge annuelle:', err);
+            console.warn('⚠️ Erreur import charge annuelle:', charge, err);
           }
         }
       }
@@ -324,19 +337,19 @@ export class ImportService {
               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 debt.id || `debt_${Date.now()}`,
-                debt.user_id || 'default-user',
+                this.mapField(debt, 'userId', 'user_id', 'default-user'),
                 debt.name,
                 debt.amount,
-                debt.paid_amount || 0,
+                this.mapField(debt, 'paidAmount', 'paid_amount', 0),
                 debt.creditor || '',
-                debt.due_date || null,
-                debt.is_paid ? 1 : 0,
-                debt.created_at || new Date().toISOString()
+                this.mapField(debt, 'dueDate', 'due_date', null),
+                this.mapField(debt, 'isPaid', 'is_paid', false) ? 1 : 0,
+                this.mapField(debt, 'createdAt', 'created_at', new Date().toISOString())
               ]
             );
             result.debts++;
           } catch (err) {
-            console.warn('⚠️ Erreur import dette:', err);
+            console.warn('⚠️ Erreur import dette:', debt, err);
           }
         }
       }
@@ -353,17 +366,17 @@ export class ImportService {
               ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
               [
                 goal.id || `goal_${Date.now()}`,
-                goal.user_id || 'default-user',
+                this.mapField(goal, 'userId', 'user_id', 'default-user'),
                 goal.name,
-                goal.target_amount,
-                goal.current_amount || 0,
-                goal.target_date || null,
-                goal.created_at || new Date().toISOString()
+                this.mapField(goal, 'targetAmount', 'target_amount'),
+                this.mapField(goal, 'currentAmount', 'current_amount', 0),
+                this.mapField(goal, 'targetDate', 'target_date', null),
+                this.mapField(goal, 'createdAt', 'created_at', new Date().toISOString())
               ]
             );
             result.savingsGoals++;
           } catch (err) {
-            console.warn('⚠️ Erreur import objectif épargne:', err);
+            console.warn('⚠️ Erreur import objectif épargne:', goal, err);
           }
         }
       }
@@ -381,22 +394,22 @@ export class ImportService {
               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 recurring.id || `rec_${Date.now()}`,
-                recurring.user_id || 'default-user',
+                this.mapField(recurring, 'userId', 'user_id', 'default-user'),
                 recurring.amount,
                 recurring.type,
                 recurring.category,
-                recurring.account_id,
+                this.mapField(recurring, 'accountId', 'account_id'),
                 recurring.description || '',
                 recurring.frequency || 'monthly',
-                recurring.start_date,
-                recurring.end_date || null,
-                recurring.is_active !== false ? 1 : 0,
-                recurring.created_at || new Date().toISOString()
+                this.mapField(recurring, 'startDate', 'start_date'),
+                this.mapField(recurring, 'endDate', 'end_date', null),
+                this.mapField(recurring, 'isActive', 'is_active', true) ? 1 : 0,
+                this.mapField(recurring, 'createdAt', 'created_at', new Date().toISOString())
               ]
             );
             result.recurringTransactions++;
           } catch (err) {
-            console.warn('⚠️ Erreur import transaction récurrente:', err);
+            console.warn('⚠️ Erreur import transaction récurrente:', recurring, err);
           }
         }
       }
