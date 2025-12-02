@@ -378,7 +378,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <TouchableOpacity
               style={[styles.actionCard, { backgroundColor: colors.background.secondary }]}
               onPress={handleExportJSON}
-              disabled={isExporting}
+              disabled={backupLoading}
             >
               <View style={[styles.actionIconBox, { backgroundColor: '#E3F2FD' }]}>
                 <Ionicons name="code-outline" size={24} color="#2196F3" />
@@ -391,13 +391,8 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   Format structuré pour réimport complet
                 </Text>
               </View>
-              {isExporting ? (
-                <View style={styles.progressContainer}>
-                  <ActivityIndicator size="small" color={colors.primary[500]} />
-                  <Text style={[styles.progressText, { color: colors.text.secondary }]}>
-                    {exportProgress}%
-                  </Text>
-                </View>
+              {backupLoading ? (
+                <ActivityIndicator size="small" color={colors.primary[500]} />
               ) : (
                 <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
               )}
@@ -406,7 +401,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <TouchableOpacity
               style={[styles.actionCard, { backgroundColor: colors.background.secondary }]}
               onPress={handleExportCSV}
-              disabled={isExporting}
+              disabled={backupLoading}
             >
               <View style={[styles.actionIconBox, { backgroundColor: '#FFF3E0' }]}>
                 <Ionicons name="document-text-outline" size={24} color="#FF9800" />
@@ -419,13 +414,8 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   Transactions pour Excel/Sheets
                 </Text>
               </View>
-              {isExporting ? (
-                <View style={styles.progressContainer}>
-                  <ActivityIndicator size="small" color={colors.primary[500]} />
-                  <Text style={[styles.progressText, { color: colors.text.secondary }]}>
-                    {exportProgress}%
-                  </Text>
-                </View>
+              {backupLoading ? (
+                <ActivityIndicator size="small" color={colors.primary[500]} />
               ) : (
                 <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
               )}
