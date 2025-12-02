@@ -28,6 +28,17 @@ export const useBackup = () => {
         db.getAllAsync('SELECT * FROM recurring_transactions WHERE user_id = ?', ['default-user'])
       ]);
       
+      console.log('📊 Backup data counts:', {
+        accounts: accounts?.length || 0,
+        transactions: transactions?.length || 0,
+        categories: categories?.length || 0,
+        budgets: budgets?.length || 0,
+        debts: debts?.length || 0,
+        savingsGoals: savingsGoals?.length || 0,
+        annualCharges: annualCharges?.length || 0,
+        recurringTransactions: recurringTransactions?.length || 0
+      });
+      
       const backupData = {
         version: '1.0.0',
         timestamp: new Date().toISOString(),
