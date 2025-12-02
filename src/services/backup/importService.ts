@@ -13,9 +13,18 @@ export class ImportService {
       const fileContent = await FileSystem.readAsStringAsync(fileUri);
       const backupData: BackupData = JSON.parse(fileContent);
       
+      // Validation améliorée du format
       if (!backupData.data) {
-        throw new Error('Format de sauvegarde invalide');
+        throw new Error('Format de sauvegarde invalide : propriété "data" manquante');
       }
+      
+      // Vérifier que data contient au moins une propriété
+      const hasData = Object.keys(backupData.data).length > 0;
+      if (!hasData) {
+        throw new Error('Le fichier de sauvegarde est vide');
+      }
+      
+      console.log('✅ Format de sauvegarde valide:', Object.keys(backupData.data));
       
       // Restaurer les données dans la base de données
       const result = await this.restoreToDatabase(backupData.data);

@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { CloudBackupService } from '../services/backup/cloudBackup';
 import { ImportService } from '../services/backup/importService';
 import { LocalBackupService } from '../services/backup/localBackup';
+import { getDatabase } from '../services/database/sqlite';
 
 export const useBackup = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -13,15 +14,32 @@ export const useBackup = () => {
       setIsLoading(true);
       setError(null);
       
+      // Récupérer toutes les données de la base
+      const db = await getDatabase();
+      
+      const [accounts, transactions, categories, budgets, debts, savingsGoals, annualCharges, recurringTransactions] = await Promise.all([
+        db.getAllAsync('SELECT * FROM accounts WHERE user_id = ?', ['default-user']),
+        db.getAllAsync('SELECT * FROM transactions WHERE user_id = ?', ['default-user']),
+        db.getAllAsync('SELECT * FROM categories WHERE user_id = ?', ['default-user']),
+        db.getAllAsync('SELECT * FROM budgets WHERE user_id = ?', ['default-user']),
+        db.getAllAsync('SELECT * FROM debts WHERE user_id = ?', ['default-user']),
+        db.getAllAsync('SELECT * FROM savings_goals WHERE user_id = ?', ['default-user']),
+        db.getAllAsync('SELECT * FROM annual_charges WHERE user_id = ?', ['default-user']),
+        db.getAllAsync('SELECT * FROM recurring_transactions WHERE user_id = ?', ['default-user'])
+      ]);
+      
       const backupData = {
         version: '1.0.0',
         timestamp: new Date().toISOString(),
         data: {
-          accounts: [],
-          transactions: [],
-          categories: [],
-          budgets: [],
-          recurringTransactions: [],
+          accounts,
+          transactions,
+          categories,
+          budgets,
+          debts,
+          savingsGoals,
+          annualCharges,
+          recurringTransactions
         }
       };
       

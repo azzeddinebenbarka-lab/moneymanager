@@ -11,7 +11,7 @@
     "build:apk": "eas build --platform android --profile production-apk",
     "build:preview": "eas build --platform android --profile preview",
     "build:aab": "eas build --platform android --profile production",
-    "update": "eas update --branch production",
+    "update": "eas update --branch production --platform android",
     "build:list": "eas build:list --platform android",
     "update:list": "eas update:list --branch production"
   },
