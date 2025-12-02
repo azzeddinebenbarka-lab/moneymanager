@@ -126,14 +126,19 @@ export class ImportService {
       transactions: 0,
       categories: 0,
       budgets: 0,
-      annualCharges: 0
+      debts: 0,
+      savingsGoals: 0,
+      annualCharges: 0,
+      recurringTransactions: 0
     };
     
     try {
+      console.log('🔄 Début restauration base de données...');
       await db.execAsync('BEGIN TRANSACTION');
       
       // Restaurer les comptes
       if (data.accounts && Array.isArray(data.accounts)) {
+        console.log(`👛 Import de ${data.accounts.length} comptes...`);
         for (const account of data.accounts) {
           try {
             await db.runAsync(
@@ -164,6 +169,7 @@ export class ImportService {
       
       // Restaurer les transactions
       if (data.transactions && Array.isArray(data.transactions)) {
+        console.log(`💰 Import de ${data.transactions.length} transactions...`);
         for (const transaction of data.transactions) {
           try {
             await db.runAsync(
@@ -198,6 +204,7 @@ export class ImportService {
       
       // Restaurer les catégories
       if (data.categories && Array.isArray(data.categories)) {
+        console.log(`📁 Import de ${data.categories.length} catégories...`);
         for (const category of data.categories) {
           try {
             await db.runAsync(
@@ -225,6 +232,7 @@ export class ImportService {
       
       // Restaurer les budgets
       if (data.budgets && Array.isArray(data.budgets)) {
+        console.log(`💼 Import de ${data.budgets.length} budgets...`);
         for (const budget of data.budgets) {
           try {
             await db.runAsync(
@@ -251,6 +259,7 @@ export class ImportService {
       
       // Restaurer les charges annuelles
       if (data.annualCharges && Array.isArray(data.annualCharges)) {
+        console.log(`📋 Import de ${data.annualCharges.length} charges annuelles...`);
         for (const charge of data.annualCharges) {
           try {
             await db.runAsync(
@@ -274,6 +283,95 @@ export class ImportService {
             result.annualCharges++;
           } catch (err) {
             console.warn('⚠️ Erreur import charge annuelle:', err);
+          }
+        }
+      }
+      
+      // Restaurer les dettes
+      if (data.debts && Array.isArray(data.debts)) {
+        console.log(`💳 Import de ${data.debts.length} dettes...`);
+        for (const debt of data.debts) {
+          try {
+            await db.runAsync(
+              `INSERT OR REPLACE INTO debts (
+                id, user_id, name, amount, paid_amount, creditor, 
+                due_date, is_paid, created_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [
+                debt.id || `debt_${Date.now()}`,
+                debt.user_id || 'default-user',
+                debt.name,
+                debt.amount,
+                debt.paid_amount || 0,
+                debt.creditor || '',
+                debt.due_date || null,
+                debt.is_paid ? 1 : 0,
+                debt.created_at || new Date().toISOString()
+              ]
+            );
+            result.debts++;
+          } catch (err) {
+            console.warn('⚠️ Erreur import dette:', err);
+          }
+        }
+      }
+      
+      // Restaurer les objectifs d'épargne
+      if (data.savingsGoals && Array.isArray(data.savingsGoals)) {
+        console.log(`🎯 Import de ${data.savingsGoals.length} objectifs d'épargne...`);
+        for (const goal of data.savingsGoals) {
+          try {
+            await db.runAsync(
+              `INSERT OR REPLACE INTO savings_goals (
+                id, user_id, name, target_amount, current_amount, 
+                target_date, created_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              [
+                goal.id || `goal_${Date.now()}`,
+                goal.user_id || 'default-user',
+                goal.name,
+                goal.target_amount,
+                goal.current_amount || 0,
+                goal.target_date || null,
+                goal.created_at || new Date().toISOString()
+              ]
+            );
+            result.savingsGoals++;
+          } catch (err) {
+            console.warn('⚠️ Erreur import objectif épargne:', err);
+          }
+        }
+      }
+      
+      // Restaurer les transactions récurrentes
+      if (data.recurringTransactions && Array.isArray(data.recurringTransactions)) {
+        console.log(`🔄 Import de ${data.recurringTransactions.length} transactions récurrentes...`);
+        for (const recurring of data.recurringTransactions) {
+          try {
+            await db.runAsync(
+              `INSERT OR REPLACE INTO recurring_transactions (
+                id, user_id, amount, type, category, account_id, 
+                description, frequency, start_date, end_date, 
+                is_active, created_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [
+                recurring.id || `rec_${Date.now()}`,
+                recurring.user_id || 'default-user',
+                recurring.amount,
+                recurring.type,
+                recurring.category,
+                recurring.account_id,
+                recurring.description || '',
+                recurring.frequency || 'monthly',
+                recurring.start_date,
+                recurring.end_date || null,
+                recurring.is_active !== false ? 1 : 0,
+                recurring.created_at || new Date().toISOString()
+              ]
+            );
+            result.recurringTransactions++;
+          } catch (err) {
+            console.warn('⚠️ Erreur import transaction récurrente:', err);
           }
         }
       }
