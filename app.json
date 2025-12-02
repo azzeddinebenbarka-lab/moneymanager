@@ -20,15 +20,12 @@
       }
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
+      "icon": "./assets/images/icon.png",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.azzeddine2025.mylife",
       "runtimeVersion": "1.0.0",
-      "versionCode": 23
+      "versionCode": 24
     },
     "plugins": [
       "expo-sqlite",
