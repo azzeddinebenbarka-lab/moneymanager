@@ -28,7 +28,7 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.azzeddine2025.mylife",
       "runtimeVersion": "1.0.0",
-      "versionCode": 21
+      "versionCode": 23
     },
     "plugins": [
       "expo-sqlite",
@@ -41,7 +41,8 @@
           "color": "#ffffff",
           "defaultChannel": "default"
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "extra": {
       "eas": {
