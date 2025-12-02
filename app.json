@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "moneymanager",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
@@ -25,7 +25,7 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.azzeddine2025.mylife",
       "runtimeVersion": "1.0.0",
-      "versionCode": 25
+      "versionCode": 26
     },
     "plugins": [
       "expo-sqlite",
