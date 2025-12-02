@@ -18,7 +18,6 @@ import { SafeAreaView } from '../components/SafeAreaView';
 import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem } from '../context/ThemeContext';
 import { useBackup } from '../hooks/useBackup';
-import { useExport } from '../hooks/useExport';
 import { AutoBackupScheduler } from '../services/backup/autoBackupScheduler';
 
 const AUTO_BACKUP_KEY = '@auto_backup_enabled';
@@ -28,7 +27,6 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { t } = useLanguage();
   const { colors } = useDesignSystem();
   const { createBackup, importData, isLoading: backupLoading } = useBackup();
-  const { exportFullBackup, exportTransactions, isExporting, exportProgress } = useExport();
   
   const [autoBackupEnabled, setAutoBackupEnabled] = useState(false);
   const [lastBackupDate, setLastBackupDate] = useState<string | null>(null);
@@ -119,16 +117,19 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     try {
       Alert.alert(
         'Export JSON',
-        'Exporter toutes les données au format JSON ?',
+        'Exporter toutes les données au format JSON ?\n\nInclut : comptes, transactions, catégories, budgets, dettes, objectifs d\'épargne, charges annuelles et transactions récurrentes.',
         [
           { text: t.cancel, style: 'cancel' },
           {
             text: 'Exporter',
             onPress: async () => {
               try {
-                const result = await exportFullBackup('json');
+                console.log('📤 Début export JSON complet...');
+                const result = await createBackup();
                 
                 if (result.success && result.filePath) {
+                  console.log('✅ Export créé:', result.filePath);
+                  
                   const canShare = await Sharing.isAvailableAsync();
                   if (canShare) {
                     await Sharing.shareAsync(result.filePath, {
@@ -137,9 +138,17 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     });
                   }
                   
-                  Alert.alert(t.success, 'Export terminé', [{ text: 'OK' }]);
+                  // Mettre à jour la date de dernière sauvegarde
+                  const now = new Date().toISOString();
+                  await AsyncStorage.setItem(LAST_BACKUP_KEY, now);
+                  setLastBackupDate(now);
+                  
+                  Alert.alert(t.success, 'Export JSON complet créé avec succès', [{ text: 'OK' }]);
+                } else {
+                  throw new Error(result.error || 'Échec de l\'export');
                 }
               } catch (error) {
+                console.error('❌ Erreur export JSON:', error);
                 Alert.alert(
                   'Erreur',
                   error instanceof Error ? error.message : 'Impossible d\'exporter les données'
