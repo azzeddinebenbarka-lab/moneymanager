@@ -186,7 +186,7 @@ export class ImportService {
               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 account.id || `acc_${Date.now()}`,
-                this.mapField(account, 'userId', 'user_id', 'default-user'),
+                'default-user',
                 account.name,
                 account.type,
                 account.balance || 0,
@@ -218,7 +218,7 @@ export class ImportService {
               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 transaction.id || `trx_${Date.now()}`,
-                this.mapField(transaction, 'userId', 'user_id', 'default-user'),
+                'default-user',
                 transaction.amount,
                 transaction.type,
                 transaction.category,
@@ -251,7 +251,7 @@ export class ImportService {
               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 category.id || `cat_${Date.now()}`,
-                this.mapField(category, 'userId', 'user_id', 'default-user'),
+                'default-user',
                 category.name,
                 category.type,
                 category.color || '#6C63FF',
@@ -279,7 +279,7 @@ export class ImportService {
               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 budget.id || `bdg_${Date.now()}`,
-                this.mapField(budget, 'userId', 'user_id', 'default-user'),
+                'default-user',
                 this.mapField(budget, 'categoryId', 'category_id'),
                 budget.amount,
                 budget.period || 'monthly',
@@ -307,7 +307,7 @@ export class ImportService {
               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 charge.id || `chg_${Date.now()}`,
-                this.mapField(charge, 'userId', 'user_id', 'default-user'),
+                'default-user',
                 charge.name,
                 charge.amount,
                 charge.category || 'Autre',
@@ -337,7 +337,7 @@ export class ImportService {
               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 debt.id || `debt_${Date.now()}`,
-                this.mapField(debt, 'userId', 'user_id', 'default-user'),
+                'default-user',
                 debt.name,
                 debt.amount,
                 this.mapField(debt, 'paidAmount', 'paid_amount', 0),
@@ -366,7 +366,7 @@ export class ImportService {
               ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
               [
                 goal.id || `goal_${Date.now()}`,
-                this.mapField(goal, 'userId', 'user_id', 'default-user'),
+                'default-user',
                 goal.name,
                 this.mapField(goal, 'targetAmount', 'target_amount'),
                 this.mapField(goal, 'currentAmount', 'current_amount', 0),
@@ -394,7 +394,7 @@ export class ImportService {
               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 recurring.id || `rec_${Date.now()}`,
-                this.mapField(recurring, 'userId', 'user_id', 'default-user'),
+                'default-user',
                 recurring.amount,
                 recurring.type,
                 recurring.category,
