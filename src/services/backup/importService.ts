@@ -172,6 +172,19 @@ export class ImportService {
     
     try {
       console.log('🔄 Début restauration base de données...');
+      console.log('📊 Données reçues:', {
+        accounts: data.accounts?.length || 0,
+        transactions: data.transactions?.length || 0,
+        categories: data.categories?.length || 0,
+        budgets: data.budgets?.length || 0,
+        debts: data.debts?.length || 0,
+        savingsGoals: data.savingsGoals?.length || 0,
+        annualCharges: data.annualCharges?.length || 0,
+        recurringTransactions: data.recurringTransactions?.length || 0
+      });
+      console.log('📝 Premier compte:', data.accounts?.[0]);
+      console.log('📝 Première transaction:', data.transactions?.[0]);
+      console.log('📝 Première charge:', data.annualCharges?.[0]);
       await db.execAsync('BEGIN TRANSACTION');
       
       // Restaurer les comptes
@@ -179,6 +192,7 @@ export class ImportService {
         console.log(`👛 Import de ${data.accounts.length} comptes...`);
         for (const account of data.accounts) {
           try {
+            console.log('💾 Import compte:', account.name, account);
             await db.runAsync(
               `INSERT OR REPLACE INTO accounts (
                 id, user_id, name, type, balance, currency, color, icon, 
@@ -199,7 +213,9 @@ export class ImportService {
               ]
             );
             result.accounts++;
+            console.log('✅ Compte importé:', account.name);
           } catch (err) {
+            console.error('❌ ERREUR import compte:', account.name, err);
             console.warn('⚠️ Erreur import compte:', account, err);
           }
         }
@@ -210,6 +226,7 @@ export class ImportService {
         console.log(`💰 Import de ${data.transactions.length} transactions...`);
         for (const transaction of data.transactions) {
           try {
+            console.log('💾 Import transaction:', transaction.amount, transaction.type);
             await db.runAsync(
               `INSERT OR REPLACE INTO transactions (
                 id, user_id, amount, type, category, sub_category, account_id,
@@ -234,7 +251,9 @@ export class ImportService {
               ]
             );
             result.transactions++;
+            console.log('✅ Transaction importée');
           } catch (err) {
+            console.error('❌ ERREUR import transaction:', transaction, err);
             console.warn('⚠️ Erreur import transaction:', transaction, err);
           }
         }
