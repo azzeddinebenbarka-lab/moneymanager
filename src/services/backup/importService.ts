@@ -348,26 +348,39 @@ export class ImportService {
         console.log(`💳 Import de ${data.debts.length} dettes...`);
         for (const debt of data.debts) {
           try {
+            // Gérer plusieurs variantes de champs pour les montants
+            const initialAmount = debt.initial_amount || debt.initialAmount || debt.amount || 0;
+            const currentAmount = debt.current_amount || debt.currentAmount || debt.paid_amount || debt.paidAmount || initialAmount;
+            
+            console.log('💳 Importing debt:', {
+              name: debt.name,
+              initialAmount,
+              currentAmount,
+              creditor: debt.creditor,
+              rawDebt: debt
+            });
+            
             await db.runAsync(
               `INSERT OR REPLACE INTO debts (
                 id, user_id, name, initial_amount, current_amount, creditor, 
                 due_date, status, created_at
               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
-                debt.id || `debt_${Date.now()}`,
+                debt.id || `debt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                 'default-user',
-                debt.name,
-                this.mapField(debt, 'initialAmount', 'initial_amount', debt.amount || 0),
-                this.mapField(debt, 'currentAmount', 'current_amount', debt.amount || 0),
-                debt.creditor || '',
-                this.mapField(debt, 'dueDate', 'due_date', null),
-                this.mapField(debt, 'status', 'status', 'active'),
-                this.mapField(debt, 'createdAt', 'created_at', new Date().toISOString())
+                debt.name || 'Dette sans nom',
+                initialAmount,
+                currentAmount,
+                debt.creditor || debt.Creditor || '',
+                debt.due_date || debt.dueDate || null,
+                debt.status || (debt.is_paid ? 'paid' : 'active'),
+                debt.created_at || debt.createdAt || new Date().toISOString()
               ]
             );
             result.debts++;
+            console.log('✅ Dette importée:', debt.name);
           } catch (err) {
-            console.warn('⚠️ Erreur import dette:', debt, err);
+            console.error('⚠️ Erreur import dette:', debt.name, err);
           }
         }
       }
