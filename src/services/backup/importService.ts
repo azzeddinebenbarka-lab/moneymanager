@@ -350,16 +350,28 @@ export class ImportService {
           try {
             // Gérer plusieurs variantes de champs pour les montants
             const initialAmount = debt.initial_amount || debt.initialAmount || debt.amount || 0;
-            const currentAmount = debt.current_amount || debt.currentAmount || debt.paid_amount || debt.paidAmount || initialAmount;
+            
+            // IMPORTANT: Dans l'ancien système, current_amount = reste à payer
+            // Dans le nouveau système, current_amount = montant déjà payé
+            // Donc: montant_payé = initial_amount - current_amount_ancien
+            let paidAmount;
+            if (debt.current_amount !== undefined || debt.currentAmount !== undefined) {
+              const remainingAmount = debt.current_amount ?? debt.currentAmount ?? 0;
+              paidAmount = initialAmount - remainingAmount; // Inversion: reste à payer → montant payé
+            } else {
+              paidAmount = debt.paid_amount || debt.paidAmount || 0;
+            }
+            
             const monthlyPayment = debt.monthly_payment || debt.monthlyPayment || 0;
             
             console.log('💳 Importing debt:', {
               name: debt.name,
               initialAmount,
-              currentAmount,
+              paidAmount,
+              remainingInJson: debt.current_amount,
               monthlyPayment,
               creditor: debt.creditor,
-              rawDebt: debt
+              status: debt.status
             });
             
             await db.runAsync(
@@ -372,7 +384,7 @@ export class ImportService {
                 'default-user',
                 debt.name || 'Dette sans nom',
                 initialAmount,
-                currentAmount,
+                paidAmount, // Maintenant c'est le montant payé, pas le reste
                 monthlyPayment,
                 debt.creditor || debt.Creditor || '',
                 debt.due_date || debt.dueDate || null,
@@ -381,7 +393,7 @@ export class ImportService {
               ]
             );
             result.debts++;
-            console.log('✅ Dette importée:', debt.name);
+            console.log('✅ Dette importée:', debt.name, `- Payé: ${paidAmount}/${initialAmount}`);
           } catch (err) {
             console.error('⚠️ Erreur import dette:', debt.name, err);
           }
