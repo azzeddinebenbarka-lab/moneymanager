@@ -38,12 +38,25 @@ const useAppInitialization = () => {
           const update = await Updates.checkForUpdateAsync();
           
           if (update.isAvailable) {
-            console.log('📥 Mise à jour disponible, téléchargement...');
+            console.log('📥 Mise à jour disponible! Téléchargement immédiat...');
+            Alert.alert(
+              '📥 Mise à jour disponible',
+              'Téléchargement en cours...',
+              [],
+              { cancelable: false }
+            );
             await Updates.fetchUpdateAsync();
-            console.log('✅ Mise à jour téléchargée, redémarrage...');
-            await Updates.reloadAsync();
+            console.log('✅ Mise à jour téléchargée! Redémarrage maintenant...');
+            Alert.alert(
+              '✅ Mise à jour installée',
+              'L\'application va redémarrer',
+              [{ text: 'OK', onPress: () => Updates.reloadAsync() }],
+              { cancelable: false }
+            );
+            // Redémarrage automatique après 2 secondes si l'utilisateur ne clique pas
+            setTimeout(() => Updates.reloadAsync(), 2000);
           } else {
-            console.log('✅ Application à jour');
+            console.log('✅ Application à jour (dernière version déjà installée)');
           }
         } catch (updateError) {
           console.warn('⚠️ Erreur lors de la vérification des mises à jour:', updateError);
