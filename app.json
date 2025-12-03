@@ -25,7 +25,7 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.azzeddine2025.mylife",
       "runtimeVersion": "1.0.0",
-      "versionCode": 28
+      "versionCode": 31
     },
     "plugins": [
       "expo-sqlite",

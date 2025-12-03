@@ -35,26 +35,19 @@ const useAppInitialization = () => {
       if (!__DEV__) {
         try {
           console.log('🔄 Vérification des mises à jour OTA...');
-          Alert.alert('🔄 Vérification', 'Recherche de mises à jour...', [], { cancelable: false });
-          
           const update = await Updates.checkForUpdateAsync();
           
           if (update.isAvailable) {
-            console.log('📥 Mise à jour disponible! Téléchargement et redémarrage automatique...');
-            Alert.alert('📥 Mise à jour trouvée!', 'Téléchargement en cours...', [], { cancelable: false });
+            console.log('📥 Mise à jour disponible! Téléchargement...');
             await Updates.fetchUpdateAsync();
-            console.log('✅ Mise à jour téléchargée! Redémarrage immédiat...');
-            Alert.alert('✅ Téléchargée!', 'Redémarrage de l\'app...', [], { cancelable: false });
-            // Redémarrage automatique immédiat
+            console.log('✅ Mise à jour téléchargée! Redémarrage...');
             await Updates.reloadAsync();
             return; // Stoppe l'exécution car l'app va redémarrer
           } else {
-            console.log('✅ Application à jour (dernière version déjà installée)');
-            Alert.alert('✅ App à jour', 'Aucune mise à jour disponible', [{ text: 'OK' }]);
+            console.log('✅ Application à jour');
           }
         } catch (updateError) {
           console.error('❌ Erreur vérification mises à jour:', updateError);
-          Alert.alert('⚠️ Erreur OTA', `Impossible de vérifier: ${updateError}`, [{ text: 'Continuer' }]);
           // Continue l'initialisation même si la mise à jour échoue
         }
       }
