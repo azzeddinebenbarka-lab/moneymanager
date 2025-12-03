@@ -351,26 +351,29 @@ export class ImportService {
             // Gérer plusieurs variantes de champs pour les montants
             const initialAmount = debt.initial_amount || debt.initialAmount || debt.amount || 0;
             const currentAmount = debt.current_amount || debt.currentAmount || debt.paid_amount || debt.paidAmount || initialAmount;
+            const monthlyPayment = debt.monthly_payment || debt.monthlyPayment || 0;
             
             console.log('💳 Importing debt:', {
               name: debt.name,
               initialAmount,
               currentAmount,
+              monthlyPayment,
               creditor: debt.creditor,
               rawDebt: debt
             });
             
             await db.runAsync(
               `INSERT OR REPLACE INTO debts (
-                id, user_id, name, initial_amount, current_amount, creditor, 
-                due_date, status, created_at
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                id, user_id, name, initial_amount, current_amount, monthly_payment,
+                creditor, due_date, status, created_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 debt.id || `debt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                 'default-user',
                 debt.name || 'Dette sans nom',
                 initialAmount,
                 currentAmount,
+                monthlyPayment,
                 debt.creditor || debt.Creditor || '',
                 debt.due_date || debt.dueDate || null,
                 debt.status || (debt.is_paid ? 'paid' : 'active'),
