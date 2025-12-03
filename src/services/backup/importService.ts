@@ -196,8 +196,8 @@ export class ImportService {
             await db.runAsync(
               `INSERT OR REPLACE INTO accounts (
                 id, user_id, name, type, balance, currency, color, icon, 
-                is_active, created_at, updated_at
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                is_active, created_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 account.id || `acc_${Date.now()}`,
                 'default-user',
@@ -208,8 +208,7 @@ export class ImportService {
                 account.color || '#6C63FF',
                 account.icon || 'wallet',
                 this.mapField(account, 'isActive', 'is_active', true) ? 1 : 0,
-                this.mapField(account, 'createdAt', 'created_at', new Date().toISOString()),
-                new Date().toISOString()
+                this.mapField(account, 'createdAt', 'created_at', new Date().toISOString())
               ]
             );
             result.accounts++;
@@ -351,18 +350,18 @@ export class ImportService {
           try {
             await db.runAsync(
               `INSERT OR REPLACE INTO debts (
-                id, user_id, name, amount, paid_amount, creditor, 
-                due_date, is_paid, created_at
+                id, user_id, name, initial_amount, current_amount, creditor, 
+                due_date, status, created_at
               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 debt.id || `debt_${Date.now()}`,
                 'default-user',
                 debt.name,
-                debt.amount,
-                this.mapField(debt, 'paidAmount', 'paid_amount', 0),
+                this.mapField(debt, 'initialAmount', 'initial_amount', debt.amount || 0),
+                this.mapField(debt, 'currentAmount', 'current_amount', debt.amount || 0),
                 debt.creditor || '',
                 this.mapField(debt, 'dueDate', 'due_date', null),
-                this.mapField(debt, 'isPaid', 'is_paid', false) ? 1 : 0,
+                this.mapField(debt, 'status', 'status', 'active'),
                 this.mapField(debt, 'createdAt', 'created_at', new Date().toISOString())
               ]
             );
@@ -381,8 +380,8 @@ export class ImportService {
             await db.runAsync(
               `INSERT OR REPLACE INTO savings_goals (
                 id, user_id, name, target_amount, current_amount, 
-                target_date, created_at
-              ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                target_date, monthly_contribution, created_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 goal.id || `goal_${Date.now()}`,
                 'default-user',
@@ -390,6 +389,7 @@ export class ImportService {
                 this.mapField(goal, 'targetAmount', 'target_amount'),
                 this.mapField(goal, 'currentAmount', 'current_amount', 0),
                 this.mapField(goal, 'targetDate', 'target_date', null),
+                this.mapField(goal, 'monthlyContribution', 'monthly_contribution', 0),
                 this.mapField(goal, 'createdAt', 'created_at', new Date().toISOString())
               ]
             );
