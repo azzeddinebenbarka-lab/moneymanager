@@ -99,7 +99,7 @@ const DebtsScreen = ({ navigation }: any) => {
       <View style={styles.modernProgressSection}>
         <View style={styles.modernProgressInfo}>
           <Text style={[styles.modernProgressLabel, isDark && styles.darkSubtext]}>
-            Payé: {formatAmount(item.currentAmount)} / {formatAmount(item.initialAmount)}
+            Payé: {formatAmount(item.currentAmount)} / {formatAmount(item.initialAmount)} [v2]
           </Text>
         </View>
         <View style={[styles.modernProgressBar, isDark && styles.darkModernProgressBar]}>
