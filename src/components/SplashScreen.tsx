@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 32,
@@ -159,8 +159,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 20,
     elevation: 15,
-    borderWidth: 3,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
     overflow: 'hidden',
   },
   appIcon: {
