@@ -5,7 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import * as Font from 'expo-font';
 import * as Updates from 'expo-updates';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { CurrencyProvider } from './src/context/CurrencyContext';
@@ -186,6 +186,7 @@ const AppWithProviders: React.FC = () => {
 // Composant principal App
 const App: React.FC = () => {
   const { isInitialized, error, isRetrying, retry } = useAppInitialization();
+  const [showSplash, setShowSplash] = React.useState(true);
 
   // Gestion des erreurs d'initialisation
   if (error) {
@@ -196,6 +197,11 @@ const App: React.FC = () => {
         isRetrying={isRetrying} 
       />
     );
+  }
+
+  // Afficher le splash screen
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
   }
 
   // Écran de chargement pendant l'initialisation
