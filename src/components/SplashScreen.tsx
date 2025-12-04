@@ -1,7 +1,6 @@
 // src/components/SplashScreen.tsx
-import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef } from 'react';
-import { Animated, Dimensions, StyleSheet, Text, View } from 'react-native';
+import { Animated, Dimensions, Image, StyleSheet, Text, View } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -116,7 +115,11 @@ const AnimatedSplash: React.FC<AnimatedSplashProps> = ({ onFinish }) => {
         ]}
       >
         <View style={styles.iconContainer}>
-          <Ionicons name="wallet" size={80} color="#FFFFFF" />
+          <Image 
+            source={require('../../assets/images/icon.png')} 
+            style={styles.appIcon}
+            resizeMode="contain"
+          />
         </View>
         <Text style={styles.title}>MoneyManager</Text>
         <Text style={styles.subtitle}>Gérez vos finances intelligemment</Text>
@@ -158,6 +161,11 @@ const styles = StyleSheet.create({
     elevation: 15,
     borderWidth: 3,
     borderColor: 'rgba(255, 255, 255, 0.3)',
+    overflow: 'hidden',
+  },
+  appIcon: {
+    width: 100,
+    height: 100,
   },
   title: {
     fontSize: 36,
