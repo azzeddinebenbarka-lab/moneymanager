@@ -7,6 +7,7 @@ import * as Updates from 'expo-updates';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import AnimatedSplash from './src/components/SplashScreen';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { CurrencyProvider } from './src/context/CurrencyContext';
 import { DatabaseProvider } from './src/context/DatabaseContext';
@@ -201,7 +202,7 @@ const App: React.FC = () => {
 
   // Afficher le splash screen
   if (showSplash) {
-    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+    return <AnimatedSplash onFinish={() => setShowSplash(false)} />;
   }
 
   // Écran de chargement pendant l'initialisation
