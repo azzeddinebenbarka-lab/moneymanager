@@ -99,7 +99,7 @@ const DebtsScreen = ({ navigation }: any) => {
       <View style={styles.modernProgressSection}>
         <View style={styles.modernProgressInfo}>
           <Text style={[styles.modernProgressLabel, isDark && styles.darkSubtext]}>
-            Payé: {formatAmount(item.initialAmount - item.currentAmount)} / {formatAmount(item.initialAmount)}
+            Payé: {formatAmount(item.currentAmount)} / {formatAmount(item.initialAmount)}
           </Text>
         </View>
         <View style={[styles.modernProgressBar, isDark && styles.darkModernProgressBar]}>
@@ -107,7 +107,7 @@ const DebtsScreen = ({ navigation }: any) => {
             style={[
               styles.modernProgressFill,
               { 
-                width: `${Math.max(0, Math.min(100, ((item.initialAmount - item.currentAmount) / item.initialAmount) * 100))}%`,
+                width: `${Math.max(0, Math.min(100, (item.currentAmount / item.initialAmount) * 100))}%`,
                 backgroundColor: getStatusColor(item.status)
               }
             ]} 

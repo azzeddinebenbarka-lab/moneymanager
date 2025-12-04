@@ -32,7 +32,7 @@ export const DebtCard: React.FC<DebtCardProps> = ({
   const isDueThisMonth = DebtCalculator.isDueThisMonth(debt);
   const isOverdue = DebtCalculator.isDebtOverdue(debt);
   const progressPercentage = debt.initialAmount > 0 ? 
-    ((debt.initialAmount - debt.currentAmount) / debt.initialAmount) * 100 : 0;
+    (debt.currentAmount / debt.initialAmount) * 100 : 0;
 
   const getStatusInfo = () => {
     switch (debt.status) {

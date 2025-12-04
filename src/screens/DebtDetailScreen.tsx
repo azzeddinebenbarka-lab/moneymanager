@@ -169,7 +169,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
   }
 
   const sourceAccounts = accounts.filter(acc => acc.type !== 'savings' && acc.balance > 0);
-  const progressPercentage = Math.max(0, ((debt.initialAmount - debt.currentAmount) / debt.initialAmount) * 100);
+  const progressPercentage = Math.max(0, (debt.currentAmount / debt.initialAmount) * 100);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background.primary }]}>

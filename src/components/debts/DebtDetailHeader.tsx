@@ -14,9 +14,9 @@ export const DebtDetailHeader = ({ debt, onAddPayment }: Props) => {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const progress = ((debt.initialAmount - debt.currentAmount) / debt.initialAmount) * 100;
+  const progress = (debt.currentAmount / debt.initialAmount) * 100;
   const remainingAmount = debt.initialAmount - debt.currentAmount;
-  const totalPaid = debt.initialAmount - debt.currentAmount;
+  const totalPaid = debt.currentAmount;
 
   const handleAddPayment = async () => {
     if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
