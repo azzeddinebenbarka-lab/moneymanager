@@ -97,13 +97,8 @@ const AnimatedSplash: React.FC<AnimatedSplashProps> = ({ onFinish }) => {
 
   return (
     <View style={styles.container}>
-      {/* Background gradient moderne */}
-      <LinearGradient
-        colors={['#667eea', '#764ba2', '#f093fb']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
-      />
+      {/* Background gradient moderne - simulé avec couleur unie */}
+      <View style={styles.gradientBackground} />
 
       {/* Pièces qui tombent */}
       {coins.map((coin) => (
@@ -135,6 +130,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  gradientBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#764ba2', // Couleur principale du gradient
   },
   content: {
     alignItems: 'center',
