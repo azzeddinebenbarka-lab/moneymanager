@@ -111,20 +111,26 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               await forceMigrateCategories();
               console.log('✅ [CategoriesScreen] Migration forcée terminée');
               
+              // Attendre un peu pour que la BD soit prête
+              await new Promise(resolve => setTimeout(resolve, 500));
+              
               // Rafraîchir les catégories depuis la base de données
               await refreshCategories();
               console.log('✅ [CategoriesScreen] Catégories rafraîchies');
               
-              // Recharger l'arbre
+              // Attendre que le state se mette à jour
+              await new Promise(resolve => setTimeout(resolve, 300));
+              
+              // Recharger manuellement l'arbre
               await loadCategoryTree();
               console.log('✅ [CategoriesScreen] Arbre rechargé');
               
+              setRefreshing(false);
               Alert.alert("Succès", "Les 50 nouvelles catégories ont été installées avec succès !");
             } catch (error) {
+              setRefreshing(false);
               Alert.alert("Erreur", "Impossible de réinitialiser les catégories.");
               console.error("❌ [CategoriesScreen] Error reinitializing categories:", error);
-            } finally {
-              setRefreshing(false);
             }
           }
         }
