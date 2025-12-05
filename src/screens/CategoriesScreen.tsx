@@ -449,7 +449,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           animationType="slide"
           onRequestClose={closeModal}
         >
-          <View style={[styles.modalContainer, { backgroundColor: colors.background.primary }]}>
+          <SafeAreaView style={[styles.modalContainer, { backgroundColor: colors.background.primary }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.text.primary }]}>
                 {editingCategory 
@@ -615,7 +615,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 </Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </SafeAreaView>
         </Modal>
       </View>
     </SafeAreaView>
@@ -814,6 +814,7 @@ const styles = StyleSheet.create({
   modalContent: {
     flex: 1,
     padding: 16,
+    paddingTop: 24,
   },
   parentInfo: {
     flexDirection: 'row',

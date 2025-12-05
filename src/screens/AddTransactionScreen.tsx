@@ -29,7 +29,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
   const { theme } = useTheme();
   const { formatAmount } = useCurrency();
   const { accounts, loading: accountsLoading, error: accountsError, refreshAccounts } = useAccounts();
-  const { categories, loading: categoriesLoading, getCategoryTree } = useCategories();
+  const { categories, loading: categoriesLoading, getCategoryTree, refreshCategories } = useCategories();
   const { createTransaction } = useTransactions();
   
   const initialType = route.params?.initialType || 'expense';
@@ -64,9 +64,10 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       refreshAccounts();
+      refreshCategories();
     });
     return unsubscribe;
-  }, [navigation, refreshAccounts]);
+  }, [navigation, refreshAccounts, refreshCategories]);
 
   // ✅ CORRECTION : Réinitialiser la catégorie quand le type change
   useEffect(() => {
