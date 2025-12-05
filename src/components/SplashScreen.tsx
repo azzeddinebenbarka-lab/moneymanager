@@ -9,16 +9,16 @@ interface AnimatedSplashProps {
 }
 
 // Composant pour une pièce qui tombe
-const FallingCoin: React.FC<{ delay: number; x: number }> = ({ delay, x }) => {
-  const fallAnim = useRef(new Animated.Value(-50)).current;
+const FallingCoin: React.FC<{ delay: number; x: number; type: number }> = ({ delay, x, type }) => {
+  const fallAnim = useRef(new Animated.Value(-200)).current; // Commence bien au-dessus de l'écran
   const rotateAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.loop(
       Animated.parallel([
         Animated.timing(fallAnim, {
-          toValue: height + 50,
-          duration: 3000 + Math.random() * 2000,
+          toValue: height + 150,
+          duration: 2500 + Math.random() * 1500,
           delay,
           useNativeDriver: true,
         }),
@@ -36,6 +36,16 @@ const FallingCoin: React.FC<{ delay: number; x: number }> = ({ delay, x }) => {
     outputRange: ['0deg', '360deg'],
   });
 
+  // Pièces en or avec effet 3D - symboles alternés
+  const symbols = ['$', '€', '$', '€']; // Alterne dollar et euro
+  const symbol = symbols[type % symbols.length];
+  
+  const coinStyle = { 
+    bg: '#D4AF37', 
+    border: '#B8860B', 
+    textColor: '#8B7355' 
+  };
+
   return (
     <Animated.View
       style={[
@@ -46,8 +56,10 @@ const FallingCoin: React.FC<{ delay: number; x: number }> = ({ delay, x }) => {
         },
       ]}
     >
-      <View style={styles.coinInner}>
-        <Text style={styles.coinText}>$</Text>
+      <View style={[styles.coinInner, { backgroundColor: coinStyle.bg, borderColor: coinStyle.border }]}>
+        <View style={styles.coinCenter}>
+          <Text style={[styles.coinSymbol, { color: coinStyle.textColor }]}>{symbol}</Text>
+        </View>
       </View>
     </Animated.View>
   );
@@ -57,11 +69,12 @@ const AnimatedSplash: React.FC<AnimatedSplashProps> = ({ onFinish }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.3)).current;
 
-  // Générer des positions aléatoires pour les pièces
-  const coins = Array.from({ length: 12 }, (_, i) => ({
+  // Générer des positions aléatoires pour les pièces (30 pièces pour effet plus dense)
+  const coins = Array.from({ length: 30 }, (_, i) => ({
     id: i,
-    x: Math.random() * (width - 40),
-    delay: Math.random() * 2000,
+    x: Math.random() * (width - 50),
+    delay: Math.random() * 2500,
+    type: i,
   }));
 
   useEffect(() => {
@@ -101,7 +114,7 @@ const AnimatedSplash: React.FC<AnimatedSplashProps> = ({ onFinish }) => {
 
       {/* Pièces qui tombent */}
       {coins.map((coin) => (
-        <FallingCoin key={coin.id} x={coin.x} delay={coin.delay} />
+        <FallingCoin key={coin.id} x={coin.x} delay={coin.delay} type={coin.type} />
       ))}
 
       {/* Contenu principal */}
@@ -122,7 +135,7 @@ const AnimatedSplash: React.FC<AnimatedSplashProps> = ({ onFinish }) => {
           />
         </View>
         <Text style={styles.title}>MoneyManager</Text>
-        <Text style={styles.subtitle}>Gérez vos finances intelligemment</Text>
+        <Text style={styles.subtitle}>Gestion intelligente de vos finances</Text>
       </Animated.View>
     </View>
   );
@@ -184,29 +197,39 @@ const styles = StyleSheet.create({
   // Styles pour les pièces
   coin: {
     position: 'absolute',
-    width: 40,
-    height: 40,
+    width: 50,
+    height: 50,
     zIndex: 1,
   },
   coinInner: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFD700',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#D4AF37',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
-    borderWidth: 2,
-    borderColor: '#FFA500',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 8,
+    borderWidth: 3,
+    borderColor: '#B8860B',
   },
-  coinText: {
-    fontSize: 24,
+  coinCenter: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#DAA520',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#B8860B',
+  },
+  coinSymbol: {
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#FF8C00',
+    color: '#8B7355',
   },
 });
 

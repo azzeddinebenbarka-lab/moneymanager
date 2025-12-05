@@ -1,4 +1,5 @@
 // src/hooks/useDashboard.ts - VERSION CORRIGÉE
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import { pushNotificationService } from '../services/PushNotificationService';
 import { useAccounts } from './useAccounts';
@@ -126,12 +127,27 @@ export const useDashboard = (): DashboardData => {
     analyticsLoading
   ]);
 
-  // Programmer le résumé quotidien à 20h00
+  // Programmer le résumé quotidien à 20h00 - UNE SEULE FOIS PAR JOUR
   useEffect(() => {
     const scheduleDailySummary = async () => {
       if (!analyticsLoading && analytics.cashFlow) {
-        const { income, expenses, netFlow } = analytics.cashFlow;
-        await pushNotificationService.scheduleDailySummary(income, expenses, netFlow);
+        try {
+          // Vérifier la dernière date de programmation
+          const lastScheduled = await AsyncStorage.getItem('last_daily_summary_scheduled');
+          const today = new Date().toDateString();
+          
+          // Programmer uniquement si pas encore fait aujourd'hui
+          if (lastScheduled !== today) {
+            const { income, expenses, netFlow } = analytics.cashFlow;
+            await pushNotificationService.scheduleDailySummary(income, expenses, netFlow);
+            
+            // Enregistrer la date de programmation
+            await AsyncStorage.setItem('last_daily_summary_scheduled', today);
+            console.log('📊 Résumé financier programmé pour 20h00');
+          }
+        } catch (error) {
+          console.error('Erreur lors de la programmation du résumé quotidien:', error);
+        }
       }
     };
 

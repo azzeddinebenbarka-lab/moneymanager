@@ -25,12 +25,11 @@ function Show-Menu {
 }
 
 # Build APK Production
-function Build-ProductionAPK {
+function Invoke-ProductionAPKBuild {
     Write-Info "🚀 Building APK Production..."
     Write-Host ""
     
-    # Demander message de version
-    $version = Read-Host "Version actuelle (ex: 1.0.2)"
+    # Demander message de build
     $message = Read-Host "Message de build"
     
     Write-Info "Lancement du build..."
@@ -55,7 +54,7 @@ function Publish-OTAUpdate {
 }
 
 # Build Preview
-function Build-PreviewAPK {
+function Invoke-PreviewAPKBuild {
     Write-Info "🧪 Building APK Preview..."
     Write-Host ""
     
@@ -73,7 +72,7 @@ function Build-PreviewAPK {
 }
 
 # Build AAB
-function Build-PlayStoreAAB {
+function Invoke-PlayStoreAABBuild {
     Write-Info "📦 Building AAB pour Play Store..."
     Write-Host ""
     
@@ -89,7 +88,7 @@ function Build-PlayStoreAAB {
 }
 
 # Lister les builds
-function List-Builds {
+function Get-BuildsList {
     Write-Info "📋 Liste des builds récents..."
     Write-Host ""
     
@@ -99,7 +98,7 @@ function List-Builds {
 }
 
 # Vérifier les updates
-function Check-Updates {
+function Get-UpdatesList {
     Write-Info "📊 Liste des updates publiés..."
     Write-Host ""
     
@@ -109,7 +108,7 @@ function Check-Updates {
 }
 
 # Setup EAS
-function Setup-EAS {
+function Initialize-EAS {
     Write-Info "🔧 Configuration EAS..."
     Write-Host ""
     
@@ -140,13 +139,13 @@ do {
     $choice = Read-Host "Choisir une option (1-8)"
     
     switch ($choice) {
-        "1" { Build-ProductionAPK }
+        "1" { Invoke-ProductionAPKBuild }
         "2" { Publish-OTAUpdate }
-        "3" { Build-PreviewAPK }
-        "4" { Build-PlayStoreAAB }
-        "5" { List-Builds }
-        "6" { Check-Updates }
-        "7" { Setup-EAS }
+        "3" { Invoke-PreviewAPKBuild }
+        "4" { Invoke-PlayStoreAABBuild }
+        "5" { Get-BuildsList }
+        "6" { Get-UpdatesList }
+        "7" { Initialize-EAS }
         "8" { 
             Write-Success "Au revoir !"
             break

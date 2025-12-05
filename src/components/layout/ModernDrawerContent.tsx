@@ -26,16 +26,6 @@ const ModernDrawerContent = (props: any) => {
           icon: 'speedometer' as const,
           screen: 'Dashboard',
         },
-        {
-          label: 'Vue par Mois',
-          icon: 'calendar' as const,
-          screen: 'MonthsOverviewStack',
-        },
-        {
-          label: t.calendarExpenses,
-          icon: 'calendar-outline' as const,
-          screen: 'Calendar',
-        },
       ],
     },
     {
@@ -45,16 +35,6 @@ const ModernDrawerContent = (props: any) => {
           label: t.transactions,
           icon: 'list' as const,
           screen: 'Transactions',
-        },
-        {
-          label: t.search || 'Rechercher',
-          icon: 'search' as const,
-          screen: 'Search',
-        },
-        {
-          label: t.newTransaction,
-          icon: 'add-circle' as const,
-          screen: 'AddTransaction',
         },
       ],
     },
@@ -110,27 +90,32 @@ const ModernDrawerContent = (props: any) => {
       ],
     }] : []),
     {
-      title: t.reports.toUpperCase(),
+      title: 'VUE PAR MOIS',
       items: [
         {
-          label: t.reports,
-          icon: 'bar-chart' as const,
-          screen: 'Analytics',
-        },
-        {
-          label: t.categoryAnalysis,
-          icon: 'pricetags' as const,
-          screen: 'CategoryAnalysis',
+          label: 'Vue par Mois',
+          icon: 'calendar' as const,
+          screen: 'MonthsOverviewStack',
         },
       ],
     },
     {
-      title: t.alerts?.toUpperCase() || 'ALERTES',
+      title: 'RAPPORTS & ANALYSES',
       items: [
         {
-          label: t.alerts || 'Alertes',
+          label: 'Rapports',
+          icon: 'bar-chart' as const,
+          screen: 'Analytics',
+        },
+      ],
+    },
+    {
+      title: t.notifications?.toUpperCase() || 'NOTIFICATIONS',
+      items: [
+        {
+          label: t.notifications || 'Notifications',
           icon: 'notifications' as const,
-          screen: 'Alerts',
+          screen: 'Notifications',
         },
       ],
     },
@@ -141,16 +126,6 @@ const ModernDrawerContent = (props: any) => {
           label: t.settings,
           icon: 'settings' as const,
           screen: 'Settings',
-        },
-        {
-          label: t.currencies,
-          icon: 'cash' as const,
-          screen: 'CurrencySettings',
-        },
-        {
-          label: t.profile,
-          icon: 'person' as const,
-          screen: 'Profile',
         },
       ],
     },

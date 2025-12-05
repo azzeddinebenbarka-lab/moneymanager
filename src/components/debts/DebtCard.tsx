@@ -31,8 +31,11 @@ export const DebtCard: React.FC<DebtCardProps> = ({
   const eligibility = DebtCalculator.calculatePaymentEligibility(debt);
   const isDueThisMonth = DebtCalculator.isDueThisMonth(debt);
   const isOverdue = DebtCalculator.isDebtOverdue(debt);
+  
+  // ✅ Calcul correct de la progression : montant payé / montant initial
+  const amountPaid = debt.initialAmount - debt.currentAmount;
   const progressPercentage = debt.initialAmount > 0 ? 
-    (debt.currentAmount / debt.initialAmount) * 100 : 0;
+    (amountPaid / debt.initialAmount) * 100 : 0;
 
   const getStatusInfo = () => {
     switch (debt.status) {

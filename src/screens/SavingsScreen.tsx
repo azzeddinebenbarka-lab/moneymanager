@@ -386,7 +386,7 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
         <View style={styles.headerTop}>
           <TouchableOpacity 
             style={styles.menuButton}
-            onPress={() => navigation.openDrawer()}
+            onPress={() => (navigation as any).openDrawer()}
           >
             <Ionicons name="menu" size={24} color={isDark ? "#fff" : "#000"} />
           </TouchableOpacity>

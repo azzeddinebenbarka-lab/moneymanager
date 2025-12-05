@@ -1,4 +1,9 @@
-// src/services/categoryResetService.ts - VERSION AVEC LES 50 NOUVELLES CATÉGORIES
+/**
+ * Service de migration automatique des catégories
+ * Remplace les anciennes catégories par la nouvelle structure au démarrage
+ * Vérifie l'existence des catégories dans la BD plutôt qu'un flag
+ */
+
 import { getDatabase } from './database/sqlite';
 
 // Helper pour créer une catégorie
@@ -24,7 +29,7 @@ const createCategoryRecord = (
   createdAt: new Date().toISOString()
 });
 
-// ✅ LES MÊMES 50 CATÉGORIES QUE categoryMigrationService.ts
+// ✅ NOUVELLE STRUCTURE COMPLÈTE
 const newCategories = [
   // ==============================
   // 1. REVENUS (Catégories principales)
@@ -107,120 +112,110 @@ const newCategories = [
   createCategoryRecord('cat_expense_misc_unexpected', 'Imprévus', 'expense', '#95A5A6', 'warning', 1, 50, 'cat_expense_misc'),
 ];
 
-export const categoryResetService = {
-  // Forcer la réinitialisation complète avec les 50 nouvelles catégories
-  async forceResetCategories(userId: string = 'default-user'): Promise<void> {
-    try {
-      const db = await getDatabase();
-      console.log('🔄 [ResetService] FORCE RESET des catégories vers les 50 nouvelles...');
-
-      // 1. Supprimer TOUTES les catégories existantes
-      await db.runAsync('DELETE FROM categories');
-      console.log('🗑️ [ResetService] Anciennes catégories supprimées');
-
-      // 2. Reset auto-increment
-      try {
-        await db.runAsync('DELETE FROM sqlite_sequence WHERE name="categories"');
-        console.log('🧹 [ResetService] Auto-increment réinitialisé');
-      } catch (e) {
-        console.log('ℹ️  [ResetService] Auto-increment reset non nécessaire');
-      }
-
-      // 3. Insérer les 50 nouvelles catégories
-      console.log(`📝 [ResetService] Insertion de ${newCategories.length} nouvelles catégories...`);
-      
-      for (const category of newCategories) {
-        await db.runAsync(
-          `INSERT OR IGNORE INTO categories (
-            id, name, type, color, icon, parent_id, level, sort_order, is_active, created_at, user_id
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            category.id,
-            category.name,
-            category.type,
-            category.color,
-            category.icon,
-            category.parentId,
-            category.level,
-            category.sortOrder,
-            category.isActive,
-            category.createdAt,
-            userId
-          ]
-        );
-      }
-
-      // 4. Vérification
-      const countResult = await db.getFirstAsync<{ count: number }>(
+/**
+ * Migre automatiquement vers les nouvelles catégories
+ * Vérifie d'abord si des catégories existent déjà
+ * @param force - Si true, réinstalle même si des catégories existent
+ */
+export async function autoMigrateCategories(force: boolean = false): Promise<void> {
+  try {
+    const db = await getDatabase();
+    
+    // Vérifier si des catégories existent déjà (sauf si forcée)
+    if (!force) {
+      const result = await db.getFirstAsync<{ count: number }>(
         'SELECT COUNT(*) as count FROM categories WHERE user_id = ?',
-        [userId]
+        ['default-user']
       );
       
-      console.log(`✅ [ResetService] ${countResult?.count} catégories installées`);
-      console.log('✅ [ResetService] Structure: 11 principales + 39 sous-catégories = 50 total');
-
-    } catch (error) {
-      console.error('❌ [ResetService] Erreur lors du reset forcé:', error);
-      throw error;
+      if (result && result.count > 0) {
+        console.log(`✅ [CategoryMigration] ${result.count} catégories déjà installées - aucune migration nécessaire`);
+        return;
+      }
+      
+      console.log('⚠️  [CategoryMigration] Aucune catégorie trouvée - installation automatique...');
     }
-  },
 
-  // Vérifier la structure de la table
-  async diagnoseCategories(userId: string = 'default-user'): Promise<any> {
+    console.log('🔄 [CategoryMigration] DÉBUT DE LA MIGRATION DÉFINITIVE DES CATÉGORIES' + (force ? ' (FORCÉE)' : ''));
+    
+    // 1️⃣ Supprimer TOUTES les catégories existantes
+    console.log('🗑️  [CategoryMigration] Suppression de toutes les catégories existantes...');
+    await db.runAsync('DELETE FROM categories');
+    
+    // 2️⃣ Réinitialiser l'auto-increment
     try {
-      const db = await getDatabase();
-      
-      // Vérifier la structure de la table
-      const tableInfo = await db.getAllAsync('PRAGMA table_info(categories)');
-      
-      // Compter les catégories par niveau
-      const levelCounts = await db.getAllAsync(`
-        SELECT level, COUNT(*) as count 
-        FROM categories 
-        WHERE user_id = ? 
-        GROUP BY level 
-        ORDER BY level
-      `, [userId]);
-
-      // Compter par type
-      const typeCounts = await db.getAllAsync(`
-        SELECT type, COUNT(*) as count 
-        FROM categories 
-        WHERE user_id = ? 
-        GROUP BY type
-      `, [userId]);
-
-      // Vérifier les doublons d'ID
-      const duplicateIds = await db.getAllAsync(`
-        SELECT id, COUNT(*) as count 
-        FROM categories 
-        WHERE user_id = ? 
-        GROUP BY id 
-        HAVING COUNT(*) > 1
-      `, [userId]);
-
-      // Afficher quelques exemples
-      const sampleCategories = await db.getAllAsync(`
-        SELECT id, name, type, level, parent_id 
-        FROM categories 
-        WHERE user_id = ? 
-        ORDER BY level, name 
-        LIMIT 10
-      `, [userId]);
-
-      return {
-        tableStructure: tableInfo,
-        levelCounts,
-        typeCounts,
-        duplicateIds,
-        totalCategories: levelCounts.reduce((acc, item: any) => acc + item.count, 0),
-        sampleCategories
-      };
-    } catch (error) {
-      console.error('❌ Erreur diagnostic:', error);
-      throw error;
+      await db.runAsync('DELETE FROM sqlite_sequence WHERE name="categories"');
+      console.log('🧹 [CategoryMigration] Auto-increment réinitialisé');
+    } catch (e) {
+      console.log('ℹ️  [CategoryMigration] Auto-increment reset non nécessaire');
     }
+    
+    // 3️⃣ Insérer les nouvelles catégories
+    console.log(`📝 [CategoryMigration] Insertion de ${newCategories.length} nouvelles catégories...`);
+    
+    for (const category of newCategories) {
+      await db.runAsync(
+        `INSERT OR IGNORE INTO categories (
+          id, name, type, color, icon, parent_id, level, sort_order, is_active, created_at, user_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          category.id,
+          category.name,
+          category.type,
+          category.color,
+          category.icon,
+          category.parentId,
+          category.level,
+          category.sortOrder,
+          category.isActive,
+          category.createdAt,
+          'default-user'
+        ]
+      );
+    }
+    
+    // 4️⃣ Vérification
+    const result = await db.getFirstAsync<{ count: number }>(
+      'SELECT COUNT(*) as count FROM categories'
+    );
+    
+    console.log(`✅ [CategoryMigration] ${result?.count} catégories insérées`);
+    console.log('✅ [CategoryMigration] STRUCTURE DÉFINITIVE:');
+    console.log('   - Revenus: 2 catégories principales + 5 sous-catégories');
+    console.log('   - Dépenses: 9 catégories principales + 34 sous-catégories');
+    console.log('   - TOTAL: 11 principales + 39 sous-catégories = 50 catégories');
+    console.log('🗑️  [CategoryMigration] Anciennes catégories DÉFINITIVEMENT SUPPRIMÉES de la BD');
+    console.log('✅ [CategoryMigration] Migration terminée avec succès');
+    
+  } catch (error) {
+    console.error('❌ [CategoryMigration] Erreur lors de la migration:', error);
+    // Ne pas bloquer l'app en cas d'erreur
   }
-};
+}
 
-export default categoryResetService;
+/**
+ * Force la migration (pour les tests ou réinitialisation manuelle)
+ * Supprime toutes les catégories et les réinstalle
+ */
+export async function forceMigrateCategories(): Promise<void> {
+  console.log('🔄 [CategoryMigration] FORÇAGE de la migration - réinstallation complète');
+  // Passer force=true pour forcer la réinstallation
+  await autoMigrateCategories(true);
+}
+
+/**
+ * Vérifie si des catégories existent dans la base de données
+ */
+export async function isMigrationCompleted(): Promise<boolean> {
+  try {
+    const db = await getDatabase();
+    const result = await db.getFirstAsync<{ count: number }>(
+      'SELECT COUNT(*) as count FROM categories WHERE user_id = ?',
+      ['default-user']
+    );
+    return (result?.count ?? 0) > 0;
+  } catch (error) {
+    console.error('❌ [CategoryMigration] Erreur vérification catégories:', error);
+    return false;
+  }
+}

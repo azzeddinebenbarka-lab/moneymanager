@@ -5,15 +5,12 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { StyleSheet, View } from 'react-native';
 import ModernDrawerContent from '../components/layout/ModernDrawerContent';
 import { useTheme } from '../context/ThemeContext';
-import { DesignSystemDemo } from '../design/DesignSystemDemo';
 
 // Import des écrans
 import AccountDetailScreen from '../screens/AccountDetailScreen';
 import AccountsScreen from '../screens/AccountsScreen';
 import AddAnnualChargeScreen from '../screens/AddAnnualChargeScreen';
-import AddMultipleCategoriesScreen from '../screens/AddMultipleCategoriesScreen';
 import AddTransactionScreen from '../screens/AddTransactionScreen';
-import AlertsScreen from '../screens/AlertsScreen';
 import AnalyticsDashboardScreen from '../screens/AnalyticsDashboardScreen';
 import AnnualChargesScreen from '../screens/AnnualChargesScreen';
 import BudgetsScreen from '../screens/BudgetsScreen';
@@ -24,7 +21,6 @@ import DashboardScreen from '../screens/DashboardScreen';
 import EditAnnualChargeScreen from '../screens/EditAnnualChargeScreen';
 import EditBudgetScreen from '../screens/EditBudgetScreen';
 import EditTransactionScreen from '../screens/EditTransactionScreen';
-import FinancialCalendarScreen from '../screens/FinancialCalendarScreen';
 import MonthDetailScreen from '../screens/MonthDetailScreen';
 import MonthsOverviewScreen from '../screens/MonthsOverviewScreen';
 import NotificationSettingsScreen from '../screens/NotificationSettingsScreen';
@@ -37,11 +33,11 @@ import SettingsScreen from '../screens/SettingsScreen';
 import AboutScreen from '../screens/AboutScreen';
 import BackupScreen from '../screens/BackupScreen';
 import GeneralSettingsScreen from '../screens/GeneralSettingsScreen';
-import SearchScreen from '../screens/SearchScreen';
 import SecuritySettingsScreen from '../screens/SecuritySettingsScreen';
 import TransactionDetailScreen from '../screens/TransactionDetailScreen';
 import TransactionsScreen from '../screens/TransactionsScreen';
 import TransferScreen from '../screens/TransferScreen';
+import BottomTabNavigator from './BottomTabNavigator';
 import DebtStackNavigator from './DebtStackNavigator';
 import SavingsStackNavigator from './SavingsStackNavigator';
 
@@ -146,7 +142,6 @@ const CategoriesStack = () => (
     screenOptions={{ headerShown: false }}
   >
     <Stack.Screen name="CategoriesList" component={CategoriesScreen} />
-    <Stack.Screen name="AddMultipleCategories" component={AddMultipleCategoriesScreen} />
   </Stack.Navigator>
 );
 
@@ -255,7 +250,7 @@ const ModernDrawerNavigator = () => {
       {/* SECTION PRINCIPALE */}
       <Drawer.Screen
         name="Dashboard"
-        component={DashboardStack}
+        component={BottomTabNavigator}
         options={{
           drawerIcon: ({ color, size }) => (
             <View style={[styles.iconContainer, { backgroundColor: '#007AFF' }]}>
@@ -263,47 +258,6 @@ const ModernDrawerNavigator = () => {
             </View>
           ),
           drawerLabel: "Tableau de Bord",
-        }}
-      />
-
-      <Drawer.Screen
-  name="DesignSystemDemo"
-  component={DesignSystemDemo}
-  options={{
-    drawerIcon: ({ color, size }) => (
-      <View style={[styles.iconContainer, { backgroundColor: '#8B5CF6' }]}>
-        <Ionicons name="color-palette" size={size-2} color="#FFFFFF" />
-      </View>
-    ),
-    drawerLabel: "Design System Demo",
-  }}
-/>
-
-      {/* ✅ CORRECTION : Vue par Mois avec nom unique */}
-      <Drawer.Screen
-        name="MonthsOverviewStack"
-        component={MonthsStack}
-        options={{
-          drawerIcon: ({ color, size }) => (
-            <View style={[styles.iconContainer, { backgroundColor: '#8B5CF6' }]}>
-              <Ionicons name="calendar" size={size-2} color="#FFFFFF" />
-            </View>
-          ),
-          drawerLabel: "Vue par Mois",
-        }}
-      />
-
-      {/* Calendrier Financier */}
-      <Drawer.Screen
-        name="Calendar"
-        component={FinancialCalendarScreen}
-        options={{
-          drawerIcon: ({ color, size }) => (
-            <View style={[styles.iconContainer, { backgroundColor: '#8E44AD' }]}>
-              <MaterialIcons name="calendar-today" size={size-2} color="#FFFFFF" />
-            </View>
-          ),
-          drawerLabel: "Calendrier Financier",
         }}
       />
 
@@ -402,8 +356,21 @@ const ModernDrawerNavigator = () => {
         }}
       />
 
+      {/* SECTION VUE PAR MOIS */}
+      <Drawer.Screen
+        name="MonthsOverviewStack"
+        component={MonthsStack}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <View style={[styles.iconContainer, { backgroundColor: '#8B5CF6' }]}>
+              <Ionicons name="calendar" size={size-2} color="#FFFFFF" />
+            </View>
+          ),
+          drawerLabel: "Vue par Mois",
+        }}
+      />
 
-      {/* SECTION ANALYTICS */}
+      {/* SECTION RAPPORTS & ANALYSES */}
       <Drawer.Screen
         name="Analytics"
         component={AnalyticsStack}
@@ -413,38 +380,11 @@ const ModernDrawerNavigator = () => {
               <Ionicons name="bar-chart" size={size-2} color="#FFFFFF" />
             </View>
           ),
-          drawerLabel: "Analytics & Rapports",
+          drawerLabel: "Rapports & Analyses",
         }}
       />
 
-      {/* New screen: Search */}
-      <Drawer.Screen
-        name="Search"
-        component={SearchScreen}
-        options={{
-          drawerIcon: ({ color, size }) => (
-            <View style={[styles.iconContainer, { backgroundColor: '#34C759' }]}>
-              <Ionicons name="search" size={size-2} color="#FFFFFF" />
-            </View>
-          ),
-          drawerLabel: "Rechercher",
-        }}
-      />
-
-      {/* SECTION ALERTES & NOTIFICATIONS */}
-      <Drawer.Screen
-        name="Alerts"
-        component={AlertsScreen}
-        options={{
-          drawerIcon: ({ color, size }) => (
-            <View style={[styles.iconContainer, { backgroundColor: '#FFD60A' }]}>
-              <Ionicons name="alert-circle" size={size-2} color="#000000" />
-            </View>
-          ),
-          drawerLabel: "Alertes Intelligentes",
-        }}
-      />
-      
+      {/* SECTION NOTIFICATIONS */}
       <Drawer.Screen
         name="Notifications"
         component={NotificationsScreen}
@@ -472,20 +412,6 @@ const ModernDrawerNavigator = () => {
         }}
       />
 
-      {/* PROFIL */}
-      <Drawer.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          drawerIcon: ({ color, size }) => (
-            <View style={[styles.iconContainer, { backgroundColor: '#5AC8FA' }]}>
-              <Ionicons name="person" size={size-2} color="#FFFFFF" />
-            </View>
-          ),
-          drawerLabel: "Mon Profil",
-        }}
-      />
-
       {/* ÉCRANS CACHÉS DU DRAWER */}
       <Drawer.Screen 
         name="AddTransaction" 
@@ -493,20 +419,6 @@ const ModernDrawerNavigator = () => {
         options={{
           drawerLabel: "Nouvelle Transaction",
           drawerItemStyle: { display: 'none' }
-        }}
-      />
-
-      <Drawer.Screen 
-        name="AddMultipleCategories" 
-        component={AddMultipleCategoriesScreen}
-        options={{ 
-          title: 'Ajout Multiple Catégories',
-          drawerIcon: ({ color, size }) => (
-            <View style={[styles.iconContainer, { backgroundColor: '#FF6B35' }]}>
-              <Ionicons name="layers" size={size-2} color="#FFFFFF" />
-            </View>
-          ),
-          drawerLabel: "Ajout Multiple",
         }}
       />
 

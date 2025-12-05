@@ -32,130 +32,87 @@ const createCategoryRecord = (
   createdAt: new Date().toISOString()
 });
 
-// 🔄 NOUVELLE STRUCTURE DE CATÉGORIES SELON VOS DEMANDES
-const mainIncomeCategories: Category[] = [
-  // ✅ 1. REVENUS (3 catégories)
-  createCategoryRecord('cat_main_salary', '💼 Salaire', 'income', '#52C41A', 'briefcase', 0, 1),
-  createCategoryRecord('cat_main_secondary_income', '📈 Revenus secondaires', 'income', '#52C41A', 'trending-up', 0, 2),
-  createCategoryRecord('cat_main_family_income', '👨‍👩‍👧‍👦 Revenus familiaux', 'income', '#52C41A', 'people', 0, 3),
-];
-
-const mainExpenseCategories: Category[] = [
-  // ✅ 2. DÉPENSES MENSUELLES (9 catégories)
-  createCategoryRecord('cat_main_housing', '🏠 Logement & Charges', 'expense', '#45B7D1', 'home', 0, 4),
-  createCategoryRecord('cat_main_food', '🛒 Nourriture & Courses', 'expense', '#FFA940', 'restaurant', 0, 5),
-  createCategoryRecord('cat_main_transport', '🚗 Transport & Voiture', 'expense', '#FA8C16', 'car', 0, 6),
-  createCategoryRecord('cat_main_health', '💊 Santé', 'expense', '#FF4D4F', 'medical', 0, 7),
-  createCategoryRecord('cat_main_child', '👶 Enfant', 'expense', '#FF85C0', 'happy', 0, 8),
-  createCategoryRecord('cat_main_subscriptions', '📱 Abonnements', 'expense', '#722ED1', 'phone-portrait', 0, 9),
-  createCategoryRecord('cat_main_personal', '👤 Dépenses personnelles', 'expense', '#13C2C2', 'person', 0, 10),
-  createCategoryRecord('cat_main_house', '🏡 Maison', 'expense', '#96CEB4', 'hammer', 0, 11),
-  createCategoryRecord('cat_main_misc', '🎁 Divers & imprévus', 'expense', '#95A5A6', 'gift', 0, 12),
-];
-
-const annualExpenseCategories: Category[] = [
-  // ✅ 3. CHARGES ANNUELLES (8 catégories)  
-  createCategoryRecord('cat_annual_car_insurance', '🛡️ Assurance voiture', 'expense', '#1890FF', 'shield', 0, 13),
-  createCategoryRecord('cat_annual_car_sticker', '🏷️ Vignette voiture', 'expense', '#1890FF', 'pricetag', 0, 14),
-  createCategoryRecord('cat_annual_car_inspection', '🔧 Visite technique', 'expense', '#1890FF', 'build', 0, 15),
-  createCategoryRecord('cat_annual_taxes', '🏛️ Impôts/taxes', 'expense', '#1890FF', 'business', 0, 16),
-  createCategoryRecord('cat_annual_ramadan', '🌙 Ramadan', 'expense', '#1890FF', 'moon', 0, 17),
-  createCategoryRecord('cat_annual_eid', '🎉 Aïd Al Adha', 'expense', '#1890FF', 'star', 0, 18),
-  createCategoryRecord('cat_annual_school', '🎒 Rentrée scolaire', 'expense', '#1890FF', 'school', 0, 19),
-  createCategoryRecord('cat_annual_vacation', '✈️ Voyages/vacances', 'expense', '#1890FF', 'airplane', 0, 20),
-];
-
-// 🔄 SOUS-CATÉGORIES DÉTAILLÉES SELON VOS DEMANDES
-const subcategories: Category[] = [
-  // 💼 Salaire
-  createCategoryRecord('cat_sub_base_salary', 'Salaire de base', 'income', '#52C41A', 'card', 1, 21, 'cat_main_salary'),
-  createCategoryRecord('cat_sub_overtime', 'Heures supplémentaires', 'income', '#52C41A', 'time', 1, 22, 'cat_main_salary'),
-  createCategoryRecord('cat_sub_bonus', 'Prime/bonus', 'income', '#52C41A', 'trophy', 1, 23, 'cat_main_salary'),
-  createCategoryRecord('cat_sub_allowances', 'Indemnités', 'income', '#52C41A', 'receipt', 1, 24, 'cat_main_salary'),
-
-  // 📈 Revenus secondaires
-  createCategoryRecord('cat_sub_freelance', 'Freelance/consulting', 'income', '#52C41A', 'laptop', 1, 25, 'cat_main_secondary_income'),
-  createCategoryRecord('cat_sub_rental', 'Revenus locatifs', 'income', '#52C41A', 'key', 1, 26, 'cat_main_secondary_income'),
-  createCategoryRecord('cat_sub_investments', 'Investissements', 'income', '#52C41A', 'trending-up', 1, 27, 'cat_main_secondary_income'),
-  createCategoryRecord('cat_sub_side_business', 'Activité secondaire', 'income', '#52C41A', 'storefront', 1, 28, 'cat_main_secondary_income'),
-
-  // 👨‍👩‍👧‍👦 Revenus familiaux
-  createCategoryRecord('cat_sub_family_allowance', 'Allocations familiales', 'income', '#52C41A', 'people', 1, 29, 'cat_main_family_income'),
-  createCategoryRecord('cat_sub_child_support', 'Pension alimentaire', 'income', '#52C41A', 'heart', 1, 30, 'cat_main_family_income'),
-  createCategoryRecord('cat_sub_family_help', 'Aide familiale', 'income', '#52C41A', 'hand-right', 1, 31, 'cat_main_family_income'),
-
-  // 🏠 Logement & Charges
-  createCategoryRecord('cat_sub_rent', 'Loyer/hypothèque', 'expense', '#45B7D1', 'home', 1, 32, 'cat_main_housing'),
-  createCategoryRecord('cat_sub_charges', 'Charges de copropriété', 'expense', '#45B7D1', 'document', 1, 33, 'cat_main_housing'),
-  createCategoryRecord('cat_sub_electricity', 'Électricité', 'expense', '#45B7D1', 'flash', 1, 34, 'cat_main_housing'),
-  createCategoryRecord('cat_sub_water', 'Eau', 'expense', '#45B7D1', 'water', 1, 35, 'cat_main_housing'),
-  createCategoryRecord('cat_sub_gas', 'Gaz', 'expense', '#45B7D1', 'flame', 1, 36, 'cat_main_housing'),
-  createCategoryRecord('cat_sub_internet', 'Internet / Wi-Fi', 'expense', '#45B7D1', 'wifi', 1, 37, 'cat_main_housing'),
-  createCategoryRecord('cat_sub_phone_home', 'Téléphone fixe', 'expense', '#45B7D1', 'call', 1, 38, 'cat_main_housing'),
-  createCategoryRecord('cat_sub_maintenance', 'Entretien/réparations', 'expense', '#45B7D1', 'build', 1, 39, 'cat_main_housing'),
-  createCategoryRecord('cat_sub_housing_insurance', 'Assurance habitation', 'expense', '#45B7D1', 'shield', 1, 40, 'cat_main_housing'),
-
-  // 🛒 Nourriture & Courses
-  createCategoryRecord('cat_sub_groceries', 'Courses alimentaires', 'expense', '#FFA940', 'basket', 1, 41, 'cat_main_food'),
-  createCategoryRecord('cat_sub_restaurants', 'Restaurants', 'expense', '#FFA940', 'restaurant', 1, 42, 'cat_main_food'),
-  createCategoryRecord('cat_sub_takeaway', 'Plats à emporter', 'expense', '#FFA940', 'bag', 1, 43, 'cat_main_food'),
-  createCategoryRecord('cat_sub_coffee_snacks', 'Café/snacks', 'expense', '#FFA940', 'cafe', 1, 44, 'cat_main_food'),
-
-  // 🚗 Transport & Voiture
-  createCategoryRecord('cat_sub_fuel', 'Carburant', 'expense', '#FA8C16', 'car', 1, 45, 'cat_main_transport'),
-  createCategoryRecord('cat_sub_car_maintenance', 'Entretien voiture', 'expense', '#FA8C16', 'build', 1, 46, 'cat_main_transport'),
-  createCategoryRecord('cat_sub_parking', 'Parking/stationnement', 'expense', '#FA8C16', 'car-sport', 1, 47, 'cat_main_transport'),
-  createCategoryRecord('cat_sub_public_transport', 'Transport public', 'expense', '#FA8C16', 'bus', 1, 48, 'cat_main_transport'),
-  createCategoryRecord('cat_sub_taxi_uber', 'Taxi/Uber', 'expense', '#FA8C16', 'speedometer', 1, 49, 'cat_main_transport'),
-
-  // 💊 Santé
-  createCategoryRecord('cat_sub_doctor', 'Médecin/consultations', 'expense', '#FF4D4F', 'medical', 1, 50, 'cat_main_health'),
-  createCategoryRecord('cat_sub_pharmacy', 'Pharmacie/médicaments', 'expense', '#FF4D4F', 'medkit', 1, 51, 'cat_main_health'),
-  createCategoryRecord('cat_sub_dentist', 'Dentiste', 'expense', '#FF4D4F', 'heart', 1, 52, 'cat_main_health'),
-  createCategoryRecord('cat_sub_lab_tests', 'Analyses/examens', 'expense', '#FF4D4F', 'flask', 1, 53, 'cat_main_health'),
-  createCategoryRecord('cat_sub_health_insurance', 'Mutuelle santé', 'expense', '#FF4D4F', 'shield', 1, 54, 'cat_main_health'),
-
-  // 👶 Enfant
-  createCategoryRecord('cat_sub_childcare', 'Garde d\'enfant/crèche', 'expense', '#FF85C0', 'happy', 1, 55, 'cat_main_child'),
-  createCategoryRecord('cat_sub_school_supplies', 'Fournitures scolaires', 'expense', '#FF85C0', 'school', 1, 56, 'cat_main_child'),
-  createCategoryRecord('cat_sub_child_clothes', 'Vêtements enfant', 'expense', '#FF85C0', 'shirt', 1, 57, 'cat_main_child'),
-  createCategoryRecord('cat_sub_toys_games', 'Jouets/jeux', 'expense', '#FF85C0', 'game-controller', 1, 58, 'cat_main_child'),
-  createCategoryRecord('cat_sub_child_activities', 'Activités enfant', 'expense', '#FF85C0', 'football', 1, 59, 'cat_main_child'),
-
-  // 📱 Abonnements
-  createCategoryRecord('cat_sub_phone_mobile', 'Téléphone mobile', 'expense', '#722ED1', 'phone-portrait', 1, 60, 'cat_main_subscriptions'),
-  createCategoryRecord('cat_sub_streaming', 'Streaming (Netflix, etc.)', 'expense', '#722ED1', 'tv', 1, 61, 'cat_main_subscriptions'),
-  createCategoryRecord('cat_sub_gym', 'Salle de sport', 'expense', '#722ED1', 'fitness', 1, 62, 'cat_main_subscriptions'),
-  createCategoryRecord('cat_sub_magazines', 'Magazines/journaux', 'expense', '#722ED1', 'newspaper', 1, 63, 'cat_main_subscriptions'),
-  createCategoryRecord('cat_sub_software', 'Logiciels/applications', 'expense', '#722ED1', 'apps', 1, 64, 'cat_main_subscriptions'),
-
-  // 👤 Dépenses personnelles
-  createCategoryRecord('cat_sub_clothing', 'Vêtements', 'expense', '#13C2C2', 'shirt', 1, 65, 'cat_main_personal'),
-  createCategoryRecord('cat_sub_beauty', 'Beauté/cosmétiques', 'expense', '#13C2C2', 'sparkles', 1, 66, 'cat_main_personal'),
-  createCategoryRecord('cat_sub_haircut', 'Coiffeur', 'expense', '#13C2C2', 'cut', 1, 67, 'cat_main_personal'),
-  createCategoryRecord('cat_sub_personal_care', 'Soins personnels', 'expense', '#13C2C2', 'heart', 1, 68, 'cat_main_personal'),
-  createCategoryRecord('cat_sub_hobbies', 'Loisirs/hobbies', 'expense', '#13C2C2', 'game-controller', 1, 69, 'cat_main_personal'),
-
-  // 🏡 Maison
-  createCategoryRecord('cat_sub_furniture', 'Meubles', 'expense', '#96CEB4', 'bed', 1, 70, 'cat_main_house'),
-  createCategoryRecord('cat_sub_appliances', 'Électroménager', 'expense', '#96CEB4', 'desktop', 1, 71, 'cat_main_house'),
-  createCategoryRecord('cat_sub_decoration', 'Décoration', 'expense', '#96CEB4', 'flower', 1, 72, 'cat_main_house'),
-  createCategoryRecord('cat_sub_cleaning', 'Produits ménagers', 'expense', '#96CEB4', 'sparkles', 1, 73, 'cat_main_house'),
-  createCategoryRecord('cat_sub_tools', 'Outils/bricolage', 'expense', '#96CEB4', 'construct', 1, 74, 'cat_main_house'),
-
-  // 🎁 Divers & imprévus
-  createCategoryRecord('cat_sub_gifts', 'Cadeaux', 'expense', '#95A5A6', 'gift', 1, 75, 'cat_main_misc'),
-  createCategoryRecord('cat_sub_donations', 'Dons/charité', 'expense', '#95A5A6', 'heart', 1, 76, 'cat_main_misc'),
-  createCategoryRecord('cat_sub_bank_fees', 'Frais bancaires', 'expense', '#95A5A6', 'card', 1, 77, 'cat_main_misc'),
-  createCategoryRecord('cat_sub_unexpected', 'Imprévus', 'expense', '#95A5A6', 'warning', 1, 78, 'cat_main_misc'),
-];
-
-// 🔄 ASSEMBLAGE DE TOUTES LES CATÉGORIES
+// ✅ LES 50 NOUVELLES CATÉGORIES DÉFINITIVES (celles que tu as demandées)
 const allCategories: Category[] = [
-  ...mainIncomeCategories,
-  ...mainExpenseCategories,
-  ...annualExpenseCategories,
-  ...subcategories
+  // ==============================
+  // 1. REVENUS (Catégories principales)
+  // ==============================
+  createCategoryRecord('cat_income_salary', '💼 Salaire', 'income', '#52C41A', 'briefcase', 0, 1),
+  createCategoryRecord('cat_income_secondary', '📈 Revenus secondaires', 'income', '#52C41A', 'trending-up', 0, 2),
+
+  // Sous-catégories Salaire
+  createCategoryRecord('cat_income_salary_net', 'Salaire net', 'income', '#52C41A', 'cash', 1, 3, 'cat_income_salary'),
+  createCategoryRecord('cat_income_salary_bonus', 'Primes / heures sup', 'income', '#52C41A', 'trophy', 1, 4, 'cat_income_salary'),
+
+  // Sous-catégories Revenus secondaires
+  createCategoryRecord('cat_income_freelance', 'Freelance', 'income', '#52C41A', 'laptop', 1, 5, 'cat_income_secondary'),
+  createCategoryRecord('cat_income_commerce', 'Commerce / ventes', 'income', '#52C41A', 'storefront', 1, 6, 'cat_income_secondary'),
+  createCategoryRecord('cat_income_commissions', 'Commissions', 'income', '#52C41A', 'trending-up', 1, 7, 'cat_income_secondary'),
+
+  // ==============================
+  // 2. DÉPENSES MENSUELLES (Catégories principales)
+  // ==============================
+  createCategoryRecord('cat_expense_housing', '🏠 Logement & Charges', 'expense', '#45B7D1', 'home', 0, 8),
+  createCategoryRecord('cat_expense_food', '🛒 Nourriture & Courses (T9edya)', 'expense', '#FFA940', 'cart', 0, 9),
+  createCategoryRecord('cat_expense_transport', '🚗 Transport & Voiture', 'expense', '#FA8C16', 'car', 0, 10),
+  createCategoryRecord('cat_expense_health', '💊 Santé', 'expense', '#FF4D4F', 'medical', 0, 11),
+  createCategoryRecord('cat_expense_child', '👶 Enfant', 'expense', '#FF85C0', 'happy', 0, 12),
+  createCategoryRecord('cat_expense_subscriptions', '📱 Abonnements', 'expense', '#722ED1', 'phone-portrait', 0, 13),
+  createCategoryRecord('cat_expense_personal', '👤 Dépenses personnelles', 'expense', '#13C2C2', 'person', 0, 14),
+  createCategoryRecord('cat_expense_house', '🏡 Maison', 'expense', '#96CEB4', 'hammer', 0, 15),
+  createCategoryRecord('cat_expense_misc', '🎁 Divers & imprévus', 'expense', '#95A5A6', 'gift', 0, 16),
+
+  // Sous-catégories Logement & Charges
+  createCategoryRecord('cat_expense_housing_rent', 'Loyer / Crédit maison', 'expense', '#45B7D1', 'home', 1, 17, 'cat_expense_housing'),
+  createCategoryRecord('cat_expense_housing_electricity', 'Électricité', 'expense', '#45B7D1', 'flash', 1, 18, 'cat_expense_housing'),
+  createCategoryRecord('cat_expense_housing_water', 'Eau', 'expense', '#45B7D1', 'water', 1, 19, 'cat_expense_housing'),
+  createCategoryRecord('cat_expense_housing_internet', 'Wifi / Internet', 'expense', '#45B7D1', 'wifi', 1, 20, 'cat_expense_housing'),
+  createCategoryRecord('cat_expense_housing_syndic', 'Syndic', 'expense', '#45B7D1', 'document', 1, 21, 'cat_expense_housing'),
+
+  // Sous-catégories Nourriture & Courses
+  createCategoryRecord('cat_expense_food_groceries', 'Épicerie', 'expense', '#FFA940', 'basket', 1, 22, 'cat_expense_food'),
+  createCategoryRecord('cat_expense_food_vegetables', 'Légumes / fruits', 'expense', '#FFA940', 'nutrition', 1, 23, 'cat_expense_food'),
+  createCategoryRecord('cat_expense_food_meat', 'Viande / poisson', 'expense', '#FFA940', 'fish', 1, 24, 'cat_expense_food'),
+  createCategoryRecord('cat_expense_food_cleaning', 'Produits ménagers', 'expense', '#FFA940', 'sparkles', 1, 25, 'cat_expense_food'),
+
+  // Sous-catégories Transport & Voiture
+  createCategoryRecord('cat_expense_transport_fuel', 'Carburant', 'expense', '#FA8C16', 'speedometer', 1, 26, 'cat_expense_transport'),
+  createCategoryRecord('cat_expense_transport_maintenance', 'Entretien', 'expense', '#FA8C16', 'build', 1, 27, 'cat_expense_transport'),
+  createCategoryRecord('cat_expense_transport_insurance', 'Assurance', 'expense', '#FA8C16', 'shield', 1, 28, 'cat_expense_transport'),
+  createCategoryRecord('cat_expense_transport_wash', 'Lavage', 'expense', '#FA8C16', 'water', 1, 29, 'cat_expense_transport'),
+  createCategoryRecord('cat_expense_transport_parking', 'Parking', 'expense', '#FA8C16', 'car-sport', 1, 30, 'cat_expense_transport'),
+
+  // Sous-catégories Santé
+  createCategoryRecord('cat_expense_health_pharmacy', 'Pharmacie', 'expense', '#FF4D4F', 'medkit', 1, 31, 'cat_expense_health'),
+  createCategoryRecord('cat_expense_health_consultation', 'Analyse / consultation', 'expense', '#FF4D4F', 'medical', 1, 32, 'cat_expense_health'),
+  createCategoryRecord('cat_expense_health_insurance', 'Assurance maladie', 'expense', '#FF4D4F', 'shield', 1, 33, 'cat_expense_health'),
+
+  // Sous-catégories Enfant
+  createCategoryRecord('cat_expense_child_food', 'Nourriture', 'expense', '#FF85C0', 'restaurant', 1, 34, 'cat_expense_child'),
+  createCategoryRecord('cat_expense_child_hygiene', 'Hygiène', 'expense', '#FF85C0', 'sparkles', 1, 35, 'cat_expense_child'),
+  createCategoryRecord('cat_expense_child_school', 'École / crèche', 'expense', '#FF85C0', 'school', 1, 36, 'cat_expense_child'),
+  createCategoryRecord('cat_expense_child_leisure', 'Loisirs', 'expense', '#FF85C0', 'game-controller', 1, 37, 'cat_expense_child'),
+
+  // Sous-catégories Abonnements
+  createCategoryRecord('cat_expense_subscriptions_phone', 'Téléphone', 'expense', '#722ED1', 'call', 1, 38, 'cat_expense_subscriptions'),
+  createCategoryRecord('cat_expense_subscriptions_apps', 'Applications', 'expense', '#722ED1', 'apps', 1, 39, 'cat_expense_subscriptions'),
+  createCategoryRecord('cat_expense_subscriptions_streaming', 'Streaming', 'expense', '#722ED1', 'tv', 1, 40, 'cat_expense_subscriptions'),
+
+  // Sous-catégories Dépenses personnelles
+  createCategoryRecord('cat_expense_personal_clothes', 'Vêtements', 'expense', '#13C2C2', 'shirt', 1, 41, 'cat_expense_personal'),
+  createCategoryRecord('cat_expense_personal_haircut', 'Coiffure', 'expense', '#13C2C2', 'cut', 1, 42, 'cat_expense_personal'),
+  createCategoryRecord('cat_expense_personal_perfume', 'Parfums', 'expense', '#13C2C2', 'sparkles', 1, 43, 'cat_expense_personal'),
+  createCategoryRecord('cat_expense_personal_outings', 'Sorties', 'expense', '#13C2C2', 'walk', 1, 44, 'cat_expense_personal'),
+
+  // Sous-catégories Maison
+  createCategoryRecord('cat_expense_house_kitchen', 'Cuisine / accessoires', 'expense', '#96CEB4', 'restaurant', 1, 45, 'cat_expense_house'),
+  createCategoryRecord('cat_expense_house_decoration', 'Décoration', 'expense', '#96CEB4', 'flower', 1, 46, 'cat_expense_house'),
+  createCategoryRecord('cat_expense_house_tools', 'Outils / bricolage', 'expense', '#96CEB4', 'construct', 1, 47, 'cat_expense_house'),
+
+  // Sous-catégories Divers & imprévus
+  createCategoryRecord('cat_expense_misc_gifts', 'Cadeaux', 'expense', '#95A5A6', 'gift', 1, 48, 'cat_expense_misc'),
+  createCategoryRecord('cat_expense_misc_family_help', 'Aides familiales', 'expense', '#95A5A6', 'people', 1, 49, 'cat_expense_misc'),
+  createCategoryRecord('cat_expense_misc_unexpected', 'Imprévus', 'expense', '#95A5A6', 'warning', 1, 50, 'cat_expense_misc'),
 ];
 
 // 🔄 SERVICE DE GESTION DES CATÉGORIES
@@ -206,7 +163,7 @@ export const categoryService = {
           const cat = allCategories.find(c => c.id === id);
           if (!cat) continue;
           await db.runAsync(`
-            INSERT INTO categories (
+            INSERT OR IGNORE INTO categories (
               id, user_id, name, type, color, icon, parent_id, level, sort_order, is_active
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `, [
@@ -245,7 +202,7 @@ export const categoryService = {
       // Insérer toutes les nouvelles catégories
       for (const category of allCategories) {
         await db.runAsync(`
-          INSERT INTO categories (
+          INSERT OR IGNORE INTO categories (
             id, user_id, name, type, color, icon, parent_id, level, sort_order, is_active
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
@@ -264,11 +221,8 @@ export const categoryService = {
 
       await db.runAsync('COMMIT');
       
-      console.log(`✅ [categoryService] NOUVELLES catégories installées: ${allCategories.length} categories`);
-      console.log(`✅ [categoryService] - ${mainIncomeCategories.length} catégories de revenus`);
-      console.log(`✅ [categoryService] - ${mainExpenseCategories.length} catégories de dépenses mensuelles`);
-      console.log(`✅ [categoryService] - ${annualExpenseCategories.length} catégories de charges annuelles`);
-      console.log(`✅ [categoryService] - ${subcategories.length} sous-catégories`);
+      console.log(`✅ [categoryService] NOUVELLES catégories installées: ${allCategories.length} catégories`);
+      console.log(`✅ [categoryService] Structure: 11 catégories principales + 39 sous-catégories`);
       
     } catch (error) {
       const db = await getDatabase();
@@ -312,7 +266,7 @@ export const categoryService = {
       
       for (const category of allCategories) {
         await db.runAsync(`
-          INSERT INTO categories (
+          INSERT OR IGNORE INTO categories (
             id, user_id, name, type, color, icon, parent_id, level, sort_order, is_active
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
@@ -333,10 +287,7 @@ export const categoryService = {
       
       console.log(`✅ [categoryService] RÉINITIALISATION COMPLÈTE TERMINÉE!`);
       console.log(`✅ [categoryService] ${allCategories.length} nouvelles catégories installées`);
-      console.log(`✅ [categoryService] - ${mainIncomeCategories.length} catégories de revenus`);
-      console.log(`✅ [categoryService] - ${mainExpenseCategories.length} catégories de dépenses mensuelles`);
-      console.log(`✅ [categoryService] - ${annualExpenseCategories.length} catégories de charges annuelles`);
-      console.log(`✅ [categoryService] - ${subcategories.length} sous-catégories`);
+      console.log(`✅ [categoryService] Structure: 11 catégories principales + 39 sous-catégories`);
       
     } catch (error) {
       const db = await getDatabase();

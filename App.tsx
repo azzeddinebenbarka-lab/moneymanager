@@ -5,8 +5,9 @@ import { createStackNavigator } from '@react-navigation/stack';
 import * as Font from 'expo-font';
 import * as Updates from 'expo-updates';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Platform, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import * as NavigationBar from 'expo-navigation-bar';
 import AnimatedSplash from './src/components/SplashScreen';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { CurrencyProvider } from './src/context/CurrencyContext';
@@ -15,6 +16,7 @@ import { LanguageProvider } from './src/context/LanguageContext';
 import { RefreshProvider } from './src/context/RefreshContext';
 import { SecurityProvider } from './src/context/SecurityContext';
 import { ThemeProvider } from './src/context/ThemeContext';
+import BottomTabNavigator from './src/navigation/BottomTabNavigator';
 import ModernDrawerNavigator from './src/navigation/ModernDrawerNavigator';
 import ForgotPasswordScreen from './src/screens/auth/ForgotPasswordScreen';
 import LoginScreen from './src/screens/auth/LoginScreen';
@@ -32,7 +34,22 @@ const useAppInitialization = () => {
       console.log('🚀 Démarrage de l\'initialisation de l\'application...');
       setIsRetrying(false);
       
-      // Étape 0: Vérifier les mises à jour EAS (uniquement en production, pas en dev)
+      // Étape 0: Configuration de la navigation bar Android
+      if (Platform.OS === 'android') {
+        try {
+          // Masquer la barre de navigation système
+          await NavigationBar.setVisibilityAsync('hidden');
+          // Comportement sticky : réapparaît temporairement au swipe puis se cache
+          await NavigationBar.setBehaviorAsync('overlay-swipe');
+          // Rendre la barre transparente
+          await NavigationBar.setBackgroundColorAsync('#00000000');
+          console.log('✅ Barre de navigation système configurée');
+        } catch (navError) {
+          console.warn('⚠️ Impossible de configurer la barre de navigation:', navError);
+        }
+      }
+      
+      // Étape 1: Vérifier les mises à jour EAS (uniquement en production, pas en dev)
       if (!__DEV__) {
         try {
           console.log('🔄 Vérification des mises à jour OTA...');
@@ -137,7 +154,7 @@ const AuthStackNavigator: React.FC = () => (
   </AuthStack.Navigator>
 );
 
-// Stack principal pour l'application
+// Stack principal pour l'application - DRAWER contient BOTTOM TAB
 const AppStack = createStackNavigator();
 
 const AppStackNavigator: React.FC = () => (
@@ -163,8 +180,37 @@ const AppNavigator: React.FC = () => {
 
 // Composant avec tous les providers
 const AppWithProviders: React.FC = () => {
+  // Maintenir la barre de navigation cachée
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      const hideNavigationBar = async () => {
+        try {
+          await NavigationBar.setVisibilityAsync('hidden');
+          await NavigationBar.setBehaviorAsync('overlay-swipe');
+          await NavigationBar.setBackgroundColorAsync('#00000000');
+        } catch (error) {
+          console.warn('⚠️ Erreur configuration navigation bar:', error);
+        }
+      };
+
+      hideNavigationBar();
+      
+      // Re-masquer la barre toutes les 2 secondes au cas où elle réapparaît
+      const interval = setInterval(hideNavigationBar, 2000);
+      
+      return () => clearInterval(interval);
+    }
+  }, []);
+
   return (
     <SafeAreaProvider>
+      {Platform.OS === 'android' && (
+        <StatusBar
+          translucent
+          backgroundColor="transparent"
+          barStyle="dark-content"
+        />
+      )}
       <ThemeProvider>
         <LanguageProvider>
           <CurrencyProvider>
@@ -200,14 +246,14 @@ const App: React.FC = () => {
     );
   }
 
-  // Afficher le splash screen
-  if (showSplash) {
-    return <AnimatedSplash onFinish={() => setShowSplash(false)} />;
-  }
-
-  // Écran de chargement pendant l'initialisation
+  // Attendre l'initialisation complète
   if (!isInitialized) {
     return <LoadingScreen />;
+  }
+
+  // Afficher le splash screen après l'initialisation
+  if (showSplash) {
+    return <AnimatedSplash onFinish={() => setShowSplash(false)} />;
   }
 
   // Application initialisée avec succès

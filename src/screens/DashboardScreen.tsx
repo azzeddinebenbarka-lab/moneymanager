@@ -16,15 +16,15 @@ import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
-    ActivityIndicator,
-    Animated,
-    Dimensions,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Animated,
+  Dimensions,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import DonutChart from '../components/charts/DonutChart';
 import { TransactionDetailModal } from '../components/modals/TransactionDetailModal';
@@ -48,7 +48,6 @@ import { useTransactions } from '../hooks/useTransactions';
 import { calculationService } from '../services/calculationService';
 
 const { width } = Dimensions.get('window');
-const HEADER_BG = require('../../assets/images/interfaces/Dashboard.png');
 
 // ✅ COMPOSANT : GRAPHIQUE FINANCIER MODERNE
 interface FinancialChartProps {
@@ -852,6 +851,7 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     gap: 16,
+    paddingBottom: 80,
   },
   
   // Header

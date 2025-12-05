@@ -1,5 +1,6 @@
-// src/services/categoryResetService.ts - VERSION AVEC LES 50 NOUVELLES CATÉGORIES
-import { getDatabase } from './database/sqlite';
+import * as SQLite from 'expo-sqlite';
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 // Helper pour créer une catégorie
 const createCategoryRecord = (
@@ -24,7 +25,7 @@ const createCategoryRecord = (
   createdAt: new Date().toISOString()
 });
 
-// ✅ LES MÊMES 50 CATÉGORIES QUE categoryMigrationService.ts
+// ✅ NOUVELLE STRUCTURE COMPLÈTE
 const newCategories = [
   // ==============================
   // 1. REVENUS (Catégories principales)
@@ -107,31 +108,30 @@ const newCategories = [
   createCategoryRecord('cat_expense_misc_unexpected', 'Imprévus', 'expense', '#95A5A6', 'warning', 1, 50, 'cat_expense_misc'),
 ];
 
-export const categoryResetService = {
-  // Forcer la réinitialisation complète avec les 50 nouvelles catégories
-  async forceResetCategories(userId: string = 'default-user'): Promise<void> {
+export const ResetCategoriesButton: React.FC = () => {
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<string>('');
+
+  const resetCategories = async () => {
+    setLoading(true);
+    setResult('');
+    
     try {
-      const db = await getDatabase();
-      console.log('🔄 [ResetService] FORCE RESET des catégories vers les 50 nouvelles...');
-
-      // 1. Supprimer TOUTES les catégories existantes
+      const db = await SQLite.openDatabaseAsync('moneymanager.db');
+      
+      // 1️⃣ Supprimer TOUTES les catégories existantes
+      console.log('🗑️  Suppression de toutes les catégories existantes...');
       await db.runAsync('DELETE FROM categories');
-      console.log('🗑️ [ResetService] Anciennes catégories supprimées');
-
-      // 2. Reset auto-increment
-      try {
-        await db.runAsync('DELETE FROM sqlite_sequence WHERE name="categories"');
-        console.log('🧹 [ResetService] Auto-increment réinitialisé');
-      } catch (e) {
-        console.log('ℹ️  [ResetService] Auto-increment reset non nécessaire');
-      }
-
-      // 3. Insérer les 50 nouvelles catégories
-      console.log(`📝 [ResetService] Insertion de ${newCategories.length} nouvelles catégories...`);
+      
+      // 2️⃣ Réinitialiser l'auto-increment
+      await db.runAsync('DELETE FROM sqlite_sequence WHERE name="categories"');
+      
+      // 3️⃣ Insérer les nouvelles catégories
+      console.log('📝 Insertion des nouvelles catégories...');
       
       for (const category of newCategories) {
         await db.runAsync(
-          `INSERT OR IGNORE INTO categories (
+          `INSERT INTO categories (
             id, name, type, color, icon, parent_id, level, sort_order, is_active, created_at, user_id
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
@@ -145,82 +145,95 @@ export const categoryResetService = {
             category.sortOrder,
             category.isActive,
             category.createdAt,
-            userId
+            'default_user'
           ]
         );
       }
-
-      // 4. Vérification
-      const countResult = await db.getFirstAsync<{ count: number }>(
-        'SELECT COUNT(*) as count FROM categories WHERE user_id = ?',
-        [userId]
+      
+      // 4️⃣ Vérification
+      const count = await db.getFirstAsync<{ count: number }>(
+        'SELECT COUNT(*) as count FROM categories'
       );
       
-      console.log(`✅ [ResetService] ${countResult?.count} catégories installées`);
-      console.log('✅ [ResetService] Structure: 11 principales + 39 sous-catégories = 50 total');
-
-    } catch (error) {
-      console.error('❌ [ResetService] Erreur lors du reset forcé:', error);
-      throw error;
-    }
-  },
-
-  // Vérifier la structure de la table
-  async diagnoseCategories(userId: string = 'default-user'): Promise<any> {
-    try {
-      const db = await getDatabase();
+      const message = `✅ SUCCÈS!\n\n${count?.count} catégories insérées:\n- Revenus: 2 principales + 5 sous-cat.\n- Dépenses: 9 principales + 34 sous-cat.\n\nRedémarrer l'app pour voir les changements.`;
       
-      // Vérifier la structure de la table
-      const tableInfo = await db.getAllAsync('PRAGMA table_info(categories)');
+      setResult(message);
+      Alert.alert('✅ Catégories réinitialisées', message);
       
-      // Compter les catégories par niveau
-      const levelCounts = await db.getAllAsync(`
-        SELECT level, COUNT(*) as count 
-        FROM categories 
-        WHERE user_id = ? 
-        GROUP BY level 
-        ORDER BY level
-      `, [userId]);
-
-      // Compter par type
-      const typeCounts = await db.getAllAsync(`
-        SELECT type, COUNT(*) as count 
-        FROM categories 
-        WHERE user_id = ? 
-        GROUP BY type
-      `, [userId]);
-
-      // Vérifier les doublons d'ID
-      const duplicateIds = await db.getAllAsync(`
-        SELECT id, COUNT(*) as count 
-        FROM categories 
-        WHERE user_id = ? 
-        GROUP BY id 
-        HAVING COUNT(*) > 1
-      `, [userId]);
-
-      // Afficher quelques exemples
-      const sampleCategories = await db.getAllAsync(`
-        SELECT id, name, type, level, parent_id 
-        FROM categories 
-        WHERE user_id = ? 
-        ORDER BY level, name 
-        LIMIT 10
-      `, [userId]);
-
-      return {
-        tableStructure: tableInfo,
-        levelCounts,
-        typeCounts,
-        duplicateIds,
-        totalCategories: levelCounts.reduce((acc, item: any) => acc + item.count, 0),
-        sampleCategories
-      };
     } catch (error) {
-      console.error('❌ Erreur diagnostic:', error);
-      throw error;
+      const errorMsg = `❌ Erreur: ${error}`;
+      setResult(errorMsg);
+      Alert.alert('❌ Erreur', errorMsg);
+      console.error('Erreur:', error);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
+
+  const handlePress = () => {
+    Alert.alert(
+      '⚠️ ATTENTION',
+      'Cette action va SUPPRIMER DÉFINITIVEMENT toutes les catégories existantes et les remplacer par la nouvelle structure.\n\n⚠️ Les transactions existantes pourraient être affectées!\n\nContinuer?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { text: '✅ Confirmer', style: 'destructive', onPress: resetCategories }
+      ]
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <TouchableOpacity 
+        style={[styles.button, loading && styles.buttonDisabled]}
+        onPress={handlePress}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#FFF" />
+        ) : (
+          <Text style={styles.buttonText}>🔄 RÉINITIALISER LES CATÉGORIES</Text>
+        )}
+      </TouchableOpacity>
+      
+      {result ? (
+        <View style={styles.resultContainer}>
+          <Text style={styles.resultText}>{result}</Text>
+        </View>
+      ) : null}
+    </View>
+  );
 };
 
-export default categoryResetService;
+const styles = StyleSheet.create({
+  container: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  button: {
+    backgroundColor: '#FF4D4F',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+    minWidth: 250,
+    alignItems: 'center',
+  },
+  buttonDisabled: {
+    backgroundColor: '#CCC',
+  },
+  buttonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  resultContainer: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 8,
+    maxWidth: 350,
+  },
+  resultText: {
+    fontSize: 14,
+    lineHeight: 22,
+  },
+});

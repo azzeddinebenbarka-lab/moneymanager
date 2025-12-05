@@ -1,10 +1,9 @@
 // src/context/DatabaseContext.tsx - VERSION COMPLÈTEMENT CORRIGÉE
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-import { categoryService } from '../services/categoryService';
+import { autoMigrateCategories } from '../services/categoryMigrationService';
 import { checkDatabaseStatus, initDatabase, resetDatabase } from '../services/database/sqlite';
 import { runAnnualChargesCleanup } from '../utils/annualChargesCleanup';
 import { emergencyAnnualChargesFix } from '../utils/emergencyAnnualChargesFix';
-import { emergencyFixSavingsTables } from '../utils/savingsEmergencyFix';
 
 interface DatabaseContextType {
   dbInitialized: boolean;
@@ -43,16 +42,7 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({ children }) 
         console.warn('⚠️ [DB CONTEXT] Annual charges fix had issues, but continuing...', annualChargesError);
       }
       
-      // 3. Réparation des tables d'épargne
-      try {
-        console.log('🛠️ [DB CONTEXT] Running savings tables emergency fix...');
-        await emergencyFixSavingsTables();
-        console.log('✅ [DB CONTEXT] Savings tables emergency fix completed');
-      } catch (savingsError) {
-        console.warn('⚠️ [DB CONTEXT] Savings tables fix had issues, but continuing...', savingsError);
-      }
-      
-      // 3bis. Nettoyage catégories/dupli des charges annuelles (idempotent)
+      // 3. Nettoyage catégories/dupli des charges annuelles (idempotent)
       try {
         console.log('🧹 [DB CONTEXT] Running annual charges data cleanup...');
         const res = await runAnnualChargesCleanup();
@@ -74,12 +64,40 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({ children }) 
       const status = await checkDatabaseStatus();
       console.log('📋 [DB CONTEXT] Database status after repair:', status);
       
-      // 5. DÉSACTIVÉ : Simplification des catégories (remplacée par les 20 nouvelles catégories)
-      console.log('🚫 [DB CONTEXT] Categories simplification DÉSACTIVÉE - utilisation des 20 nouvelles catégories');
+      // 5. 🗑️ SUPPRESSION DÉFINITIVE DES ANCIENNES CATÉGORIES + INSTALLATION DES 50 NOUVELLES
+      try {
+        console.log('🗑️ [DB CONTEXT] SUPPRESSION DÉFINITIVE de toutes les anciennes catégories...');
+        const { getDatabase: getDb } = await import('../services/database/sqlite');
+        const db = await getDb();
+        
+        // Compter les catégories avant suppression
+        const beforeCount = await db.getFirstAsync<{ count: number }>('SELECT COUNT(*) as count FROM categories');
+        console.log(`📊 [DB CONTEXT] ${beforeCount?.count || 0} catégories dans la BD avant suppression`);
+        
+        // SUPPRESSION TOTALE ET DÉFINITIVE
+        await db.runAsync('DELETE FROM categories');
+        console.log('✅ [DB CONTEXT] TOUTES les anciennes catégories SUPPRIMÉES DÉFINITIVEMENT');
+        
+        // Reset auto-increment
+        try {
+          await db.runAsync('DELETE FROM sqlite_sequence WHERE name="categories"');
+        } catch (e) {
+          console.log('ℹ️  [DB CONTEXT] Auto-increment reset non nécessaire');
+        }
+        
+        // Maintenant installer les nouvelles via la migration
+        await autoMigrateCategories();
+        
+        // Vérifier le résultat
+        const afterCount = await db.getFirstAsync<{ count: number }>('SELECT COUNT(*) as count FROM categories');
+        console.log(`✅ [DB CONTEXT] ${afterCount?.count || 0} NOUVELLES catégories installées`);
+        console.log('🎉 [DB CONTEXT] BASE DE DONNÉES NETTOYÉE - Anciennes catégories DISPARUES POUR TOUJOURS');
+      } catch (migrationError) {
+        console.error('❌ [DB CONTEXT] Categories cleanup FAILED:', migrationError);
+      }
       
-      // 6. INITIALISATION AUTORITAIRE : Force installation des 20 catégories + sous-catégories
-      console.log('👑 [DB CONTEXT] INITIALISATION AUTORITAIRE des 20 catégories...');
-      await categoryService.initializeDefaultCategories();
+      // 6. DÉSACTIVÉ : Pas d'autre système d'initialisation
+      console.log('🚫 [DB CONTEXT] Aucun autre système - BD propre avec 50 catégories uniquement');
       
       // 7. Traitement automatique des transactions récurrentes (UNE SEULE FOIS au démarrage)
       try {

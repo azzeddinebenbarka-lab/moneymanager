@@ -17,6 +17,7 @@ import { SafeAreaView } from '../components/SafeAreaView';
 import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useCategories } from '../hooks/useCategories';
+import { forceMigrateCategories } from '../services/categoryMigrationService';
 import { Category } from '../types';
 
 interface CategoryFormData {
@@ -42,8 +43,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     refreshCategories,
     getCategoryTree,
     getMainCategories,
-    getSubcategories,
-    forceReinitializeAllCategories
+    getSubcategories
   } = useCategories();
   
   const [refreshing, setRefreshing] = useState(false);
@@ -96,7 +96,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const handleForceReinitialize = async (): Promise<void> => {
     Alert.alert(
       "Réinitialiser les catégories",
-      "Êtes-vous sûr de vouloir réinitialiser toutes les catégories avec le système complet ? Cette action supprimera toutes vos catégories personnalisées.",
+      "Êtes-vous sûr de vouloir réinitialiser toutes les catégories ? Cette action supprimera DÉFINITIVEMENT toutes les anciennes catégories et installera les 50 nouvelles catégories.",
       [
         { text: "Annuler", style: "cancel" },
         { 
@@ -105,12 +105,24 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           onPress: async () => {
             try {
               setRefreshing(true);
-              await forceReinitializeAllCategories();
+              console.log('🔄 [CategoriesScreen] Début réinitialisation...');
+              
+              // Utiliser la migration forcée avec les NOUVELLES catégories
+              await forceMigrateCategories();
+              console.log('✅ [CategoriesScreen] Migration forcée terminée');
+              
+              // Rafraîchir les catégories depuis la base de données
+              await refreshCategories();
+              console.log('✅ [CategoriesScreen] Catégories rafraîchies');
+              
+              // Recharger l'arbre
               await loadCategoryTree();
-              Alert.alert("Succès", "Les catégories ont été réinitialisées avec succès !");
+              console.log('✅ [CategoriesScreen] Arbre rechargé');
+              
+              Alert.alert("Succès", "Les 50 nouvelles catégories ont été installées avec succès !");
             } catch (error) {
               Alert.alert("Erreur", "Impossible de réinitialiser les catégories.");
-              console.error("Error reinitializing categories:", error);
+              console.error("❌ [CategoriesScreen] Error reinitializing categories:", error);
             } finally {
               setRefreshing(false);
             }
@@ -408,17 +420,6 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   </Text>
                 )}
               </View>
-
-              {/* Bouton pour l'ajout multiple */}
-              <TouchableOpacity 
-                style={[styles.multipleButton, { backgroundColor: colors.background.card, borderColor: colors.primary[500] }]}
-                onPress={() => navigation.navigate('AddMultipleCategories')}
-              >
-                <Ionicons name="layers" size={20} color={colors.primary[500]} />
-                <Text style={[styles.multipleButtonText, { color: colors.primary[500] }]}>
-                  Ajouter plusieurs catégories
-                </Text>
-              </TouchableOpacity>
 
               {/* Bouton de réinitialisation des catégories */}
               <TouchableOpacity 
