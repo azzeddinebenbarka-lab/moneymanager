@@ -15,7 +15,8 @@ import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useDebts } from '../hooks/useDebts';
-import { Debt, DebtPayment, DEBT_TYPES, DEBT_CATEGORIES } from '../types/Debt';
+import { Debt, DEBT_CATEGORIES, DEBT_TYPES, DebtPayment } from '../types/Debt';
+import { getDebtCategoryLabel, getDebtTypeLabel } from '../utils/debtTranslations';
 
 interface DebtDetailScreenProps {
   navigation: any;
@@ -69,7 +70,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
       setPayments(paymentData || []);
     } catch (error) {
       console.error('Error loading debt data:', error);
-      Alert.alert(t.error, 'Impossible de charger les données de la dette');
+      Alert.alert(t.error, t.cannotLoadDebtData);
     } finally {
       setLoading(false);
     }
@@ -77,18 +78,18 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
 
   const handleMakePayment = async () => {
     if (!debt || !paymentAmount || !selectedAccountId) {
-      Alert.alert(t.error, 'Veuillez remplir tous les champs');
+      Alert.alert(t.error, t.fillAllFields);
       return;
     }
 
     const amount = parseFloat(paymentAmount);
     if (isNaN(amount) || amount <= 0) {
-      Alert.alert(t.error, 'Montant invalide');
+      Alert.alert(t.error, t.invalidAmount);
       return;
     }
 
     if (amount > debt.currentAmount) {
-      Alert.alert(t.error, 'Le montant ne peut pas dépasser le solde restant');
+      Alert.alert(t.error, t.amountCannotExceedBalance);
       return;
     }
 
@@ -96,7 +97,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
     try {
       await makePayment(debtId, amount, selectedAccountId);
       
-      Alert.alert(t.success, 'Paiement effectué avec succès');
+      Alert.alert(t.success, t.paymentSuccess);
       setShowPaymentForm(false);
       setPaymentAmount('');
       setSelectedAccountId('');
@@ -104,7 +105,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
       await refreshDebts();
     } catch (error: any) {
       console.error('Error making payment:', error);
-      Alert.alert(t.error, error.message || 'Impossible d\'effectuer le paiement');
+      Alert.alert(t.error, error.message || t.cannotMakePayment);
     } finally {
       setPaymentLoading(false);
     }
@@ -114,8 +115,8 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
     if (!debt) return;
 
     Alert.alert(
-      'Supprimer la dette',
-      `Êtes-vous sûr de vouloir supprimer la dette "${debt.name}" ?\n\nCette action est irréversible.`,
+      t.deleteDebt,
+      `${t.deleteDebtConfirm} "${debt.name}" ?\n\n${t.deletionIrreversible}.`,
       [
         { text: t.cancel, style: 'cancel' },
         {
@@ -126,7 +127,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
               await deleteDebt(debtId);
               navigation.goBack();
             } catch (error: any) {
-              Alert.alert(t.error, error.message || 'Impossible de supprimer la dette');
+              Alert.alert(t.error, error.message || t.cannotDeleteDebt);
             }
           },
         },
@@ -136,10 +137,10 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
 
   const getStatusLabel = (status: Debt['status']): string => {
     switch (status) {
-      case 'active': return 'Active';
-      case 'overdue': return 'En retard';
-      case 'paid': return 'Payée';
-      case 'future': return 'Future';
+      case 'active': return t.debtActive;
+      case 'overdue': return t.debtOverdue;
+      case 'paid': return t.debtPaid;
+      case 'future': return t.debtFuture;
       default: return status;
     }
   };
@@ -162,7 +163,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
     return (
       <View style={[styles.container, { backgroundColor: colors.background.primary }, styles.center]}>
         <Text style={[styles.loadingText, { color: colors.text.primary }]}>
-          Chargement...
+          {t.loading}...
         </Text>
       </View>
     );
@@ -182,7 +183,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
           <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: colors.text.primary }]}>
-          Détails de la Dette
+          {t.debtDetails}
         </Text>
         <TouchableOpacity 
           style={styles.editButton}
@@ -230,14 +231,14 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
               />
             </View>
             <Text style={[styles.progressText, { color: colors.text.secondary }]}>
-              {progressPercentage.toFixed(1)}% remboursé
+              {progressPercentage.toFixed(1)}% {t.reimbursed}
             </Text>
           </View>
 
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
               <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
-                Reste à payer
+                {t.remainingBalance}
               </Text>
               <Text style={[styles.statValue, { color: colors.semantic.warning }]}>
                 {formatDisplayAmount(debt.currentAmount)}
@@ -245,7 +246,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
             </View>
             <View style={styles.statItem}>
               <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
-                Mensualité
+                {t.monthlyPayment}
               </Text>
               <Text style={[styles.statValue, { color: colors.text.primary }]}>
                 {formatDisplayAmount(debt.monthlyPayment)}
@@ -253,7 +254,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
             </View>
             <View style={styles.statItem}>
               <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
-                Statut
+                {t.status}
               </Text>
               <View style={[
                 styles.statusBadge,
@@ -272,11 +273,11 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
               <Ionicons name="calendar-outline" size={18} color={colors.text.secondary} />
               <View style={styles.additionalInfoText}>
                 <Text style={[styles.additionalInfoLabel, { color: colors.text.secondary }]}>
-                  Prochain paiement
+                  {t.nextPayment}
                 </Text>
                 <Text style={[styles.additionalInfoValue, { color: colors.text.primary }]}>
                   {(() => {
-                    if (debt.status === 'paid' || debt.currentAmount <= 0) return 'Aucun (payé)';
+                    if (debt.status === 'paid' || debt.currentAmount <= 0) return t.nonePaid;
                     
                     // Parser la date correctement (format YYYY-MM-DD)
                     const [year, month, day] = debt.dueDate.split('-').map(Number);
@@ -297,7 +298,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
         {/* Actions */}
         <View style={[styles.actionsCard, { backgroundColor: colors.background.card }]}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            Actions
+            {t.actions}
           </Text>
           
           <View style={styles.actionsGrid}>
@@ -311,7 +312,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
             >
               <Ionicons name="card" size={24} color={colors.primary[500]} />
               <Text style={[styles.actionText, { color: colors.text.primary }]}>
-                Payer
+                {t.pay}
               </Text>
             </TouchableOpacity>
 
@@ -321,7 +322,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
             >
               <Ionicons name="create" size={24} color={colors.semantic.warning} />
               <Text style={[styles.actionText, { color: colors.text.primary }]}>
-                Modifier
+                {t.modify}
               </Text>
             </TouchableOpacity>
           </View>
@@ -330,14 +331,14 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
         {/* Informations détaillées */}
         <View style={[styles.infoCard, { backgroundColor: colors.background.card }]}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            Informations
+            {t.information}
           </Text>
           
           <View style={styles.infoList}>
             {/* Type de dette */}
             <View style={styles.infoItem}>
               <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>
-                Type de dette
+                {t.debtType}
               </Text>
               <View style={styles.infoValueWithIcon}>
                 <Ionicons 
@@ -346,7 +347,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
                   color={debt.color}
                 />
                 <Text style={[styles.infoValue, { color: colors.text.primary }]}>
-                  {DEBT_TYPES.find(t => t.value === debt.type)?.label || debt.type}
+                  {getDebtTypeLabel(debt.type, t)}
                 </Text>
               </View>
             </View>
@@ -354,7 +355,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
             {/* Catégorie */}
             <View style={styles.infoItem}>
               <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>
-                Catégorie
+                {t.category}
               </Text>
               <View style={styles.infoValueWithIcon}>
                 <Ionicons 
@@ -363,7 +364,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
                   color={DEBT_CATEGORIES.find(c => c.value === debt.category)?.color || debt.color}
                 />
                 <Text style={[styles.infoValue, { color: colors.text.primary }]}>
-                  {DEBT_CATEGORIES.find(c => c.value === debt.category)?.label || debt.category}
+                  {getDebtCategoryLabel(debt.category, t)}
                 </Text>
               </View>
             </View>
@@ -371,7 +372,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
             {/* Date de début */}
             <View style={styles.infoItem}>
               <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>
-                Date de début
+                {t.startDate}
               </Text>
               <Text style={[styles.infoValue, { color: colors.text.primary }]}>
                 {new Date(debt.startDate).toLocaleDateString('fr-FR')}
@@ -381,7 +382,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
             {/* Date d'échéance */}
             <View style={styles.infoItem}>
               <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>
-                Prochaine échéance
+                {t.dueDate}
               </Text>
               <Text style={[styles.infoValue, { color: colors.text.primary }]}>
                 {new Date(debt.dueDate).toLocaleDateString('fr-FR')}
@@ -391,7 +392,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
             {/* Paiement automatique */}
             <View style={styles.infoItem}>
               <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>
-                Paiement automatique
+                {t.automaticPayment}
               </Text>
               <View style={styles.infoValueWithIcon}>
                 <Ionicons 
@@ -400,7 +401,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
                   color={debt.autoPay ? colors.semantic.success : colors.text.disabled}
                 />
                 <Text style={[styles.infoValue, { color: colors.text.primary }]}>
-                  {debt.autoPay ? 'Activé' : 'Désactivé'}
+                  {debt.autoPay ? t.enabled : t.disabled}
                 </Text>
               </View>
             </View>
@@ -409,10 +410,10 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
             {debt.autoPay && debt.paymentAccountId && (
               <View style={styles.infoItem}>
                 <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>
-                  Compte de paiement
+                  {t.paymentAccount}
                 </Text>
                 <Text style={[styles.infoValue, { color: colors.text.primary }]}>
-                  {accounts.find(a => a.id === debt.paymentAccountId)?.name || 'Compte inconnu'}
+                  {accounts.find(a => a.id === debt.paymentAccountId)?.name || t.unknownAccount}
                 </Text>
               </View>
             )}
@@ -421,10 +422,10 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
             {debt.paymentDay && (
               <View style={styles.infoItem}>
                 <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>
-                  Jour de paiement
+                  {t.paymentDay}
                 </Text>
                 <Text style={[styles.infoValue, { color: colors.text.primary }]}>
-                  Le {debt.paymentDay} de chaque mois
+                  {debt.paymentDay} {t.dayOfEachMonth}
                 </Text>
               </View>
             )}
@@ -432,7 +433,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
             {/* Progression */}
             <View style={styles.infoItem}>
               <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>
-                Progression
+                {t.progress}
               </Text>
               <Text style={[styles.infoValue, { color: colors.text.primary }]}>
                 {progressPercentage.toFixed(1)}%
@@ -443,7 +444,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
           {debt.notes && (
             <View style={styles.notesSection}>
               <Text style={[styles.notesLabel, { color: colors.text.secondary }]}>
-                Notes
+                {t.notes}
               </Text>
               <Text style={[styles.notesValue, { color: colors.text.primary }]}>
                 {debt.notes}
@@ -456,7 +457,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
         <View style={[styles.paymentsCard, { backgroundColor: colors.background.card }]}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-              Historique des Paiements ({payments.length})
+              {t.paymentHistory} ({payments.length})
             </Text>
           </View>
 
@@ -464,7 +465,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
             <View style={styles.emptyPayments}>
               <Ionicons name="receipt-outline" size={48} color={colors.text.disabled} />
               <Text style={[styles.emptyText, { color: colors.text.secondary }]}>
-                Aucun paiement enregistré
+                {t.noPaymentRecorded}
               </Text>
             </View>
           ) : (
@@ -484,10 +485,10 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
                   </View>
                   <View style={styles.paymentRight}>
                     <Text style={[styles.paymentPrincipal, { color: colors.text.secondary }]}>
-                      Principal: {formatDisplayAmount(payment.principal, false)} {/* ✅ CORRECTION: Format devise */}
+                      {t.principal}: {formatDisplayAmount(payment.principal, false)} {/* ✅ CORRECTION: Format devise */}
                     </Text>
                     <Text style={[styles.paymentInterest, { color: colors.text.secondary }]}>
-                      Intérêts: {formatDisplayAmount(payment.interest, false)} {/* ✅ CORRECTION: Format devise */}
+                      {t.interest}: {formatDisplayAmount(payment.interest, false)} {/* ✅ CORRECTION: Format devise */}
                     </Text>
                   </View>
                 </View>
@@ -499,17 +500,17 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
         {/* Zone de danger */}
         <View style={[styles.dangerCard, { backgroundColor: colors.background.card }]}>
           <Text style={[styles.dangerTitle, { color: colors.semantic.error }]}>
-            Zone de danger
+            {t.dangerZone}
           </Text>
           <Text style={[styles.dangerText, { color: colors.text.secondary }]}>
-            La suppression est irréversible et supprimera toutes les données associées à cette dette.
+            {t.deletionIrreversible}.
           </Text>
           <TouchableOpacity 
             style={[styles.deleteButton, { backgroundColor: colors.semantic.error + '10', borderLeftColor: colors.semantic.error }]}
             onPress={handleDeleteDebt}
           >
             <Ionicons name="trash-outline" size={20} color={colors.semantic.error} />
-            <Text style={[styles.deleteButtonText, { color: colors.semantic.error }]}>Supprimer la dette</Text>
+            <Text style={[styles.deleteButtonText, { color: colors.semantic.error }]}>{t.deleteDebt}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -520,7 +521,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
           <View style={[styles.modalContent, { backgroundColor: colors.background.primary }]}>
             <View style={[styles.modalHeader, { borderBottomColor: colors.border.primary }]}>
               <Text style={[styles.modalTitle, { color: colors.text.primary }]}>
-                Effectuer un paiement
+                {t.makePayment}
               </Text>
               <TouchableOpacity onPress={() => setShowPaymentForm(false)}>
                 <Ionicons name="close" size={24} color={colors.text.primary} />
@@ -530,7 +531,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
             <View style={styles.paymentForm}>
               <View style={styles.inputGroup}>
                 <Text style={[styles.label, { color: colors.text.primary }]}>
-                  Montant à payer
+                  {t.amountToPay}
                 </Text>
                 <View style={styles.amountContainer}>
                   <TextInput
@@ -543,13 +544,13 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
                   />
                 </View>
                 <Text style={[styles.hint, { color: colors.text.secondary }]}>
-                  Solde restant: {formatDisplayAmount(debt.currentAmount)} {/* ✅ CORRECTION: Format devise */}
+                  {t.remainingBalanceLabel}: {formatDisplayAmount(debt.currentAmount)} {/* ✅ CORRECTION: Format devise */}
                 </Text>
               </View>
 
               <View style={styles.inputGroup}>
                 <Text style={[styles.label, { color: colors.text.primary }]}>
-                  Compte source
+                  {t.sourceAccount}
                 </Text>
                 <View style={styles.accountsList}>
                   {sourceAccounts.map((account) => (
@@ -568,7 +569,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
                           {account.name}
                         </Text>
                         <Text style={[styles.accountBalance, { color: colors.text.secondary }]}>
-                          {formatDisplayAmount(account.balance, false)} disponible {/* ✅ CORRECTION: Format devise */}
+                          {formatDisplayAmount(account.balance, false)} {t.available} {/* ✅ CORRECTION: Format devise */}
                         </Text>
                       </View>
                       {selectedAccountId === account.id && (
@@ -579,7 +580,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
                 </View>
                 {sourceAccounts.length === 0 && (
                   <Text style={[styles.warningText, { color: colors.text.secondary }]}>
-                    Aucun compte avec un solde suffisant
+                    {t.noAccountSufficientBalance}
                   </Text>
                 )}
               </View>
@@ -589,7 +590,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
                   style={[styles.cancelButton, { backgroundColor: colors.background.secondary, borderColor: colors.border.primary }]}
                   onPress={() => setShowPaymentForm(false)}
                 >
-                  <Text style={[styles.cancelButtonText, { color: colors.text.primary }]}>Annuler</Text>
+                  <Text style={[styles.cancelButtonText, { color: colors.text.primary }]}>{t.cancel}</Text>
                 </TouchableOpacity>
                 
                 <TouchableOpacity 
@@ -602,7 +603,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
                   disabled={!paymentAmount || !selectedAccountId || paymentLoading}
                 >
                   <Text style={[styles.confirmButtonText, { color: colors.text.inverse }]}>
-                    {paymentLoading ? 'Paiement...' : 'Confirmer'}
+                    {paymentLoading ? t.paying : t.confirm}
                   </Text>
                 </TouchableOpacity>
               </View>

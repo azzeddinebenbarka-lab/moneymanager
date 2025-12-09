@@ -396,7 +396,7 @@ export const calculationService = {
             type: 'debt',
             description: `[Dette] ${debt.name}`,
             amount: debt.monthlyPayment || 0,
-            date: debt.dueDate,
+            date: debt.nextDueDate || debt.startDate,
             creditor: debt.creditor,
             paymentAccountId: debt.paymentAccountId,
             autoPay: debt.autoPay

@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BudgetCard from '../components/budget/BudgetCard';
 import BudgetForm from '../components/budget/BudgetForm';
+import { AppHeader } from '../components/layout/AppHeader';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
@@ -89,7 +90,7 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
       <SafeAreaView style={[styles.container, isDark && styles.darkContainer, styles.center]} edges={['top', 'left', 'right']}>
         <ActivityIndicator size="large" color="#007AFF" />
         <Text style={[styles.loadingText, isDark && styles.darkText]}>
-          Chargement des budgets...
+          {t.loadingBudgets}
         </Text>
       </SafeAreaView>
     );
@@ -103,7 +104,7 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
           {error}
         </Text>
         <TouchableOpacity style={styles.retryButton} onPress={refreshBudgets}>
-          <Text style={styles.retryButtonText}>Réessayer</Text>
+          <Text style={styles.retryButtonText}>{t.retry}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -114,22 +115,22 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[styles.container, isDark && styles.darkContainer]} edges={['top', 'left', 'right']}>
+      <AppHeader 
+        title={t.myBudgets} 
+        rightComponent={
+          <TouchableOpacity onPress={() => setShowBudgetForm(true)}>
+            <Ionicons name="add" size={24} color="#007AFF" />
+          </TouchableOpacity>
+        }
+      />
       {/* Header avec statistiques */}
       <View style={[styles.header, isDark && styles.darkHeader]}>
         <View style={styles.headerTop}>
-          <Text style={[styles.title, isDark && styles.darkText]}>
-            Budgets
-          </Text>
-          <TouchableOpacity 
-            style={[styles.headerButton, isDark && styles.darkHeaderButton]}
-            onPress={() => setShowBudgetForm(true)}
-          >
-            <Ionicons name="add" size={20} color="#007AFF" />
-          </TouchableOpacity>
+          {/* Title moved to AppHeader */}
         </View>
 
         <Text style={[styles.subtitle, isDark && styles.darkSubtext]}>
-          Gérez vos limites de dépenses
+          {t.manageLimits}
         </Text>
 
         {/* Statistiques rapides */}
@@ -139,7 +140,7 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
               {stats.totalBudgets}
             </Text>
             <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
-              Total
+              {t.total}
             </Text>
           </View>
           
@@ -150,7 +151,7 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
               {stats.activeBudgets}
             </Text>
             <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
-              Actifs
+              {t.active}
             </Text>
           </View>
           
@@ -161,7 +162,7 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
               {Math.round(stats.averageUsage)}%
             </Text>
             <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
-              Utilisation
+              {t.usage}
             </Text>
           </View>
         </View>
@@ -180,7 +181,7 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
-                    Budgets Actifs ({activeBudgets.length})
+                    {t.activeBudgets} ({activeBudgets.length})
                   </Text>
                 </View>
 
@@ -201,7 +202,7 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
-                    Budgets Inactifs ({inactiveBudgets.length})
+                    {t.inactiveBudgets} ({inactiveBudgets.length})
                   </Text>
                 </View>
 
@@ -229,7 +230,7 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
               {t.noBudgets}
             </Text>
             <Text style={[styles.emptySubtext, isDark && styles.darkSubtext]}>
-              Créez votre premier budget pour suivre vos dépenses
+              {t.createFirstBudget}
             </Text>
             <TouchableOpacity 
               style={styles.createButton}

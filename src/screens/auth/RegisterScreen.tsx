@@ -1,9 +1,12 @@
 // src/screens/auth/RegisterScreen.tsx
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
+    FlatList,
+    Modal,
     ScrollView,
     StyleSheet,
     Text,
@@ -13,9 +16,46 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
+
+// Liste complète des pays
+const COUNTRIES = [
+  'Afghanistan', 'Afrique du Sud', 'Albanie', 'Algérie', 'Allemagne', 'Andorre', 'Angola',
+  'Arabie Saoudite', 'Argentine', 'Arménie', 'Australie', 'Autriche', 'Azerbaïdjan',
+  'Bahamas', 'Bahreïn', 'Bangladesh', 'Barbade', 'Belgique', 'Belize', 'Bénin', 'Bhoutan',
+  'Biélorussie', 'Bolivie', 'Bosnie-Herzégovine', 'Botswana', 'Brésil', 'Brunei', 'Bulgarie',
+  'Burkina Faso', 'Burundi', 'Cambodge', 'Cameroun', 'Canada', 'Cap-Vert', 'Chili', 'Chine',
+  'Chypre', 'Colombie', 'Comores', 'Congo', 'Corée du Nord', 'Corée du Sud', 'Costa Rica',
+  'Côte d\'Ivoire', 'Croatie', 'Cuba', 'Danemark', 'Djibouti', 'Dominique', 'Égypte',
+  'Émirats arabes unis', 'Équateur', 'Érythrée', 'Espagne', 'Estonie', 'Eswatini', 'États-Unis',
+  'Éthiopie', 'Fidji', 'Finlande', 'France', 'Gabon', 'Gambie', 'Géorgie', 'Ghana', 'Grèce',
+  'Grenade', 'Guatemala', 'Guinée', 'Guinée-Bissau', 'Guinée équatoriale', 'Guyana', 'Haïti',
+  'Honduras', 'Hongrie', 'Inde', 'Indonésie', 'Irak', 'Iran', 'Irlande', 'Islande', 'Israël',
+  'Italie', 'Jamaïque', 'Japon', 'Jordanie', 'Kazakhstan', 'Kenya', 'Kirghizistan', 'Kiribati',
+  'Koweït', 'Laos', 'Lesotho', 'Lettonie', 'Liban', 'Libéria', 'Libye', 'Liechtenstein',
+  'Lituanie', 'Luxembourg', 'Madagascar', 'Malaisie', 'Malawi', 'Maldives', 'Mali', 'Malte',
+  'Maroc', 'Maurice', 'Mauritanie', 'Mexique', 'Micronésie', 'Moldavie', 'Monaco', 'Mongolie',
+  'Monténégro', 'Mozambique', 'Myanmar', 'Namibie', 'Nauru', 'Népal', 'Nicaragua', 'Niger',
+  'Nigéria', 'Norvège', 'Nouvelle-Zélande', 'Oman', 'Ouganda', 'Ouzbékistan', 'Pakistan',
+  'Palaos', 'Panama', 'Papouasie-Nouvelle-Guinée', 'Paraguay', 'Pays-Bas', 'Pérou', 'Philippines',
+  'Pologne', 'Portugal', 'Qatar', 'République centrafricaine', 'République démocratique du Congo',
+  'République dominicaine', 'République tchèque', 'Roumanie', 'Royaume-Uni', 'Russie', 'Rwanda',
+  'Saint-Kitts-et-Nevis', 'Saint-Marin', 'Saint-Vincent-et-les-Grenadines', 'Sainte-Lucie',
+  'Salomon (Îles)', 'Salvador', 'Samoa', 'Sao Tomé-et-Principe', 'Sénégal', 'Serbie', 'Seychelles',
+  'Sierra Leone', 'Singapour', 'Slovaquie', 'Slovénie', 'Somalie', 'Soudan', 'Soudan du Sud',
+  'Sri Lanka', 'Suède', 'Suisse', 'Suriname', 'Syrie', 'Tadjikistan', 'Tanzanie', 'Tchad',
+  'Thaïlande', 'Timor oriental', 'Togo', 'Tonga', 'Trinité-et-Tobago', 'Tunisie', 'Turkménistan',
+  'Turquie', 'Tuvalu', 'Ukraine', 'Uruguay', 'Vanuatu', 'Vatican', 'Venezuela', 'Vietnam',
+  'Yémen', 'Zambie', 'Zimbabwe'
+];
 
 const RegisterScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
   const { register } = useAuth();
+  const { t } = useLanguage();
+  const [name, setName] = useState('');
+  const [country, setCountry] = useState('');
+  const [showCountryModal, setShowCountryModal] = useState(false);
+  const [countrySearch, setCountrySearch] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -23,33 +63,57 @@ const RegisterScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<{ 
+    name?: string;
+    country?: string;
     email?: string; 
     password?: string; 
     confirmPassword?: string;
   }>({});
 
+  // Filtrer les pays selon la recherche
+  const filteredCountries = COUNTRIES.filter(c => 
+    c.toLowerCase().includes(countrySearch.toLowerCase())
+  );
+
+  const selectCountry = (selectedCountry: string) => {
+    setCountry(selectedCountry);
+    setShowCountryModal(false);
+    setCountrySearch('');
+    if (errors.country) setErrors({ ...errors, country: undefined });
+  };
+
   const validateForm = (): boolean => {
     const newErrors: typeof errors = {};
     
+    // Validation nom
+    if (!name.trim()) {
+      newErrors.name = t.nameRequired;
+    }
+    
+    // Validation pays
+    if (!country.trim()) {
+      newErrors.country = t.countryRequired;
+    }
+    
     // Validation email
     if (!email.trim()) {
-      newErrors.email = 'L\'email est requis';
+      newErrors.email = t.emailRequired;
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'Format d\'email invalide';
+      newErrors.email = t.emailInvalid;
     }
     
     // Validation mot de passe
     if (!password) {
-      newErrors.password = 'Le mot de passe est requis';
+      newErrors.password = t.passwordRequired;
     } else if (password.length < 6) {
-      newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères';
+      newErrors.password = t.passwordMinLength;
     }
     
     // Validation confirmation
     if (!confirmPassword) {
-      newErrors.confirmPassword = 'Veuillez confirmer le mot de passe';
+      newErrors.confirmPassword = t.passwordRequired;
     } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
+      newErrors.confirmPassword = t.passwordsNotMatch;
     }
     
     setErrors(newErrors);
@@ -65,6 +129,10 @@ const RegisterScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
     try {
       const result = await register(email.trim(), password);
       if (result.success) {
+        // Sauvegarder le nom et le pays dans AsyncStorage
+        await AsyncStorage.setItem('userName', name.trim());
+        await AsyncStorage.setItem('userCountry', country.trim());
+        
         // L'utilisateur sera automatiquement redirigé vers le dashboard
         // grâce à la navigation conditionnelle dans App.tsx
         console.log('✅ Inscription réussie, redirection automatique...');
@@ -98,19 +166,57 @@ const RegisterScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
           <View style={styles.iconCircle}>
             <Ionicons name="person-add" size={32} color="#6C63FF" />
           </View>
-          <Text style={styles.title}>Créer un compte</Text>
-          <Text style={styles.subtitle}>Commencez à gérer vos finances dès maintenant</Text>
+          <Text style={styles.title}>{t.createAccount}</Text>
+          <Text style={styles.subtitle}>{t.welcomeDescription}</Text>
         </View>
 
         <View style={styles.form}>
+          {/* Nom */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>{t.fullName}</Text>
+            <View style={[styles.inputWrapper, errors.name && styles.inputError]}>
+              <Ionicons name="person-outline" size={20} color="#6B7280" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder={t.fullName}
+                value={name}
+                onChangeText={(text) => {
+                  setName(text);
+                  if (errors.name) setErrors({ ...errors, name: undefined });
+                }}
+                autoCapitalize="words"
+                placeholderTextColor="#bdbdbd"
+                editable={!loading}
+              />
+            </View>
+            {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
+          </View>
+
+          {/* Pays */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>{t.country}</Text>
+            <TouchableOpacity 
+              style={[styles.inputWrapper, errors.country && styles.inputError]}
+              onPress={() => setShowCountryModal(true)}
+              disabled={loading}
+            >
+              <Ionicons name="globe-outline" size={20} color="#6B7280" style={styles.inputIcon} />
+              <Text style={[styles.input, !country && styles.placeholderText]}>
+                {country || t.selectCountry}
+              </Text>
+              <Ionicons name="chevron-down" size={20} color="#6B7280" />
+            </TouchableOpacity>
+            {errors.country && <Text style={styles.errorText}>{errors.country}</Text>}
+          </View>
+
           {/* Email */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>{t.email}</Text>
             <View style={[styles.inputWrapper, errors.email && styles.inputError]}>
               <Ionicons name="mail-outline" size={20} color="#6B7280" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="votre@email.com"
+                placeholder={t.email}
                 value={email}
                 onChangeText={(text) => {
                   setEmail(text);
@@ -128,12 +234,12 @@ const RegisterScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
 
           {/* Mot de passe */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Mot de passe</Text>
+            <Text style={styles.label}>{t.password}</Text>
             <View style={[styles.inputWrapper, errors.password && styles.inputError]}>
               <Ionicons name="lock-closed-outline" size={20} color="#6B7280" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Au moins 6 caractères"
+                placeholder={t.passwordMinLength}
                 value={password}
                 onChangeText={(text) => {
                   setPassword(text);
@@ -156,12 +262,12 @@ const RegisterScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
 
           {/* Confirmation mot de passe */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Confirmer le mot de passe</Text>
+            <Text style={styles.label}>{t.confirmPassword}</Text>
             <View style={[styles.inputWrapper, errors.confirmPassword && styles.inputError]}>
               <Ionicons name="lock-closed-outline" size={20} color="#6B7280" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Confirmez votre mot de passe"
+                placeholder={t.confirmPassword}
                 value={confirmPassword}
                 onChangeText={(text) => {
                   setConfirmPassword(text);
@@ -196,7 +302,7 @@ const RegisterScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
               <ActivityIndicator color="#fff" />
             ) : (
               <>
-                <Text style={styles.buttonText}>Créer mon compte</Text>
+                <Text style={styles.buttonText}>{t.createAccount}</Text>
                 <Ionicons name="arrow-forward" size={20} color="#fff" />
               </>
             )}
@@ -204,13 +310,74 @@ const RegisterScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
 
           {/* Lien vers connexion */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Vous avez déjà un compte ? </Text>
-            <TouchableOpacity onPress={goToLogin}>
-              <Text style={styles.footerLink}>Se connecter</Text>
+            <Text style={styles.footerText}>{t.alreadyHaveAccount}</Text>
+            <TouchableOpacity onPress={goToLogin} disabled={loading}>
+              <Text style={styles.linkText}>{t.signIn}</Text>
             </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
+
+      {/* Modal de sélection de pays */}
+      <Modal
+        visible={showCountryModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowCountryModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t.selectCountry}</Text>
+              <TouchableOpacity onPress={() => setShowCountryModal(false)}>
+                <Ionicons name="close" size={24} color="#17233C" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Barre de recherche */}
+            <View style={styles.searchWrapper}>
+              <Ionicons name="search" size={20} color="#6B7280" style={styles.searchIcon} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder={t.searchCountry}
+                value={countrySearch}
+                onChangeText={setCountrySearch}
+                autoCapitalize="none"
+                autoCorrect={false}
+                placeholderTextColor="#bdbdbd"
+              />
+              {countrySearch.length > 0 && (
+                <TouchableOpacity onPress={() => setCountrySearch('')}>
+                  <Ionicons name="close-circle" size={20} color="#6B7280" />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* Liste des pays */}
+            <FlatList
+              data={filteredCountries}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.countryItem}
+                  onPress={() => selectCountry(item)}
+                >
+                  <Text style={styles.countryText}>{item}</Text>
+                  {country === item && (
+                    <Ionicons name="checkmark" size={20} color="#6C63FF" />
+                  )}
+                </TouchableOpacity>
+              )}
+              ItemSeparatorComponent={() => <View style={styles.separator} />}
+              ListEmptyComponent={() => (
+                <View style={styles.emptyList}>
+                  <Text style={styles.emptyText}>{t.noCountryFound}</Text>
+                </View>
+              )}
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -280,6 +447,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#17233C',
   },
+  placeholderText: {
+    color: '#bdbdbd',
+  },
   eyeIcon: { padding: 4 },
   errorText: { fontSize: 12, color: '#EF4444', marginTop: 4 },
 
@@ -311,10 +481,81 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
   },
-  footerLink: {
+  linkText: {
     fontSize: 14,
     color: '#6C63FF',
     fontWeight: '600',
+    marginLeft: 4,
+  },
+
+  // Styles pour le modal de sélection de pays
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 20,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#17233C',
+  },
+  searchWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 48,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    paddingHorizontal: 12,
+    marginHorizontal: 20,
+    marginBottom: 16,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: '#17233C',
+  },
+  countryItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+  },
+  countryText: {
+    fontSize: 16,
+    color: '#17233C',
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginHorizontal: 20,
+  },
+  emptyList: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#6B7280',
   },
 });
 

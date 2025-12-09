@@ -1,6 +1,7 @@
 // /src/components/savings/ContributionHistory.tsx
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useCurrency } from '../../context/CurrencyContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { SavingsContribution, SavingsGoal } from '../../types/Savings';
 
 interface Props {
@@ -10,16 +11,17 @@ interface Props {
 
 export const ContributionHistory = ({ contributions, goal }: Props) => {
   const { formatAmount } = useCurrency();
+  const { t } = useLanguage();
 
   if (contributions.length === 0) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Historique des Contributions</Text>
+        <Text style={styles.title}>{t.contributionHistory}</Text>
         <View style={styles.emptyState}>
           <Text style={styles.emptyIcon}>💸</Text>
-          <Text style={styles.emptyText}>Aucune contribution pour le moment</Text>
+          <Text style={styles.emptyText}>{t.noContribution || 'Aucune contribution pour le moment'}</Text>
           <Text style={styles.emptySubtext}>
-            Commencez par ajouter votre première contribution
+            {t.addFirstContribution || 'Commencez par ajouter votre première contribution'}
           </Text>
         </View>
       </View>
@@ -44,7 +46,7 @@ export const ContributionHistory = ({ contributions, goal }: Props) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Historique des Contributions</Text>
+      <Text style={styles.title}>{t.contributionHistory}</Text>
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {Object.entries(groupedContributions).map(([monthYear, monthContributions]) => {
@@ -73,9 +75,9 @@ export const ContributionHistory = ({ contributions, goal }: Props) => {
                   </View>
                   
                   <View style={styles.contributionCenter}>
-                    <Text style={styles.contributionLabel}>Contribution</Text>
+                    <Text style={styles.contributionLabel}>{t.contribution}</Text>
                     <Text style={styles.contributionTime}>
-                      Ajoutée le {new Date(contribution.createdAt).toLocaleDateString('fr-FR')}
+                      {t.addedOn || 'Ajoutée le'} {new Date(contribution.createdAt).toLocaleDateString('fr-FR')}
                     </Text>
                   </View>
                   
@@ -97,19 +99,19 @@ export const ContributionHistory = ({ contributions, goal }: Props) => {
       {/* Résumé */}
       <View style={styles.summary}>
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Total contribué</Text>
+          <Text style={styles.summaryLabel}>{t.totalContributed || 'Total contribué'}</Text>
           <Text style={styles.summaryValue}>
             {formatAmount(goal.currentAmount)}
           </Text>
         </View>
         
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Nombre de contributions</Text>
+          <Text style={styles.summaryLabel}>{t.numberOfContributions || 'Nombre de contributions'}</Text>
           <Text style={styles.summaryValue}>{contributions.length}</Text>
         </View>
         
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Moyenne par contribution</Text>
+          <Text style={styles.summaryLabel}>{t.averagePerContribution || 'Moyenne par contribution'}</Text>
           <Text style={styles.summaryValue}>
             {formatAmount(goal.currentAmount / Math.max(contributions.length, 1))}
           </Text>

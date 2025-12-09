@@ -52,7 +52,7 @@ const SavingsDetailScreen: React.FC<SavingsDetailScreenProps> = ({ navigation, r
       }
     } catch (error) {
       console.error('Error loading goal data:', error);
-      Alert.alert(t.error, 'Impossible de charger les données de l\'objectif');
+      Alert.alert(t.error, t.cannotLoadGoal);
     } finally {
       setLoading(false);
     }
@@ -67,10 +67,10 @@ const SavingsDetailScreen: React.FC<SavingsDetailScreenProps> = ({ navigation, r
       
       return {
         success: true,
-        message: `Contribution de ${amount.toFixed(2)}€ ajoutée avec succès !`
+        message: `${t.contribution} ${amount.toFixed(2)}€ ${t.contributionAdded}`
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Impossible d\'ajouter la contribution';
+      const errorMessage = error instanceof Error ? error.message : t.cannotAddContribution;
       
       return {
         success: false,
@@ -84,7 +84,7 @@ const SavingsDetailScreen: React.FC<SavingsDetailScreenProps> = ({ navigation, r
     
     Alert.alert(
       t.deleteSavingsGoal,
-      `Êtes-vous sûr de vouloir supprimer "${goal.name}" ? Cette action est irréversible.`,
+      `${t.deleteSavingsGoalConfirm} "${goal.name}" ? ${t.deleteConfirmMessage}`,
       [
         { text: t.cancel, style: 'cancel' },
         { 
@@ -94,9 +94,9 @@ const SavingsDetailScreen: React.FC<SavingsDetailScreenProps> = ({ navigation, r
             try {
               await deleteGoal(goalId);
               navigation.goBack();
-              Alert.alert(t.success, 'Objectif supprimé avec succès');
+              Alert.alert(t.success, t.goalDeletedSuccess);
             } catch (error) {
-              Alert.alert(t.error, 'Impossible de supprimer l\'objectif');
+              Alert.alert(t.error, t.cannotDeleteGoal);
             }
           }
         }
@@ -114,7 +114,7 @@ const SavingsDetailScreen: React.FC<SavingsDetailScreenProps> = ({ navigation, r
       <SafeAreaView style={[styles.container, isDark && styles.darkContainer]}>
         <View style={styles.center}>
           <Text style={[styles.loadingText, isDark && styles.darkText]}>
-            Chargement...
+            {t.loading}
           </Text>
         </View>
       </SafeAreaView>
@@ -126,13 +126,13 @@ const SavingsDetailScreen: React.FC<SavingsDetailScreenProps> = ({ navigation, r
       <SafeAreaView style={[styles.container, isDark && styles.darkContainer]}>
         <View style={styles.center}>
           <Text style={[styles.errorText, isDark && styles.darkText]}>
-            Objectif non trouvé
+            {t.goalNotFound}
           </Text>
           <TouchableOpacity 
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Text style={styles.backButtonLabel}>Retour</Text>
+            <Text style={styles.backButtonLabel}>{t.back}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -151,7 +151,7 @@ const SavingsDetailScreen: React.FC<SavingsDetailScreenProps> = ({ navigation, r
             <Ionicons name="arrow-back" size={24} color={isDark ? '#fff' : '#000'} />
           </TouchableOpacity>
           <Text style={[styles.title, isDark && styles.darkText]}>
-            Détails de l'objectif
+            {t.goalDetails}
           </Text>
           <View style={styles.headerActions}>
             <TouchableOpacity 
@@ -185,7 +185,7 @@ const SavingsDetailScreen: React.FC<SavingsDetailScreenProps> = ({ navigation, r
           {/* Actions rapides */}
           <View style={[styles.quickActions, isDark && styles.darkCard]}>
             <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
-              Actions Rapides
+              {t.quickActions}
             </Text>
             <View style={styles.actionButtons}>
               <TouchableOpacity 
@@ -193,7 +193,7 @@ const SavingsDetailScreen: React.FC<SavingsDetailScreenProps> = ({ navigation, r
                 onPress={() => setShowContributionModal(true)}
               >
                 <Ionicons name="add-circle" size={20} color="#fff" />
-                <Text style={styles.actionButtonText}>Ajouter</Text>
+                <Text style={styles.actionButtonText}>{t.addAction}</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
@@ -201,7 +201,7 @@ const SavingsDetailScreen: React.FC<SavingsDetailScreenProps> = ({ navigation, r
                 onPress={handleEditGoal}
               >
                 <Ionicons name="create" size={20} color="#fff" />
-                <Text style={styles.actionButtonText}>Modifier</Text>
+                <Text style={styles.actionButtonText}>{t.modifyAction}</Text>
               </TouchableOpacity>
             </View>
           </View>

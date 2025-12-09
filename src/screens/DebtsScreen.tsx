@@ -8,6 +8,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { AppHeader } from '../components/layout/AppHeader';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
@@ -52,10 +53,10 @@ const DebtsScreen = ({ navigation }: any) => {
   // ✅ CORRECTION : Fonction pour obtenir le libellé du statut
   const getStatusLabel = (status: Debt['status']): string => {
     switch (status) {
-      case 'active': return 'Active';
-      case 'overdue': return 'En retard';
-      case 'paid': return 'Payée';
-      case 'future': return 'Future';
+      case 'active': return t.debtActive;
+      case 'overdue': return t.debtOverdue;
+      case 'paid': return t.debtPaid;
+      case 'future': return t.debtFuture;
       default: return status;
     }
   };
@@ -99,7 +100,7 @@ const DebtsScreen = ({ navigation }: any) => {
       <View style={styles.modernProgressSection}>
         <View style={styles.modernProgressInfo}>
           <Text style={[styles.modernProgressLabel, isDark && styles.darkSubtext]}>
-            Payé: {formatAmount(item.initialAmount - item.currentAmount)} / {formatAmount(item.initialAmount)}
+            {t.paidAmount}: {formatAmount(item.initialAmount - item.currentAmount)} / {formatAmount(item.initialAmount)}
           </Text>
         </View>
         <View style={[styles.modernProgressBar, isDark && styles.darkModernProgressBar]}>
@@ -119,7 +120,7 @@ const DebtsScreen = ({ navigation }: any) => {
       <View style={styles.modernDebtFooter}>
         <View style={styles.modernDebtDetail}>
           <Text style={[styles.modernDetailLabel, isDark && styles.darkSubtext]}>
-            Mensualité:
+            {t.monthlyPayment}:
           </Text>
           <Text style={[styles.modernDetailValue, isDark && styles.darkText]}>
             {formatAmount(item.monthlyPayment)}
@@ -127,10 +128,10 @@ const DebtsScreen = ({ navigation }: any) => {
         </View>
         <View style={styles.modernDebtDetail}>
           <Text style={[styles.modernDetailLabel, isDark && styles.darkSubtext]}>
-            Échéance:
+            {t.startDate}:
           </Text>
           <Text style={[styles.modernDetailValue, isDark && styles.darkText]}>
-            {new Date(item.dueDate).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}
+            {new Date(item.startDate).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}
           </Text>
         </View>
       </View>
@@ -155,18 +156,7 @@ const DebtsScreen = ({ navigation }: any) => {
 
   return (
     <View style={[styles.container, isDark && styles.darkContainer]}>
-      {/* Header moderne avec flèche retour */}
-      <View style={[styles.modernHeader, isDark && styles.darkModernHeader]}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#000"} />
-        </TouchableOpacity>
-        <Text style={[styles.modernTitle, isDark && styles.darkText]}>
-          Dettes
-        </Text>
-      </View>
+      <AppHeader title={t.myDebts} />
 
       <FlatList
         data={filteredDebts}
@@ -179,11 +169,11 @@ const DebtsScreen = ({ navigation }: any) => {
             {/* Carte résumé total */}
             <View style={[styles.totalCard, isDark && styles.darkTotalCard]}>
               <Text style={[styles.totalLabel, isDark && styles.darkSubtext]}>
-                Total des dettes
+                {t.totalDebts}
               </Text>
               <View style={styles.totalRow}>
                 <Text style={[styles.totalCount, isDark && styles.darkSubtext]}>
-                  {stats.totalDebt} dettes actives
+                  {stats.totalDebt} {t.activeDebts}
                 </Text>
                 <Text style={[styles.totalAmount, { color: '#EF4444' }]}>
                   {formatAmount(stats.totalRemaining || 0)}
@@ -193,7 +183,7 @@ const DebtsScreen = ({ navigation }: any) => {
 
             {/* Section dettes en cours avec titre */}
             <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
-              Dettes en cours
+              {t.debtsInProgress}
             </Text>
 
             {/* Filtres horizontaux modernisés */}
@@ -211,7 +201,7 @@ const DebtsScreen = ({ navigation }: any) => {
                   filter === 'all' && styles.modernFilterTextActive,
                   isDark && !filter && styles.darkText
                 ]}>
-                  Toutes
+                  {t.allDebts}
                 </Text>
               </TouchableOpacity>
               
@@ -228,7 +218,7 @@ const DebtsScreen = ({ navigation }: any) => {
                   filter === 'active' && styles.modernFilterTextActive,
                   isDark && filter !== 'active' && styles.darkText
                 ]}>
-                  Actives
+                  {t.actives}
                 </Text>
               </TouchableOpacity>
               
@@ -245,7 +235,7 @@ const DebtsScreen = ({ navigation }: any) => {
                   filter === 'overdue' && styles.modernFilterTextActive,
                   isDark && filter !== 'overdue' && styles.darkText
                 ]}>
-                  En retard
+                  {t.overdue}
                 </Text>
               </TouchableOpacity>
 
@@ -262,7 +252,7 @@ const DebtsScreen = ({ navigation }: any) => {
                   filter === 'future' && styles.modernFilterTextActive,
                   isDark && filter !== 'future' && styles.darkText
                 ]}>
-                  Futures
+                  {t.futures}
                 </Text>
               </TouchableOpacity>
               
@@ -279,7 +269,7 @@ const DebtsScreen = ({ navigation }: any) => {
                   filter === 'paid' && styles.modernFilterTextActive,
                   isDark && filter !== 'paid' && styles.darkText
                 ]}>
-                  Payées
+                  {t.paidDebts}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -295,14 +285,14 @@ const DebtsScreen = ({ navigation }: any) => {
               color={isDark ? "#888" : "#666"} 
             />
             <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
-              Aucune dette {filter !== 'all' ? `"${getStatusLabel(filter as Debt['status'])}"` : ''} trouvée
+              {t.noDebtFound} {filter !== 'all' ? `"${getStatusLabel(filter as Debt['status'])}"` : ''}
             </Text>
             <TouchableOpacity 
               style={[styles.emptyButton, isDark && styles.darkEmptyButton]}
               onPress={() => navigation.navigate('AddDebt')}
             >
               <Text style={styles.emptyButtonText}>
-                Ajouter une dette
+                {t.addDebt}
               </Text>
             </TouchableOpacity>
           </View>

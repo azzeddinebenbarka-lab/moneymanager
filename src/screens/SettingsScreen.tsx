@@ -2,6 +2,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { AppHeader } from '../components/layout/AppHeader';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -22,62 +23,62 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 
   const settingsSections = [
     {
-      title: 'COMPTE',
+      title: t.account.toUpperCase(),
       items: [
         {
           icon: 'person-outline',
           title: t.profile || 'Profil',
-          description: 'Informations personnelles',
+          description: t.personalInfo,
           color: colors.primary[500],
           screen: 'Profile',
         },
       ],
     },
     {
-      title: 'PRÉFÉRENCES',
+      title: t.preferences.toUpperCase(),
       items: [
         {
           icon: 'settings-outline',
           title: t.general,
-          description: 'Devise, langue, thème',
+          description: t.currencyLanguageTheme,
           color: '#5AC8FA',
           screen: 'GeneralSettings',
         },
         {
           icon: 'notifications-outline',
           title: t.notifications,
-          description: 'Gestion des notifications push',
+          description: t.notificationManagement,
           color: '#FF9500',
           screen: 'NotificationSettings',
         },
       ],
     },
     {
-      title: 'SÉCURITÉ',
+      title: t.securitySettings.toUpperCase(),
       items: [
         {
           icon: 'shield-checkmark-outline',
           title: t.security,
-          description: 'Mot de passe, biométrie, code PIN',
+          description: t.passwordBiometrics,
           color: '#FF3B30',
           screen: 'SecuritySettings',
         },
         {
           icon: 'cloud-upload-outline',
           title: t.backup,
-          description: 'Sauvegarde et restauration',
+          description: t.backupRestore,
           color: '#34C759',
           screen: 'Backup',
         },
       ],
     },
     {
-      title: 'SUPPORT',
+      title: t.support.toUpperCase(),
       items: [
         {
           icon: 'information-circle-outline',
           title: t.about,
-          description: 'Version, aide, conditions',
+          description: t.versionHelp,
           color: '#5856D6',
           screen: 'AboutScreen',
         },
@@ -87,6 +88,7 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 
   return (
     <SafeAreaView>
+      <AppHeader title={t.settings} />
       <ScrollView style={[styles.container, { backgroundColor: colors.background.primary }]}>
         {/* Section Profil */}
         <View style={[styles.profileSection, { backgroundColor: colors.background.secondary }]}>
@@ -99,11 +101,11 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
               {capitalizedUserName}
             </Text>
             <Text style={[styles.profileEmail, { color: colors.text.secondary }]}>
-              {user?.email || 'Non connecté'}
+              {user?.email || t.notConnected}
             </Text>
             <View style={[styles.roleBadge, { backgroundColor: colors.primary[100] }]}>
               <Text style={[styles.roleText, { color: colors.primary[700] }]}>
-                Utilisateur
+                {t.userRole}
               </Text>
             </View>
           </View>
@@ -111,7 +113,7 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 
         {/* Titre Paramètres */}
         <Text style={[styles.pageTitle, { color: colors.text.primary }]}>
-          Paramètres
+          {t.settings}
         </Text>
 
         {/* Sections de paramètres avec catégories */}

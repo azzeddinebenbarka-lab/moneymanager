@@ -1,4 +1,5 @@
 import { Category } from '../types';
+import { translateCategoryName } from './categoryTranslations';
 
 export interface ResolvedCategory {
   parent?: string | null;
@@ -8,8 +9,13 @@ export interface ResolvedCategory {
 
 // Resolve a category value that may be an id, a name, or a legacy keyword.
 // Returns an object with optional parent name and child name to allow "Parent › Child" rendering.
-export function resolveCategoryLabel(value: string | undefined | null, categories: Category[] = []): ResolvedCategory {
-  if (!value) return { child: 'Autre' };
+// If translations are provided, category names will be translated
+export function resolveCategoryLabel(
+  value: string | undefined | null, 
+  categories: Category[] = [],
+  translations?: any
+): ResolvedCategory {
+  if (!value) return { child: translations ? translations.other || 'Autre' : 'Autre' };
 
   const all = categories || [];
   const trimmed = String(value).trim();
@@ -18,21 +24,25 @@ export function resolveCategoryLabel(value: string | undefined | null, categorie
   // 1) Try exact id match
   const byId = all.find((c) => c.id === trimmed);
   if (byId) {
+    const translatedName = translations ? translateCategoryName(byId.name, translations) : byId.name;
     if (byId.parentId) {
       const parent = all.find((p) => p.id === byId.parentId);
-      return { parent: parent ? parent.name : null, child: byId.name, matchedId: byId.id };
+      const translatedParent = parent && translations ? translateCategoryName(parent.name, translations) : parent?.name;
+      return { parent: translatedParent || null, child: translatedName, matchedId: byId.id };
     }
-    return { child: byId.name, matchedId: byId.id };
+    return { child: translatedName, matchedId: byId.id };
   }
 
   // 2) Try exact name match (case-insensitive)
   const byName = all.find((c) => (c.name || '').toLowerCase() === lower);
   if (byName) {
+    const translatedName = translations ? translateCategoryName(byName.name, translations) : byName.name;
     if (byName.parentId) {
       const parent = all.find((p) => p.id === byName.parentId);
-      return { parent: parent ? parent.name : null, child: byName.name, matchedId: byName.id };
+      const translatedParent = parent && translations ? translateCategoryName(parent.name, translations) : parent?.name;
+      return { parent: translatedParent || null, child: translatedName, matchedId: byName.id };
     }
-    return { child: byName.name, matchedId: byName.id };
+    return { child: translatedName, matchedId: byName.id };
   }
 
   // 3) Try partial match: category name contains value or vice-versa
@@ -41,11 +51,13 @@ export function resolveCategoryLabel(value: string | undefined | null, categorie
     return name.includes(lower) || lower.includes(name);
   });
   if (partial) {
+    const translatedName = translations ? translateCategoryName(partial.name, translations) : partial.name;
     if (partial.parentId) {
       const parent = all.find((p) => p.id === partial.parentId);
-      return { parent: parent ? parent.name : null, child: partial.name, matchedId: partial.id };
+      const translatedParent = parent && translations ? translateCategoryName(parent.name, translations) : parent?.name;
+      return { parent: translatedParent || null, child: translatedName, matchedId: partial.id };
     }
-    return { child: partial.name, matchedId: partial.id };
+    return { child: translatedName, matchedId: partial.id };
   }
 
   // 4) Fallback: use the raw value as a label

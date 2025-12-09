@@ -97,15 +97,15 @@ export default function NotificationSettingsScreen() {
   const handleTestNotification = async () => {
     try {
       await pushNotificationService.sendLocalNotification({
-        title: '🔔 Notification de test',
-        body: 'Les notifications fonctionnent correctement !',
+        title: t.testNotificationTitle,
+        body: t.testNotificationBody,
         data: { type: 'test' },
         sound: preferences.soundEnabled,
       });
       
       Alert.alert(
-        'Test réussi !',
-        'Une notification a été envoyée'
+        t.testSuccess,
+        t.notificationSent
       );
     } catch (error) {
       Alert.alert(
@@ -117,19 +117,19 @@ export default function NotificationSettingsScreen() {
 
   const handleClearAll = async () => {
     Alert.alert(
-      'Effacer les notifications',
-      'Voulez-vous effacer toutes les notifications programmées ?',
+      t.clearAllNotifications,
+      t.clearNotificationsQuestion,
       [
         { text: t.cancel, style: 'cancel' },
         {
-          text: 'Effacer',
+          text: t.clearAllNotifications,
           style: 'destructive',
           onPress: async () => {
             await pushNotificationService.cancelAllNotifications();
             await pushNotificationService.clearAllNotifications();
             await pushNotificationService.resetBadge();
             setScheduledCount(0);
-            Alert.alert('Terminé', 'Toutes les notifications ont été effacées');
+            Alert.alert(t.finished, t.allNotificationsCleared);
           },
         },
       ]
@@ -145,8 +145,8 @@ export default function NotificationSettingsScreen() {
       );
       
       Alert.alert(
-        'Rappel programmé',
-        'Vous recevrez un rappel quotidien à 18h00'
+        t.dailyReminderScheduled,
+        t.dailyReminderMessage
       );
       
       loadScheduledCount();
@@ -160,7 +160,7 @@ export default function NotificationSettingsScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: designSystem.colors.background.primary }]}>
         <View style={styles.centered}>
           <Text style={[styles.message, { color: designSystem.colors.text.secondary }]}>
-            Chargement des paramètres...
+            {t.loading}
           </Text>
         </View>
       </SafeAreaView>
@@ -173,10 +173,10 @@ export default function NotificationSettingsScreen() {
         <View style={styles.centered}>
           <Ionicons name="notifications-off" size={64} color={designSystem.colors.text.tertiary} />
           <Text style={[styles.title, { color: designSystem.colors.text.primary }]}>
-            Notifications désactivées
+            {t.notificationsDisabled}
           </Text>
           <Text style={[styles.message, { color: designSystem.colors.text.secondary }]}>
-            Veuillez activer les notifications dans les paramètres de votre appareil
+            {t.enableInSettings}
           </Text>
         </View>
       </SafeAreaView>
@@ -190,23 +190,23 @@ export default function NotificationSettingsScreen() {
         <View style={styles.header}>
           <Ionicons name="notifications" size={48} color={designSystem.colors.primary[500]} />
           <Text style={[styles.headerTitle, { color: designSystem.colors.text.primary }]}>
-            Paramètres de notification
+            {t.notificationSettings}
           </Text>
           <Text style={[styles.headerSubtitle, { color: designSystem.colors.text.secondary }]}>
-            {scheduledCount} notification(s) programmée(s)
+            {scheduledCount} {t.scheduledNotifications.toLowerCase()}
           </Text>
         </View>
 
         {/* Notifications Push */}
         <View style={[styles.section, { backgroundColor: designSystem.colors.background.card }]}>
           <Text style={[styles.sectionTitle, { color: designSystem.colors.text.primary }]}>
-            Notifications Push
+            {t.pushNotifications || t.notifications}
           </Text>
           
           <SettingRow
             icon="notifications-outline"
-            title="Activer les notifications"
-            subtitle="Recevoir des notifications sur votre appareil"
+            title={t.enableNotifications}
+            subtitle={t.receiveNotifications}
             value={preferences.pushEnabled}
             onToggle={() => togglePreference('pushEnabled')}
             colors={designSystem.colors}
@@ -214,8 +214,8 @@ export default function NotificationSettingsScreen() {
 
           <SettingRow
             icon="volume-high-outline"
-            title="Son"
-            subtitle="Jouer un son pour les notifications"
+            title={t.soundEnabled}
+            subtitle={t.playSound}
             value={preferences.soundEnabled}
             onToggle={() => togglePreference('soundEnabled')}
             colors={designSystem.colors}
@@ -224,8 +224,8 @@ export default function NotificationSettingsScreen() {
 
           <SettingRow
             icon="phone-portrait-outline"
-            title="Vibration"
-            subtitle="Vibrer pour les notifications"
+            title={t.vibrationEnabled}
+            subtitle={t.vibrateForNotifications}
             value={preferences.vibrationEnabled}
             onToggle={() => togglePreference('vibrationEnabled')}
             colors={designSystem.colors}
@@ -234,8 +234,8 @@ export default function NotificationSettingsScreen() {
 
           <SettingRow
             icon="ellipse"
-            title="Badge"
-            subtitle="Afficher le nombre sur l'icône de l'app"
+            title={t.badgeEnabled}
+            subtitle={t.showBadgeIcon}
             value={preferences.badgeEnabled}
             onToggle={() => togglePreference('badgeEnabled')}
             colors={designSystem.colors}
@@ -246,13 +246,13 @@ export default function NotificationSettingsScreen() {
         {/* Types de notifications */}
         <View style={[styles.section, { backgroundColor: designSystem.colors.background.card }]}>
           <Text style={[styles.sectionTitle, { color: designSystem.colors.text.primary }]}>
-            Types de notifications
+            {t.activityNotifications}
           </Text>
           
           <SettingRow
             icon="swap-horizontal"
-            title="Transactions"
-            subtitle="Ajout, modification, suppression"
+            title={t.transactionsNotif}
+            subtitle={t.transactionChanges}
             value={preferences.transactionsEnabled}
             onToggle={() => togglePreference('transactionsEnabled')}
             colors={designSystem.colors}
@@ -261,8 +261,8 @@ export default function NotificationSettingsScreen() {
 
           <SettingRow
             icon="alert-circle"
-            title="Alertes budgets"
-            subtitle="Budget dépassé, avertissements"
+            title={t.budgetAlerts}
+            subtitle={t.budgetExceeded}
             value={preferences.budgetAlertsEnabled}
             onToggle={() => togglePreference('budgetAlertsEnabled')}
             colors={designSystem.colors}
@@ -271,8 +271,8 @@ export default function NotificationSettingsScreen() {
 
           <SettingRow
             icon="time"
-            title="Rappels de dettes"
-            subtitle="Échéances proches, paiements"
+            title={t.debtReminders}
+            subtitle={t.upcomingPayments}
             value={preferences.debtRemindersEnabled}
             onToggle={() => togglePreference('debtRemindersEnabled')}
             colors={designSystem.colors}
@@ -281,8 +281,8 @@ export default function NotificationSettingsScreen() {
 
           <SettingRow
             icon="trophy"
-            title="Objectifs d'épargne"
-            subtitle="Progrès, objectifs atteints"
+            title={t.savingsGoalsNotif}
+            subtitle={t.progressAchieved}
             value={preferences.savingsGoalsEnabled}
             onToggle={() => togglePreference('savingsGoalsEnabled')}
             colors={designSystem.colors}
@@ -291,8 +291,8 @@ export default function NotificationSettingsScreen() {
 
           <SettingRow
             icon="bar-chart"
-            title="Rapports"
-            subtitle="Rapports mensuels, statistiques"
+            title={t.reportsNotif}
+            subtitle={t.monthlyStats}
             value={preferences.reportsEnabled}
             onToggle={() => togglePreference('reportsEnabled')}
             colors={designSystem.colors}
@@ -303,7 +303,7 @@ export default function NotificationSettingsScreen() {
         {/* Actions */}
         <View style={[styles.section, { backgroundColor: designSystem.colors.background.card }]}>
           <Text style={[styles.sectionTitle, { color: designSystem.colors.text.primary }]}>
-            Actions
+            {t.actions}
           </Text>
 
           <TouchableOpacity
@@ -313,7 +313,7 @@ export default function NotificationSettingsScreen() {
           >
             <Ionicons name="flask" size={20} color="#FFFFFF" />
             <Text style={styles.actionButtonText}>
-              Tester les notifications
+              {t.testNotification}
             </Text>
           </TouchableOpacity>
 
@@ -324,7 +324,7 @@ export default function NotificationSettingsScreen() {
           >
             <Ionicons name="alarm" size={20} color="#FFFFFF" />
             <Text style={styles.actionButtonText}>
-              Programmer rappel quotidien (18h)
+              {t.scheduleDailyReminder}
             </Text>
           </TouchableOpacity>
 
@@ -334,7 +334,7 @@ export default function NotificationSettingsScreen() {
           >
             <Ionicons name="trash" size={20} color="#FFFFFF" />
             <Text style={styles.actionButtonText}>
-              Effacer toutes les notifications
+              {t.clearAllNotifications}
             </Text>
           </TouchableOpacity>
         </View>
@@ -343,8 +343,8 @@ export default function NotificationSettingsScreen() {
         <View style={styles.info}>
           <Ionicons name="information-circle" size={20} color={designSystem.colors.text.tertiary} />
           <Text style={[styles.infoText, { color: designSystem.colors.text.tertiary }]}>
-            Les notifications push ne fonctionnent que sur un appareil physique.
-            {'\n'}Les notifications sont envoyées localement et ne nécessitent pas de connexion internet.
+            {t.pushNotifWork}
+            {'\n'}{t.locallyStored}
           </Text>
         </View>
       </ScrollView>

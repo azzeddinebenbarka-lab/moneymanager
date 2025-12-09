@@ -13,7 +13,9 @@ import {
     View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppHeader } from '../components/layout/AppHeader';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAnnualCharges } from '../hooks/useAnnualCharges';
 import { recurrenceService } from '../services/recurrenceService';
@@ -29,6 +31,7 @@ export default function AnnualChargesScreen({ navigation }: AnnualChargesScreenP
   const { designSystem } = useTheme();
   const colors = designSystem.colors;
   const { formatAmount } = useCurrency();
+  const { t } = useLanguage();
   const { 
     charges, 
     loading, 
@@ -91,28 +94,28 @@ export default function AnnualChargesScreen({ navigation }: AnnualChargesScreenP
     return [
       { 
         key: 'all' as FilterType, 
-        label: 'Toutes', 
+        label: t.allCharges, 
         count: charges.length, 
         icon: 'list-outline',
         amount: allTotal
       },
       { 
         key: 'pending' as FilterType, 
-        label: 'En attente', 
+        label: t.pending, 
         count: pendingCharges.length,
         icon: 'time-outline',
         amount: pendingTotal
       },
       { 
         key: 'paid' as FilterType, 
-        label: 'Payées', 
+        label: t.paid, 
         count: paidCharges.length,
         icon: 'checkmark-circle-outline',
         amount: paidTotal
       },
       { 
         key: 'upcoming' as FilterType, 
-        label: 'À venir', 
+        label: t.upcoming, 
         count: upcomingCharges.length,
         icon: 'calendar-outline',
         amount: upcomingTotal
@@ -162,29 +165,29 @@ export default function AnnualChargesScreen({ navigation }: AnnualChargesScreenP
     try {
       await updateAnnualCharge(charge.id, { autoDeduct: enabled });
       Alert.alert(
-        'Succès',
-        enabled ? 'Prélèvement automatique activé' : 'Prélèvement automatique désactivé'
+        t.success,
+        enabled ? t.autoDeductEnabled : t.autoDeductDisabled
       );
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de modifier le prélèvement automatique');
+      Alert.alert(t.error, t.autoDeductError);
     }
   }, [updateAnnualCharge]);
 
   const handleDelete = useCallback((charge: AnnualCharge) => {
     Alert.alert(
-      'Supprimer la charge',
-      `Êtes-vous sûr de vouloir supprimer "${charge.name}" ?`,
+      t.deleteCharge,
+      `${t.deleteChargeConfirm} "${charge.name}" ?`,
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         {
-          text: 'Supprimer',
+          text: t.delete,
           style: 'destructive',
           onPress: async () => {
             try {
               await deleteAnnualCharge(charge.id);
               await refreshAnnualCharges();
             } catch (error) {
-              Alert.alert('Erreur', 'Impossible de supprimer la charge');
+              Alert.alert(t.error, t.deleteChargeError);
             }
           }
         }
@@ -309,12 +312,12 @@ export default function AnnualChargesScreen({ navigation }: AnnualChargesScreenP
           {charge.isPaid && (
             <View style={[styles.infoBadge, { backgroundColor: safeColors.success + '20', borderWidth: 1, borderColor: safeColors.success + '40' }]}>
               <Ionicons name="checkmark-circle" size={12} color={safeColors.success} />
-              <Text style={[styles.infoBadgeText, { color: safeColors.success }]}>Payée</Text>
+              <Text style={[styles.infoBadgeText, { color: safeColors.success }]}>{t.paid}</Text>
             </View>
           )}
           <View style={[styles.infoBadge, { backgroundColor: safeColors.primary + '15', borderWidth: 1, borderColor: safeColors.primary + '40' }]}>
             <Ionicons name="calendar-outline" size={12} color={safeColors.primary} />
-            <Text style={[styles.infoBadgeText, { color: safeColors.primary }]}>Annuel</Text>
+            <Text style={[styles.infoBadgeText, { color: safeColors.primary }]}>{t.annual}</Text>
           </View>
         </View>
         
@@ -348,7 +351,7 @@ export default function AnnualChargesScreen({ navigation }: AnnualChargesScreenP
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={safeColors.primary} />
           <Text style={[styles.loadingText, { color: safeColors.text.secondary }]}>
-            Chargement...
+            {t.loading}
           </Text>
         </View>
       </SafeAreaView>
@@ -357,24 +360,23 @@ export default function AnnualChargesScreen({ navigation }: AnnualChargesScreenP
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: safeColors.background }]} edges={['top']}>
-      {/* En-tête avec bouton d'ajout */}
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: safeColors.text.primary }]}>
-          Charges Annuelles
-        </Text>
-        <TouchableOpacity
-          style={[styles.addButton, { backgroundColor: safeColors.primary }]}
-          onPress={() => navigation.navigate('AddAnnualCharge')}
-        >
-          <Ionicons name="add" size={24} color="white" />
-        </TouchableOpacity>
-      </View>
+      <AppHeader 
+        title={t.annualCharges}
+        rightComponent={
+          <TouchableOpacity
+            style={[styles.addButton, { backgroundColor: safeColors.primary }]}
+            onPress={() => navigation.navigate('AddAnnualCharge')}
+          >
+            <Ionicons name="add" size={24} color="white" />
+          </TouchableOpacity>
+        }
+      />
 
       {/* Message informatif */}
       <View style={[styles.infoMessage, { backgroundColor: safeColors.primary + '10', borderColor: safeColors.primary + '30' }]}>
         <Ionicons name="information-circle" size={20} color={safeColors.primary} />
         <Text style={[styles.infoMessageText, { color: safeColors.text.primary }]}>
-          <Text style={{ fontWeight: '600' }}>💡 Astuce :</Text> Les charges avec 📅 sont récurrentes, ⚡ indique un prélèvement automatique actif
+          {t.chargesHint}
         </Text>
       </View>
 
@@ -384,24 +386,24 @@ export default function AnnualChargesScreen({ navigation }: AnnualChargesScreenP
           <View style={styles.budgetHeader}>
             <Ionicons name="wallet-outline" size={24} color={safeColors.primary} />
             <Text style={[styles.budgetTitle, { color: safeColors.text.primary }]}>
-              Budget Annuel
+              {t.annualBudget}
             </Text>
           </View>
           <View style={styles.budgetContent}>
             <View style={styles.budgetRow}>
-              <Text style={[styles.budgetLabel, { color: safeColors.text.secondary }]}>Total charges</Text>
+              <Text style={[styles.budgetLabel, { color: safeColors.text.secondary }]}>{t.totalCharges}</Text>
               <Text style={[styles.budgetAmount, { color: safeColors.text.primary }]}>
                 {formatAmount(budgetCard.totalCharges)}
               </Text>
             </View>
             <View style={styles.budgetRow}>
-              <Text style={[styles.budgetLabel, { color: safeColors.text.secondary }]}>Payées</Text>
+              <Text style={[styles.budgetLabel, { color: safeColors.text.secondary }]}>{t.paidCharges}</Text>
               <Text style={[styles.budgetAmount, { color: safeColors.success }]}>
                 {formatAmount(budgetCard.paidAmount)}
               </Text>
             </View>
             <View style={styles.budgetRow}>
-              <Text style={[styles.budgetLabel, { color: safeColors.text.secondary }]}>Restantes</Text>
+              <Text style={[styles.budgetLabel, { color: safeColors.text.secondary }]}>{t.remainingCharges}</Text>
               <Text style={[styles.budgetAmount, { color: safeColors.warning }]}>
                 {formatAmount(budgetCard.remainingAmount)}
               </Text>
@@ -481,12 +483,14 @@ export default function AnnualChargesScreen({ navigation }: AnnualChargesScreenP
             <View style={styles.emptyContainer}>
               <Ionicons name="document-outline" size={64} color={safeColors.text.secondary} />
               <Text style={[styles.emptyTitle, { color: safeColors.text.primary }]}>
-                Aucune charge
+                {t.noCharge}
               </Text>
               <Text style={[styles.emptyDescription, { color: safeColors.text.secondary }]}>
                 {selectedFilter === 'all' 
-                  ? 'Ajoutez votre première charge annuelle'
-                  : `Aucune charge ${filters.find(f => f.key === selectedFilter)?.label.toLowerCase()}`
+                  ? t.addFirstCharge
+                  : selectedFilter === 'pending' ? t.noPendingCharges
+                  : selectedFilter === 'paid' ? t.noPaidCharges
+                  : t.noUpcomingCharges
                 }
               </Text>
             </View>
@@ -494,13 +498,13 @@ export default function AnnualChargesScreen({ navigation }: AnnualChargesScreenP
             <View style={styles.chargesList}>
               <View style={styles.sectionHeader}>
                 <Text style={[styles.sectionTitle, { color: safeColors.text.primary }]}>
-                  {selectedFilter === 'all' ? 'Toutes les charges' :
-                   selectedFilter === 'pending' ? 'Charges en attente' :
-                   selectedFilter === 'paid' ? 'Charges payées' :
-                   selectedFilter === 'upcoming' ? 'Charges à venir' : 'Charges'}
+                  {selectedFilter === 'all' ? t.allChargesList :
+                   selectedFilter === 'pending' ? t.pendingChargesList :
+                   selectedFilter === 'paid' ? t.paidChargesList :
+                   selectedFilter === 'upcoming' ? t.upcomingChargesList : t.allChargesList}
                 </Text>
                 <View style={[styles.sectionBadge, { backgroundColor: safeColors.primary }]}>
-                  <Text style={styles.sectionBadgeText}>Total</Text>
+                  <Text style={styles.sectionBadgeText}>{t.total}</Text>
                 </View>
                 <Text style={[styles.sectionAmount, { color: safeColors.text.primary }]}>
                   {formatAmount(filters.find(f => f.key === selectedFilter)?.amount || 0)}

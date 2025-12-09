@@ -1,18 +1,19 @@
 ﻿import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
-    ActivityIndicator,
-    FlatList,
-    RefreshControl,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import BarChart from '../components/charts/BarChart';
 import LineChart from '../components/charts/LineChart';
 import PieChart from '../components/charts/PieChart';
+import { SafeAreaView } from '../components/SafeAreaView';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
@@ -54,7 +55,7 @@ const ReportsScreen = ({ navigation }: any) => {
   const PeriodSelector = () => (
     <View style={[styles.periodSelector, { backgroundColor: colors.background.card }]}>
       <Text style={[styles.periodSelectorTitle, { color: colors.text.primary }]}>
-        Période
+        {t.period}
       </Text>
       {predefinedPeriods.map((period) => (
         <TouchableOpacity
@@ -101,7 +102,7 @@ const ReportsScreen = ({ navigation }: any) => {
         >
           <Ionicons name="filter" size={20} color="#007AFF" />
           <Text style={[styles.filtersToggleText, { color: colors.text.primary }]}>
-            Filtres avancés
+            {t.advancedFilters}
           </Text>
           <Ionicons 
             name={showAdvancedFilters ? "chevron-up" : "chevron-down"} 
@@ -114,7 +115,7 @@ const ReportsScreen = ({ navigation }: any) => {
           <View style={[styles.advancedFilters, { backgroundColor: colors.background.card }]}>
             <View style={styles.filterGroup}>
               <Text style={[styles.filterLabel, { color: colors.text.primary }]}>
-                Type de transaction
+                {t.transactionType}
               </Text>
               <View style={styles.filterOptions}>
                 <TouchableOpacity
@@ -128,7 +129,7 @@ const ReportsScreen = ({ navigation }: any) => {
                     styles.filterOptionText,
                     filters.transactionTypes.includes('income') && styles.filterOptionTextSelected,
                   ]}>
-                    Revenus
+                    {t.income}
                   </Text>
                 </TouchableOpacity>
                 
@@ -143,7 +144,7 @@ const ReportsScreen = ({ navigation }: any) => {
                     styles.filterOptionText,
                     filters.transactionTypes.includes('expense') && styles.filterOptionTextSelected,
                   ]}>
-                    Dépenses
+                    {t.expenses}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -151,11 +152,11 @@ const ReportsScreen = ({ navigation }: any) => {
 
             <View style={styles.filterGroup}>
               <Text style={[styles.filterLabel, { color: colors.text.primary }]}>
-                Montant
+                {t.amount}
               </Text>
               <View style={styles.amountFilters}>
                 <View style={styles.amountInputContainer}>
-                  <Text style={[styles.amountLabel, { color: colors.text.secondary }]}>Min</Text>
+                  <Text style={[styles.amountLabel, { color: colors.text.secondary }]}>{t.min}</Text>
                   <TextInput
                     style={[styles.amountInput, { backgroundColor: colors.background.secondary, color: colors.text.primary, borderColor: colors.border.primary }]}
                     placeholder="0"
@@ -169,7 +170,7 @@ const ReportsScreen = ({ navigation }: any) => {
                   />
                 </View>
                 <View style={styles.amountInputContainer}>
-                  <Text style={[styles.amountLabel, { color: colors.text.secondary }]}>Max</Text>
+                  <Text style={[styles.amountLabel, { color: colors.text.secondary }]}>{t.max}</Text>
                   <TextInput
                     style={[styles.amountInput, { backgroundColor: colors.background.secondary, color: colors.text.primary, borderColor: colors.border.primary }]}
                     placeholder="∞"
@@ -194,7 +195,7 @@ const ReportsScreen = ({ navigation }: any) => {
                 maxAmount: undefined,
               })}
             >
-              <Text style={styles.resetButtonText}>Réinitialiser les filtres</Text>
+              <Text style={styles.resetButtonText}>{t.resetFilters}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -205,7 +206,7 @@ const ReportsScreen = ({ navigation }: any) => {
   const QuickStatsCard = () => (
     <View style={[styles.quickStatsCard, { backgroundColor: colors.background.card }]}>
       <Text style={[styles.cardTitle, { color: colors.text.primary }]}>
-        Aperçu Financier
+        {t.financialOverview}
       </Text>
       
       <View style={styles.statsGrid}>
@@ -215,7 +216,7 @@ const ReportsScreen = ({ navigation }: any) => {
             {formatAmount(quickStats.totalIncome || 0)}
           </Text>
           <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
-            Revenus
+            {t.income}
           </Text>
         </View>
 
@@ -225,7 +226,7 @@ const ReportsScreen = ({ navigation }: any) => {
             {formatAmount(quickStats.totalExpenses || 0)}
           </Text>
           <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
-            Dépenses
+            {t.expenses}
           </Text>
         </View>
 
@@ -242,7 +243,7 @@ const ReportsScreen = ({ navigation }: any) => {
             {formatAmount(quickStats.netCashFlow || 0)}
           </Text>
           <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
-            Solde
+            {t.balance}
           </Text>
         </View>
 
@@ -252,7 +253,7 @@ const ReportsScreen = ({ navigation }: any) => {
             {(quickStats.savingsRate || 0).toFixed(1)}%
           </Text>
           <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
-            Épargne
+            {t.savings}
           </Text>
         </View>
       </View>
@@ -275,12 +276,12 @@ const ReportsScreen = ({ navigation }: any) => {
 
     const getHealthStatusText = (status: string): string => {
       switch (status) {
-        case 'excellent': return 'Excellent';
-        case 'good': return 'Bon';
-        case 'fair': return 'Correct';
-        case 'poor': return 'Faible';
-        case 'critical': return 'Critique';
-        default: return 'Inconnu';
+        case 'excellent': return t.excellent;
+        case 'good': return t.good;
+        case 'fair': return t.fair;
+        case 'poor': return t.poor;
+        case 'critical': return t.critical;
+        default: return t.unknown;
       }
     };
 
@@ -291,7 +292,7 @@ const ReportsScreen = ({ navigation }: any) => {
       >
         <View style={styles.healthHeader}>
           <Text style={[styles.cardTitle, { color: colors.text.primary }]}>
-            Santé Financière
+            {t.financialHealth}
           </Text>
           <View style={[
             styles.healthScore,
@@ -315,7 +316,7 @@ const ReportsScreen = ({ navigation }: any) => {
         {financialHealth.recommendations && financialHealth.recommendations.length > 0 && (
           <View style={styles.recommendations}>
             <Text style={[styles.recommendationsTitle, { color: colors.text.secondary }]}>
-              Recommandations
+              {t.recommendations}
             </Text>
             <Text style={[styles.recommendation, { color: colors.text.secondary }]}>
               {financialHealth.recommendations[0]}
@@ -333,7 +334,7 @@ const ReportsScreen = ({ navigation }: any) => {
     >
       <View style={styles.cardHeader}>
         <Text style={[styles.cardTitle, { color: colors.text.primary }]}>
-          Top Catégories
+          {t.topCategories}
         </Text>
         <Ionicons name="chevron-forward" size={20} color={colors.text.secondary} />
       </View>
@@ -370,7 +371,7 @@ const ReportsScreen = ({ navigation }: any) => {
 
       {topCategories.length === 0 && (
         <Text style={[styles.emptyText, { color: colors.text.secondary }]}>
-          Aucune donnée de catégorie
+          {t.noCategoryData}
         </Text>
       )}
     </TouchableOpacity>
@@ -383,7 +384,7 @@ const ReportsScreen = ({ navigation }: any) => {
     >
       <View style={styles.cardHeader}>
         <Text style={[styles.cardTitle, { color: colors.text.primary }]}>
-          Tendances Mensuelles
+          {t.monthlyTrends}
         </Text>
         <Ionicons name="chevron-forward" size={20} color={colors.text.secondary} />
       </View>
@@ -406,7 +407,7 @@ const ReportsScreen = ({ navigation }: any) => {
 
       {monthlySummaries.length === 0 && (
         <Text style={[styles.emptyText, { color: colors.text.secondary }]}>
-          Aucune donnée mensuelle
+          {t.noMonthlyData}
         </Text>
       )}
     </TouchableOpacity>
@@ -415,13 +416,13 @@ const ReportsScreen = ({ navigation }: any) => {
   const ChartsSection = () => (
     <View style={styles.chartsSection}>
       <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-        Visualisations
+        {t.visualizations}
       </Text>
       
       {chartData && (
         <BarChart 
           data={chartData}
-          title="Dépenses par Catégorie"
+          title={t.expensesByCategory}
           height={240}
         />
       )}
@@ -432,7 +433,7 @@ const ReportsScreen = ({ navigation }: any) => {
             ...item,
             percentage: item.percentage || 0
           }))}
-          title="Répartition des Dépenses"
+          title={t.expensesDistribution}
           height={260}
         />
       )}
@@ -440,7 +441,7 @@ const ReportsScreen = ({ navigation }: any) => {
       {chartData && (
         <LineChart 
           data={chartData}
-          title="Évolution des Dépenses"
+          title={t.expensesEvolution}
           height={240}
         />
       )}
@@ -452,7 +453,7 @@ const ReportsScreen = ({ navigation }: any) => {
       <View style={[styles.container, { backgroundColor: colors.background.primary }, styles.center]}>
         <ActivityIndicator size="large" color="#007AFF" />
         <Text style={[styles.loadingText, { color: colors.text.primary }]}>
-          Chargement des rapports...
+          {t.loadingReports}
         </Text>
       </View>
     );
@@ -466,7 +467,7 @@ const ReportsScreen = ({ navigation }: any) => {
           {error}
         </Text>
         <TouchableOpacity style={styles.retryButton} onPress={refreshAllData}>
-          <Text style={styles.retryButtonText}>Réessayer</Text>
+          <Text style={styles.retryButtonText}>{t.retry}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -477,42 +478,43 @@ const ReportsScreen = ({ navigation }: any) => {
       <View style={[styles.container, { backgroundColor: colors.background.primary }, styles.center]}>
         <Ionicons name="stats-chart" size={64} color={colors.text.disabled} />
         <Text style={[styles.emptyText, { color: colors.text.primary }]}>
-          Aucune donnée financière
+          {t.noFinancialData}
         </Text>
         <Text style={[styles.emptySubtext, { color: colors.text.secondary }]}>
-          Ajoutez des transactions pour voir vos rapports
+          {t.addTransactionsToSeeReports}
         </Text>
         <TouchableOpacity 
           style={styles.addButton}
           onPress={() => navigation.navigate('AddTransaction')}
         >
-          <Text style={styles.addButtonText}>Ajouter une transaction</Text>
+          <Text style={styles.addButtonText}>{t.addTransaction}</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
-      <View style={[styles.header, { backgroundColor: colors.background.card, borderBottomColor: colors.border.primary }]}>
-        <View style={styles.headerTop}>
-          <Text style={[styles.title, { color: colors.text.primary }]}>
-            Rapports
-          </Text>
-          <TouchableOpacity 
-            style={[styles.periodButton, { backgroundColor: colors.background.secondary }]}
-            onPress={() => setShowPeriodSelector(!showPeriodSelector)}
-          >
-            <Text style={[styles.periodButtonText, { color: colors.text.primary }]}>
-              {currentPeriod?.label || 'Ce mois'}
+    <SafeAreaView>
+      <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
+        <View style={[styles.header, { backgroundColor: colors.background.card, borderBottomColor: colors.border.primary }]}>
+          <View style={styles.headerTop}>
+            <Text style={[styles.title, { color: colors.text.primary }]}>
+              {t.reports}
             </Text>
-            <Ionicons 
-              name={showPeriodSelector ? "chevron-up" : "chevron-down"} 
-              size={16} 
-              color={colors.text.secondary} 
-            />
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity 
+              style={[styles.periodButton, { backgroundColor: colors.background.secondary }]}
+              onPress={() => setShowPeriodSelector(!showPeriodSelector)}
+            >
+              <Text style={[styles.periodButtonText, { color: colors.text.primary }]}>
+                {currentPeriod?.label || t.thisMonth}
+              </Text>
+              <Ionicons 
+                name={showPeriodSelector ? "chevron-up" : "chevron-down"} 
+                size={16} 
+                color={colors.text.secondary} 
+              />
+            </TouchableOpacity>
+          </View>
 
         {showPeriodSelector && <PeriodSelector />}
         
@@ -550,7 +552,8 @@ const ReportsScreen = ({ navigation }: any) => {
       >
         <Ionicons name="download" size={24} color="#fff" />
       </TouchableOpacity>
-    </View>
+      </View>
+    </SafeAreaView>
   );
 };
 

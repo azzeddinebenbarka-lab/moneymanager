@@ -3,11 +3,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import * as Font from 'expo-font';
+import * as NavigationBar from 'expo-navigation-bar';
 import * as Updates from 'expo-updates';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import * as NavigationBar from 'expo-navigation-bar';
 import AnimatedSplash from './src/components/SplashScreen';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { CurrencyProvider } from './src/context/CurrencyContext';
@@ -16,12 +16,12 @@ import { LanguageProvider } from './src/context/LanguageContext';
 import { RefreshProvider } from './src/context/RefreshContext';
 import { SecurityProvider } from './src/context/SecurityContext';
 import { ThemeProvider } from './src/context/ThemeContext';
-import BottomTabNavigator from './src/navigation/BottomTabNavigator';
 import ModernDrawerNavigator from './src/navigation/ModernDrawerNavigator';
 import ForgotPasswordScreen from './src/screens/auth/ForgotPasswordScreen';
 import LoginScreen from './src/screens/auth/LoginScreen';
 import RegisterScreen from './src/screens/auth/RegisterScreen';
 import WelcomeScreen from './src/screens/auth/WelcomeScreen';
+import OnboardingScreen from './src/screens/OnboardingScreen';
 
 // Hook pour l'initialisation des polices
 const useAppInitialization = () => {
@@ -147,6 +147,7 @@ const AuthStack = createStackNavigator();
 
 const AuthStackNavigator: React.FC = () => (
   <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+    <AuthStack.Screen name="Onboarding" component={OnboardingScreen} />
     <AuthStack.Screen name="Welcome" component={WelcomeScreen} />
     <AuthStack.Screen name="Login" component={LoginScreen} />
     <AuthStack.Screen name="Register" component={RegisterScreen} />

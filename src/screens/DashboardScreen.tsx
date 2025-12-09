@@ -12,19 +12,20 @@ interface NetWorthData {
   trend?: 'up' | 'down' | 'stable';
 }
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
-  Animated,
-  Dimensions,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Animated,
+    Dimensions,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import DonutChart from '../components/charts/DonutChart';
 import { TransactionDetailModal } from '../components/modals/TransactionDetailModal';
@@ -188,12 +189,13 @@ interface FinancialHealthCardProps {
 
 const FinancialHealthCard: React.FC<FinancialHealthCardProps> = ({ score, onPress }) => {
   const { colors, spacing } = useDesignSystem();
+  const { t } = useLanguage();
   
   const getHealthStatus = (score: number) => {
-    if (score >= 80) return { status: 'Excellent', color: colors.semantic.success, emoji: '🎉' };
-    if (score >= 60) return { status: 'Bon', color: colors.semantic.success, emoji: '👍' };
-    if (score >= 40) return { status: 'Moyen', color: colors.semantic.warning, emoji: '⚠️' };
-    return { status: 'À améliorer', color: colors.semantic.error, emoji: '🚨' };
+    if (score >= 80) return { status: t.excellent, color: colors.semantic.success, emoji: '🎉' };
+    if (score >= 60) return { status: t.good, color: colors.semantic.success, emoji: '👍' };
+    if (score >= 40) return { status: t.average, color: colors.semantic.warning, emoji: '⚠️' };
+    return { status: t.needsImprovement, color: colors.semantic.error, emoji: '🚨' };
   };
 
   const health = getHealthStatus(score);
@@ -206,7 +208,7 @@ const FinancialHealthCard: React.FC<FinancialHealthCardProps> = ({ score, onPres
     >
       <View style={styles.healthHeader}>
         <Text style={[styles.healthTitle, { color: colors.text.primary }]}>
-          Santé Financière
+          {t.financialHealth}
         </Text>
         <Text style={styles.healthEmoji}>{health.emoji}</Text>
       </View>
@@ -217,7 +219,7 @@ const FinancialHealthCard: React.FC<FinancialHealthCardProps> = ({ score, onPres
             {score}/100
           </Text>
           <Text style={[styles.healthScoreLabel, { color: colors.text.tertiary }]}>
-            Score
+            {t.score}
           </Text>
         </View>
 
@@ -241,10 +243,10 @@ const FinancialHealthCard: React.FC<FinancialHealthCardProps> = ({ score, onPres
 
       <Text style={[styles.healthAdvice, { color: colors.text.secondary }]}>
         {score >= 80 
-          ? 'Votre santé financière est excellente !' 
+          ? t.financialHealthExcellent
           : score >= 60 
-          ? 'Vous êtes sur la bonne voie.'
-          : 'Quelques ajustements pourraient aider.'
+          ? t.financialHealthGood
+          : t.financialHealthAverage
         }
       </Text>
     </TouchableOpacity>
@@ -336,7 +338,7 @@ const QuickActionsGrid: React.FC = React.memo(() => {
   const quickActions = [
     { 
       id: 'transaction', 
-      title: 'Transaction', 
+      title: t.transaction, 
       icon: 'add-circle' as const, 
       color: colors.primary[500],
       screen: 'Transactions',
@@ -344,7 +346,7 @@ const QuickActionsGrid: React.FC = React.memo(() => {
     },
     { 
       id: 'budget', 
-      title: 'Budget', 
+      title: t.budget, 
       icon: 'pie-chart' as const, 
       color: colors.functional.savings,
       screen: 'Budgets',
@@ -352,7 +354,7 @@ const QuickActionsGrid: React.FC = React.memo(() => {
     },
     { 
       id: 'category', 
-      title: 'Catégorie', 
+      title: t.category, 
       icon: 'pricetags' as const, 
       color: colors.functional.investment,
       screen: 'Categories',
@@ -360,7 +362,7 @@ const QuickActionsGrid: React.FC = React.memo(() => {
     },
     { 
       id: 'annualCharge', 
-      title: 'Charge Annuelle', 
+      title: t.annualCharge, 
       icon: 'calendar' as const, 
       color: colors.functional.expense,
       screen: 'AnnualCharges',
@@ -368,7 +370,7 @@ const QuickActionsGrid: React.FC = React.memo(() => {
     },
     { 
       id: 'savings', 
-      title: 'Épargne', 
+      title: t.savings, 
       icon: 'trending-up' as const, 
       color: colors.functional.income,
       screen: 'Savings',
@@ -376,7 +378,7 @@ const QuickActionsGrid: React.FC = React.memo(() => {
     },
     { 
       id: 'debt', 
-      title: 'Dette', 
+      title: t.debts, 
       icon: 'card' as const, 
       color: '#FF6B6B',
       screen: 'Debts',
@@ -427,10 +429,28 @@ const ModernHeader: React.FC<ModernHeaderProps> = ({ unreadCount }) => {
   const navigation = useNavigation();
   const { syncAllData, isSyncing } = useSync();
   const { user } = useAuth();
+  const [userName, setUserName] = useState<string>('');
   
-  // Extraire le prénom de l'email de l'utilisateur
-  const userName = user?.email ? user.email.split('@')[0].split('.')[0] : 'Utilisateur';
-  const capitalizedUserName = userName.charAt(0).toUpperCase() + userName.slice(1);
+  // Charger le nom de l'utilisateur depuis AsyncStorage
+  useEffect(() => {
+    const loadUserName = async () => {
+      try {
+        const storedName = await AsyncStorage.getItem('userName');
+        if (storedName) {
+          setUserName(storedName);
+        } else {
+          // Fallback: extraire le prénom de l'email
+          const emailName = user?.email ? user.email.split('@')[0].split('.')[0] : 'Utilisateur';
+          setUserName(emailName.charAt(0).toUpperCase() + emailName.slice(1));
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement du nom:', error);
+        const emailName = user?.email ? user.email.split('@')[0].split('.')[0] : 'Utilisateur';
+        setUserName(emailName.charAt(0).toUpperCase() + emailName.slice(1));
+      }
+    };
+    loadUserName();
+  }, [user?.email]);
 
   return (
     <View style={[styles.header, { backgroundColor: colors.background.card }]}>
@@ -447,7 +467,7 @@ const ModernHeader: React.FC<ModernHeaderProps> = ({ unreadCount }) => {
           {/* logo removed per design: keep header compact */}
           <View>
             <Text style={[styles.welcomeText, { color: colors.text.secondary }]}>
-              {t.welcome}, {capitalizedUserName}
+              {t.welcome}, {userName}
             </Text>
             <Text style={[styles.title, { color: colors.text.primary, fontSize: 18 }]}> 
               {t.dashboard}
@@ -485,6 +505,7 @@ const ModernHeader: React.FC<ModernHeaderProps> = ({ unreadCount }) => {
 const DashboardScreen: React.FC = () => {
   const { colors } = useDesignSystem();
   const { formatAmount } = useCurrency();
+  const { t, language } = useLanguage();
   const navigation = useNavigation();
   const { syncAllData, isSyncing } = useSync();
   const { refreshKey } = useRefresh(); // ✅ Écoute les changements globaux
@@ -511,11 +532,11 @@ const DashboardScreen: React.FC = () => {
   // ✅ OBTENIR LE LIBELLÉ DES CATÉGORIES SPÉCIALES
   const getSpecialCategoryLabel = (category: string): string => {
     const labels: { [key: string]: string } = {
-      'dette': 'Paiement de Dette',
-      'épargne': 'Épargne',
-      'charges_annuelles': 'Charge Annuelle',
-      'transfert': 'Transfert',
-      'remboursement épargne': 'Remboursement Épargne'
+      'dette': t.debtPayment,
+      'épargne': t.savings,
+      'charges_annuelles': t.annualCharge,
+      'transfert': t.transfer,
+      'remboursement épargne': t.savingsRefund
     };
     return labels[category.toLowerCase()] || category;
   };
@@ -587,10 +608,10 @@ const DashboardScreen: React.FC = () => {
 
   // ✅ Mémoriser les données du donut chart
   const donutData = useMemo(() => [
-    { name: 'Revenus', amount: Math.max(0, analytics.cashFlow.income), color: colors.functional.income },
-    { name: 'Dépenses', amount: Math.max(0, Math.abs(analytics.cashFlow.expenses)), color: colors.functional.expense },
-    { name: 'Solde', amount: Math.max(0, Math.abs(analytics.cashFlow.netFlow)), color: analytics.cashFlow.netFlow >= 0 ? colors.functional.savings : colors.functional.debt }
-  ], [analytics.cashFlow, colors]);
+    { name: t.revenue, amount: Math.max(0, analytics.cashFlow.income), color: colors.functional.income },
+    { name: t.expenses, amount: Math.max(0, Math.abs(analytics.cashFlow.expenses)), color: colors.functional.expense },
+    { name: analytics.cashFlow.netFlow >= 0 ? t.savings : t.deficit, amount: Math.max(0, Math.abs(analytics.cashFlow.netFlow)), color: analytics.cashFlow.netFlow >= 0 ? colors.functional.savings : colors.functional.debt }
+  ], [analytics.cashFlow, colors, t, language]);
 
 
 
@@ -706,7 +727,7 @@ const DashboardScreen: React.FC = () => {
           ]}
         >
           <Text style={[styles.refreshText, { color: colors.text.inverse }]}>
-            ✓ Dashboard mis à jour
+            {t.dashboardUpdated}
           </Text>
         </Animated.View>
         <ScrollView
@@ -739,7 +760,7 @@ const DashboardScreen: React.FC = () => {
 
           {/* Donut: Revenus / Dépenses / Solde */}
           <View style={{ width: '100%' }}>
-            <Text style={[styles.sectionTitle, { color: colors.text.primary, marginBottom: 12, marginHorizontal: 16 }]}>Aperçu Financier</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text.primary, marginBottom: 12, marginHorizontal: 16 }]}>{t.financialOverview}</Text>
             <View style={[styles.financialOverviewCard, { backgroundColor: colors.background.card }]}> 
               <DonutChart
                 data={donutData}
@@ -756,14 +777,14 @@ const DashboardScreen: React.FC = () => {
           {/* Transactions récentes */}
           <View style={{ paddingTop: 12 }}> 
             <View style={[styles.sectionHeader, { marginHorizontal: 16, marginBottom: 8 }]}>
-              <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Transactions Récentes</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>{t.recentTransactions}</Text>
               <TouchableOpacity 
                 onPress={() => navigation.navigate('Transactions' as never)}
                 accessible={true}
                 accessibilityLabel="Voir toutes les transactions"
                 accessibilityRole="button"
               >
-                <Text style={[styles.seeMoreButton, { color: colors.primary[500] }]}>Voir plus</Text>
+                <Text style={[styles.seeMoreButton, { color: colors.primary[500] }]}>{t.seeMore}</Text>
               </TouchableOpacity>
             </View>
             {recentTransactions.map((tx: any) => {
@@ -795,7 +816,7 @@ const DashboardScreen: React.FC = () => {
           {/* Prochaines Charges Annuelles */}
           {upcomingCharges.length > 0 && (
             <View style={{ width: '100%', paddingTop: 12 }} accessible={true} accessibilityLabel="Prochaines charges annuelles à venir">
-              <Text style={[styles.sectionTitle, { color: colors.text.primary, marginBottom: 12, marginHorizontal: 16 }]}>Prochaines Charges Annuelles</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text.primary, marginBottom: 12, marginHorizontal: 16 }]}>{t.upcomingAnnualCharges}</Text>
               <View style={[styles.upcomingChargesCard, { backgroundColor: colors.background.card }]}>
                 {upcomingCharges.map((charge: any, index: number) => (
                   <View 

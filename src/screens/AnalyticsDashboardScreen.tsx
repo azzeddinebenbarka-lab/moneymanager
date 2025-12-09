@@ -1,15 +1,18 @@
 // src/screens/AnalyticsDashboardScreen.tsx - VERSION MODERNISÉE
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useMemo, useState } from 'react';
 import {
-    Dimensions,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import { SafeAreaView } from '../components/SafeAreaView';
+import { AppHeader } from '../components/layout/AppHeader';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
@@ -23,7 +26,8 @@ const { width: screenWidth } = Dimensions.get('window');
 type PeriodType = 'month' | '3months' | '6months' | 'year';
 
 const AnalyticsDashboardScreen = ({ navigation }: any) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const locale = language === 'ar' ? 'ar-MA' : language === 'en' ? 'en-US' : 'fr-FR';
   const { colors } = useDesignSystem();
   const { theme } = useTheme();
   const { formatAmount } = useCurrency();
@@ -39,21 +43,32 @@ const AnalyticsDashboardScreen = ({ navigation }: any) => {
 
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('3months');
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const isDark = theme === 'dark';
 
   const getPeriodLabel = (period: PeriodType): string => {
     switch (period) {
-      case 'month': return 'Ce mois';
-      case '3months': return '3 mois';
-      case '6months': return '6 mois';
-      case 'year': return 'Cette année';
-      default: return '3 mois';
+      case 'month': return t.thisMonth;
+      case '3months': return t.threeMonths;
+      case '6months': return t.sixMonths;
+      case 'year': return t.thisYear;
+      default: return t.threeMonths;
     }
   };
 
-  useEffect(() => {
-    refreshAllData();
-  }, []);
+  // Recharger les données à chaque fois que l'écran est affiché
+  useFocusEffect(
+    useCallback(() => {
+      refreshAllData();
+    }, [])
+  );
+
+  // Fonction pour gérer le pull-to-refresh
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await refreshAllData();
+    setIsRefreshing(false);
+  }, [refreshAllData]);
 
   // Filtrer les données selon la période sélectionnée
   const filteredData = useMemo(() => {
@@ -126,7 +141,7 @@ const AnalyticsDashboardScreen = ({ navigation }: any) => {
     }
     
     const labels = filteredData.map(month => 
-      new Date(month.month).toLocaleDateString('fr-FR', { month: 'short' })
+      new Date(month.month).toLocaleDateString(locale, { month: 'short' })
     );
     const data = filteredData.map(month => month.expenses || 0);
     
@@ -137,76 +152,68 @@ const AnalyticsDashboardScreen = ({ navigation }: any) => {
   }, [filteredData]);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
-      {/* Header moderne */}
-      <View style={[styles.modernHeader, { backgroundColor: colors.background.card }]}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={[styles.modernTitle, { color: colors.text.primary }]}>
-          Statistiques Avancées
-        </Text>
-        
-        {/* Dropdown filtre période */}
-        <View style={styles.dropdownContainer}>
-          <TouchableOpacity 
-            style={[styles.dropdownButton, { backgroundColor: colors.background.secondary }]}
-            onPress={() => setShowDropdown(!showDropdown)}
-          >
-            <Text style={[styles.dropdownButtonText, { color: colors.text.primary }]}>
-              {getPeriodLabel(selectedPeriod)}
-            </Text>
-            <Ionicons 
-              name={showDropdown ? "chevron-up" : "chevron-down"} 
-              size={16} 
-              color={colors.text.primary} 
-            />
-          </TouchableOpacity>
-          
-          {showDropdown && (
-            <View style={[styles.dropdownMenu, { backgroundColor: colors.background.card }]}>
-              {[
-                { key: 'month' as PeriodType, label: 'Ce mois' },
-                { key: '3months' as PeriodType, label: '3 mois' },
-                { key: '6months' as PeriodType, label: '6 mois' },
-                { key: 'year' as PeriodType, label: 'Cette année' },
-              ].map((period) => (
-                <TouchableOpacity
-                  key={period.key}
-                  style={[
-                    styles.dropdownItem,
-                    { backgroundColor: selectedPeriod === period.key ? colors.primary[100] : 'transparent' },
-                  ]}
-                  onPress={() => {
-                    setSelectedPeriod(period.key);
-                    setShowDropdown(false);
-                  }}
-                >
-                  <Text style={[
-                    styles.dropdownItemText,
-                    { color: selectedPeriod === period.key ? colors.primary[500] : colors.text.primary },
-                  ]}>
-                    {period.label}
-                  </Text>
-                  {selectedPeriod === period.key && (
-                    <Ionicons name="checkmark" size={18} color={colors.primary[500]} />
-                  )}
-                </TouchableOpacity>
-              ))}
+    <SafeAreaView>
+      <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
+        <AppHeader 
+          title={t.reports}
+          rightComponent={
+            <View style={styles.dropdownContainer}>
+              <TouchableOpacity 
+                style={[styles.dropdownButton, { backgroundColor: colors.background.secondary }]}
+                onPress={() => setShowDropdown(!showDropdown)}
+              >
+                <Text style={[styles.dropdownButtonText, { color: colors.text.primary }]}>
+                  {getPeriodLabel(selectedPeriod)}
+                </Text>
+                <Ionicons 
+                  name={showDropdown ? "chevron-up" : "chevron-down"} 
+                  size={16} 
+                  color={colors.text.primary} 
+                />
+              </TouchableOpacity>
+              
+              {showDropdown && (
+                <View style={[styles.dropdownMenu, { backgroundColor: colors.background.card }]}>
+                  {[
+                    { key: 'month' as PeriodType, label: t.thisMonth },
+                    { key: '3months' as PeriodType, label: t.threeMonths },
+                    { key: '6months' as PeriodType, label: t.sixMonths },
+                    { key: 'year' as PeriodType, label: t.thisYear },
+                  ].map((period) => (
+                    <TouchableOpacity
+                      key={period.key}
+                      style={[
+                        styles.dropdownItem,
+                        { backgroundColor: selectedPeriod === period.key ? colors.primary[100] : 'transparent' },
+                      ]}
+                      onPress={() => {
+                        setSelectedPeriod(period.key);
+                        setShowDropdown(false);
+                      }}
+                    >
+                      <Text style={[
+                        styles.dropdownItemText,
+                        { color: selectedPeriod === period.key ? colors.primary[500] : colors.text.primary },
+                      ]}>
+                        {period.label}
+                      </Text>
+                      {selectedPeriod === period.key && (
+                        <Ionicons name="checkmark" size={18} color={colors.primary[500]} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
             </View>
-          )}
-        </View>
-      </View>
+          }
+        />
 
       <ScrollView
         style={styles.content}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
-            onRefresh={refreshAllData}
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
             tintColor={colors.primary[500]}
           />
         }
@@ -217,7 +224,7 @@ const AnalyticsDashboardScreen = ({ navigation }: any) => {
           <View style={styles.chartHeader}>
             <Ionicons name="trending-up" size={20} color={colors.text.primary} />
             <Text style={[styles.chartTitle, { color: colors.text.primary }]}>
-              Évolution mensuelle
+              {t.monthlyEvolution}
             </Text>
           </View>
           
@@ -229,7 +236,7 @@ const AnalyticsDashboardScreen = ({ navigation }: any) => {
           ) : (
             <View style={styles.emptyChart}>
               <Text style={[styles.emptyChartText, { color: colors.text.secondary }]}>
-                Aucune donnée disponible
+                {t.noDataAvailable}
               </Text>
             </View>
           )}
@@ -237,14 +244,14 @@ const AnalyticsDashboardScreen = ({ navigation }: any) => {
 
         {/* Comparaison mensuelle */}
         <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-          Comparaison mensuelle
+          {t.monthlyComparison}
         </Text>
         
         <View style={[styles.comparisonCard, { backgroundColor: colors.background.card }]}>
           {filteredData && Array.isArray(filteredData) && filteredData.length > 0 ? (
             filteredData.slice(-3).reverse().map((month, index) => {
               const date = new Date(month.month);
-              const monthName = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+              const monthName = date.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
               const isCurrentMonth = index === 0;
               
               return (
@@ -269,7 +276,7 @@ const AnalyticsDashboardScreen = ({ navigation }: any) => {
           ) : (
             <View style={styles.emptyState}>
               <Text style={[styles.emptyChartText, { color: colors.text.secondary }]}>
-                Aucune donnée disponible
+                {t.noDataAvailable}
               </Text>
             </View>
           )}
@@ -277,7 +284,7 @@ const AnalyticsDashboardScreen = ({ navigation }: any) => {
 
         {/* Tendances & Prévisions */}
         <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-          Tendances & Prévisions
+          {t.trendsAndForecasts}
         </Text>
 
         {/* Moyenne mensuelle */}
@@ -287,10 +294,10 @@ const AnalyticsDashboardScreen = ({ navigation }: any) => {
           </View>
           <View style={styles.insightContent}>
             <Text style={[styles.insightLabel, { color: colors.text.primary }]}>
-              Moyenne mensuelle
+              {t.monthlyAverage}
             </Text>
             <Text style={[styles.insightSubtext, { color: colors.text.secondary }]}>
-              Basé sur les {filteredData?.length || 0} derniers mois
+              {t.basedOnLast} {filteredData?.length || 0} {t.lastMonths}
             </Text>
           </View>
           <Text style={[styles.insightValue, { color: colors.text.primary }]}>
@@ -305,10 +312,10 @@ const AnalyticsDashboardScreen = ({ navigation }: any) => {
           </View>
           <View style={styles.insightContent}>
             <Text style={[styles.insightLabel, { color: colors.text.primary }]}>
-              Prévision janvier
+              {t.forecastJanuary}
             </Text>
             <Text style={[styles.insightSubtext, { color: colors.text.secondary }]}>
-              {nextMonthPrediction.isIncreasing ? '+' : ''}{nextMonthPrediction.percentage.toFixed(0)}% vs décembre • Tendance à la {nextMonthPrediction.isIncreasing ? 'hausse' : 'baisse'}
+              {nextMonthPrediction.isIncreasing ? '+' : ''}{nextMonthPrediction.percentage.toFixed(0)}% {t.vsPrevious} décembre • {nextMonthPrediction.isIncreasing ? t.trendUp : t.trendDown}
             </Text>
           </View>
           <Text style={[styles.insightValue, { color: colors.text.primary }]}>
@@ -323,12 +330,12 @@ const AnalyticsDashboardScreen = ({ navigation }: any) => {
           </View>
           <View style={styles.recommendationContent}>
             <Text style={[styles.recommendationTitle, { color: colors.text.primary }]}>
-              Recommandation
+              {t.recommendation}
             </Text>
             <Text style={[styles.recommendationText, { color: colors.text.secondary }]}>
               {nextMonthPrediction.isIncreasing 
-                ? 'Vos dépenses augmentent légèrement. Pensez à revoir votre budget pour maintenir votre équilibre financier.'
-                : 'Bonne nouvelle ! Vos dépenses sont en baisse. Continuez sur cette lancée pour améliorer votre épargne.'}
+                ? t.expensesIncreasing
+                : t.expensesDecreasing}
             </Text>
           </View>
         </View>
@@ -336,6 +343,7 @@ const AnalyticsDashboardScreen = ({ navigation }: any) => {
         <View style={styles.spacer} />
       </ScrollView>
     </View>
+    </SafeAreaView>
   );
 };
 

@@ -4,17 +4,18 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Animated,
-  Dimensions,
-  FlatList,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    Animated,
+    Dimensions,
+    FlatList,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import MonthCard from '../components/analytics/MonthCard';
+import { AppHeader } from '../components/layout/AppHeader';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -204,7 +205,7 @@ const MonthsOverviewScreen: React.FC = () => {
       ]}
     >
       <Text style={[styles.yearSelectorLabel, { color: colors.text.secondary }]}>
-        Sélectionnez l'année
+        {t.selectYear}
       </Text>
       <ScrollView 
         horizontal 
@@ -243,9 +244,9 @@ const MonthsOverviewScreen: React.FC = () => {
   const MetricSelector = () => (
     <View style={styles.metricSelector}>
       {[
-        { key: 'balance', label: 'Solde', icon: 'trending-up', color: colors.primary[500] },
-        { key: 'income', label: 'Revenus', icon: 'arrow-down', color: '#10B981' },
-        { key: 'expenses', label: 'Dépenses', icon: 'arrow-up', color: '#EF4444' },
+        { key: 'balance', label: t.balance, icon: 'trending-up', color: colors.primary[500] },
+        { key: 'income', label: t.income, icon: 'arrow-down', color: '#10B981' },
+        { key: 'expenses', label: t.expenses, icon: 'arrow-up', color: '#EF4444' },
       ].map(metric => (
         <TouchableOpacity
           key={metric.key}
@@ -288,10 +289,10 @@ const MonthsOverviewScreen: React.FC = () => {
       <View style={styles.summaryHeader}>
         <View>
           <Text style={[styles.yearlySummaryTitle, { color: colors.text.primary }]}>
-            Résumé {selectedYear}
+            {t.summary} {selectedYear}
           </Text>
           <Text style={[styles.yearlySummarySubtitle, { color: colors.text.secondary }]}>
-            Performance financière annuelle
+            {t.annualFinancialPerformance}
           </Text>
         </View>
         <View style={[styles.yearBadge, { backgroundColor: colors.background.secondary }]}>
@@ -316,7 +317,7 @@ const MonthsOverviewScreen: React.FC = () => {
               {formatAmount(yearlyTotals.totalNetFlow)}
             </Text>
             <Text style={[styles.mainStatLabel, { color: colors.text.secondary }]}>
-              Solde Annuel
+              {t.annualBalance}
             </Text>
           </View>
         </View>
@@ -328,7 +329,7 @@ const MonthsOverviewScreen: React.FC = () => {
               {formatAmount(yearlyTotals.totalIncome)}
             </Text>
             <Text style={[styles.miniStatLabel, { color: colors.text.secondary }]}>
-              Revenus
+              {t.income}
             </Text>
           </View>
           
@@ -338,7 +339,7 @@ const MonthsOverviewScreen: React.FC = () => {
               {formatAmount(yearlyTotals.totalExpenses)}
             </Text>
             <Text style={[styles.miniStatLabel, { color: colors.text.secondary }]}>
-              Dépenses
+              {t.expenses}
             </Text>
           </View>
           
@@ -348,7 +349,7 @@ const MonthsOverviewScreen: React.FC = () => {
               {yearlyTotals.totalTransactions}
             </Text>
             <Text style={[styles.miniStatLabel, { color: colors.text.secondary }]}>
-              Transactions
+              {t.transactions}
             </Text>
           </View>
         </View>
@@ -358,7 +359,7 @@ const MonthsOverviewScreen: React.FC = () => {
           <View style={styles.performanceHeader}>
             <Ionicons name="speedometer" size={16} color="#F59E0B" />
             <Text style={[styles.performanceLabel, { color: colors.text.secondary }]}>
-              Taux d'épargne
+              {t.savingsRate}
             </Text>
           </View>
           <View style={styles.performanceBar}>
@@ -402,17 +403,17 @@ const MonthsOverviewScreen: React.FC = () => {
         />
       </View>
       <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>
-        Aucune donnée pour {selectedYear}
+        {t.noDataFor} {selectedYear}
       </Text>
       <Text style={[styles.emptyDescription, { color: colors.text.secondary }]}>
-        Les transactions de {selectedYear} apparaîtront ici dès que vous ajouterez des données.
+        {t.transactionsWillAppearHere.replace('{year}', selectedYear.toString())}
       </Text>
       <TouchableOpacity 
         style={styles.emptyActionButton}
         onPress={() => navigation.navigate('AddTransaction' as any)}
       >
         <Ionicons name="add" size={20} color="#fff" />
-        <Text style={styles.emptyActionText}>Commencer à tracker</Text>
+        <Text style={styles.emptyActionText}>{t.startTracking}</Text>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -431,16 +432,16 @@ const MonthsOverviewScreen: React.FC = () => {
       <View style={styles.sectionHeader}>
         <View>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            Analyse Mensuelle
+            {t.monthlyAnalysis}
           </Text>
           <Text style={[styles.sectionSubtitle, { color: colors.text.secondary }]}>
-            Détails mois par mois
+            {t.monthByMonthDetails}
           </Text>
         </View>
         <View style={[styles.monthCount, { backgroundColor: colors.background.secondary }]}>
           <Ionicons name="layers" size={16} color={colors.primary[500]} />
           <Text style={[styles.monthCountText, { color: colors.text.secondary }]}>
-            {monthlyData.length} mois
+            {monthlyData.length} {t.months}
           </Text>
         </View>
       </View>
@@ -479,10 +480,10 @@ const MonthsOverviewScreen: React.FC = () => {
           <View style={styles.loadingContent}>
             <Ionicons name="calendar" size={64} color={colors.primary[500]} />
             <Text style={[styles.loadingText, { color: colors.text.primary }]}>
-              Chargement des données...
+              {t.loadingData}
             </Text>
             <Text style={[styles.loadingSubtext, { color: colors.text.secondary }]}>
-              Analyse des transactions mensuelles
+              {t.analyzingMonthlyTransactions}
             </Text>
           </View>
         </View>
@@ -493,7 +494,7 @@ const MonthsOverviewScreen: React.FC = () => {
   return (
     <SafeAreaView>
       <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
-        <ModernHeader />
+        <AppHeader title={t.monthsOverview} />
         
         <ScrollView 
           style={styles.content}

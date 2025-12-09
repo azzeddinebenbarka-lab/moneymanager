@@ -11,6 +11,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import { AppHeader } from '../components/layout/AppHeader';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { AddContributionModal } from '../components/savings/AddContributionModal';
 import { DeleteGoalModal } from '../components/savings/DeleteGoalModal';
@@ -176,10 +177,10 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
       await refreshAccounts();
       
       Alert.alert(
-        'Succès',
+        t.success,
         withRefund ? 
-          `Objectif supprimé et ${formatAmount(selectedGoal.currentAmount)} remboursés !` :
-          'Objectif supprimé avec succès',
+          `${t.goalDeletedSuccess} ${formatAmount(selectedGoal.currentAmount)} ${t.goalDeletedWithRefund}` :
+          t.goalDeletedSuccess,
         [{ text: 'OK' }]
       );
 
@@ -198,7 +199,7 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
     setActionLoading(true);
     try {
       await markGoalAsCompleted(goal.id);
-      Alert.alert(t.success, 'Objectif marqué comme terminé !', [{ text: 'OK' }]);
+      Alert.alert(t.success, t.goalMarkedCompleted, [{ text: 'OK' }]);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       Alert.alert(t.error, errorMessage, [{ text: 'OK' }]);
@@ -245,7 +246,7 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
                 {item.name}
               </Text>
               <Text style={[styles.goalTarget, isDark && styles.darkSubtext]}>
-                Objectif: {formatCurrency(item.targetAmount)}
+                {t.target}: {formatCurrency(item.targetAmount)}
               </Text>
             </View>
           </View>
@@ -297,7 +298,7 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
           {isCompleted && (
             <View style={styles.completedBadge}>
               <Ionicons name="checkmark" size={12} color="#fff" />
-              <Text style={styles.completedText}>Terminé</Text>
+              <Text style={styles.completedText}>{t.completed}</Text>
             </View>
           )}
         </View>
@@ -305,7 +306,7 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
         <View style={styles.goalDetails}>
           <View style={styles.detailItem}>
             <Text style={[styles.detailLabel, isDark && styles.darkSubtext]}>
-              Épargne actuelle
+              {t.currentSavings}
             </Text>
             <Text style={[styles.detailValue, isDark && styles.darkText]}>
               {formatCurrency(item.currentAmount)}
@@ -313,7 +314,7 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
           </View>
           <View style={styles.detailItem}>
             <Text style={[styles.detailLabel, isDark && styles.darkSubtext]}>
-              Progression
+              {t.progress}
             </Text>
             <Text style={[styles.detailValue, isDark && styles.darkText]}>
               {progress.toFixed(1)}%
@@ -321,7 +322,7 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
           </View>
           <View style={styles.detailItem}>
             <Text style={[styles.detailLabel, isDark && styles.darkSubtext]}>
-              Mensualité
+              {t.monthlyPayment}
             </Text>
             <Text style={[styles.detailValue, isDark && styles.darkText]}>
               {formatCurrency(item.monthlyContribution || 0)}
@@ -333,7 +334,7 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
           <View style={styles.savingsAccountInfo}>
             <Ionicons name="checkmark-done" size={14} color="#34C759" />
             <Text style={[styles.savingsAccountText, isDark && styles.darkSubtext]}>
-              Compte épargne lié
+              {t.linkedSavingsAccount}
             </Text>
           </View>
         )}
@@ -350,10 +351,10 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
         color={isDark ? '#555' : '#ccc'} 
       />
       <Text style={[styles.emptyTitle, isDark && styles.darkText]}>
-        {loading ? 'Chargement...' : 'Aucun objectif d\'épargne'}
+        {loading ? t.loading : t.noSavingsGoal}
       </Text>
       <Text style={[styles.emptyDescription, isDark && styles.darkSubtext]}>
-        {loading ? 'Récupération de vos objectifs...' : 'Créez votre premier objectif pour commencer à épargner.'}
+        {loading ? t.fetchingGoals : t.createFirstGoal}
       </Text>
       {!loading && (
         <TouchableOpacity 
@@ -361,7 +362,7 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
           onPress={() => navigation.navigate('AddSavingsGoal')}
         >
           <Ionicons name="add" size={20} color="#fff" />
-          <Text style={styles.addButtonText}>Créer un objectif</Text>
+          <Text style={styles.addButtonText}>{t.createGoal}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -373,7 +374,7 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
       <SafeAreaView style={[styles.container, styles.center, isDark && styles.darkContainer]}>
         <ActivityIndicator size="large" color="#007AFF" />
         <Text style={[styles.loadingText, isDark && styles.darkText]}>
-          Chargement des objectifs...
+          {t.loadingSavingsGoals}
         </Text>
       </SafeAreaView>
     );
@@ -382,23 +383,17 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
   // ✅ RENDU PRINCIPAL
   return (
     <SafeAreaView style={[styles.container, isDark && styles.darkContainer]}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity 
-            style={styles.menuButton}
-            onPress={() => (navigation as any).openDrawer()}
-          >
-            <Ionicons name="menu" size={24} color={isDark ? "#fff" : "#000"} />
-          </TouchableOpacity>
-          <Text style={[styles.headerTitle, isDark && styles.darkText]}>
-            Mes Objectifs
-          </Text>
-          <TouchableOpacity 
-            style={styles.addButtonHeader}
-            onPress={() => navigation.navigate('AddSavingsGoal')}
-          >
+      <AppHeader 
+        title={t.savingsGoals} 
+        rightComponent={
+          <TouchableOpacity onPress={() => navigation.navigate('AddSavingsGoal')}>
             <Ionicons name="add" size={24} color={isDark ? "#fff" : "#000"} />
           </TouchableOpacity>
+        }
+      />
+      <View style={styles.header}>
+        <View style={styles.headerTop}>
+          {/* Title moved to AppHeader */}
         </View>
 
         <View style={[styles.searchContainer, isDark && styles.darkSearchContainer]}>
@@ -422,7 +417,7 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
         <View style={[styles.statsCard, isDark && styles.darkCard]}>
           <View style={styles.statItem}>
             <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
-              Total épargné
+              {t.totalSaved}
             </Text>
             <Text style={[styles.statValue, isDark && styles.darkText]}>
               {formatCurrency(stats.totalSaved || 0)}
@@ -430,7 +425,7 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
           </View>
           <View style={styles.statItem}>
             <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
-              Objectifs
+              {t.goals}
             </Text>
             <Text style={[styles.statValue, isDark && styles.darkText]}>
               {stats.totalGoals || 0}
@@ -438,7 +433,7 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
           </View>
           <View style={styles.statItem}>
             <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
-              Terminés
+              {t.completed}
             </Text>
             <Text style={[styles.statValue, isDark && styles.darkText]}>
               {stats.completedGoals || 0}
@@ -492,7 +487,7 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingBox}>
             <ActivityIndicator size="large" color="#007AFF" />
-            <Text style={styles.loadingOverlayText}>Traitement en cours...</Text>
+            <Text style={styles.loadingOverlayText}>{t.processingAction}</Text>
           </View>
         </View>
       )}

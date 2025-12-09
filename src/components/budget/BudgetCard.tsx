@@ -2,6 +2,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Budget } from '../../types';
 import BudgetProgress from './BudgetProgress';
@@ -20,6 +21,7 @@ const BudgetCard: React.FC<BudgetCardProps> = ({
   onToggle,
 }) => {
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const isDark = theme === 'dark';
 
   const getPeriodLabel = (period: string) => {
@@ -74,7 +76,7 @@ const BudgetCard: React.FC<BudgetCardProps> = ({
               color={isDark ? '#888' : '#666'} 
             />
             <Text style={[styles.category, isDark && styles.darkSubtext]}>
-              {budget.category}
+              {translateCategoryName(budget.category, t)}
             </Text>
           </View>
         </View>

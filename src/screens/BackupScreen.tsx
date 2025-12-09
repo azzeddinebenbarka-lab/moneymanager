@@ -62,8 +62,8 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       if (value) {
         await AutoBackupScheduler.enable();
         Alert.alert(
-          'Sauvegarde automatique activée',
-          'Vos données seront sauvegardées automatiquement chaque jour.',
+          t.autoBackupTitle,
+          t.autoBackupEnabledMessage,
           [{ text: 'OK' }]
         );
       } else {
@@ -77,12 +77,12 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const handleCreateBackup = async () => {
     try {
       Alert.alert(
-        'Créer une sauvegarde',
-        'Voulez-vous créer une sauvegarde complète de vos données ?',
+        t.createBackup,
+        t.createBackupQuestion,
         [
           { text: t.cancel, style: 'cancel' },
           {
-            text: 'Créer',
+            text: t.createAction,
             onPress: async () => {
               try {
                 const result = await createBackup();
@@ -93,15 +93,15 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   setLastBackupDate(now);
                   
                   Alert.alert(
-                    'Sauvegarde créée',
-                    'La sauvegarde a été créée avec succès.',
+                    t.createBackup,
+                    t.backupCreated,
                     [{ text: 'OK' }]
                   );
                 }
               } catch (error) {
                 Alert.alert(
-                  'Erreur',
-                  error instanceof Error ? error.message : 'Impossible de créer la sauvegarde'
+                  t.error,
+                  error instanceof Error ? error.message : t.cannotChangePassword
                 );
               }
             }
@@ -117,11 +117,11 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     try {
       Alert.alert(
         'Export JSON',
-        'Exporter toutes les données au format JSON ?\n\nInclut : comptes, transactions, catégories, budgets, dettes, objectifs d\'épargne, charges annuelles et transactions récurrentes.',
+        t.exportJSONQuestion,
         [
           { text: t.cancel, style: 'cancel' },
           {
-            text: 'Exporter',
+            text: t.exportAction,
             onPress: async () => {
               try {
                 console.log('📤 Début export JSON complet...');
@@ -167,11 +167,11 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     try {
       Alert.alert(
         'Export CSV',
-        'Exporter les transactions au format CSV ?',
+        t.exportCSVQuestion,
         [
           { text: t.cancel, style: 'cancel' },
           {
-            text: 'Exporter',
+            text: t.exportAction,
             onPress: async () => {
               try {
                 const result = await exportTransactions(undefined, undefined, 'csv');
@@ -205,12 +205,12 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const handleImportData = async () => {
     try {
       Alert.alert(
-        'Importer des données',
-        'Cette fonctionnalité remplacera vos données actuelles. Créez une sauvegarde avant de continuer.',
+        t.importData,
+        t.replaceCurrentData,
         [
           { text: t.cancel, style: 'cancel' },
           {
-            text: 'Continuer',
+            text: t.continue,
             style: 'destructive',
             onPress: async () => {
               try {
@@ -274,7 +274,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         <View style={[styles.container, { backgroundColor: colors.background.primary }, styles.loadingContainer]}>
           <ActivityIndicator size="large" color={colors.primary[500]} />
           <Text style={[styles.loadingText, { color: colors.text.primary }]}>
-            Chargement...
+            {t.loading}...
           </Text>
         </View>
       </SafeAreaView>
@@ -294,10 +294,10 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           </TouchableOpacity>
           <View style={styles.headerContent}>
             <Text style={[styles.headerTitle, { color: colors.text.primary }]}>
-              Sauvegarde & Export
+              {t.backupExport}
             </Text>
             <Text style={[styles.headerSubtitle, { color: colors.text.secondary }]}>
-              Protégez vos données financières
+              {t.protectFinancialData}
             </Text>
           </View>
         </View>
@@ -306,7 +306,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           {/* Sauvegarde automatique */}
           <View style={styles.section}>
             <Text style={[styles.sectionHeader, { color: colors.text.secondary }]}>
-              SAUVEGARDE AUTOMATIQUE
+              {t.autoBackupTitle.toUpperCase()}
             </Text>
             
             <View style={[styles.card, { backgroundColor: colors.background.secondary }]}>
@@ -315,10 +315,10 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               </View>
               <View style={styles.cardContent}>
                 <Text style={[styles.cardTitle, { color: colors.text.primary }]}>
-                  Sauvegarde auto
+                  {t.autoBackupTitle}
                 </Text>
                 <Text style={[styles.cardDescription, { color: colors.text.secondary }]}>
-                  Sauvegarde quotidienne automatique
+                  {t.dailyAutoBackup}
                 </Text>
               </View>
               <Switch
@@ -333,7 +333,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               <View style={[styles.infoCard, { backgroundColor: colors.primary[50] }]}>
                 <Ionicons name="time-outline" size={16} color={colors.primary[500]} />
                 <Text style={[styles.infoText, { color: colors.primary[700] }]}>
-                  Dernière sauvegarde : {formatDate(lastBackupDate)}
+                  {t.lastBackup} : {formatDate(lastBackupDate)}
                 </Text>
               </View>
             )}
@@ -342,7 +342,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           {/* Sauvegarde manuelle */}
           <View style={styles.section}>
             <Text style={[styles.sectionHeader, { color: colors.text.secondary }]}>
-              SAUVEGARDE MANUELLE
+              {t.createBackup.toUpperCase()}
             </Text>
             
             <TouchableOpacity
@@ -355,10 +355,10 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               </View>
               <View style={styles.actionContent}>
                 <Text style={[styles.actionTitle, { color: colors.text.primary }]}>
-                  Créer une sauvegarde
+                  {t.createBackup}
                 </Text>
                 <Text style={[styles.actionDescription, { color: colors.text.secondary }]}>
-                  Sauvegarde complète de toutes vos données
+                  {t.completeBackupAllData}
                 </Text>
               </View>
               {backupLoading ? (
@@ -372,7 +372,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           {/* Export des données */}
           <View style={styles.section}>
             <Text style={[styles.sectionHeader, { color: colors.text.secondary }]}>
-              EXPORT DES DONNÉES
+              {t.exportAction.toUpperCase()}
             </Text>
             
             <TouchableOpacity
@@ -385,10 +385,10 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               </View>
               <View style={styles.actionContent}>
                 <Text style={[styles.actionTitle, { color: colors.text.primary }]}>
-                  Exporter en JSON
+                  {t.exportJSON}
                 </Text>
                 <Text style={[styles.actionDescription, { color: colors.text.secondary }]}>
-                  Format structuré pour réimport complet
+                  {t.structuredFormatReimport}
                 </Text>
               </View>
               {backupLoading ? (
@@ -408,10 +408,10 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               </View>
               <View style={styles.actionContent}>
                 <Text style={[styles.actionTitle, { color: colors.text.primary }]}>
-                  Exporter en CSV
+                  {t.exportCSV}
                 </Text>
                 <Text style={[styles.actionDescription, { color: colors.text.secondary }]}>
-                  Transactions pour Excel/Sheets
+                  {t.exportTransactionsCSV}
                 </Text>
               </View>
               {backupLoading ? (

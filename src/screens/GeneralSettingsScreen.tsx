@@ -17,8 +17,8 @@ export const GeneralSettingsScreen: React.FC<{ navigation: any }> = ({ navigatio
   const [isCleaningDuplicates, setIsCleaningDuplicates] = useState(false);
 
   const themeOptions = [
-    { value: 'light', label: 'Clair', icon: 'sunny-outline' },
-    { value: 'dark', label: 'Sombre', icon: 'moon-outline' },
+    { value: 'light', label: t.light, icon: 'sunny-outline' },
+    { value: 'dark', label: t.dark, icon: 'moon-outline' },
   ];
 
   const handleThemeChange = (newTheme: 'light' | 'dark') => {
@@ -27,24 +27,24 @@ export const GeneralSettingsScreen: React.FC<{ navigation: any }> = ({ navigatio
 
   const handleCleanDuplicates = async () => {
     Alert.alert(
-      'Nettoyer les doublons',
-      'Supprimer les transactions récurrentes en double ? Cette action est irréversible.',
+      t.cleanDuplicates,
+      t.cleanDuplicatesQuestion,
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         {
-          text: 'Nettoyer',
+          text: t.cleanDuplicates,
           style: 'destructive',
           onPress: async () => {
             setIsCleaningDuplicates(true);
             try {
               const result = await cleanupService.cleanDuplicateRecurringTransactions();
               Alert.alert(
-                'Terminé',
-                `${result.deleted} transaction(s) en double supprimée(s).\n${result.errors.length > 0 ? `\n⚠️ ${result.errors.length} erreur(s)` : ''}`,
+                t.finished,
+                `${result.deleted} ${t.duplicatesDeleted}.\n${result.errors.length > 0 ? `\n⚠️ ${result.errors.length} ${t.error}(s)` : ''}`,
                 [{ text: 'OK' }]
               );
             } catch (error) {
-              Alert.alert('Erreur', 'Impossible de nettoyer les doublons');
+              Alert.alert(t.error, t.cannotCleanDuplicates);
             } finally {
               setIsCleaningDuplicates(false);
             }
@@ -59,7 +59,7 @@ export const GeneralSettingsScreen: React.FC<{ navigation: any }> = ({ navigatio
       <ScrollView style={[styles.container, { backgroundColor: colors.background.primary }]}>
         {/* Section Devise */}
         <Text style={[styles.sectionHeader, { color: colors.text.secondary }]}>
-          DEVISE
+          {t.currency.toUpperCase()}
         </Text>
         <TouchableOpacity
           style={[styles.settingCard, { backgroundColor: colors.background.secondary }]}
@@ -70,7 +70,7 @@ export const GeneralSettingsScreen: React.FC<{ navigation: any }> = ({ navigatio
           </View>
           <View style={styles.settingContent}>
             <Text style={[styles.settingTitle, { color: colors.text.primary }]}>
-              Devise principale
+              {t.mainCurrency}
             </Text>
             <Text style={[styles.settingValue, { color: colors.text.secondary }]}>
               {currentCurrency || 'MAD'}
@@ -81,7 +81,7 @@ export const GeneralSettingsScreen: React.FC<{ navigation: any }> = ({ navigatio
 
         {/* Section Thème */}
         <Text style={[styles.sectionHeader, { color: colors.text.secondary }]}>
-          APPARENCE
+          {t.appearance.toUpperCase()}
         </Text>
         {themeOptions.map((option) => (
           <TouchableOpacity
@@ -113,7 +113,7 @@ export const GeneralSettingsScreen: React.FC<{ navigation: any }> = ({ navigatio
 
         {/* Section Maintenance (temporaire) */}
         <Text style={[styles.sectionHeader, { color: colors.text.secondary }]}>
-          MAINTENANCE
+          {t.maintenance.toUpperCase()}
         </Text>
         <TouchableOpacity
           style={[styles.settingCard, { backgroundColor: colors.background.secondary }]}
@@ -125,10 +125,10 @@ export const GeneralSettingsScreen: React.FC<{ navigation: any }> = ({ navigatio
           </View>
           <View style={styles.settingContent}>
             <Text style={[styles.settingTitle, { color: colors.text.primary }]}>
-              {isCleaningDuplicates ? 'Nettoyage...' : 'Nettoyer les doublons'}
+              {isCleaningDuplicates ? t.cleaning : t.cleanDuplicates}
             </Text>
             <Text style={[styles.settingValue, { color: colors.text.secondary }]}>
-              Supprimer les transactions récurrentes en double
+              {t.cleanDuplicatesDesc}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />

@@ -2,13 +2,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef } from 'react';
 import {
-  Animated,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Animated,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { useCurrency } from '../../context/CurrencyContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 
 export interface MonthCardProps {
@@ -36,6 +37,7 @@ const MonthCard: React.FC<MonthCardProps> = ({
   highlightMetric = 'netFlow',
   animationDelay = 0 // ✅ VALEUR PAR DÉFAUT
 }) => {
+  const { t, language } = useLanguage();
   const { theme } = useTheme();
   const { formatAmount } = useCurrency();
   const isDark = theme === 'dark';
@@ -63,15 +65,18 @@ const MonthCard: React.FC<MonthCardProps> = ({
     return () => clearTimeout(timer);
   }, [animationDelay]);
 
-  const monthName = new Date(year, month).toLocaleDateString('fr-FR', { 
+  // Obtenir la locale appropriée selon la langue
+  const locale = language === 'ar' ? 'ar-MA' : language === 'en' ? 'en-US' : 'fr-FR';
+  
+  const monthName = new Date(year, month).toLocaleDateString(locale, { 
     month: 'long',
     year: 'numeric'
   });
 
   const getMonthStatus = () => {
-    if (netFlow > 0) return { status: 'positif', color: '#10B981', icon: 'trending-up' as const };
-    if (netFlow < 0) return { status: 'négatif', color: '#EF4444', icon: 'trending-down' as const };
-    return { status: 'équilibré', color: '#6B7280', icon: 'remove' as const };
+    if (netFlow > 0) return { status: t.positive, color: '#10B981', icon: 'trending-up' as const };
+    if (netFlow < 0) return { status: t.negative, color: '#EF4444', icon: 'trending-down' as const };
+    return { status: t.balanced, color: '#6B7280', icon: 'remove' as const };
   };
 
   const status = getMonthStatus();
@@ -100,7 +105,7 @@ const MonthCard: React.FC<MonthCardProps> = ({
             </Text>
             {isCurrentMonth && (
               <View style={styles.currentBadge}>
-                <Text style={styles.currentBadgeText}>Mois en cours</Text>
+                <Text style={styles.currentBadgeText}>{t.currentMonth}</Text>
               </View>
             )}
           </View>
@@ -120,7 +125,7 @@ const MonthCard: React.FC<MonthCardProps> = ({
             <View style={styles.statHeader}>
               <Ionicons name="arrow-down" size={16} color="#10B981" />
               <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
-                Revenus
+                {t.income}
               </Text>
             </View>
             <Text style={[styles.statValue, isDark && styles.darkText]}>
@@ -132,7 +137,7 @@ const MonthCard: React.FC<MonthCardProps> = ({
             <View style={styles.statHeader}>
               <Ionicons name="arrow-up" size={16} color="#EF4444" />
               <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
-                Dépenses
+                {t.expenses}
               </Text>
             </View>
             <Text style={[styles.statValue, isDark && styles.darkText]}>
@@ -148,7 +153,7 @@ const MonthCard: React.FC<MonthCardProps> = ({
                 color={status.color} 
               />
               <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>
-                Solde
+                {t.balance}
               </Text>
             </View>
             <Text style={[styles.statValue, { color: status.color }]}>
@@ -171,7 +176,7 @@ const MonthCard: React.FC<MonthCardProps> = ({
             />
           </View>
           <Text style={[styles.performanceText, isDark && styles.darkSubtext]}>
-            {income > 0 ? `${((expenses / income) * 100).toFixed(1)}% des revenus` : 'Aucun revenu'}
+            {income > 0 ? `${((expenses / income) * 100).toFixed(1)}% ${t.ofIncome}` : t.noIncome}
           </Text>
         </View>
 
@@ -184,7 +189,7 @@ const MonthCard: React.FC<MonthCardProps> = ({
               color={isDark ? '#888' : '#666'} 
             />
             <Text style={[styles.transactionText, isDark && styles.darkSubtext]}>
-              {transactionCount} transaction{transactionCount !== 1 ? 's' : ''}
+              {transactionCount} {transactionCount !== 1 ? t.transactions : t.transactionSingular}
             </Text>
           </View>
           

@@ -1,17 +1,19 @@
 // src/components/charts/ChartFilters.tsx - NOUVEAU COMPOSANT COMPLET
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  Modal,
-  TextInput,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
+import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useCategories } from '../../hooks/useCategories';
+import { translateCategoryName } from '../../utils/categoryTranslations';
 
 export interface ChartFilter {
   period: 'day' | 'week' | 'month' | 'year' | 'custom';
@@ -44,6 +46,7 @@ export const ChartFilters: React.FC<ChartFiltersProps> = ({
 }) => {
   const { theme } = useTheme();
   const { categories } = useCategories();
+  const { t } = useLanguage();
   const isDark = theme === 'dark';
   
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -433,7 +436,7 @@ export const ChartFilters: React.FC<ChartFiltersProps> = ({
                 filters.category === category.id && styles.modalItemTextActive,
                 isDark && styles.darkText,
               ]}>
-                {category.name}
+                {translateCategoryName(category.name, t)}
               </Text>
               {filters.category === category.id && (
                 <Ionicons name="checkmark" size={20} color="#007AFF" />

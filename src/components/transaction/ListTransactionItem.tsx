@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useCurrency } from '../../context/CurrencyContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { useDesignSystem } from '../../context/ThemeContext';
 import useCategories from '../../hooks/useCategories';
 import resolveCategoryLabel from '../../utils/categoryResolver';
@@ -33,10 +34,11 @@ export const ListTransactionItem: React.FC<ListTransactionItemProps> = ({ item, 
   const { colors } = useDesignSystem();
   const { formatAmount } = useCurrency();
   const { categories } = useCategories();
+  const { t } = useLanguage();
   
   const isIncome = item.type === 'income';
   const isTransfer = item.type === 'transfer';
-  const resolved = resolveCategoryLabel(item.subCategory || item.category, categories || []);
+  const resolved = resolveCategoryLabel(item.subCategory || item.category, categories || [], t);
   const label = resolved.child;
   
   // Formater le montant (sans décimales maintenant géré dans formatAmount)

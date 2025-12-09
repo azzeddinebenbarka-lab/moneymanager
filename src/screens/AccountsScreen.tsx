@@ -1,7 +1,7 @@
 ﻿// src/screens/AccountsScreen.tsx - VERSION COMPLÈTEMENT CORRIGÉE
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
     Alert,
     FlatList,
@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AccountForm from '../components/account/AccountForm';
+import { AppHeader } from '../components/layout/AppHeader';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
@@ -161,41 +162,27 @@ const AccountsScreen = ({ navigation }: any) => {
 
   
   
-  // New header matching design
-  const Header = () => (
-    <View style={[styles.topHeader, { backgroundColor: colors.background.primary, borderBottomColor: colors.border.primary }]}> 
-      <View style={styles.topHeaderRow}>
-        <TouchableOpacity style={styles.backWrap} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={20} color={colors.text.primary} />
-        </TouchableOpacity>
-
-        <Text style={[styles.pageTitle, { color: colors.text.primary }]}>{t.myAccounts}</Text>
-
-        <TouchableOpacity style={styles.refreshIcon} onPress={onRefresh} disabled={refreshing}>
-          <Ionicons name="refresh" size={20} color={colors.text.primary} />
-        </TouchableOpacity>
+  // Summary card with account statistics
+  const SummaryCard = () => (
+    <View style={[styles.summaryCard, { backgroundColor: colors.background.card }]}> 
+      <View style={styles.summaryTop}>
+        <View>
+          <Text style={[styles.summaryLabel, { color: colors.text.secondary }]}>{t.totalBalance?.toUpperCase()}</Text>
+          <Text style={[styles.summaryAmount, { color: colors.text.primary }]}>{formatAmount(totalBalance)}</Text>
+        </View>
+        <View style={styles.summaryIcon}>
+          <Ionicons name="library-outline" size={28} color={colors.primary[500]} />
+        </View>
       </View>
 
-      <View style={[styles.summaryCard, { backgroundColor: colors.background.card }]}> 
-        <View style={styles.summaryTop}>
-          <View>
-            <Text style={[styles.summaryLabel, { color: colors.text.secondary }]}>{t.totalBalance?.toUpperCase()}</Text>
-            <Text style={[styles.summaryAmount, { color: colors.text.primary }]}>{formatAmount(totalBalance)}</Text>
-          </View>
-          <View style={styles.summaryIcon}>
-            <Ionicons name="library-outline" size={28} color={colors.primary[500]} />
-          </View>
+      <View style={styles.summarySplit}>
+        <View style={styles.splitItem}>
+          <Text style={[styles.splitLabel, { color: colors.text.secondary }]}>{t.accounts}</Text>
+          <Text style={[styles.splitValue, { color: colors.text.primary }]}>{formatAmount(accounts.filter(a => a.type !== 'savings').reduce((s, a) => s + a.balance, 0))}</Text>
         </View>
-
-        <View style={styles.summarySplit}>
-          <View style={styles.splitItem}>
-            <Text style={[styles.splitLabel, { color: colors.text.secondary }]}>{t.accounts}</Text>
-            <Text style={[styles.splitValue, { color: colors.text.primary }]}>{formatAmount(accounts.filter(a => a.type !== 'savings').reduce((s, a) => s + a.balance, 0))}</Text>
-          </View>
-          <View style={styles.splitItem}>
-            <Text style={[styles.splitLabel, { color: colors.text.secondary }]}>{t.savings}</Text>
-            <Text style={[styles.splitValue, { color: colors.text.primary }]}>{formatAmount(accounts.filter(a => a.type === 'savings').reduce((s, a) => s + a.balance, 0))}</Text>
-          </View>
+        <View style={styles.splitItem}>
+          <Text style={[styles.splitLabel, { color: colors.text.secondary }]}>{t.savings}</Text>
+          <Text style={[styles.splitValue, { color: colors.text.primary }]}>{formatAmount(accounts.filter(a => a.type === 'savings').reduce((s, a) => s + a.balance, 0))}</Text>
         </View>
       </View>
     </View>
@@ -213,7 +200,15 @@ const AccountsScreen = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background.primary }]} edges={["top"]}>
-      <Header />
+      <AppHeader 
+        title={t.myAccounts} 
+        rightComponent={
+          <TouchableOpacity onPress={onRefresh} disabled={refreshing}>
+            <Ionicons name="refresh" size={20} color={colors.text.primary} />
+          </TouchableOpacity>
+        }
+      />
+      <SummaryCard />
 
       <View style={styles.content}>
         <View style={styles.listContainer}>

@@ -12,6 +12,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import { AppHeader } from '../components/layout/AppHeader';
 import { TransactionDetailModal } from '../components/modals/TransactionDetailModal';
 import { SafeAreaView } from '../components/SafeAreaView';
 import ListTransactionItem from '../components/transaction/ListTransactionItem';
@@ -151,11 +152,11 @@ const TransactionsScreen = ({ navigation }: any) => {
   // ✅ OBTENIR LE LIBELLÉ DES CATÉGORIES SPÉCIALES
   const getSpecialCategoryLabel = (category: string): string => {
     const labels: { [key: string]: string } = {
-      'dette': 'Paiement de Dette',
-      'épargne': 'Épargne',
-      'charges_annuelles': 'Charge Annuelle',
-      'transfert': 'Transfert',
-      'remboursement épargne': 'Remboursement Épargne'
+      'dette': t.debtPayment,
+      'épargne': t.savings,
+      'charges_annuelles': t.annualCharge,
+      'transfert': t.transfer,
+      'remboursement épargne': t.savingsRefund
     };
     return labels[category.toLowerCase()] || category;
   };
@@ -223,40 +224,28 @@ const TransactionsScreen = ({ navigation }: any) => {
   const months = generateMonths();
   const currentMonth = new Date().getMonth() + 1;
 
-  // Nouveau header : bouton retour + titre centré + onglets segmentés (Toutes / Revenus / Dépenses / Ce mois)
-  const ImageHeader = () => (
-    <View style={[styles.headerImage, { backgroundColor: colors.background.primary, borderBottomColor: colors.border.primary }]}>
-      <View style={styles.headerRow}> 
-        <TouchableOpacity style={[styles.backButton, { backgroundColor: colors.background.secondary }]} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={20} color={colors.text.primary} />
-        </TouchableOpacity>
-
-        <Text style={[styles.titleCentered, { color: colors.text.primary }]}>{t.transactions}</Text>
-
-        <View style={{width:44}} />
-      </View>
-
-      <View style={styles.segmentContainer}>
-        {[t.all, t.incomes, t.expenses, t.thisMonth].map((tab) => {
-          const active = (tab === selectedTab);
-          return (
-            <TouchableOpacity
-              key={tab}
-              style={[styles.segmentButton, active && styles.segmentButtonActive]}
-              onPress={() => {
-                setSelectedTab(tab);
-                if (tab === t.thisMonth) {
-                  const now = new Date();
-                  setSelectedMonth(now.getMonth() + 1);
-                  setSelectedYear(now.getFullYear());
-                }
-              }}
-            >
-              <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{tab}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+  // Segment tabs component (previously part of ImageHeader)
+  const SegmentTabs = () => (
+    <View style={styles.segmentContainer}>
+      {[t.all, t.incomes, t.expenses, t.thisMonth].map((tab) => {
+        const active = (tab === selectedTab);
+        return (
+          <TouchableOpacity
+            key={tab}
+            style={[styles.segmentButton, active && styles.segmentButtonActive]}
+            onPress={() => {
+              setSelectedTab(tab);
+              if (tab === t.thisMonth) {
+                const now = new Date();
+                setSelectedMonth(now.getMonth() + 1);
+                setSelectedYear(now.getFullYear());
+              }
+            }}
+          >
+            <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{tab}</Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 
@@ -278,7 +267,7 @@ const TransactionsScreen = ({ navigation }: any) => {
               setSelectedMonth(yearOnly ? (now.getMonth() + 1) : null);
             }}
           >
-            <Text style={[styles.anneePillText, yearOnly && styles.anneePillTextActive]}>Cette année</Text>
+            <Text style={[styles.anneePillText, yearOnly && styles.anneePillTextActive]}>{t.thisYear}</Text>
           </TouchableOpacity>
         </View>
 
@@ -318,13 +307,13 @@ const TransactionsScreen = ({ navigation }: any) => {
             {currentMonthName} {selectedYear}
           </Text>
           <Text style={[styles.transactionCount, { color: colors.text.secondary }]}>
-            {stats.total} transaction{stats.total !== 1 ? 's' : ''}
+            {stats.total} {t.transactionPlural}
           </Text>
         </View>
         
         <View style={styles.mainBalanceContainer}>
           <Text style={[styles.balanceLabel, { color: colors.text.secondary }]}>
-            Solde du mois
+            {t.monthBalance}
           </Text>
           <Text style={[
             styles.mainBalance,
@@ -383,10 +372,10 @@ const TransactionsScreen = ({ navigation }: any) => {
           />
         </View>
         <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>
-          Aucune transaction
+          {t.noTransaction}
         </Text>
         <Text style={[styles.emptySubtitle, { color: colors.text.secondary }]}>
-          {`Aucune transaction trouvée pour ${currentMonthName} ${selectedYear}`}
+          {`${t.noTransactionFound} ${currentMonthName} ${selectedYear}`}
         </Text>
         <TouchableOpacity 
           style={styles.addEmptyButton}
@@ -394,7 +383,7 @@ const TransactionsScreen = ({ navigation }: any) => {
         >
           <Ionicons name="add" size={20} color={colors.text.inverse} />
           <Text style={styles.addEmptyButtonText}>
-            Nouvelle transaction
+            {t.newTransaction}
           </Text>
         </TouchableOpacity>
       </View>
@@ -406,7 +395,7 @@ const TransactionsScreen = ({ navigation }: any) => {
     <View style={styles.loadingContainer}>
       <ActivityIndicator size="large" color={colors.primary[500]} />
       <Text style={[styles.loadingText, { color: colors.text.primary }]}>
-        Chargement des transactions...
+        {t.loadingTransactions}
       </Text>
     </View>
   );
@@ -414,7 +403,7 @@ const TransactionsScreen = ({ navigation }: any) => {
   if (loading && !refreshing && transactions.length === 0) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background.primary }]}>
-        <ImageHeader />
+        <AppHeader title={t.transactions} />
         <LoadingIndicator />
       </SafeAreaView>
     );
@@ -422,7 +411,8 @@ const TransactionsScreen = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background.primary }]}>
-      <ImageHeader />
+      <AppHeader title={t.transactions} />
+      <SegmentTabs />
       <CompactFilter />
       
       <FlatList

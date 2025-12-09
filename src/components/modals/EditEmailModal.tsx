@@ -11,6 +11,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface EditEmailModalProps {
   visible: boolean;
@@ -27,6 +28,7 @@ export const EditEmailModal: React.FC<EditEmailModalProps> = ({
   onSubmit,
   isDark = false 
 }) => {
+  const { t } = useLanguage();
   const [newEmail, setNewEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -48,15 +50,15 @@ export const EditEmailModal: React.FC<EditEmailModalProps> = ({
     const newErrors: any = {};
 
     if (!newEmail.trim()) {
-      newErrors.email = 'L\'email est requis';
+      newErrors.email = t.emailRequired;
     } else if (!validateEmail(newEmail)) {
-      newErrors.email = 'Format d\'email invalide';
+      newErrors.email = t.invalidEmailFormat;
     } else if (newEmail.toLowerCase() === currentEmail.toLowerCase()) {
-      newErrors.email = 'Le nouvel email est identique à l\'actuel';
+      newErrors.email = t.sameAsCurrentEmail;
     }
 
     if (!password) {
-      newErrors.password = 'Le mot de passe est requis';
+      newErrors.password = t.passwordRequired;
     }
 
     setErrors(newErrors);
@@ -70,14 +72,14 @@ export const EditEmailModal: React.FC<EditEmailModalProps> = ({
     try {
       const result = await onSubmit(newEmail.trim(), password);
       if (result.success) {
-        Alert.alert('Succès', 'Email modifié avec succès');
+        Alert.alert(t.success, t.emailChangedSuccess);
         resetForm();
         onClose();
       } else {
-        Alert.alert('Erreur', result.error || 'Impossible de modifier l\'email');
+        Alert.alert(t.error, result.error || t.cannotChangeEmail);
       }
     } catch (error: any) {
-      Alert.alert('Erreur', error?.message || 'Une erreur est survenue');
+      Alert.alert(t.error, error?.message || t.errorOccurred);
     } finally {
       setLoading(false);
     }
@@ -98,7 +100,7 @@ export const EditEmailModal: React.FC<EditEmailModalProps> = ({
       <View style={styles.overlay}>
         <View style={[styles.modal, isDark && styles.darkModal]}>
           <View style={styles.header}>
-            <Text style={[styles.title, isDark && styles.darkText]}>Modifier l'email</Text>
+            <Text style={[styles.title, isDark && styles.darkText]}>{t.modifyEmail}</Text>
             <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
               <Ionicons name="close" size={24} color={isDark ? '#fff' : '#17233C'} />
             </TouchableOpacity>
@@ -109,13 +111,13 @@ export const EditEmailModal: React.FC<EditEmailModalProps> = ({
             <View style={styles.infoBox}>
               <Ionicons name="information-circle" size={20} color="#6C63FF" />
               <Text style={[styles.infoText, isDark && styles.darkSubtext]}>
-                Email actuel: <Text style={styles.boldText}>{currentEmail}</Text>
+                {t.currentEmail}: <Text style={styles.boldText}>{currentEmail}</Text>
               </Text>
             </View>
 
             {/* New Email */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, isDark && styles.darkSubtext]}>Nouvel email</Text>
+              <Text style={[styles.label, isDark && styles.darkSubtext]}>{t.newEmail}</Text>
               <View style={[styles.inputWrapper, errors.email && styles.inputError]}>
                 <Ionicons name="mail-outline" size={20} color="#6B7280" style={styles.icon} />
                 <TextInput
@@ -138,7 +140,7 @@ export const EditEmailModal: React.FC<EditEmailModalProps> = ({
 
             {/* Password Confirmation */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, isDark && styles.darkSubtext]}>Confirmer avec votre mot de passe</Text>
+              <Text style={[styles.label, isDark && styles.darkSubtext]}>{t.confirmWithPassword}</Text>
               <View style={[styles.inputWrapper, errors.password && styles.inputError]}>
                 <Ionicons name="lock-closed-outline" size={20} color="#6B7280" style={styles.icon} />
                 <TextInput
@@ -167,7 +169,7 @@ export const EditEmailModal: React.FC<EditEmailModalProps> = ({
               onPress={handleClose}
               disabled={loading}
             >
-              <Text style={styles.cancelButtonText}>Annuler</Text>
+              <Text style={styles.cancelButtonText}>{t.cancel}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -178,7 +180,7 @@ export const EditEmailModal: React.FC<EditEmailModalProps> = ({
               {loading ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
-                <Text style={styles.submitButtonText}>Confirmer</Text>
+                <Text style={styles.submitButtonText}>{t.confirm}</Text>
               )}
             </TouchableOpacity>
           </View>

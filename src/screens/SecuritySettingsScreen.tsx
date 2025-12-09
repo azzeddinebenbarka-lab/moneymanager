@@ -29,12 +29,12 @@ export const SecuritySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
   const [isUpdating, setIsUpdating] = useState(false);
 
   const timeoutOptions = [
-    { label: 'Immédiat', value: 0 },
-    { label: '1 minute', value: 1 },
-    { label: '5 minutes', value: 5 },
-    { label: '15 minutes', value: 15 },
-    { label: '30 minutes', value: 30 },
-    { label: '1 heure', value: 60 },
+    { label: t.immediate, value: 0 },
+    { label: t.oneMinute, value: 1 },
+    { label: t.fiveMinutes, value: 5 },
+    { label: t.fifteenMinutes, value: 15 },
+    { label: t.thirtyMinutes, value: 30 },
+    { label: t.oneHour, value: 60 },
   ];
 
   const handleToggleBiometric = async (value: boolean) => {
@@ -42,8 +42,8 @@ export const SecuritySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
 
     if (!biometricAvailable && value) {
       Alert.alert(
-        'Non disponible',
-        'L\'authentification biométrique n\'est pas disponible sur cet appareil.',
+        t.notAvailableDevice,
+        t.notAvailableDevice,
         [{ text: 'OK' }]
       );
       return;
@@ -55,13 +55,13 @@ export const SecuritySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
 
       if (value) {
         Alert.alert(
-          'Sécurité activée',
-          'L\'authentification biométrique est maintenant activée. L\'application sera verrouillée à chaque démarrage.',
+          t.securityEnabled,
+          t.biometricEnabledMessage,
           [{ text: 'OK' }]
         );
       }
     } catch (error: any) {
-      Alert.alert(t.error, error?.message || 'Impossible d\'activer la sécurité');
+      Alert.alert(t.error, error?.message || t.cannotEnableSecurity);
     } finally {
       setIsUpdating(false);
     }
@@ -74,7 +74,7 @@ export const SecuritySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
       setIsUpdating(true);
       await toggleAutoLock(value);
     } catch (error) {
-      Alert.alert(t.error, 'Impossible de modifier le verrouillage automatique');
+      Alert.alert(t.error, t.cannotModifyAutoLock);
     } finally {
       setIsUpdating(false);
     }
@@ -82,8 +82,8 @@ export const SecuritySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
 
   const handleSelectTimeout = (timeout: number) => {
     Alert.alert(
-      'Délai de verrouillage',
-      `Verrouiller après ${timeout === 0 ? 'sortie immédiate' : timeout === 1 ? '1 minute' : timeout < 60 ? `${timeout} minutes` : '1 heure'} ?`,
+      t.lockDelayQuestion,
+      `${t.autoLockDesc} ${timeout === 0 ? t.afterImmediate : timeout === 1 ? t.afterOneMinute : timeout < 60 ? `${timeout} ${t.afterXMinutes}` : t.afterOneHour} ?`,
       [
         { text: t.cancel, style: 'cancel' },
         {
@@ -92,7 +92,7 @@ export const SecuritySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
             try {
               await setAutoLockTimeout(timeout);
             } catch (error) {
-              Alert.alert(t.error, 'Impossible de modifier le délai');
+              Alert.alert(t.error, t.cannotModifyDelay);
             }
           }
         }
@@ -105,7 +105,7 @@ export const SecuritySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
       <ScrollView style={[styles.container, { backgroundColor: colors.background.primary }]}>
         {/* Section Authentification Biométrique */}
         <Text style={[styles.sectionHeader, { color: colors.text.secondary }]}>
-          AUTHENTIFICATION BIOMÉTRIQUE
+          {t.biometricAuth.toUpperCase()}
         </Text>
         <View style={[styles.settingCard, { backgroundColor: colors.background.secondary }]}>
           <View style={[styles.iconContainer, { backgroundColor: colors.primary[100] }]}>
@@ -113,12 +113,12 @@ export const SecuritySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
           </View>
           <View style={styles.settingContent}>
             <Text style={[styles.settingTitle, { color: colors.text.primary }]}>
-              Activer la biométrie
+              {t.enableBiometric}
             </Text>
             <Text style={[styles.settingDescription, { color: colors.text.secondary }]}>
               {biometricAvailable
-                ? 'Protégez vos données avec votre empreinte'
-                : 'Non disponible sur cet appareil'}
+                ? t.protectWithBiometric
+                : t.notAvailableDevice}
             </Text>
           </View>
           <Switch
@@ -134,7 +134,7 @@ export const SecuritySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
         {preferences.biometricEnabled && (
           <>
             <Text style={[styles.sectionHeader, { color: colors.text.secondary }]}>
-              VERROUILLAGE AUTOMATIQUE
+              {t.autoLock.toUpperCase()}
             </Text>
             <View style={[styles.settingCard, { backgroundColor: colors.background.secondary }]}>
               <View style={[styles.iconContainer, { backgroundColor: '#FFF3E020' }]}>
@@ -142,10 +142,10 @@ export const SecuritySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
               </View>
               <View style={styles.settingContent}>
                 <Text style={[styles.settingTitle, { color: colors.text.primary }]}>
-                  Verrouillage auto
+                  {t.autoLock}
                 </Text>
                 <Text style={[styles.settingDescription, { color: colors.text.secondary }]}>
-                  Verrouille l'app après inactivité
+                  {t.autoLockDesc}
                 </Text>
               </View>
               <Switch
@@ -160,7 +160,7 @@ export const SecuritySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
             {preferences.autoLockEnabled && (
               <View style={[styles.timeoutCard, { backgroundColor: colors.background.secondary }]}>
                 <Text style={[styles.timeoutTitle, { color: colors.text.secondary }]}>
-                  Délai avant verrouillage
+                  {t.lockDelay}
                 </Text>
                 <View style={styles.timeoutOptions}>
                   {timeoutOptions.map((option) => (

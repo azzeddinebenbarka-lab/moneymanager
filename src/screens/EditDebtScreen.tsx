@@ -20,7 +20,8 @@ import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useDebts } from '../hooks/useDebts';
-import { Debt, DEBT_TYPES, DEBT_CATEGORIES, DebtType, DebtCategory } from '../types/Debt';
+import { Debt, DEBT_CATEGORIES, DEBT_TYPES, DebtCategory, DebtType } from '../types/Debt';
+import { getDebtCategoryLabel, getDebtStatusLabel, getDebtTypeLabel } from '../utils/debtTranslations';
 
 interface EditDebtScreenProps {
   navigation: any;
@@ -117,12 +118,12 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
 
   const handleSave = async () => {
     if (!form.name || !form.initialAmount || !form.currentAmount || !form.monthlyPayment || !form.creditor) {
-      Alert.alert(t.error, 'Veuillez remplir tous les champs obligatoires');
+      Alert.alert(t.error, t.fillAllFields);
       return;
     }
 
     if (form.autoPay && !form.paymentAccountId) {
-      Alert.alert(t.error, 'Veuillez sélectionner un compte de paiement pour le paiement automatique');
+      Alert.alert(t.error, t.selectPaymentAccount);
       return;
     }
 
@@ -132,22 +133,22 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
     const interestRate = parseFloat(form.interestRate);
 
     if (isNaN(initialAmount) || initialAmount <= 0) {
-      Alert.alert(t.error, 'Le montant initial doit être un nombre positif');
+      Alert.alert(t.error, t.initialAmountPositive);
       return;
     }
 
     if (isNaN(currentAmount) || currentAmount < 0) {
-      Alert.alert(t.error, 'Le montant actuel doit être un nombre positif');
+      Alert.alert(t.error, t.currentAmountPositive);
       return;
     }
 
     if (isNaN(monthlyPayment) || monthlyPayment <= 0) {
-      Alert.alert(t.error, 'Le paiement mensuel doit être un nombre positif');
+      Alert.alert(t.error, t.monthlyPaymentPositive);
       return;
     }
 
     if (currentAmount > initialAmount) {
-      Alert.alert(t.error, 'Le montant actuel ne peut pas être supérieur au montant initial');
+      Alert.alert(t.error, t.currentCannotExceedInitial);
       return;
     }
 
@@ -176,13 +177,13 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
       
       console.log('✅ [EditDebtScreen] Debt updated successfully');
       Alert.alert(
-        'Succès',
-        'Dette modifiée avec succès',
+        t.success,
+        t.debtModifiedSuccess,
         [{ text: 'OK', onPress: () => navigation.navigate('DebtsList') }]
       );
     } catch (error) {
       console.error('❌ [EditDebtScreen] Error updating debt:', error);
-      Alert.alert(t.error, 'Impossible de modifier la dette');
+      Alert.alert(t.error, t.cannotModifyDebt);
     } finally {
       setSaving(false);
     }
@@ -278,7 +279,7 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
     return (
       <SafeAreaView style={[styles.container, isDark && styles.darkContainer, styles.center]}>
         <Text style={[styles.loadingText, isDark && styles.darkText]}>
-          Chargement...
+          {t.loading}...
         </Text>
       </SafeAreaView>
     );
@@ -303,20 +304,20 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
               <Ionicons name="close" size={24} color={isDark ? "#fff" : "#000"} />
             </TouchableOpacity>
             <Text style={[styles.title, isDark && styles.darkText]}>
-              Modifier la Dette
+              {t.modifyDebt}
             </Text>
           </View>
 
         {/* Section: Informations de base */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
-            📋 Informations de base
+            📋 {t.baseInformation}
           </Text>
 
         {/* Nom de la dette */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Nom de la dette *
+            {t.debtName} *
           </Text>
           <TextInput
             style={[styles.input, isDark && styles.darkInput]}
@@ -330,7 +331,7 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
         {/* Créancier */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Créancier *
+            {t.creditorName} *
           </Text>
           <TextInput
             style={[styles.input, isDark && styles.darkInput]}
@@ -345,13 +346,13 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
         {/* Section: Type et catégorie */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
-            🏷️ Type et catégorie
+            🏷️ {t.typeAndCategory}
           </Text>
 
         {/* Type de dette */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Type de dette
+            {t.debtType}
           </Text>
           <ScrollView 
             horizontal 
@@ -381,7 +382,7 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
                   form.type === type.value && styles.chipTextSelected,
                   form.type === type.value && { color: form.color }
                 ]}>
-                  {type.label}
+                  {getDebtTypeLabel(type.value, t)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -391,7 +392,7 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
         {/* Statut */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Statut
+            {t.status}
           </Text>
           <ScrollView 
             horizontal 
@@ -416,7 +417,7 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
                   form.status === status.value && styles.chipTextSelected,
                   form.status === status.value && { color: form.color }
                 ]}>
-                  {status.label}
+                  {getDebtStatusLabel(status.value, t)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -426,7 +427,7 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
         {/* Catégorie */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Catégorie
+            {t.category}
           </Text>
           <ScrollView 
             horizontal 
@@ -456,7 +457,7 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
                   form.category === cat.value && styles.chipTextSelected,
                   form.category === cat.value && { color: cat.color }
                 ]}>
-                  {cat.label}
+                  {getDebtCategoryLabel(cat.value, t)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -467,13 +468,13 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
         {/* Section: Détails financiers */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
-            💰 Détails financiers
+            💰 {t.financialDetails}
           </Text>
 
         {/* Montant initial */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Montant initial *
+            {t.initialAmount} *
           </Text>
           <TextInput
             style={[styles.input, isDark && styles.darkInput]}
@@ -494,7 +495,7 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
         {/* Montant actuel */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Montant actuel *
+            {t.currentAmount} *
           </Text>
           <TextInput
             style={[styles.input, isDark && styles.darkInput]}
@@ -515,7 +516,7 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
         {/* Taux d'intérêt */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Taux d'intérêt (%)
+            {t.interestRate} (%)
           </Text>
           <TextInput
             style={[styles.input, isDark && styles.darkInput]}
@@ -536,7 +537,7 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
         {/* Paiement mensuel */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Paiement mensuel *
+            {t.monthlyPayment} *
           </Text>
           <TextInput
             style={[styles.input, isDark && styles.darkInput]}
@@ -557,7 +558,7 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
         {/* Date de début */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Date de début
+            {t.startDate}
           </Text>
           <TouchableOpacity 
             style={[styles.dateButton, isDark && styles.darkInput]}
@@ -577,7 +578,7 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
             />
           )}
           <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-            Date à laquelle la dette a commencé
+            {t.debtStartDate}
           </Text>
         </View>
         </View>
@@ -585,7 +586,7 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
         {/* Section: Options de paiement */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
-            💳 Options de paiement
+            💳 {t.paymentOptions}
           </Text>
 
         {/* Paiement automatique */}
@@ -594,7 +595,7 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
             <View style={styles.switchLabelCompact}>
               <Ionicons name="card-outline" size={20} color={isDark ? "#fff" : "#000"} />
               <Text style={[styles.labelBold, isDark && styles.darkText]}>
-                Paiement automatique
+                {t.automaticPayment}
               </Text>
             </View>
             <Switch
@@ -608,13 +609,13 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
           {form.autoPay && (
             <View style={styles.accountSelectorCompact}>
               <Text style={[styles.sublabel, isDark && styles.darkSubtext]}>
-                Sélectionnez le compte qui paiera automatiquement
+                {t.selectAccountForAutoPay}
               </Text>
               
               {/* Jour du mois pour le paiement */}
               <View style={styles.paymentDayContainer}>
                 <Text style={[styles.label, isDark && styles.darkText]}>
-                  Jour du mois pour le paiement
+                  {t.dayOfMonthForPayment}
                 </Text>
                 <TextInput
                   style={[styles.input, styles.dayInput, isDark && styles.darkInput]}
@@ -631,13 +632,13 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
                   maxLength={2}
                 />
                 <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-                  Le paiement sera effectué automatiquement le {form.paymentDay} de chaque mois
+                  {t.automaticPaymentOnDay} {form.paymentDay} {t.dayOfEachMonth}
                 </Text>
               </View>
 
               {accounts.length === 0 ? (
                 <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-                  Aucun compte disponible. Créez d'abord un compte.
+                  {t.noAccountAvailable}
                 </Text>
               ) : (
                 <View style={styles.accountsRow}>
@@ -672,7 +673,7 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
         {/* Couleur */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Couleur
+            {t.color}
           </Text>
           <View style={styles.colorsContainer}>
             {colors.map((color) => (
@@ -701,7 +702,7 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
             onPress={() => navigation.navigate('Debts', { screen: 'DebtsList' })}
             disabled={saving}
           >
-            <Text style={styles.cancelButtonText}>Annuler</Text>
+            <Text style={styles.cancelButtonText}>{t.cancel}</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -710,7 +711,7 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
             disabled={saving || !form.name || !form.initialAmount || !form.currentAmount || !form.monthlyPayment || !form.creditor}
           >
             <Text style={styles.saveButtonText}>
-              {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+              {saving ? t.saving : t.save}
             </Text>
           </TouchableOpacity>
         </View>

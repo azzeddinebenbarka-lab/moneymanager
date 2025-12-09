@@ -11,6 +11,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface ChangePasswordModalProps {
   visible: boolean;
@@ -25,6 +26,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   onSubmit,
   isDark = false 
 }) => {
+  const { t } = useLanguage();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -47,11 +49,11 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   const validateForm = (): boolean => {
     const newErrors: any = {};
 
-    if (!currentPassword) newErrors.current = 'Mot de passe actuel requis';
-    if (!newPassword) newErrors.new = 'Nouveau mot de passe requis';
-    else if (newPassword.length < 6) newErrors.new = 'Au moins 6 caractères';
-    if (!confirmPassword) newErrors.confirm = 'Confirmation requise';
-    else if (newPassword !== confirmPassword) newErrors.confirm = 'Les mots de passe ne correspondent pas';
+    if (!currentPassword) newErrors.current = t.currentPasswordRequired;
+    if (!newPassword) newErrors.new = t.newPasswordRequired;
+    else if (newPassword.length < 6) newErrors.new = t.atLeast6Chars;
+    if (!confirmPassword) newErrors.confirm = t.confirmationRequired;
+    else if (newPassword !== confirmPassword) newErrors.confirm = t.passwordsDoNotMatch;
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -64,14 +66,14 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
     try {
       const result = await onSubmit(currentPassword, newPassword);
       if (result.success) {
-        Alert.alert('Succès', 'Mot de passe changé avec succès');
+        Alert.alert(t.success, t.passwordChangedSuccess);
         resetForm();
         onClose();
       } else {
-        Alert.alert('Erreur', result.error || 'Impossible de changer le mot de passe');
+        Alert.alert(t.error, result.error || t.cannotChangePassword);
       }
     } catch (error: any) {
-      Alert.alert('Erreur', error?.message || 'Une erreur est survenue');
+      Alert.alert(t.error, error?.message || t.errorOccurred);
     } finally {
       setLoading(false);
     }
@@ -92,7 +94,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
       <View style={styles.overlay}>
         <View style={[styles.modal, isDark && styles.darkModal]}>
           <View style={styles.header}>
-            <Text style={[styles.title, isDark && styles.darkText]}>Changer le mot de passe</Text>
+            <Text style={[styles.title, isDark && styles.darkText]}>{t.changePassword}</Text>
             <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
               <Ionicons name="close" size={24} color={isDark ? '#fff' : '#17233C'} />
             </TouchableOpacity>
@@ -101,7 +103,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
           <View style={styles.content}>
             {/* Current Password */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, isDark && styles.darkSubtext]}>Mot de passe actuel</Text>
+              <Text style={[styles.label, isDark && styles.darkSubtext]}>{t.currentPasswordLabel}</Text>
               <View style={[styles.inputWrapper, errors.current && styles.inputError]}>
                 <Ionicons name="lock-closed-outline" size={20} color="#6B7280" style={styles.icon} />
                 <TextInput
@@ -125,12 +127,12 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
 
             {/* New Password */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, isDark && styles.darkSubtext]}>Nouveau mot de passe</Text>
+              <Text style={[styles.label, isDark && styles.darkSubtext]}>{t.newPasswordLabel}</Text>
               <View style={[styles.inputWrapper, errors.new && styles.inputError]}>
                 <Ionicons name="key-outline" size={20} color="#6B7280" style={styles.icon} />
                 <TextInput
                   style={[styles.input, isDark && styles.darkText]}
-                  placeholder="Au moins 6 caractères"
+                  placeholder={t.atLeast6Chars}
                   value={newPassword}
                   onChangeText={(text) => {
                     setNewPassword(text);
@@ -149,12 +151,12 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
 
             {/* Confirm Password */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, isDark && styles.darkSubtext]}>Confirmer le nouveau mot de passe</Text>
+              <Text style={[styles.label, isDark && styles.darkSubtext]}>{t.confirmPasswordLabel}</Text>
               <View style={[styles.inputWrapper, errors.confirm && styles.inputError]}>
                 <Ionicons name="checkmark-circle-outline" size={20} color="#6B7280" style={styles.icon} />
                 <TextInput
                   style={[styles.input, isDark && styles.darkText]}
-                  placeholder="Répéter le mot de passe"
+                  placeholder={t.repeatPassword}
                   value={confirmPassword}
                   onChangeText={(text) => {
                     setConfirmPassword(text);
@@ -178,7 +180,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
               onPress={handleClose}
               disabled={loading}
             >
-              <Text style={styles.cancelButtonText}>Annuler</Text>
+              <Text style={styles.cancelButtonText}>{t.cancel}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -189,7 +191,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
               {loading ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
-                <Text style={styles.submitButtonText}>Confirmer</Text>
+                <Text style={styles.submitButtonText}>{t.confirm}</Text>
               )}
             </TouchableOpacity>
           </View>

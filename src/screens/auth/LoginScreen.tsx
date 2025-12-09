@@ -1,12 +1,14 @@
 // src/screens/auth/LoginScreen.tsx
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
   const { login, register, isRegistered } = useAuth();
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [registered, setRegistered] = useState<boolean | null>(null);
@@ -26,16 +28,16 @@ const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
     
     // Validation email
     if (!email.trim()) {
-      newErrors.email = 'L\'email est requis';
+      newErrors.email = t.emailRequired;
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'Format d\'email invalide';
+      newErrors.email = t.emailInvalid;
     }
     
     // Validation mot de passe
     if (!password) {
-      newErrors.password = 'Le mot de passe est requis';
+      newErrors.password = t.passwordRequired;
     } else if (!registered && password.length < 6) {
-      newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères';
+      newErrors.password = t.passwordMinLength;
     }
     
     setErrors(newErrors);
@@ -52,18 +54,18 @@ const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
       if (registered) {
         const result = await login(email.trim(), password);
         if (!result.success) {
-          Alert.alert('Erreur de connexion', result.error || 'Email ou mot de passe invalide');
+          Alert.alert(t.error, result.error || t.loginError);
         }
       } else {
         const result = await register(email.trim(), password);
         if (result.success) {
-          Alert.alert('Succès', 'Compte créé et connecté avec succès');
+          Alert.alert(t.registerSuccess, t.loginSuccess);
         } else {
-          Alert.alert('Erreur d\'inscription', result.error || 'Impossible de créer le compte');
+          Alert.alert(t.error, result.error || t.registerError);
         }
       }
     } catch (err: any) {
-      Alert.alert('Erreur', err?.message || 'Une erreur est survenue');
+      Alert.alert(t.error, err?.message || t.error);
     } finally {
       setLoading(false);
     }
@@ -86,7 +88,7 @@ const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
       <SafeAreaView style={styles.safe}>
         <View style={styles.centerLoader}>
           <ActivityIndicator size="large" color="#6C63FF" />
-          <Text style={styles.loadingText}>Chargement...</Text>
+          <Text style={styles.loadingText}>{t.loading}</Text>
         </View>
       </SafeAreaView>
     );
@@ -97,25 +99,29 @@ const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
           <View style={styles.iconCircle}>
-            <Ionicons name="wallet" size={32} color="#6C63FF" />
+            <Image 
+              source={require('../../../assets/images/icon.png')} 
+              style={styles.appIcon}
+              resizeMode="contain"
+            />
           </View>
-          <Text style={styles.appTitle}>Mon Budget</Text>
-          <Text style={styles.subtitle}>Gérez vos finances intelligemment</Text>
+          <Text style={styles.appTitle}>MoneyMind</Text>
+          <Text style={styles.subtitle}>{t.welcomeDescription}</Text>
         </View>
 
         <View style={styles.form}>
           <Text style={styles.formTitle}>
-            {registered ? 'Connexion' : 'Créer un compte'}
+            {registered ? t.login : t.createAccount}
           </Text>
 
           {/* Email */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>{t.email}</Text>
             <View style={[styles.inputWrapper, errors.email && styles.inputError]}>
               <Ionicons name="mail-outline" size={20} color="#6B7280" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="votre@email.com"
+                placeholder={t.email}
                 value={email}
                 onChangeText={(text) => {
                   setEmail(text);
@@ -133,12 +139,12 @@ const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
 
           {/* Password */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Mot de passe</Text>
+            <Text style={styles.label}>{t.password}</Text>
             <View style={[styles.inputWrapper, errors.password && styles.inputError]}>
               <Ionicons name="lock-closed-outline" size={20} color="#6B7280" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder={registered ? '••••••••' : 'Au moins 6 caractères'}
+                placeholder={registered ? '••••••••' : t.passwordMinLength}
                 value={password}
                 onChangeText={(text) => {
                   setPassword(text);
@@ -170,7 +176,7 @@ const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
             ) : (
               <>
                 <Text style={styles.buttonText}>
-                  {registered ? 'Se connecter' : 'Créer mon compte'}
+                  {registered ? t.signIn : t.createAccount}
                 </Text>
                 <Ionicons name="arrow-forward" size={20} color="#fff" />
               </>
@@ -179,16 +185,16 @@ const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
 
           {registered && (
             <TouchableOpacity style={styles.forgot} onPress={handleForgotPassword}>
-              <Text style={styles.forgotText}>Mot de passe oublié ?</Text>
+              <Text style={styles.forgotText}>{t.forgotPassword}</Text>
             </TouchableOpacity>
           )}
 
           {/* Lien vers inscription */}
           {!registered && (
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Vous avez déjà un compte ? </Text>
+              <Text style={styles.footerText}>{t.alreadyHaveAccount} </Text>
               <TouchableOpacity onPress={goToRegister}>
-                <Text style={styles.footerLink}>Créer un compte</Text>
+                <Text style={styles.footerLink}>{t.createAccount}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -209,10 +215,19 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#E8E5FF',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  appIcon: {
+    width: 60,
+    height: 60,
   },
   appTitle: { fontSize: 28, fontWeight: '700', color: '#17233c' },
   subtitle: { fontSize: 13, color: '#6b7280', marginTop: 6 },

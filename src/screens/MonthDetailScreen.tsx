@@ -3,21 +3,22 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Animated,
-    Dimensions,
-    FlatList,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Dimensions,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import { AppHeader } from '../components/layout/AppHeader';
+import { TransactionDetailModal } from '../components/modals/TransactionDetailModal';
 import { SafeAreaView } from '../components/SafeAreaView';
 import ListTransactionItem from '../components/transaction/ListTransactionItem';
-import { TransactionDetailModal } from '../components/modals/TransactionDetailModal';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
@@ -49,6 +50,11 @@ const MonthDetailScreen: React.FC = () => {
   const { transactions, deleteTransaction, loading: transactionsLoading, refreshTransactions } = useTransactions();
   const { categories, getCategoryById } = useCategories();
   const [parentNames, setParentNames] = useState<Map<string, string>>(new Map());
+
+  const monthNames = [
+    t.january, t.february, t.march, t.april, t.may, t.june,
+    t.july, t.august, t.september, t.october, t.november, t.december
+  ];
 
   const { year, month } = route.params;
 
@@ -146,11 +152,11 @@ const MonthDetailScreen: React.FC = () => {
   // ✅ OBTENIR LE LIBELLÉ DES CATÉGORIES SPÉCIALES
   const getSpecialCategoryLabel = (category: string): string => {
     const labels: { [key: string]: string } = {
-      'dette': 'Paiement de Dette',
-      'épargne': 'Épargne',
-      'charges_annuelles': 'Charge Annuelle',
-      'transfert': 'Transfert',
-      'remboursement épargne': 'Remboursement Épargne'
+      'dette': t.debtPayment,
+      'épargne': t.savings,
+      'charges_annuelles': t.annualCharge,
+      'transfert': t.transfer,
+      'remboursement épargne': t.savingsRefund
     };
     return labels[category.toLowerCase()] || category;
   };
@@ -226,7 +232,7 @@ const MonthDetailScreen: React.FC = () => {
           
           <View style={styles.headerTitleContainer}>
             <Text style={[styles.headerTitle, { color: colors.text.primary }]}>
-              Détail du Mois
+              {t.monthDetail}
             </Text>
             <Text style={[styles.headerSubtitle, { color: colors.text.secondary }]}>
               {monthName}
@@ -237,7 +243,7 @@ const MonthDetailScreen: React.FC = () => {
             <View style={styles.miniStat}>
               <Ionicons name="receipt" size={14} color="#007AFF" />
               <Text style={[styles.miniStatText, { color: colors.text.secondary }]}>
-                {monthData?.transactionCount || 0} transactions
+                {monthData?.transactionCount || 0} {t.transactions}
               </Text>
             </View>
           </View>
@@ -268,7 +274,7 @@ const MonthDetailScreen: React.FC = () => {
               {formatAmount(monthData?.income || 0)}
             </Text>
             <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
-              Revenus
+              {t.income}
             </Text>
           </View>
         </View>
@@ -283,7 +289,7 @@ const MonthDetailScreen: React.FC = () => {
               {formatAmount(monthData?.expenses || 0)}
             </Text>
             <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
-              Dépenses
+              {t.expenses}
             </Text>
           </View>
         </View>
@@ -298,7 +304,7 @@ const MonthDetailScreen: React.FC = () => {
             color={monthData?.netFlow >= 0 ? '#10B981' : '#EF4444'} 
           />
           <Text style={[styles.netFlowLabel, { color: colors.text.secondary }]}>
-            Solde du Mois
+            {t.monthBalance}
           </Text>
         </View>
         <Text style={[
@@ -308,7 +314,7 @@ const MonthDetailScreen: React.FC = () => {
           {formatAmount(monthData?.netFlow || 0)}
         </Text>
         <Text style={[styles.savingsRate, { color: colors.text.secondary }]}>
-          Taux d'épargne: {monthData?.savingsRate?.toFixed(1) || 0}%
+          {t.savingsRate}: {monthData?.savingsRate?.toFixed(1) || 0}%
         </Text>
       </View>
     </Animated.View>
@@ -326,13 +332,13 @@ const MonthDetailScreen: React.FC = () => {
       ]}
     >
       <Text style={[styles.filtersLabel, { color: colors.text.secondary }]}>
-        Filtrer les transactions
+        {t.filterTransactions}
       </Text>
       <View style={styles.filtersRow}>
         {[
-          { key: 'all', label: 'Toutes', icon: 'list' },
-          { key: 'income', label: 'Revenus', icon: 'arrow-down' },
-          { key: 'expense', label: 'Dépenses', icon: 'arrow-up' },
+          { key: 'all', label: t.all, icon: 'list' },
+          { key: 'income', label: t.income, icon: 'arrow-down' },
+          { key: 'expense', label: t.expenses, icon: 'arrow-up' },
         ].map(filter => (
           <TouchableOpacity
             key={filter.key}
@@ -378,10 +384,10 @@ const MonthDetailScreen: React.FC = () => {
       >
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            Analyse par Catégorie
+            {t.categoryAnalysisTitle}
           </Text>
           <Text style={[styles.sectionSubtitle, { color: colors.text.secondary }]}>
-            Dépenses détaillées
+            {t.detailedExpenses}
           </Text>
         </View>
 
@@ -475,12 +481,14 @@ const MonthDetailScreen: React.FC = () => {
             color={colors.text.disabled} 
           />
           <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>
-            Aucune transaction
+            {t.noTransaction}
           </Text>
           <Text style={[styles.emptyDescription, { color: colors.text.secondary }]}>
             {selectedFilter === 'all' 
-              ? `Aucune transaction pour ${monthName}`
-              : `Aucune transaction ${selectedFilter === 'income' ? 'de revenu' : 'de dépense'} pour ${monthName}`
+              ? `${t.noTransactionFor} ${monthName}`
+              : selectedFilter === 'income' 
+                ? `${t.incomeTransactionFor} ${monthName}`
+                : `${t.expenseTransactionFor} ${monthName}`
             }
           </Text>
         </Animated.View>
@@ -499,11 +507,11 @@ const MonthDetailScreen: React.FC = () => {
       >
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            Transactions ({filteredTransactions.length})
+            {t.transactions} ({filteredTransactions.length})
           </Text>
           <Text style={[styles.sectionSubtitle, { color: colors.text.secondary }]}>
-            {selectedFilter === 'all' ? 'Toutes les transactions' : 
-             selectedFilter === 'income' ? 'Revenus seulement' : 'Dépenses seulement'}
+            {selectedFilter === 'all' ? t.all + ' ' + t.transactions.toLowerCase() : 
+             selectedFilter === 'income' ? t.income + ' ' + t.only : t.expenses + ' ' + t.only}
           </Text>
         </View>
 
@@ -611,7 +619,7 @@ const MonthDetailScreen: React.FC = () => {
         <View style={[styles.container, { backgroundColor: colors.background.primary }, styles.center]}>
           <ActivityIndicator size="large" color="#007AFF" />
           <Text style={[styles.loadingText, { color: colors.text.primary }]}>
-            Chargement des données...
+            {t.loadingData}
           </Text>
         </View>
       </SafeAreaView>
@@ -621,7 +629,7 @@ const MonthDetailScreen: React.FC = () => {
   return (
     <SafeAreaView>
       <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
-        <ModernHeader />
+        <AppHeader title={`${monthNames[month - 1]} ${year}`} showBackButton={true} />
         
         <ScrollView 
           style={styles.content}

@@ -16,7 +16,7 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const handleOpenLink = (url: string, title: string) => {
     Alert.alert(
       title,
-      'Cette fonctionnalité sera bientôt disponible',
+      t.comingSoon,
       [{ text: 'OK' }]
     );
   };
@@ -24,30 +24,30 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const aboutItems = [
     {
       icon: 'information-circle-outline',
-      title: 'Version',
+      title: t.version,
       value: `${APP_VERSION} (${BUILD_NUMBER})`,
       color: colors.primary[500],
     },
     {
       icon: 'help-circle-outline',
-      title: 'Aide & Support',
-      subtitle: 'Obtenez de l\'aide',
+      title: t.helpSupport,
+      subtitle: t.getHelp,
       color: '#34C759',
-      onPress: () => handleOpenLink('support', 'Aide & Support'),
+      onPress: () => handleOpenLink('support', t.helpSupport),
     },
     {
       icon: 'document-text-outline',
-      title: 'Conditions d\'utilisation',
-      subtitle: 'Lire les conditions',
+      title: t.termsOfService,
+      subtitle: t.readTerms,
       color: '#5856D6',
-      onPress: () => handleOpenLink('terms', 'Conditions d\'utilisation'),
+      onPress: () => handleOpenLink('terms', t.termsOfService),
     },
     {
       icon: 'shield-checkmark-outline',
-      title: 'Politique de confidentialité',
-      subtitle: 'Protection des données',
+      title: t.privacyPolicy,
+      subtitle: t.dataProtection,
       color: '#FF9500',
-      onPress: () => handleOpenLink('privacy', 'Politique de confidentialité'),
+      onPress: () => handleOpenLink('privacy', t.privacyPolicy),
     },
   ];
 
@@ -63,13 +63,13 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             MoneyManager
           </Text>
           <Text style={[styles.appTagline, { color: colors.text.secondary }]}>
-            Gérez vos finances intelligemment
+            {t.manageFinancesSmartly}
           </Text>
         </View>
 
         {/* Informations */}
         <Text style={[styles.sectionHeader, { color: colors.text.secondary }]}>
-          INFORMATIONS
+          {t.appInfo.toUpperCase()}
         </Text>
         {aboutItems.map((item, index) => (
           <TouchableOpacity
@@ -105,7 +105,7 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: colors.text.tertiary }]}>
-            Fait avec ❤️ pour vous
+            {t.madeWithLove}
           </Text>
           <Text style={[styles.footerText, { color: colors.text.tertiary }]}>
             © 2024 MoneyManager

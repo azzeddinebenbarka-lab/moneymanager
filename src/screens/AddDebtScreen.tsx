@@ -19,6 +19,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useDebts } from '../hooks/useDebts';
 import { CreateDebtData, DEBT_CATEGORIES, DEBT_TYPES, DebtCategory, DebtType } from '../types/Debt';
+import { getDebtCategoryLabel, getDebtTypeLabel } from '../utils/debtTranslations';
 
 interface DebtFormData {
   name: string;
@@ -74,12 +75,12 @@ const AddDebtScreen = ({ navigation }: any) => {
 
   const handleSave = async () => {
     if (!form.name || !form.initialAmount || !form.monthlyPayment || !form.creditor) {
-      Alert.alert(t.error, 'Veuillez remplir tous les champs obligatoires');
+      Alert.alert(t.error, t.fillAllFields);
       return;
     }
 
     if (form.autoPay && !form.paymentAccountId) {
-      Alert.alert(t.error, 'Veuillez sélectionner un compte de paiement pour le paiement automatique');
+      Alert.alert(t.error, t.selectPaymentAccount);
       return;
     }
 
@@ -88,17 +89,17 @@ const AddDebtScreen = ({ navigation }: any) => {
     const interestRate = parseFloat(form.interestRate);
 
     if (isNaN(initialAmount) || initialAmount <= 0) {
-      Alert.alert(t.error, 'Le montant initial doit être un nombre positif');
+      Alert.alert(t.error, t.initialAmountPositive);
       return;
     }
 
     if (isNaN(monthlyPayment) || monthlyPayment <= 0) {
-      Alert.alert(t.error, 'Le paiement mensuel doit être un nombre positif');
+      Alert.alert(t.error, t.monthlyPaymentPositive);
       return;
     }
 
     if (monthlyPayment > initialAmount) {
-      Alert.alert(t.error, 'Le paiement mensuel ne peut pas être supérieur au montant initial');
+      Alert.alert(t.error, t.monthlyPaymentCannotExceedInitial);
       return;
     }
 
@@ -127,13 +128,13 @@ const AddDebtScreen = ({ navigation }: any) => {
       
       console.log('✅ [AddDebtScreen] Debt created successfully');
       Alert.alert(
-        'Succès',
-        'Dette ajoutée avec succès',
+        t.success,
+        t.debtAddedSuccess,
         [{ text: 'OK', onPress: () => navigation.navigate('DebtsList') }]
       );
     } catch (error) {
       console.error('❌ [AddDebtScreen] Error creating debt:', error);
-      Alert.alert(t.error, 'Impossible d\'ajouter la dette');
+      Alert.alert(t.error, t.cannotAddDebt);
     } finally {
       setLoading(false);
     }
@@ -250,20 +251,20 @@ const AddDebtScreen = ({ navigation }: any) => {
             <Ionicons name="close" size={24} color={isDark ? "#fff" : "#000"} />
           </TouchableOpacity>
           <Text style={[styles.title, isDark && styles.darkText]}>
-            Nouvelle Dette
+            {t.newDebt}
           </Text>
         </View>
 
         {/* Section: Informations de base */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
-            📋 Informations de base
+            📋 {t.baseInformation}
           </Text>
 
         {/* Nom de la dette */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Nom de la dette *
+            {t.debtName} *
           </Text>
           <TextInput
             style={[styles.input, isDark && styles.darkInput]}
@@ -277,7 +278,7 @@ const AddDebtScreen = ({ navigation }: any) => {
         {/* Créancier */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Créancier *
+            {t.creditorName} *
           </Text>
           <TextInput
             style={[styles.input, isDark && styles.darkInput]}
@@ -292,13 +293,13 @@ const AddDebtScreen = ({ navigation }: any) => {
         {/* Section: Type et catégorie */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
-            🏷️ Type et catégorie
+            🏷️ {t.typeAndCategory}
           </Text>
 
         {/* Type de dette */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Type de dette
+            {t.debtType}
           </Text>
           <ScrollView 
             horizontal 
@@ -328,7 +329,7 @@ const AddDebtScreen = ({ navigation }: any) => {
                   form.type === type.value && styles.chipTextSelected,
                   form.type === type.value && { color: form.color }
                 ]}>
-                  {type.label}
+                  {getDebtTypeLabel(type.value, t)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -338,7 +339,7 @@ const AddDebtScreen = ({ navigation }: any) => {
         {/* Catégorie */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Catégorie
+            {t.category}
           </Text>
           <ScrollView 
             horizontal 
@@ -368,7 +369,7 @@ const AddDebtScreen = ({ navigation }: any) => {
                   form.category === cat.value && styles.chipTextSelected,
                   form.category === cat.value && { color: cat.color }
                 ]}>
-                  {cat.label}
+                  {getDebtCategoryLabel(cat.value, t)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -379,13 +380,13 @@ const AddDebtScreen = ({ navigation }: any) => {
         {/* Section: Détails financiers */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
-            💰 Détails financiers
+            💰 {t.financialDetails}
           </Text>
 
         {/* Montant initial */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Montant initial *
+            {t.initialAmount} *
           </Text>
           <TextInput
             style={[styles.input, isDark && styles.darkInput]}
@@ -406,7 +407,7 @@ const AddDebtScreen = ({ navigation }: any) => {
         {/* Taux d'intérêt */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Taux d'intérêt (%)
+            {t.interestRate} (%)
           </Text>
           <View style={styles.interestContainer}>
             <TextInput
@@ -435,7 +436,7 @@ const AddDebtScreen = ({ navigation }: any) => {
         {/* Paiement mensuel */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Paiement mensuel *
+            {t.monthlyPayment} *
           </Text>
           <TextInput
             style={[styles.input, isDark && styles.darkInput]}
@@ -456,7 +457,7 @@ const AddDebtScreen = ({ navigation }: any) => {
         {/* Date de début */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Date de début
+            {t.startDate}
           </Text>
           <TouchableOpacity 
             style={[styles.dateButton, isDark && styles.darkInput]}
@@ -476,7 +477,7 @@ const AddDebtScreen = ({ navigation }: any) => {
             />
           )}
           <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-            Date à laquelle la dette a commencé
+            {t.debtStartDate}
           </Text>
         </View>
 
@@ -484,7 +485,7 @@ const AddDebtScreen = ({ navigation }: any) => {
         {form.autoPay && (
           <View style={[styles.inputGroup, styles.calculatedDateGroup]}>
             <Text style={[styles.label, isDark && styles.darkText]}>
-              📅 Date d'échéance (première échéance)
+              📅 {t.dueDateFirstPayment}
             </Text>
             <View style={[styles.calculatedDateBox, isDark && styles.darkInput]}>
               <Text style={[styles.calculatedDateText, isDark && styles.darkText]}>
@@ -516,8 +517,8 @@ const AddDebtScreen = ({ navigation }: any) => {
             </View>
             <Text style={[styles.hint, isDark && styles.darkSubtext]}>
               {form.startPaymentNextMonth 
-                ? "Premier paiement le mois prochain" 
-                : "Premier paiement dès que possible"}
+                ? t.firstPaymentNextMonth
+                : t.firstPaymentAsap}
             </Text>
           </View>
         )}
@@ -526,7 +527,7 @@ const AddDebtScreen = ({ navigation }: any) => {
         {/* Section: Options de paiement */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
-            💳 Options de paiement
+            💳 {t.paymentOptions}
           </Text>
 
         {/* Paiement automatique */}
@@ -535,7 +536,7 @@ const AddDebtScreen = ({ navigation }: any) => {
             <View style={styles.switchLabelCompact}>
               <Ionicons name="card-outline" size={20} color={isDark ? "#fff" : "#000"} />
               <Text style={[styles.labelBold, isDark && styles.darkText]}>
-                Paiement automatique
+                {t.automaticPayment}
               </Text>
             </View>
             <Switch
@@ -549,13 +550,13 @@ const AddDebtScreen = ({ navigation }: any) => {
           {form.autoPay && (
             <View style={styles.accountSelectorCompact}>
               <Text style={[styles.sublabel, isDark && styles.darkSubtext]}>
-                Sélectionnez le compte qui paiera automatiquement
+                {t.selectAccountForAutoPay}
               </Text>
               
               {/* Jour du mois pour le paiement */}
               <View style={styles.paymentDayContainer}>
                 <Text style={[styles.label, isDark && styles.darkText]}>
-                  Jour du mois pour le paiement
+                  {t.dayOfMonthForPayment}
                 </Text>
                 <TextInput
                   style={[styles.input, styles.dayInput, isDark && styles.darkInput]}
@@ -572,14 +573,14 @@ const AddDebtScreen = ({ navigation }: any) => {
                   maxLength={2}
                 />
                 <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-                  Le paiement sera effectué automatiquement le {form.paymentDay} de chaque mois
+                  {t.automaticPaymentOnDay} {form.paymentDay} {t.dayOfEachMonth}
                 </Text>
               </View>
 
               {/* Choix du début des paiements */}
               <View style={styles.paymentStartContainer}>
                 <Text style={[styles.label, isDark && styles.darkText]}>
-                  Début des paiements automatiques
+                  {t.automaticPaymentStart}
                 </Text>
                 
                 <TouchableOpacity
@@ -595,14 +596,14 @@ const AddDebtScreen = ({ navigation }: any) => {
                   </View>
                   <View style={styles.radioContent}>
                     <Text style={[styles.radioTitle, isDark && styles.darkText]}>
-                      Mois prochain (recommandé)
+                      {t.nextMonthRecommended}
                     </Text>
                     <Text style={[styles.radioSubtitle, isDark && styles.darkSubtext]}>
                       {(() => {
                         const nextMonth = new Date(form.startDate);
                         nextMonth.setMonth(nextMonth.getMonth() + 1);
                         nextMonth.setDate(form.paymentDay);
-                        return `🗓️ Premier prélèvement : ${nextMonth.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+                        return `🗓️ ${t.firstDebitOn} : ${nextMonth.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`;
                       })()}
                     </Text>
                   </View>
@@ -621,10 +622,10 @@ const AddDebtScreen = ({ navigation }: any) => {
                   </View>
                   <View style={styles.radioContent}>
                     <Text style={[styles.radioTitle, isDark && styles.darkText]}>
-                      Dès que possible
+                      {t.asapPayment}
                     </Text>
                     <Text style={[styles.radioSubtitle, isDark && styles.darkSubtext]}>
-                      ⚡ Si la date d'échéance est dépassée, prélèvement immédiat
+                      ⚡ {t.ifDueDatePassedImmediate}
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -632,7 +633,7 @@ const AddDebtScreen = ({ navigation }: any) => {
 
               {accounts.length === 0 ? (
                 <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-                  Aucun compte disponible. Créez d'abord un compte.
+                  {t.noAccountAvailable}
                 </Text>
               ) : (
                 <View style={styles.accountsRow}>
@@ -667,7 +668,7 @@ const AddDebtScreen = ({ navigation }: any) => {
         {/* Couleur */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Couleur
+            {t.color}
           </Text>
           <View style={styles.colorsContainer}>
             {colors.map((color) => (
@@ -696,7 +697,7 @@ const AddDebtScreen = ({ navigation }: any) => {
             onPress={() => navigation.navigate('Debts', { screen: 'DebtsList' })}
             disabled={loading}
           >
-            <Text style={styles.cancelButtonText}>Annuler</Text>
+            <Text style={styles.cancelButtonText}>{t.cancel}</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -705,7 +706,7 @@ const AddDebtScreen = ({ navigation }: any) => {
             disabled={loading || !form.name || !form.initialAmount || !form.monthlyPayment || !form.creditor}
           >
             <Text style={styles.saveButtonText}>
-              {loading ? 'Ajout...' : 'Ajouter'}
+              {loading ? t.adding : t.add}
             </Text>
           </TouchableOpacity>
         </View>

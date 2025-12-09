@@ -1,6 +1,7 @@
 // src/screens/ProfileScreen.tsx
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { ChangePasswordModal } from '../components/modals/ChangePasswordModal';
@@ -29,6 +30,37 @@ const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
 
+  // États pour le nom et le pays de l'utilisateur
+  const [userName, setUserName] = useState<string>('');
+  const [userCountry, setUserCountry] = useState<string>('');
+
+  // Charger le nom et le pays depuis AsyncStorage
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const storedName = await AsyncStorage.getItem('userName');
+        const storedCountry = await AsyncStorage.getItem('userCountry');
+        
+        if (storedName) {
+          setUserName(storedName);
+        } else {
+          // Fallback: extraire le nom de l'email
+          const emailName = user?.email ? user.email.split('@')[0] : t.user;
+          setUserName(emailName);
+        }
+        
+        if (storedCountry) {
+          setUserCountry(storedCountry);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des données utilisateur:', error);
+        const emailName = user?.email ? user.email.split('@')[0] : t.user;
+        setUserName(emailName);
+      }
+    };
+    loadUserData();
+  }, [user?.email]);
+
   // Date d'inscription
   const getMemberSince = () => {
     if (user?.createdAt) {
@@ -40,12 +72,12 @@ const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
 
   const handleLogout = () => {
     Alert.alert(
-      'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter ?',
+      t.logout,
+      t.logoutConfirm,
       [
         { text: t.cancel, style: 'cancel' },
         {
-          text: 'Se déconnecter',
+          text: t.logout,
           style: 'destructive',
           onPress: async () => {
             await logout();
@@ -69,8 +101,13 @@ const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
             </View>
           </View>
           <Text style={[styles.name, isDark && styles.darkText]}>
-            {user?.email?.split('@')[0] || 'Utilisateur'}
+            {userName || user?.email?.split('@')[0] || t.user}
           </Text>
+          {userCountry && (
+            <Text style={[styles.country, isDark && styles.darkSubtext]}>
+              🌍 {userCountry}
+            </Text>
+          )}
           <Text style={[styles.email, isDark && styles.darkSubtext]}>
             {user?.email || 'utilisateur@example.com'}
           </Text>
@@ -82,7 +119,7 @@ const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
             <View style={[styles.statIconBox, { backgroundColor: '#E8F5E9' }]}>
               <Ionicons name="calendar-outline" size={20} color="#4CAF50" />
             </View>
-            <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>Membre depuis</Text>
+            <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>{t.memberSince}</Text>
             <Text style={[styles.statValue, isDark && styles.darkText]}>{getMemberSince()}</Text>
           </View>
 
@@ -92,7 +129,7 @@ const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
             <View style={[styles.statIconBox, { backgroundColor: '#FFF3E0' }]}>
               <Ionicons name="swap-horizontal-outline" size={20} color="#FF9800" />
             </View>
-            <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>Transactions totales</Text>
+            <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>{t.transactions}</Text>
             <Text style={[styles.statValue, isDark && styles.darkText]}>{transactions.length}</Text>
           </View>
 
@@ -102,7 +139,7 @@ const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
             <View style={[styles.statIconBox, { backgroundColor: '#F3E5F5' }]}>
               <Ionicons name="grid-outline" size={20} color="#9C27B0" />
             </View>
-            <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>Catégories actives</Text>
+            <Text style={[styles.statLabel, isDark && styles.darkSubtext]}>{t.categories}</Text>
             <Text style={[styles.statValue, isDark && styles.darkText]}>{categories.length}</Text>
           </View>
         </View>
@@ -112,14 +149,14 @@ const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
           <View style={styles.infoRow}>
             <View style={styles.infoLeft}>
               <Ionicons name="card-outline" size={20} color="#6C63FF" />
-              <Text style={[styles.infoLabel, isDark && styles.darkText]}>Comptes actifs</Text>
+              <Text style={[styles.infoLabel, isDark && styles.darkText]}>{t.activeAccounts}</Text>
             </View>
             <Text style={[styles.infoValue, isDark && styles.darkText]}>{accountsCount}</Text>
           </View>
           <View style={styles.infoRow}>
             <View style={styles.infoLeft}>
               <Ionicons name="cash-outline" size={20} color="#4CAF50" />
-              <Text style={[styles.infoLabel, isDark && styles.darkText]}>Devise</Text>
+              <Text style={[styles.infoLabel, isDark && styles.darkText]}>{t.currency}</Text>
             </View>
             <Text style={[styles.infoValue, isDark && styles.darkText]}>{currency.code} - {currency.name}</Text>
           </View>
@@ -127,7 +164,7 @@ const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
 
         {/* Actions */}
         <View style={styles.actionsSection}>
-          <Text style={[styles.sectionTitle, isDark && styles.darkText]}>Actions</Text>
+          <Text style={[styles.sectionTitle, isDark && styles.darkText]}>{t.general}</Text>
 
           <TouchableOpacity 
             style={[styles.actionButton, isDark && styles.darkCard]}
@@ -136,7 +173,7 @@ const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
             <View style={[styles.actionIconBox, { backgroundColor: '#FFF8E1' }]}>
               <Ionicons name="create-outline" size={22} color="#FFC107" />
             </View>
-            <Text style={[styles.actionText, isDark && styles.darkText]}>Modifier l'email</Text>
+            <Text style={[styles.actionText, isDark && styles.darkText]}>{t.modifyEmail}</Text>
             <Ionicons name="chevron-forward" size={20} color={isDark ? '#666' : '#ccc'} />
           </TouchableOpacity>
 
@@ -147,7 +184,7 @@ const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
             <View style={[styles.actionIconBox, { backgroundColor: '#E3F2FD' }]}>
               <Ionicons name="lock-closed-outline" size={22} color="#2196F3" />
             </View>
-            <Text style={[styles.actionText, isDark && styles.darkText]}>Changer le mot de passe</Text>
+            <Text style={[styles.actionText, isDark && styles.darkText]}>{t.changePassword}</Text>
             <Ionicons name="chevron-forward" size={20} color={isDark ? '#666' : '#ccc'} />
           </TouchableOpacity>
 
@@ -158,7 +195,7 @@ const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
             <View style={[styles.actionIconBox, { backgroundColor: '#F3E5F5' }]}>
               <Ionicons name="shield-checkmark-outline" size={22} color="#9C27B0" />
             </View>
-            <Text style={[styles.actionText, isDark && styles.darkText]}>Sécurité</Text>
+            <Text style={[styles.actionText, isDark && styles.darkText]}>{t.security}</Text>
             <Ionicons name="chevron-forward" size={20} color={isDark ? '#666' : '#ccc'} />
           </TouchableOpacity>
 
@@ -169,7 +206,7 @@ const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
             <View style={[styles.actionIconBox, { backgroundColor: '#E8F5E9' }]}>
               <Ionicons name="cloud-upload-outline" size={22} color="#4CAF50" />
             </View>
-            <Text style={[styles.actionText, isDark && styles.darkText]}>Sauvegarde & Export</Text>
+            <Text style={[styles.actionText, isDark && styles.darkText]}>{t.backupExport}</Text>
             <Ionicons name="chevron-forward" size={20} color={isDark ? '#666' : '#ccc'} />
           </TouchableOpacity>
 
@@ -180,7 +217,7 @@ const ProfileScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
             <View style={[styles.actionIconBox, { backgroundColor: '#FFEBEE' }]}>
               <Ionicons name="log-out-outline" size={22} color="#F44336" />
             </View>
-            <Text style={[styles.actionText, { color: '#F44336' }]}>Se déconnecter</Text>
+            <Text style={[styles.actionText, { color: '#F44336' }]}>{t.logoutAction}</Text>
             <Ionicons name="chevron-forward" size={20} color="#F44336" />
           </TouchableOpacity>
         </View>
@@ -261,6 +298,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     color: '#17233C',
+    marginBottom: 4,
+  },
+  country: {
+    fontSize: 14,
+    color: '#6B7280',
     marginBottom: 4,
   },
   email: {

@@ -14,11 +14,13 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from '../components/SafeAreaView';
+import { AppHeader } from '../components/layout/AppHeader';
 import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useCategories } from '../hooks/useCategories';
 import { forceMigrateCategories } from '../services/categoryMigrationService';
 import { Category } from '../types';
+import { translateCategoryName } from '../utils/categoryTranslations';
 
 interface CategoryFormData {
   name: string;
@@ -95,12 +97,12 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   const handleForceReinitialize = async (): Promise<void> => {
     Alert.alert(
-      "Réinitialiser les catégories",
-      "Êtes-vous sûr de vouloir réinitialiser toutes les catégories ? Cette action supprimera DÉFINITIVEMENT toutes les anciennes catégories et installera les 50 nouvelles catégories.",
+      t.resetCategories,
+      t.resetCategoriesConfirm,
       [
-        { text: "Annuler", style: "cancel" },
+        { text: t.cancel, style: "cancel" },
         { 
-          text: "Réinitialiser", 
+          text: t.resetCategories, 
           style: "destructive",
           onPress: async () => {
             try {
@@ -126,10 +128,10 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               console.log('✅ [CategoriesScreen] Arbre rechargé');
               
               setRefreshing(false);
-              Alert.alert("Succès", "Les 50 nouvelles catégories ont été installées avec succès !");
+              Alert.alert(t.success, t.resetCategoriesSuccess);
             } catch (error) {
               setRefreshing(false);
-              Alert.alert("Erreur", "Impossible de réinitialiser les catégories.");
+              Alert.alert(t.error, t.resetCategoriesError);
               console.error("❌ [CategoriesScreen] Error reinitializing categories:", error);
             }
           }
@@ -156,7 +158,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     setEditingCategory(category);
     setSelectedParent(null);
     setFormData({
-      name: category.name,
+      name: translateCategoryName(category.name, t),
       type: category.type,
       color: category.color,
       icon: category.icon,
@@ -196,7 +198,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const handleDelete = (category: Category): void => {
     Alert.alert(
       t.deleteCategory,
-      `Êtes-vous sûr de vouloir supprimer "${category.name}" ?${category.level === 0 ? '\n\nLes sous-catégories associées seront également supprimées.' : ''}`,
+      `Êtes-vous sûr de vouloir supprimer "${translateCategoryName(category.name, t)}" ?${category.level === 0 ? '\n\nLes sous-catégories associées seront également supprimées.' : ''}`,
       [
         { text: t.cancel, style: 'cancel' },
         {
@@ -231,7 +233,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         <Ionicons name={item.icon as any} size={20} color={colors.text.primary} />
         <View style={styles.categoryTextContainer}>
           <Text style={[styles.categoryName, { color: colors.text.primary }]}>
-            {item.name}
+            {translateCategoryName(item.name, t)}
           </Text>
           {item.level === 1 && (
             <Text style={[styles.subCategoryLabel, { color: colors.text.secondary }]}>
@@ -265,10 +267,10 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <Ionicons name={category.icon as any} size={20} color={colors.text.primary} />
             <View style={styles.categoryTextContainer}>
               <Text style={[styles.categoryName, { color: colors.text.primary }]}>
-                {category.name}
+                {translateCategoryName(category.name, t)}
               </Text>
               <Text style={[styles.mainCategoryLabel, { color: colors.text.secondary }]}>
-                Catégorie principale
+                {t.mainCategory}
               </Text>
             </View>
           </View>
@@ -277,7 +279,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             { backgroundColor: category.type === 'income' ? colors.semantic.success : colors.semantic.error }
           ]}>
             <Text style={styles.typeBadgeText}>
-              {category.type === 'income' ? 'Revenu' : 'Dépense'}
+              {category.type === 'income' ? t.revenue : t.expenses}
             </Text>
           </View>
         </TouchableOpacity>
@@ -288,7 +290,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           onPress={() => openAddModal(category)}
         >
           <Ionicons name="add-circle" size={20} color={colors.primary[500]} />
-          <Text style={[styles.addSubCategoryText, { color: colors.primary[500] }]}>Sous-catégorie</Text>
+          <Text style={[styles.addSubCategoryText, { color: colors.primary[500] }]}>{t.subcategory}</Text>
         </TouchableOpacity>
       </View>
 
@@ -340,7 +342,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       <View style={[styles.container, { backgroundColor: colors.background.primary }, styles.center]}>
         <ActivityIndicator size="large" color={colors.primary[500]} />
         <Text style={[styles.loadingText, { color: colors.text.primary }]}>
-          Chargement des catégories...
+          {t.loadingCategories}
         </Text>
       </View>
     );
@@ -354,7 +356,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           {error}
         </Text>
         <TouchableOpacity style={[styles.retryButton, { backgroundColor: colors.primary[500] }]} onPress={refreshCategories}>
-          <Text style={[styles.retryButtonText, { color: colors.text.inverse }]}>Réessayer</Text>
+          <Text style={[styles.retryButtonText, { color: colors.text.inverse }]}>{t.retry}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -363,20 +365,15 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   return (
     <SafeAreaView>
       <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
+        <AppHeader title="Catégories" />
+        
         <View style={[styles.header, { backgroundColor: colors.background.primary, borderBottomColor: colors.border.primary }]}>
-          <Text style={[styles.title, { color: colors.text.primary }]}>
-            Catégories
-          </Text>
-          <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
-            Gérez vos catégories et sous-catégories
-          </Text>
-          
           {/* ✅ Barre de recherche */}
           <View style={[styles.searchContainer, { backgroundColor: colors.background.secondary }]}>
             <Ionicons name="search" size={20} color={colors.text.secondary} />
             <TextInput
               style={[styles.searchInput, { color: colors.text.primary }]}
-              placeholder="Rechercher une catégorie..."
+              placeholder={t.searchCategory}
               placeholderTextColor={colors.text.tertiary}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -401,7 +398,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-                    Dépenses ({expenseCategoriesTree.reduce((acc, item) => acc + 1 + item.subcategories.length, 0)})
+                    {t.expensesPlural} ({expenseCategoriesTree.reduce((acc, item) => acc + 1 + item.subcategories.length, 0)})
                   </Text>
                 </View>
                 {expenseCategoriesTree.map((item) => renderCategoryWithSubcategories(item))}
@@ -416,7 +413,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-                    Revenus ({incomeCategoriesTree.reduce((acc, item) => acc + 1 + item.subcategories.length, 0)})
+                    {t.income} ({incomeCategoriesTree.reduce((acc, item) => acc + 1 + item.subcategories.length, 0)})
                   </Text>
                 </View>
                 {incomeCategoriesTree.map((item) => renderCategoryWithSubcategories(item))}
@@ -434,7 +431,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               >
                 <Ionicons name="refresh" size={20} color={colors.semantic.error} />
                 <Text style={[styles.multipleButtonText, { color: colors.semantic.error }]}>
-                  Réinitialiser avec toutes les catégories
+                  {t.resetCategoriesButton}
                 </Text>
               </TouchableOpacity>
             </>
@@ -482,7 +479,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               )}
 
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.text.primary }]}>Nom</Text>
+                <Text style={[styles.label, { color: colors.text.primary }]}>{t.name}</Text>
                 <TextInput
                   style={[styles.input, { backgroundColor: colors.background.card, color: colors.text.primary, borderColor: colors.border.primary }]}
                   value={formData.name}
@@ -495,7 +492,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               {/* Type (uniquement pour les catégories principales) */}
               {!selectedParent && (
                 <View style={styles.inputGroup}>
-                  <Text style={[styles.label, { color: colors.text.primary }]}>Type</Text>
+                  <Text style={[styles.label, { color: colors.text.primary }]}>{t.type}</Text>
                   <View style={styles.typeContainer}>
                     <TouchableOpacity
                       style={[
@@ -510,7 +507,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                         { color: colors.text.primary },
                         formData.type === 'expense' && { color: colors.text.inverse },
                       ]}>
-                        Dépense
+                        {t.expenses}
                       </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -526,7 +523,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                         { color: colors.text.primary },
                         formData.type === 'income' && { color: colors.text.inverse },
                       ]}>
-                        Revenu
+                        {t.revenue}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -534,7 +531,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               )}
 
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.text.primary }]}>Couleur</Text>
+                <Text style={[styles.label, { color: colors.text.primary }]}>{t.color}</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   <View style={styles.colorsContainer}>
                     {categoryColors.map((color: string) => (
@@ -557,7 +554,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.text.primary }]}>Icône</Text>
+                <Text style={[styles.label, { color: colors.text.primary }]}>{t.icon}</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   <View style={styles.iconsContainer}>
                     {categoryIcons.map((icon: string) => (
@@ -582,16 +579,16 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.text.primary }]}>Aperçu</Text>
+                <Text style={[styles.label, { color: colors.text.primary }]}>{t.preview}</Text>
                 <View style={[styles.preview, { backgroundColor: colors.background.card }]}>
                   <View style={[styles.colorIndicator, { backgroundColor: formData.color }]} />
                   <Ionicons name={formData.icon as any} size={20} color={colors.text.primary} />
                   <View style={styles.previewTextContainer}>
                     <Text style={[styles.previewText, { color: colors.text.primary }]}>
-                      {formData.name || (selectedParent ? 'Sous-catégorie' : 'Catégorie principale')}
+                      {formData.name || (selectedParent ? t.subcategory : t.mainCategory)}
                     </Text>
                     <Text style={[styles.previewType, { color: colors.text.secondary }]}>
-                      {selectedParent ? 'Sous-catégorie' : 'Catégorie principale'} • {formData.type === 'income' ? 'Revenu' : 'Dépense'}
+                      {selectedParent ? t.subcategory : t.mainCategory} • {formData.type === 'income' ? t.revenue : t.expenses}
                     </Text>
                   </View>
                 </View>

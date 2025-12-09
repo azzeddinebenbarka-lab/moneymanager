@@ -1,7 +1,7 @@
 // src/screens/NotificationsScreen.tsx - Design moderne inspiré iOS
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import React, { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
     RefreshControl,
     ScrollView,
@@ -10,6 +10,8 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { SafeAreaView } from '../components/SafeAreaView';
+import { AppHeader } from '../components/layout/AppHeader';
 import { useLanguage } from '../context/LanguageContext';
 import { useDesignSystem, useTheme } from '../context/ThemeContext';
 import { useSmartAlerts } from '../hooks/useSmartAlerts';
@@ -54,9 +56,9 @@ const NotificationsScreen = () => {
   // Grouper par date
   const groupedNotifications = useMemo(() => {
     const groups: { [key: string]: Alert[] } = {
-      "Aujourd'hui": [],
-      Hier: [],
-      'Cette semaine': [],
+      [t.today]: [],
+      [t.yesterday]: [],
+      [t.thisWeek]: [],
     };
 
     const today = new Date();
@@ -70,11 +72,11 @@ const NotificationsScreen = () => {
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
       if (diffDays === 0) {
-        groups["Aujourd'hui"].push(notification);
+        groups[t.today].push(notification);
       } else if (diffDays === 1) {
-        groups['Hier'].push(notification);
+        groups[t.yesterday].push(notification);
       } else if (diffDays <= 7) {
-        groups['Cette semaine'].push(notification);
+        groups[t.thisWeek].push(notification);
       }
     });
 
@@ -123,15 +125,15 @@ const NotificationsScreen = () => {
     const now = new Date();
     const diffMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
 
-    if (diffMinutes < 60) return `Il y a ${diffMinutes}min`;
+    if (diffMinutes < 60) return `${t.agoMin} ${diffMinutes}min`;
 
     const diffHours = Math.floor(diffMinutes / 60);
-    if (diffHours < 24) return `Il y a ${diffHours}h`;
+    if (diffHours < 24) return `${t.agoHours} ${diffHours}h`;
 
     const diffDays = Math.floor(diffHours / 24);
-    if (diffDays === 1) return 'Hier';
+    if (diffDays === 1) return t.yesterday;
 
-    return `${diffDays} jours`;
+    return `${diffDays} ${t.days}`;
   };
 
   const handleNotificationPress = (notification: Alert) => {
@@ -193,25 +195,19 @@ const NotificationsScreen = () => {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.background.primary }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text.primary }]}>Notifications</Text>
-        <View style={styles.backButton} />
-      </View>
+    <SafeAreaView>
+      <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
+        <AppHeader title={t.notifications} />
 
       {/* Tabs */}
       <View style={[styles.tabsContainer, { backgroundColor: colors.background.primary }]}>
-        {renderTab('toutes', 'Toutes')}
+        {renderTab('toutes', t.allNotifications)}
         {renderTab(
           'nonLues',
-          `Non lues${unreadCount > 0 ? ` (${unreadCount})` : ''}`,
+          `${t.unreadNotifications}${unreadCount > 0 ? ` (${unreadCount})` : ''}`,
           unreadCount
         )}
-        {renderTab('alertes', 'Alertes')}
+        {renderTab('alertes', t.alerts)}
       </View>
 
       {/* Liste des notifications */}
@@ -235,12 +231,12 @@ const NotificationsScreen = () => {
               color={colors.text.disabled}
             />
             <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>
-              Aucune notification
+              {t.noNotifications}
             </Text>
             <Text style={[styles.emptySubtitle, { color: colors.text.secondary }]}>
               {activeTab === 'nonLues'
-                ? 'Toutes vos notifications sont lues'
-                : 'Vous n\'avez pas encore de notifications'}
+                ? t.allNotificationsRead
+                : t.noNotificationsYet}
             </Text>
           </View>
         ) : (
@@ -259,6 +255,7 @@ const NotificationsScreen = () => {
         )}
       </ScrollView>
     </View>
+  </SafeAreaView>
   );
 };
 

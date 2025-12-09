@@ -3,19 +3,21 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useEffect, useState } from 'react';
 import {
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { useCurrency } from '../../context/CurrencyContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useAccounts } from '../../hooks/useAccounts';
 import { useCategories } from '../../hooks/useCategories';
 import { Category, CreateTransactionData, Transaction } from '../../types';
+import { translateCategoryName } from '../../utils/categoryTranslations';
 
 interface TransactionFormProps {
   visible: boolean;
@@ -43,6 +45,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   const { formatAmount } = useCurrency();
   const { accounts, loading: accountsLoading } = useAccounts();
   const { categories, loading: categoriesLoading } = useCategories();
+  const { t } = useLanguage();
   const isDark = theme === 'dark';
 
   const [formData, setFormData] = useState({
@@ -209,17 +212,22 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     return formatAmount(num, false);
   };
 
-  // ✅ FONCTION POUR OBTENIR LE NOM COMPLET DE LA CATÉGORIE
+  // ✅ FONCTION POUR OBTENIR LE NOM COMPLET DE LA CATÉGORIE (avec traduction)
   const getCategoryFullName = (categoryId: string, subCategoryId?: string): string => {
     const mainCategory = categories.find(cat => cat.id === categoryId);
     if (!mainCategory) return '';
     
+    const translatedMain = translateCategoryName(mainCategory.name, t);
+    
     if (subCategoryId) {
       const subCategory = categories.find(cat => cat.id === subCategoryId);
-      return subCategory ? `${mainCategory.name} › ${subCategory.name}` : mainCategory.name;
+      if (subCategory) {
+        const translatedSub = translateCategoryName(subCategory.name, t);
+        return `${translatedMain} › ${translatedSub}`;
+      }
     }
     
-    return mainCategory.name;
+    return translatedMain;
   };
 
   if (accountsLoading || categoriesLoading) {
@@ -364,7 +372,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                       styles.categoryButtonText,
                       formData.category === category.id && styles.categoryButtonTextSelected,
                     ]}>
-                      {category.name}
+                      {translateCategoryName(category.name, t)}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -399,7 +407,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                       styles.subCategoryButtonText,
                       formData.subCategory === subCategory.id && styles.subCategoryButtonTextSelected,
                     ]}>
-                      {subCategory.name}
+                      {translateCategoryName(subCategory.name, t)}
                     </Text>
                   </TouchableOpacity>
                 ))}
