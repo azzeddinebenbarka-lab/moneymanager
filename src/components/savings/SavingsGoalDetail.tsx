@@ -15,16 +15,19 @@ interface Props {
 export const SavingsGoalDetail = ({ goal, onAddContribution }: Props) => {
   const { calculateGoalAchievementDate } = useSavings();
   const { formatAmount } = useCurrency();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const progress = (goal.currentAmount / goal.targetAmount) * 100;
   const remainingAmount = goal.targetAmount - goal.currentAmount;
   const isCompleted = goal.isCompleted;
 
+  // Déterminer le locale en fonction de la langue
+  const locale = language === 'ar' ? 'ar-SA' : language === 'en' ? 'en-US' : 'fr-FR';
+
   // Calcul de la date d'atteinte réelle
   const achievementDate = useMemo(() => {
     if (isCompleted) {
-      return new Date(goal.targetDate).toLocaleDateString('fr-FR', {
+      return new Date(goal.targetDate).toLocaleDateString(locale, {
         day: 'numeric',
         month: 'long',
         year: 'numeric'
@@ -37,12 +40,12 @@ export const SavingsGoalDetail = ({ goal, onAddContribution }: Props) => {
       goal.monthlyContribution 
     );
     
-    return new Date(calculatedDate).toLocaleDateString('fr-FR', {
+    return new Date(calculatedDate).toLocaleDateString(locale, {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
     });
-  }, [goal, isCompleted, calculateGoalAchievementDate]);
+  }, [goal, isCompleted, calculateGoalAchievementDate, locale]);
 
   // Calcul du temps restant
   const timeRemaining = useMemo(() => {

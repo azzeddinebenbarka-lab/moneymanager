@@ -3,17 +3,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Animated,
-  Dimensions,
-  FlatList,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Animated,
+    Dimensions,
+    FlatList,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { AppHeader } from '../components/layout/AppHeader';
 import { TransactionDetailModal } from '../components/modals/TransactionDetailModal';
@@ -193,7 +193,11 @@ const MonthDetailScreen: React.FC = () => {
   };
 
   const handleDeleteTransaction = (transactionId: string, description?: string) => {
-    Alert.alert('Supprimer la transaction', `Voulez-vous supprimer \"${description || ''}\" ?`, [
+    const message = description 
+      ? t.deleteTransactionMessage.replace('{description}', description)
+      : t.deleteTransactionMessage.replace(' "{description}"', '');
+    
+    Alert.alert(t.deleteTransactionTitle, message, [
       { text: t.cancel, style: 'cancel' },
       { text: t.delete, style: 'destructive', onPress: async () => {
         try {

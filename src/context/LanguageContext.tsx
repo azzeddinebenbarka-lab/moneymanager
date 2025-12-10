@@ -11,6 +11,8 @@ interface LanguageContextType {
   t: Translations;
   changeLanguage: (lang: Language) => Promise<void>;
   isRTL: boolean;
+  formatMonthYear: (date: Date | string) => string;
+  formatFullDate: (date: Date | string) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -67,11 +69,53 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  const formatMonthYear = (date: Date | string | null | undefined): string => {
+    if (!date) return '-';
+    const d = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(d.getTime())) return '-';
+    
+    const month = d.getMonth(); // 0-11
+    const year = d.getFullYear();
+    
+    const t = translations[language];
+    const monthNames = [
+      t.january, t.february, t.march, t.april, t.may, t.june,
+      t.july, t.august, t.september, t.october, t.november, t.december
+    ];
+    
+    // Format court : "janv. 2026" ou "Jan 2026" ou "يناير 2026"
+    const monthName = monthNames[month];
+    const shortMonth = language === 'ar' ? monthName : monthName.substring(0, 4) + '.';
+    
+    return `${shortMonth} ${year}`;
+  };
+
+  const formatFullDate = (date: Date | string | null | undefined): string => {
+    if (!date) return '-';
+    const d = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(d.getTime())) return '-';
+    
+    const day = d.getDate();
+    const month = d.getMonth(); // 0-11
+    const year = d.getFullYear();
+    
+    const t = translations[language];
+    const monthNames = [
+      t.january, t.february, t.march, t.april, t.may, t.june,
+      t.july, t.august, t.september, t.october, t.november, t.december
+    ];
+    
+    // Format complet : "15 janvier 2026" ou "15 January 2026" ou "15 يناير 2026"
+    return `${day} ${monthNames[month]} ${year}`;
+  };
+
   const value: LanguageContextType = {
     language,
     t: translations[language],
     changeLanguage,
     isRTL,
+    formatMonthYear,
+    formatFullDate,
   };
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;

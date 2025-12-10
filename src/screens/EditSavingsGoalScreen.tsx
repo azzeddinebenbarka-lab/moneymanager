@@ -4,6 +4,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useEffect, useState } from 'react';
 import {
     Alert,
+    KeyboardAvoidingView,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
@@ -27,9 +29,9 @@ interface EditSavingsGoalScreenProps {
 
 const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigation, route }) => {
   const { goalId } = route.params;
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { theme } = useTheme();
-  const { formatAmount, currencySymbol } = useCurrency();
+  const { formatAmount } = useCurrency();
   const { getGoalById, updateGoal, deleteGoalWithTransactions, getRelatedTransactionsCount } = useSavings();
   const { accounts } = useAccounts();
   
@@ -58,13 +60,13 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
   const contributionAccounts = accounts.filter(acc => acc.type !== 'savings');
 
   const categories = [
-    { value: 'vacation' as const, label: 'Vacances', icon: 'airplane' },
-    { value: 'car' as const, label: 'Voiture', icon: 'car' },
-    { value: 'house' as const, label: 'Maison', icon: 'home' },
-    { value: 'emergency' as const, label: 'Urgence', icon: 'medical' },
-    { value: 'education' as const, label: 'Éducation', icon: 'school' },
-    { value: 'retirement' as const, label: 'Retraite', icon: 'heart' },
-    { value: 'other' as const, label: 'Autre', icon: 'flag' },
+    { value: 'vacation' as const, label: t.vacation, icon: 'airplane' },
+    { value: 'car' as const, label: t.car, icon: 'car' },
+    { value: 'house' as const, label: t.house, icon: 'home' },
+    { value: 'emergency' as const, label: t.emergency, icon: 'medical' },
+    { value: 'education' as const, label: t.education, icon: 'school' },
+    { value: 'retirement' as const, label: t.retirement, icon: 'heart' },
+    { value: 'other' as const, label: t.other, icon: 'flag' },
   ];
 
   const colors = [
@@ -98,12 +100,12 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
           contributionAccountId: goal.contributionAccountId || '',
         });
       } else {
-        Alert.alert(t.error, 'Objectif non trouvé');
+        Alert.alert(t.error, t.goalNotFound);
         navigation.navigate('Savings');
       }
     } catch (error) {
       console.error('Error loading goal:', error);
-      Alert.alert(t.error, 'Impossible de charger l\'objectif');
+      Alert.alert(t.error, t.cannotLoadGoal);
       navigation.navigate('Savings');
     } finally {
       setInitialLoading(false);
@@ -143,7 +145,7 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
 
   const handleSave = async () => {
     if (!form.name || !form.targetAmount || !form.monthlyContribution || !form.savingsAccountId) {
-      Alert.alert(t.error, 'Veuillez remplir tous les champs obligatoires');
+      Alert.alert(t.error, t.fillAllRequiredFields);
       return;
     }
 
@@ -152,12 +154,12 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
     const currentAmount = parseFloat(form.currentAmount || '0');
 
     if (isNaN(targetAmount) || targetAmount <= 0) {
-      Alert.alert(t.error, 'Le montant cible doit être un nombre positif');
+      Alert.alert(t.error, t.targetAmountPositive);
       return;
     }
 
     if (isNaN(monthlyContribution) || monthlyContribution <= 0) {
-      Alert.alert(t.error, 'La contribution mensuelle doit être un nombre positif');
+      Alert.alert(t.error, t.monthlyContributionPositive);
       return;
     }
 
@@ -177,13 +179,13 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
       });
       
       Alert.alert(
-        'Succès',
-        'Objectif modifié avec succès',
+        t.success,
+        t.goalMarkedCompleted,
         [{ text: 'OK', onPress: () => navigation.navigate('Savings') }]
       );
     } catch (error) {
       console.error('Erreur modification objectif:', error);
-      Alert.alert(t.error, 'Impossible de modifier l\'objectif');
+      Alert.alert(t.error, t.cannotLoadGoal);
     } finally {
       setLoading(false);
     }
@@ -196,13 +198,13 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
       await deleteGoalWithTransactions(goalId, deleteTransactions, withRefund);
       
       Alert.alert(
-        'Succès',
-        'Objectif supprimé avec succès',
+        t.success,
+        t.goalDeletedSuccess,
         [{ text: 'OK', onPress: () => navigation.navigate('Savings') }]
       );
     } catch (error) {
       console.error('Erreur suppression objectif:', error);
-      Alert.alert(t.error, 'Impossible de supprimer l\'objectif');
+      Alert.alert(t.error, t.cannotDeleteGoal);
     } finally {
       setDeleteLoading(false);
       setShowDeleteModal(false);
@@ -218,10 +220,10 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
 
   if (initialLoading) {
     return (
-      <SafeAreaView style={[styles.container, isDark && styles.darkContainer]}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#1c1c1e' : '#f8f9fa' }}>
         <View style={styles.center}>
-          <Text style={[styles.loadingText, isDark && styles.darkText]}>
-            Chargement...
+          <Text style={[styles.loadingText, { color: isDark ? '#fff' : '#666' }]}>
+            {t.loading}
           </Text>
         </View>
       </SafeAreaView>
@@ -229,12 +231,18 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <ScrollView 
-        style={[styles.container, isDark && styles.darkContainer]}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
+    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#1c1c1e' : '#f8f9fa' }}>
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
+        <ScrollView 
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={true}
+          keyboardShouldPersistTaps="handled"
+          nestedScrollEnabled={true}
+        >
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton}
@@ -243,7 +251,7 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
             <Ionicons name="close" size={24} color={isDark ? "#fff" : "#000"} />
           </TouchableOpacity>
           <Text style={[styles.title, isDark && styles.darkText]}>
-            Modifier l'Objectif
+            {t.editSavingsGoal}
           </Text>
           <TouchableOpacity 
             style={styles.deleteButton}
@@ -266,41 +274,38 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
           <View style={[styles.transactionsAlert, isDark && styles.darkTransactionsAlert]}>
             <Ionicons name="information-circle" size={20} color="#1976d2" />
             <Text style={[styles.transactionsAlertText, isDark && styles.darkText]}>
-              {relatedTransactionsCount} transaction{relatedTransactionsCount > 1 ? 's' : ''} liée{relatedTransactionsCount > 1 ? 's' : ''} à cet objectif
+              {relatedTransactionsCount} {t.transactions}
             </Text>
           </View>
         )}
 
         {/* Formulaire */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
-            Nom de l'objectif *
+          <Text style={styles.label}>
+            {t.goalName} *
           </Text>
           <TextInput
             style={[styles.input, isDark && styles.darkInput]}
             value={form.name}
-            onChangeText={(text) => setForm(prev => ({ ...prev, name: text }))}
-            placeholder="Ex: Achat voiture, Vacances..."
+            onChangeText={(value) => setForm(prev => ({ ...prev, name: value }))}
+            placeholder={t.goalNameLabel}
             placeholderTextColor={isDark ? "#888" : "#999"}
           />
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
-            Montant cible *
+          <Text style={styles.label}>
+            {t.targetAmount} *
           </Text>
-          <View style={styles.amountContainer}>
-            <Text style={[styles.currencySymbol, isDark && styles.darkText]}>{currencySymbol}</Text>
-            <TextInput
-              style={[styles.input, styles.amountInput, isDark && styles.darkInput]}
-              value={form.targetAmount}
-              onChangeText={(value) => handleAmountChange('targetAmount', value)}
-              placeholder="0,00"
-              placeholderTextColor={isDark ? "#888" : "#999"}
-              keyboardType="decimal-pad"
-              returnKeyType="done"
-            />
-          </View>
+          <TextInput
+            style={[styles.input, isDark && styles.darkInput]}
+            value={form.targetAmount}
+            onChangeText={(value) => handleAmountChange('targetAmount', value)}
+            placeholder="0,00"
+            placeholderTextColor={isDark ? "#888" : "#999"}
+            keyboardType="decimal-pad"
+            returnKeyType="done"
+          />
           {form.targetAmount && (
             <Text style={[styles.hint, isDark && styles.darkSubtext]}>
               {formatDisplayAmount(form.targetAmount)}
@@ -309,21 +314,18 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
-            Épargne actuelle
+          <Text style={styles.label}>
+            {t.currentSavings}
           </Text>
-          <View style={styles.amountContainer}>
-            <Text style={[styles.currencySymbol, isDark && styles.darkText]}>{currencySymbol}</Text>
-            <TextInput
-              style={[styles.input, styles.amountInput, isDark && styles.darkInput]}
-              value={form.currentAmount}
-              onChangeText={(value) => handleAmountChange('currentAmount', value)}
-              placeholder="0,00"
-              placeholderTextColor={isDark ? "#888" : "#999"}
-              keyboardType="decimal-pad"
-              returnKeyType="done"
-            />
-          </View>
+          <TextInput
+            style={[styles.input, isDark && styles.darkInput]}
+            value={form.currentAmount}
+            onChangeText={(value) => handleAmountChange('currentAmount', value)}
+            placeholder="0,00"
+            placeholderTextColor={isDark ? "#888" : "#999"}
+            keyboardType="decimal-pad"
+            returnKeyType="done"
+          />
           {form.currentAmount && (
             <Text style={[styles.hint, isDark && styles.darkSubtext]}>
               {formatDisplayAmount(form.currentAmount)}
@@ -332,21 +334,18 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
-            Contribution mensuelle *
+          <Text style={styles.label}>
+            {t.monthlyContributionLabel} *
           </Text>
-          <View style={styles.amountContainer}>
-            <Text style={[styles.currencySymbol, isDark && styles.darkText]}>{currencySymbol}</Text>
-            <TextInput
-              style={[styles.input, styles.amountInput, isDark && styles.darkInput]}
-              value={form.monthlyContribution}
-              onChangeText={(value) => handleAmountChange('monthlyContribution', value)}
-              placeholder="0,00"
-              placeholderTextColor={isDark ? "#888" : "#999"}
-              keyboardType="decimal-pad"
-              returnKeyType="done"
-            />
-          </View>
+          <TextInput
+            style={[styles.input, isDark && styles.darkInput]}
+            value={form.monthlyContribution}
+            onChangeText={(value) => handleAmountChange('monthlyContribution', value)}
+            placeholder="0,00"
+            placeholderTextColor={isDark ? "#888" : "#999"}
+            keyboardType="decimal-pad"
+            returnKeyType="done"
+          />
           {form.monthlyContribution && (
             <Text style={[styles.hint, isDark && styles.darkSubtext]}>
               {formatDisplayAmount(form.monthlyContribution)}
@@ -355,15 +354,15 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
-            Date cible
+          <Text style={styles.label}>
+            {t.targetDateLabel}
           </Text>
           <TouchableOpacity 
             style={[styles.dateButton, isDark && styles.darkInput]}
             onPress={() => setShowDatePicker(true)}
           >
             <Text style={[styles.dateText, isDark && styles.darkText]}>
-              {form.targetDate.toLocaleDateString('fr-FR')}
+              {form.targetDate.toLocaleDateString(language === 'ar' ? 'ar-SA' : language === 'en' ? 'en-US' : 'fr-FR')}
             </Text>
             <Ionicons name="calendar" size={20} color={isDark ? "#fff" : "#666"} />
           </TouchableOpacity>
@@ -379,10 +378,15 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
-            Compte d'épargne *
+          <Text style={styles.label}>
+            {t.savingsAccountLabel}
           </Text>
-          <View style={styles.accountsContainer}>
+          <ScrollView 
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.accountsContainer}
+            nestedScrollEnabled={true}
+          >
             {savingsAccounts.map((account) => (
               <TouchableOpacity
                 key={account.id}
@@ -407,19 +411,24 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
                 )}
               </TouchableOpacity>
             ))}
-          </View>
+          </ScrollView>
           {savingsAccounts.length === 0 && (
             <Text style={[styles.warningText, isDark && styles.darkSubtext]}>
-              Aucun compte d'épargne trouvé.
+              {t.noSavingsAccount}
             </Text>
           )}
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
-            Compte source des contributions
+          <Text style={styles.label}>
+            {t.contributionSourceAccountLabel}
           </Text>
-          <View style={styles.accountsContainer}>
+          <ScrollView 
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.accountsContainer}
+            nestedScrollEnabled={true}
+          >
             {contributionAccounts.map((account) => (
               <TouchableOpacity
                 key={account.id}
@@ -444,17 +453,22 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
                 )}
               </TouchableOpacity>
             ))}
-          </View>
+          </ScrollView>
           <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-            Sélectionnez le compte depuis lequel les fonds seront transférés
+            {t.selectSourceAccount}
           </Text>
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
-            Catégorie
+          <Text style={styles.label}>
+            {t.category}
           </Text>
-          <View style={styles.categoriesContainer}>
+          <ScrollView 
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoriesContainer}
+            nestedScrollEnabled={true}
+          >
             {categories.map((category) => (
               <TouchableOpacity
                 key={category.value}
@@ -483,14 +497,19 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
                 </Text>
               </TouchableOpacity>
             ))}
-          </View>
+          </ScrollView>
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>
-            Couleur
+          <Text style={styles.label}>
+            {t.color}
           </Text>
-          <View style={styles.colorsContainer}>
+          <ScrollView 
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.colorsContainer}
+            nestedScrollEnabled={true}
+          >
             {colors.map((color) => (
               <TouchableOpacity
                 key={color}
@@ -506,7 +525,7 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
                 )}
               </TouchableOpacity>
             ))}
-          </View>
+          </ScrollView>
         </View>
 
         <View style={styles.buttonsContainer}>
@@ -515,7 +534,7 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
               onPress={() => navigation.navigate('Savings', { screen: 'SavingsList' })}
             disabled={loading}
           >
-            <Text style={styles.cancelButtonText}>Annuler</Text>
+            <Text style={styles.cancelButtonText}>{t.cancel}</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -531,7 +550,11 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
             </Text>
           </TouchableOpacity>
         </View>
+
+        {/* Espace supplémentaire pour le défilement */}
+        <View style={styles.bottomSpacer} />
       </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* ✅ MODAL DE SUPPRESSION AMÉLIORÉ */}
       <DeleteGoalModal
@@ -560,15 +583,13 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  darkContainer: {
-    backgroundColor: '#1c1c1e',
-  },
   content: {
     padding: 20,
+    paddingBottom: 20,
+    flexGrow: 1,
+  },
+  bottomSpacer: {
+    height: 50,
   },
   center: {
     flex: 1,

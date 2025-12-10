@@ -1,6 +1,18 @@
 // src/services/SmartAlertService.ts - VERSION COMPLÈTEMENT CORRIGÉE
 import { Alert, AlertPriority, AlertType } from '../types/Alert';
 
+// Type pour la fonction de traduction
+type TranslateFunction = (key: string) => string;
+
+// Fonction helper pour remplacer les paramètres dans les messages
+const formatMessage = (template: string, params: Record<string, string | number>): string => {
+  let result = template;
+  Object.keys(params).forEach(key => {
+    result = result.replace(`{${key}}`, String(params[key]));
+  });
+  return result;
+};
+
 export interface AlertRule {
   id: string;
   name: string;
@@ -25,6 +37,7 @@ export class SmartAlertService {
   private rules: AlertRule[] = [];
   private cooldownCache: Map<string, number> = new Map();
   private fallbackMode: boolean = false;
+  private translateFn: TranslateFunction = (key) => key; // Fonction par défaut
 
   private constructor() {
     this.initializeRules();
@@ -35,6 +48,11 @@ export class SmartAlertService {
       SmartAlertService.instance = new SmartAlertService();
     }
     return SmartAlertService.instance;
+  }
+
+  // Méthode pour définir la fonction de traduction
+  setTranslateFunction(translateFn: TranslateFunction): void {
+    this.translateFn = translateFn;
   }
 
   async analyzeAndGenerateAlerts(userId: string = 'default-user'): Promise<AlertAnalysisResult> {
@@ -473,24 +491,28 @@ export class SmartAlertService {
                transaction.type === 'expense' && 
                Math.abs(transaction.amount) > 1000;
       },
-      generateAlert: (data) => ({
-        title: '💸 Transaction importante détectée',
-        message: `Une transaction de ${Math.abs(data.recentTransaction.amount)} MAD a été enregistrée.`,
-        type: 'transaction',
-        priority: 'medium',
-        category: 'spending',
-        userId: data.userId,
-        status: 'active',
-        updatedAt: new Date().toISOString(),
-        read: false,
-        data: {
-          transactionId: data.recentTransaction.id,
-          amount: Math.abs(data.recentTransaction.amount),
-          accountId: data.recentTransaction.accountId
-        },
-        actionUrl: 'TransactionDetail',
-        actionLabel: 'Voir détails'
-      })
+      generateAlert: (data) => {
+        const t = this.translateFn;
+        const amount = `${Math.abs(data.recentTransaction.amount)} MAD`;
+        return {
+          title: formatMessage(t('largeTransactionTitle'), {}),
+          message: formatMessage(t('largeTransactionMessage'), { amount }),
+          type: 'transaction',
+          priority: 'medium',
+          category: 'spending',
+          userId: data.userId,
+          status: 'active',
+          updatedAt: new Date().toISOString(),
+          read: false,
+          data: {
+            transactionId: data.recentTransaction.id,
+            amount: Math.abs(data.recentTransaction.amount),
+            accountId: data.recentTransaction.accountId
+          },
+          actionUrl: 'TransactionDetail',
+          actionLabel: 'Voir détails'
+        };
+      }
     });
 
     // Règles pour les budgets
@@ -510,6 +532,7 @@ export class SmartAlertService {
         }) || false;
       },
       generateAlert: (data) => {
+        const t = this.translateFn;
         const exceededBudgets = data.budgets?.filter((budget: any) => {
           const percentage = (budget.spent / budget.amount) * 100;
           return budget.isActive && percentage >= 90;
@@ -519,8 +542,12 @@ export class SmartAlertService {
         const percentage = mainBudget ? ((mainBudget.spent / mainBudget.amount) * 100).toFixed(1) : '0';
         
         return {
-          title: '🚨 Budget presque épuisé',
-          message: `Le budget "${mainBudget?.name}" est utilisé à ${percentage}%.`,
+          title: formatMessage(t('budgetNearLimitTitle'), {}),
+          message: formatMessage(t('budgetNearLimitMessage'), {
+            budgetName: mainBudget?.name || '',
+            categoryName: mainBudget?.category || '',
+            percentage
+          }),
           type: 'budget',
           priority: 'high',
           category: 'budget',
@@ -563,6 +590,7 @@ export class SmartAlertService {
         }) || false;
       },
       generateAlert: (data) => {
+        const t = this.translateFn;
         const dueDebts = data.debts?.filter((debt: any) => {
           const today = new Date();
           const nextPayment = debt.nextPaymentDate ? new Date(debt.nextPaymentDate) : new Date();
@@ -575,8 +603,11 @@ export class SmartAlertService {
         const daysUntilDue = Math.ceil((nextPayment.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
         
         return {
-          title: '📅 Paiement de dette imminent',
-          message: `Le paiement pour "${mainDebt?.name}" est dû dans ${daysUntilDue} jour(s).`,
+          title: formatMessage(t('debtPaymentDueTitle'), {}),
+          message: formatMessage(t('debtPaymentDueMessage'), {
+            debtName: mainDebt?.name || '',
+            days: daysUntilDue
+          }),
           type: 'debt',
           priority: 'critical',
           category: 'debt',
@@ -613,6 +644,7 @@ export class SmartAlertService {
         }) || false;
       },
       generateAlert: (data) => {
+        const t = this.translateFn;
         const progressingGoals = data.savingsGoals?.filter((goal: any) => {
           const progress = (goal.currentAmount / goal.targetAmount) * 100;
           return !goal.isCompleted && progress >= 75 && progress < 100;
@@ -622,8 +654,11 @@ export class SmartAlertService {
         const progress = mainGoal ? ((mainGoal.currentAmount / mainGoal.targetAmount) * 100).toFixed(1) : '0';
         
         return {
-          title: '🎯 Objectif d\'épargne presque atteint',
-          message: `"${mainGoal?.name}" est complété à ${progress}%.`,
+          title: formatMessage(t('savingsGoalNearTitle'), {}),
+          message: formatMessage(t('savingsGoalNearMessage'), {
+            goalName: mainGoal?.name || '',
+            progress
+          }),
           type: 'savings',
           priority: 'low',
           category: 'savings',
@@ -660,6 +695,7 @@ export class SmartAlertService {
         ) || false;
       },
       generateAlert: (data) => {
+        const t = this.translateFn;
         const lowBalanceAccounts = data.accounts?.filter((account: any) => 
           account.isActive && account.balance < 100 && account.balance > 0
         ) || [];
@@ -667,8 +703,11 @@ export class SmartAlertService {
         const mainAccount = lowBalanceAccounts[0];
         
         return {
-          title: '⚠️ Solde faible détecté',
-          message: `Le compte "${mainAccount?.name}" a un solde faible: ${mainAccount?.balance} MAD`,
+          title: formatMessage(t('lowBalanceTitle'), {}),
+          message: formatMessage(t('lowBalanceMessage'), {
+            accountName: mainAccount?.name || '',
+            balance: `${mainAccount?.balance} MAD`
+          }),
           type: 'account',
           priority: 'high',
           category: 'balance',
@@ -697,13 +736,18 @@ export class SmartAlertService {
       isEnabled: true,
       condition: (data) => true,
       generateAlert: (data) => {
+        const t = this.translateFn;
         const totalExpenses = data.cashFlow?.expenses || 0;
         const totalIncome = data.cashFlow?.income || 0;
         const netFlow = data.cashFlow?.netFlow || 0;
         
         return {
-          title: '📊 Résumé financier du jour',
-          message: `Aujourd'hui: ${totalIncome} MAD de revenus, ${totalExpenses} MAD de dépenses. Solde: ${netFlow} MAD`,
+          title: formatMessage(t('dailySummaryTitle'), {}),
+          message: formatMessage(t('dailySummaryMessage'), {
+            income: `${totalIncome} MAD`,
+            expenses: `${totalExpenses} MAD`,
+            netFlow: `${netFlow} MAD`
+          }),
           type: 'summary',
           priority: 'low',
           category: 'daily',

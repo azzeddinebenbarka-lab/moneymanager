@@ -2,13 +2,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import {
+    Dimensions,
     Modal,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
-    Dimensions
+    View
 } from 'react-native';
+import { useLanguage } from '../../context/LanguageContext';
 import { useDesignSystem } from '../../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
@@ -36,6 +37,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
   formatAmount
 }) => {
   const { colors, spacing } = useDesignSystem();
+  const { t } = useLanguage();
 
   // Ne rien rendre si pas de transaction ou modal non visible
   if (!visible || !transaction) {
@@ -72,7 +74,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
             <View style={[styles.infoBadge, { backgroundColor: colors.warning?.[100] || '#FEF3C7' }]}>
               <Ionicons name="information-circle" size={20} color={colors.warning?.[700] || '#92400E'} />
               <Text style={[styles.infoText, { color: colors.warning?.[700] || '#92400E' }]}>
-                Transaction automatique du système
+                {t.automaticSystemTransaction}
               </Text>
             </View>
 
@@ -80,7 +82,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
             <View style={styles.section}>
               <View style={[styles.amountContainer, { backgroundColor: colors.background?.secondary || '#F3F4F6' }]}>
                 <Text style={[styles.amountLabel, { color: colors.text?.secondary || '#6B7280' }]}>
-                  Montant
+                  {t.amount}
                 </Text>
                 <Text style={[styles.amountValue, { color: colors.error?.[500] || '#EF4444' }]}>
                   {formatAmount(transaction.amount)}
@@ -97,7 +99,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                 </View>
                 <View style={styles.detailContent}>
                   <Text style={[styles.detailLabel, { color: colors.text?.secondary || '#6B7280' }]}>
-                    Catégorie
+                    {t.category}
                   </Text>
                   <Text style={[styles.detailValue, { color: colors.text?.primary || '#111827' }]}>
                     {categoryLabel}
@@ -112,7 +114,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                 </View>
                 <View style={styles.detailContent}>
                   <Text style={[styles.detailLabel, { color: colors.text?.secondary || '#6B7280' }]}>
-                    Date
+                    {t.date}
                   </Text>
                   <Text style={[styles.detailValue, { color: colors.text?.primary || '#111827' }]}>
                     {new Date(transaction.date).toLocaleDateString('fr-FR', {
@@ -133,7 +135,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                   </View>
                   <View style={styles.detailContent}>
                     <Text style={[styles.detailLabel, { color: colors.text?.secondary || '#6B7280' }]}>
-                      Description
+                      {t.description}
                     </Text>
                     <Text style={[styles.detailValue, { color: colors.text?.primary || '#111827' }]}>
                       {transaction.description}

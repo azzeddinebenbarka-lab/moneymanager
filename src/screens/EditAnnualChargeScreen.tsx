@@ -36,7 +36,7 @@ interface AnnualChargeFormData {
 
 const EditAnnualChargeScreen = ({ navigation, route }: any) => {
   const { chargeId } = route.params || {};
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { theme } = useTheme();
   const { accounts } = useAccounts();
   const subcategories = getAllSubcategories();
@@ -64,10 +64,10 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
   const isDark = theme === 'dark';
 
   const recurrenceOptions = [
-    { value: 'yearly' as const, label: 'Annuelle' },
-    { value: 'monthly' as const, label: 'Mensuelle' },
-    { value: 'quarterly' as const, label: 'Trimestrielle' },
-    { value: 'none' as const, label: 'Ponctuelle' },
+    { value: 'yearly' as const, label: t.recurrenceYearly },
+    { value: 'monthly' as const, label: t.recurrenceMonthly },
+    { value: 'quarterly' as const, label: t.recurrenceQuarterly },
+    { value: 'none' as const, label: t.recurrenceOneTime },
   ];
 
   useEffect(() => {
@@ -104,7 +104,7 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
       }
     } catch (error) {
       console.error('Error loading charge:', error);
-      Alert.alert(t.error, 'Impossible de charger la charge annuelle');
+      Alert.alert(t.error, t.cannotLoadCharge);
       navigation.navigate('AnnualChargesList');
     } finally {
       setInitialLoading(false);
@@ -113,18 +113,18 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
 
   const handleSave = async () => {
     if (!form.name || !form.amount || !form.category) {
-      Alert.alert(t.error, 'Veuillez remplir tous les champs obligatoires');
+      Alert.alert(t.error, t.fillAllRequiredFields);
       return;
     }
 
     const amount = parseFloat(form.amount.replace(',', '.'));
     if (isNaN(amount) || amount <= 0) {
-      Alert.alert(t.error, 'Veuillez saisir un montant valide');
+      Alert.alert(t.error, t.enterValidChargeAmount);
       return;
     }
 
     if (form.autoDeduct && !form.accountId) {
-      Alert.alert(t.error, 'Veuillez sélectionner un compte pour le prélèvement automatique');
+      Alert.alert(t.error, t.selectAccountForAutoDeduct);
       return;
     }
 
@@ -147,22 +147,22 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
         // Mode édition
         await updateAnnualCharge(chargeId, chargeData);
         Alert.alert(
-          'Succès',
-          'Charge annuelle modifiée avec succès',
+          t.success,
+          t.chargeUpdatedSuccess,
           [{ text: 'OK', onPress: () => navigation.navigate('AnnualChargesList') }]
         );
       } else {
         // Mode création
         await createCharge(chargeData);
         Alert.alert(
-          'Succès',
-          'Charge annuelle créée avec succès',
+          t.success,
+          t.chargeCreatedSuccess,
           [{ text: 'OK', onPress: () => navigation.navigate('AnnualChargesList') }]
         );
       }
     } catch (error) {
       console.error('❌ [EditAnnualChargeScreen] Error saving charge:', error);
-      Alert.alert(t.error, chargeId ? 'Impossible de modifier la charge annuelle' : 'Impossible de créer la charge annuelle');
+      Alert.alert(t.error, chargeId ? t.cannotUpdateCharge : t.cannotCreateCharge);
     } finally {
       setLoading(false);
     }
@@ -194,13 +194,90 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
 
   const getAccountName = (accountId: string) => {
     const account = accounts.find(acc => acc.id === accountId);
-    return account ? account.name : 'Sélectionner un compte';
+    return account ? account.name : t.selectAccount;
+  };
+
+  // Fonction pour traduire les catégories
+  const translateCategory = (categoryValue: string): string => {
+    const categoryMap: { [key: string]: string } = {
+      'taxes': t.ac_taxes,
+      'insurance': t.ac_insurance,
+      'subscriptions': t.ac_subscriptions,
+      'maintenance': t.ac_maintenance,
+      'education': t.ac_education,
+      'health': t.ac_healthcare,
+      'gifts': language === 'fr' ? 'Cadeaux' : language === 'en' ? 'Gifts' : 'هدايا',
+      'vacation': language === 'fr' ? 'Vacances' : language === 'en' ? 'Vacation' : 'عطلة',
+      'islamic': language === 'fr' ? 'Charges islamiques' : language === 'en' ? 'Islamic charges' : 'رسوم إسلامية',
+      'vehicle': language === 'fr' ? 'Véhicule' : language === 'en' ? 'Vehicle' : 'مركبة',
+      'technical_visit': language === 'fr' ? 'Visite technique' : language === 'en' ? 'Technical visit' : 'زيارة فنية',
+    };
+    return categoryMap[categoryValue.toLowerCase()] || categoryValue;
+  };
+
+  // Fonction pour traduire les sous-catégories
+  const translateSubcategory = (subcategoryValue: string): string => {
+    const subcategoryMap: { [key: string]: string } = {
+      // Taxes
+      'income_tax': language === 'fr' ? 'Impôt sur le revenu' : language === 'en' ? 'Income tax' : 'ضريبة الدخل',
+      'property_tax': language === 'fr' ? 'Taxe foncière' : language === 'en' ? 'Property tax' : 'ضريبة الممتلكات',
+      'business_tax': language === 'fr' ? 'Taxe professionnelle' : language === 'en' ? 'Business tax' : 'الضريبة المهنية',
+      // Assurances
+      'health_insurance': language === 'fr' ? 'Assurance santé' : language === 'en' ? 'Health insurance' : 'التأمين الصحي',
+      'auto_insurance': language === 'fr' ? 'Assurance auto' : language === 'en' ? 'Auto insurance' : 'تأمين السيارات',
+      'home_insurance': language === 'fr' ? 'Assurance habitation' : language === 'en' ? 'Home insurance' : 'تأمين المنزل',
+      // Abonnements
+      'digital_services': language === 'fr' ? 'Services numériques' : language === 'en' ? 'Digital services' : 'الخدمات الرقمية',
+      'media_streaming': language === 'fr' ? 'Streaming multimédia' : language === 'en' ? 'Media streaming' : 'بث الوسائط',
+      'professional_tools': language === 'fr' ? 'Outils professionnels' : language === 'en' ? 'Professional tools' : 'أدوات احترافية',
+      // Maintenance
+      'home_maintenance': language === 'fr' ? 'Entretien maison' : language === 'en' ? 'Home maintenance' : 'صيانة المنزل',
+      'vehicle_maintenance': language === 'fr' ? 'Entretien véhicule' : language === 'en' ? 'Vehicle maintenance' : 'صيانة المركبة',
+      'equipment_maintenance': language === 'fr' ? 'Entretien équipements' : language === 'en' ? 'Equipment maintenance' : 'صيانة المعدات',
+      // Éducation
+      'school_fees': language === 'fr' ? 'Frais scolaires' : language === 'en' ? 'School fees' : 'الرسوم المدرسية',
+      'training_courses': language === 'fr' ? 'Formation continue' : language === 'en' ? 'Training courses' : 'التدريب',
+      'educational_materials': language === 'fr' ? 'Matériel éducatif' : language === 'en' ? 'Educational materials' : 'المواد التعليمية',
+      // Santé
+      'medical_checkup': language === 'fr' ? 'Bilans médicaux' : language === 'en' ? 'Medical checkup' : 'الفحص الطبي',
+      'dental_care': language === 'fr' ? 'Soins dentaires' : language === 'en' ? 'Dental care' : 'العناية بالأسنان',
+      'medical_treatments': language === 'fr' ? 'Traitements médicaux' : language === 'en' ? 'Medical treatments' : 'العلاجات الطبية',
+      // Islamiques
+      'zakat': language === 'fr' ? 'Zakat' : language === 'en' ? 'Zakat' : 'زكاة',
+      'sadaqah': language === 'fr' ? 'Sadaqah' : language === 'en' ? 'Sadaqah' : 'صدقة',
+      'eid_expenses': language === 'fr' ? 'Dépenses Aïd' : language === 'en' ? 'Eid expenses' : 'نفقات العيد',
+      'hajj_umrah': language === 'fr' ? 'Hajj / Omra' : language === 'en' ? 'Hajj / Umrah' : 'الحج والعمرة',
+      'ramadan': language === 'fr' ? 'Ramadan' : language === 'en' ? 'Ramadan' : 'رمضان',
+      'ramadan_expenses': language === 'fr' ? 'Dépenses Ramadan' : language === 'en' ? 'Ramadan expenses' : 'نفقات رمضان',
+      'islamic_charity': language === 'fr' ? 'Œuvres de charité' : language === 'en' ? 'Islamic charity' : 'الأعمال الخيرية',
+      // Véhicule
+      'vehicle_registration': language === 'fr' ? 'Vignette voiture' : language === 'en' ? 'Vehicle registration' : 'تسجيل المركبة',
+      'vehicle_insurance': language === 'fr' ? 'Assurance véhicule' : language === 'en' ? 'Vehicle insurance' : 'تأمين المركبة',
+      'vehicle_tax': language === 'fr' ? 'Taxe véhicule' : language === 'en' ? 'Vehicle tax' : 'ضريبة المركبة',
+      'technical_inspection': language === 'fr' ? 'Contrôle technique' : language === 'en' ? 'Technical inspection' : 'الفحص الفني',
+      // Visite technique
+      'vehicle_technical_visit': language === 'fr' ? 'Visite technique véhicule' : language === 'en' ? 'Vehicle technical visit' : 'الزيارة الفنية للمركبة',
+      'home_technical_visit': language === 'fr' ? 'Diagnostic immobilier' : language === 'en' ? 'Home technical visit' : 'التشخيص العقاري',
+      'equipment_inspection': language === 'fr' ? 'Inspection équipements' : language === 'en' ? 'Equipment inspection' : 'فحص المعدات',
+      'safety_inspection': language === 'fr' ? 'Contrôle de sécurité' : language === 'en' ? 'Safety inspection' : 'فحص السلامة',
+      // Autres
+      'birthday_gifts': language === 'fr' ? 'Cadeaux anniversaires' : language === 'en' ? 'Birthday gifts' : 'هدايا أعياد الميلاد',
+      'holiday_gifts': language === 'fr' ? 'Cadeaux fêtes' : language === 'en' ? 'Holiday gifts' : 'هدايا الأعياد',
+      'special_occasions': language === 'fr' ? 'Occasions spéciales' : language === 'en' ? 'Special occasions' : 'مناسبات خاصة',
+      'travel_expenses': language === 'fr' ? 'Frais de voyage' : language === 'en' ? 'Travel expenses' : 'مصاريف السفر',
+      'accommodation': language === 'fr' ? 'Hébergement' : language === 'en' ? 'Accommodation' : 'الإقامة',
+      'leisure_activities': language === 'fr' ? 'Activités loisirs' : language === 'en' ? 'Leisure activities' : 'أنشطة الترفيه',
+    };
+    return subcategoryMap[subcategoryValue] || subcategoryValue;
   };
 
   const getCategoryName = (categoryId: string) => {
-    if (!categoryId) return 'Sélectionner une catégorie';
+    if (!categoryId) return t.selectCategory;
     const subcategory = subcategories.find(sub => sub.value === categoryId);
-    return subcategory ? `${subcategory.parentLabel} - ${subcategory.label}` : 'Sélectionner une catégorie';
+    if (!subcategory) return t.selectCategory;
+    const translatedParent = translateCategory(subcategory.parentCategory);
+    const translatedSub = translateSubcategory(subcategory.value);
+    return `${translatedParent} - ${translatedSub}`;
   };
 
   if (initialLoading) {
@@ -208,7 +285,7 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
       <SafeAreaView style={[styles.container, isDark && styles.darkContainer]}>
         <View style={styles.center}>
           <Text style={[styles.loadingText, isDark && styles.darkText]}>
-            Chargement...
+            {t.loading}
           </Text>
         </View>
       </SafeAreaView>
@@ -238,20 +315,20 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
             <Ionicons name="close" size={24} color={isDark ? "#fff" : "#000"} />
           </TouchableOpacity>
           <Text style={[styles.title, isDark && styles.darkText]}>
-            {chargeId ? 'Modifier la Charge' : 'Nouvelle Charge'}
+            {chargeId ? t.editCharge : t.newCharge}
           </Text>
         </View>
 
         {/* Nom de la charge */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Nom de la charge *
+            {t.chargeName}
           </Text>
           <TextInput
             style={[styles.input, isDark && styles.darkInput]}
             value={form.name}
             onChangeText={(text) => setForm(prev => ({ ...prev, name: text }))}
-            placeholder="Ex: Assurance habitation"
+            placeholder={t.chargeNamePlaceholder}
             placeholderTextColor={isDark ? "#888" : "#999"}
           />
         </View>
@@ -259,13 +336,13 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
         {/* Montant */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Montant *
+            {t.amount} *
           </Text>
           <TextInput
             style={[styles.input, isDark && styles.darkInput]}
             value={form.amount}
             onChangeText={handleAmountChange}
-            placeholder="0,00"
+            placeholder={t.amountPlaceholder}
             placeholderTextColor={isDark ? "#888" : "#999"}
             keyboardType="decimal-pad"
           />
@@ -274,7 +351,7 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
         {/* Date d'échéance */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Date d'échéance *
+            {t.dueDate} *
           </Text>
           <TouchableOpacity 
             style={[styles.dateButton, isDark && styles.darkInput]}
@@ -298,14 +375,14 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
         {/* Catégorie */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Catégorie *
+            {t.category} *
           </Text>
           <TouchableOpacity 
             style={[styles.selectButton, isDark && styles.darkInput]}
             onPress={() => setShowCategoryModal(true)}
           >
             <Text style={[styles.selectButtonText, isDark && styles.darkText]}>
-              {form.category ? getCategoryName(form.category) : 'Sélectionner une catégorie'}
+              {form.category ? getCategoryName(form.category) : t.selectCategory}
             </Text>
             <Ionicons name="chevron-down" size={20} color={isDark ? "#fff" : "#666"} />
           </TouchableOpacity>
@@ -314,10 +391,10 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
         {/* ✅ CORRIGÉ : Compte associé */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Compte associé
+            {t.associatedAccount}
           </Text>
           <Text style={[styles.hint, isDark && styles.darkSubtext, { marginBottom: 8 }]}>
-            ⚡ Sélectionnez un compte pour activer le prélèvement automatique à la date d'échéance
+            {t.autoDeductHelper}
           </Text>
           <TouchableOpacity 
             style={[styles.selectButton, isDark && styles.darkInput]}
@@ -329,7 +406,7 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
             <Ionicons name="chevron-down" size={20} color={isDark ? "#fff" : "#666"} />
           </TouchableOpacity>
           <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-            Sélectionnez le compte pour le prélèvement automatique
+            {t.selectAccountHelper}
           </Text>
         </View>
 
@@ -338,7 +415,7 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
           <View style={styles.inputGroup}>
             <View style={styles.switchContainer}>
               <Text style={[styles.label, isDark && styles.darkText]}>
-                Prélèvement automatique
+                {t.autoDeduct}
               </Text>
               <TouchableOpacity
                 style={[
@@ -355,8 +432,8 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
             </View>
             <Text style={[styles.hint, isDark && styles.darkSubtext]}>
               {form.autoDeduct 
-                ? 'Le montant sera automatiquement débité du compte sélectionné à la date d\'\u00e9chéance'
-                : 'Activez pour débiter automatiquement le compte à l\'\u00e9chéance'
+                ? t.autoDeductActiveHelper
+                : t.autoDeductInactiveHelper
               }
             </Text>
           </View>
@@ -365,10 +442,10 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
         {/* Récurrence */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Récurrence
+            {t.recurrence}
           </Text>
           <Text style={[styles.hint, isDark && styles.darkSubtext, { marginBottom: 8 }]}>
-            💡 Quand vous payez une charge récurrente, une nouvelle occurrence sera automatiquement créée pour la prochaine échéance
+            {t.recurrenceHelper}
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.recurrenceContainer}>
             {recurrenceOptions.map((recurrence) => (
@@ -395,13 +472,13 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
         {/* Jours de rappel */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Rappel (jours avant)
+            {t.reminderDaysBefore}
           </Text>
           <TextInput
             style={[styles.input, isDark && styles.darkInput]}
             value={form.reminderDays}
             onChangeText={handleReminderDaysChange}
-            placeholder="7"
+            placeholder={t.reminderPlaceholder}
             placeholderTextColor={isDark ? "#888" : "#999"}
             keyboardType="number-pad"
           />
@@ -410,13 +487,13 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
         {/* Notes */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Notes
+            {t.notes}
           </Text>
           <TextInput
             style={[styles.input, styles.textArea, isDark && styles.darkInput]}
             value={form.notes}
             onChangeText={(text) => setForm(prev => ({ ...prev, notes: text }))}
-            placeholder="Informations supplémentaires..."
+            placeholder={t.notesPlaceholder}
             placeholderTextColor={isDark ? "#888" : "#999"}
             multiline
             numberOfLines={3}
@@ -431,7 +508,7 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
             onPress={() => navigation.navigate('AnnualCharges', { screen: 'AnnualChargesList' })}
             disabled={loading}
           >
-            <Text style={styles.cancelButtonText}>Annuler</Text>
+            <Text style={styles.cancelButtonText}>{t.cancel}</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -444,7 +521,7 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
             disabled={loading || !form.name || !form.amount || !form.category}
           >
             <Text style={styles.saveButtonText}>
-              {loading ? 'Modification...' : 'Modifier'}
+              {loading ? t.modifying : t.edit}
             </Text>
           </TouchableOpacity>
         </View>
@@ -461,7 +538,7 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, isDark && styles.darkModalContent]}>
             <Text style={[styles.modalTitle, isDark && styles.darkText]}>
-              Sélectionner un compte
+              {t.selectAnAccount}
             </Text>
             <ScrollView style={styles.modalList}>
               {accounts.map(account => (
@@ -502,7 +579,7 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
               style={[styles.modalCloseButton, isDark && styles.darkModalCloseButton]}
               onPress={() => setShowAccountModal(false)}
             >
-              <Text style={styles.modalCloseButtonText}>Fermer</Text>
+              <Text style={styles.modalCloseButtonText}>{t.close}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -518,7 +595,7 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, isDark && styles.darkModalContent]}>
             <Text style={[styles.modalTitle, isDark && styles.darkText]}>
-              Sélectionner une catégorie
+              {t.selectCategory}
             </Text>
             <ScrollView style={styles.modalList}>
               {subcategories.map(subcategory => (
@@ -545,13 +622,13 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
                       form.category === subcategory.value && styles.modalItemTextSelected,
                       isDark && styles.darkText
                     ]}>
-                      {subcategory.label}
+                      {translateSubcategory(subcategory.value)}
                     </Text>
                     <Text style={[
                       styles.modalItemSubtext,
                       { color: isDark ? '#8E8E93' : '#666' }
                     ]}>
-                      {subcategory.parentLabel}
+                      {translateCategory(subcategory.parentCategory)}
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -561,7 +638,7 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
               style={[styles.modalCloseButton, isDark && styles.darkModalCloseButton]}
               onPress={() => setShowCategoryModal(false)}
             >
-              <Text style={styles.modalCloseButtonText}>Fermer</Text>
+              <Text style={styles.modalCloseButtonText}>{t.close}</Text>
             </TouchableOpacity>
           </View>
         </View>

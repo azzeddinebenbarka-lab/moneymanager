@@ -38,7 +38,7 @@ interface DebtFormData {
 }
 
 const AddDebtScreen = ({ navigation }: any) => {
-  const { t } = useLanguage();
+  const { t, formatMonthYear, formatFullDate } = useLanguage();
   const { theme } = useTheme();
   const { formatAmount } = useCurrency();
   const { createDebt } = useDebts();
@@ -423,7 +423,7 @@ const AddDebtScreen = ({ navigation }: any) => {
               style={styles.calculateButton}
               onPress={calculateMonthlyPayment}
             >
-              <Text style={styles.calculateButtonText}>Calculer</Text>
+              <Text style={styles.calculateButtonText}>{t.calculate}</Text>
             </TouchableOpacity>
           </View>
           {form.interestRate && (
@@ -464,7 +464,7 @@ const AddDebtScreen = ({ navigation }: any) => {
             onPress={() => setShowStartDatePicker(true)}
           >
             <Text style={[styles.dateText, isDark && styles.darkText]}>
-              {form.startDate.toLocaleDateString('fr-FR')}
+              {formatFullDate(form.startDate)}
             </Text>
             <Ionicons name="calendar" size={20} color={isDark ? "#fff" : "#666"} />
           </TouchableOpacity>
@@ -506,12 +506,7 @@ const AddDebtScreen = ({ navigation }: any) => {
                   // Option "Dès que possible" : rester dans le mois actuel
                   
                   const dueDate = new Date(dueYear, dueMonth, paymentDay);
-                  return dueDate.toLocaleDateString('fr-FR', { 
-                    weekday: 'long', 
-                    day: 'numeric', 
-                    month: 'long', 
-                    year: 'numeric' 
-                  });
+                  return formatFullDate(dueDate);
                 })()}
               </Text>
             </View>
@@ -603,7 +598,7 @@ const AddDebtScreen = ({ navigation }: any) => {
                         const nextMonth = new Date(form.startDate);
                         nextMonth.setMonth(nextMonth.getMonth() + 1);
                         nextMonth.setDate(form.paymentDay);
-                        return `🗓️ ${t.firstDebitOn} : ${nextMonth.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+                        return `🗓️ ${t.firstDebitOn} : ${formatFullDate(nextMonth)}`;
                       })()}
                     </Text>
                   </View>

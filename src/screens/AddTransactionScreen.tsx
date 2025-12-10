@@ -57,7 +57,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
   const isDark = theme === 'dark';
 
   const frequencyOptions = [
-    { value: 'monthly', label: 'Mensuelle' },
+    { value: 'monthly', label: t.monthly },
   ];
 
   // ✅ CORRECTION : Charger au focus
@@ -79,17 +79,17 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
 
   const handleSave = async () => {
     if (!form.amount || parseFloat(form.amount) <= 0) {
-      Alert.alert(t.error, 'Veuillez saisir un montant valide');
+      Alert.alert(t.error, t.enterValidAmount);
       return;
     }
 
     if (!form.category) {
-      Alert.alert(t.error, 'Veuillez sélectionner une catégorie');
+      Alert.alert(t.error, t.selectCategoryRequired);
       return;
     }
 
     if (!form.accountId) {
-      Alert.alert(t.error, 'Veuillez sélectionner un compte');
+      Alert.alert(t.error, t.selectAccountRequired);
       return;
     }
 
@@ -114,8 +114,8 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
       await createTransaction(transactionData);
 
       Alert.alert(
-        'Succès',
-        `Transaction ${form.isRecurring ? 'récurrente ' : ''}ajoutée avec succès`,
+        t.success,
+        form.isRecurring ? t.recurringTransactionCreated : t.transactionCreated,
         [{ 
           text: 'OK', 
           onPress: () => navigation.navigate('Transactions')
@@ -123,7 +123,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
       );
     } catch (error) {
       console.error('Error creating transaction:', error);
-      Alert.alert(t.error, 'Impossible d\'ajouter la transaction');
+      Alert.alert(t.error, t.cannotAddTransaction);
     } finally {
       setLoading(false);
     }
@@ -179,7 +179,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
               styles.typeButtonText,
               { color: form.type === 'expense' ? colors.text.inverse : colors.semantic.error },
             ]}>
-              Dépense
+              {t.expense}
             </Text>
           </TouchableOpacity>
 
@@ -199,7 +199,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
               styles.typeButtonText,
               { color: form.type === 'income' ? colors.text.inverse : colors.semantic.success },
             ]}>
-              Revenu
+              {t.income}
             </Text>
           </TouchableOpacity>
         </View>
@@ -207,7 +207,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
         {/* Montant */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: colors.text.primary }]}>
-            Montant *
+            {t.amount} *
           </Text>
           <View style={styles.amountContainer}>
             <TextInput
@@ -233,7 +233,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
         {/* Catégorie AVEC DROPDOWN */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: colors.text.primary }]}>
-            Catégorie *
+            {t.category} *
           </Text>
           
           <CategoryPickerDropdown
@@ -250,40 +250,40 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
         {/* Compte */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: colors.text.primary }]}>
-            Compte *
+            {t.account} *
           </Text>
           
           {accountsLoading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" color={colors.primary[500]} />
               <Text style={[styles.loadingText, { color: colors.text.secondary }]}>
-                Chargement des comptes...
+                {t.loadingAccounts}
               </Text>
             </View>
           ) : accountsError ? (
             <View style={styles.errorContainer}>
               <Ionicons name="alert-circle" size={24} color={colors.semantic.error} />
               <Text style={[styles.errorText, { color: colors.semantic.error }]}>
-                Erreur de chargement: {accountsError}
+                {t.loadingError}: {accountsError}
               </Text>
               <TouchableOpacity 
                 style={[styles.retryButton, { backgroundColor: colors.primary[500] }]}
                 onPress={refreshAccounts}
               >
-                <Text style={[styles.retryButtonText, { color: colors.text.inverse }]}>Réessayer</Text>
+                <Text style={[styles.retryButtonText, { color: colors.text.inverse }]}>{t.retry}</Text>
               </TouchableOpacity>
             </View>
           ) : accounts.length === 0 ? (
             <View style={styles.emptyState}>
               <Ionicons name="wallet-outline" size={32} color={colors.text.disabled} />
               <Text style={[styles.emptyText, { color: colors.text.secondary }]}>
-                Aucun compte disponible
+                {t.noAccountAvailable}
               </Text>
               <TouchableOpacity 
                 style={[styles.addButton, { backgroundColor: colors.primary[500] }]}
                 onPress={() => navigation.navigate('Accounts')}
               >
-                <Text style={[styles.addButtonText, { color: colors.text.inverse }]}>Ĺréer un compte</Text>
+                <Text style={[styles.addButtonText, { color: colors.text.inverse }]}>{t.createAccount}</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -325,7 +325,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
         {/* Description */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: colors.text.primary }]}>
-            Description
+            {t.description}
           </Text>
           <TextInput
             style={[styles.input, { backgroundColor: colors.background.secondary, color: colors.text.primary }]}
@@ -340,7 +340,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
         {/* Date */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: colors.text.primary }]}>
-            Date
+            {t.date}
           </Text>
           <TouchableOpacity 
             style={[styles.dateButton, { backgroundColor: colors.background.secondary }]}
@@ -365,7 +365,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
         <View style={styles.inputGroup}>
           <View style={styles.switchContainer}>
             <Text style={[styles.label, { color: colors.text.primary }]}>
-              Transaction récurrente
+              {t.recurringTransaction}
             </Text>
             <TouchableOpacity
               style={[
@@ -384,12 +384,12 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
           {form.isRecurring && (
             <>
               <Text style={[styles.helperText, { color: colors.text.secondary, marginTop: 8 }]}>
-                💡 Cette transaction sera automatiquement créée à chaque échéance (quotidienne, hebdomadaire, mensuelle ou annuelle)
+                💡 {t.recurringTransactionHelper}
               </Text>
 
               {/* Fréquence */}
               <View style={styles.recurrenceSection}>
-                <Text style={[styles.subLabel, { color: colors.text.primary }]}>Fréquence *</Text>
+                <Text style={[styles.subLabel, { color: colors.text.primary }]}>{t.frequency} *</Text>
                 <View style={styles.frequencyContainer}>
                   {frequencyOptions.map((freq) => (
                     <TouchableOpacity
@@ -415,7 +415,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
               <View style={styles.recurrenceSection}>
                 <View style={styles.endDateHeader}>
                   <Text style={[styles.subLabel, { color: colors.text.primary }]}>
-                    Date de fin
+                    {t.endDate}
                   </Text>
                   <TouchableOpacity 
                     style={[styles.toggleButton, { backgroundColor: colors.primary[100] }]}
@@ -435,7 +435,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
                     }}
                   >
                     <Text style={[styles.toggleButtonText, { color: colors.primary[500] }]}>
-                      {hasEndDate ? 'Désactiver' : 'Activer'}
+                      {hasEndDate ? t.disable : t.enable}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -448,7 +448,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
                     <Text style={[styles.dateText, { color: colors.text.primary }]}>
                       {form.recurrenceEndDate 
                         ? form.recurrenceEndDate.toLocaleDateString('fr-FR')
-                        : 'Sélectionner une date'
+                        : t.selectDate
                       }
                     </Text>
                     <Ionicons name="calendar" size={20} color={colors.text.secondary} />
@@ -474,7 +474,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
             onPress={() => navigation.navigate('Transactions', { screen: 'TransactionsList' })}
             disabled={loading}
           >
-            <Text style={[styles.cancelButtonText, { color: colors.text.primary }]}>Annuler</Text>
+            <Text style={[styles.cancelButtonText, { color: colors.text.primary }]}>{t.cancel}</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -487,7 +487,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
             disabled={loading || !form.amount || !form.category || !form.accountId}
           >
             <Text style={[styles.saveButtonText, { color: colors.text.inverse }]}>
-              {loading ? 'Ajout...' : 'Ajouter'}
+              {loading ? t.saving : t.add}
             </Text>
           </TouchableOpacity>
         </View>

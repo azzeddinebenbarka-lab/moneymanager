@@ -242,7 +242,7 @@ const processContribution = async (contributionAmount: number) => {
 
             {/* Montant actuel */}
             <View style={styles.currentAmountSection}>
-              <Text style={styles.currentAmountLabel}>{t.currentAmount || 'Montant actuel'}</Text>
+              <Text style={styles.currentAmountLabel}>{t.currentAmount}</Text>
               <Text style={styles.currentAmount}>{formatAmount(goal.currentAmount)}</Text>
               <Text style={styles.targetAmount}>
                 {t.target}: {formatAmount(goal.targetAmount)}
@@ -251,7 +251,7 @@ const processContribution = async (contributionAmount: number) => {
 
             {/* Compte source */}
             <View style={styles.inputGroup}>
-              <Text style={styles.sectionLabel}>{t.sourceAccount || 'Compte source'} *</Text>
+              <Text style={styles.sectionLabel}>{t.sourceAccount} *</Text>
               <View style={styles.accountsContainer}>
                 {contributionAccounts.map((account) => (
                   <TouchableOpacity
@@ -267,7 +267,7 @@ const processContribution = async (contributionAmount: number) => {
                     <View style={styles.accountInfo}>
                       <Text style={styles.accountName}>{account.name}</Text>
                       <Text style={styles.accountBalance}>
-                        {t.balance || 'Solde'}: {formatAmount(account.balance)}
+                        {t.balance}: {formatAmount(account.balance)}
                       </Text>
                     </View>
                     {selectedAccountId === account.id && (
@@ -280,14 +280,14 @@ const processContribution = async (contributionAmount: number) => {
               </View>
               {contributionAccounts.length === 0 && (
                 <Text style={styles.warningText}>
-                  {t.noAccountWithBalance || 'Aucun compte avec un solde positif disponible.'}
+                  {t.noAccountWithBalance}
                 </Text>
               )}
             </View>
 
             {/* Compte d'épargne de destination */}
             <View style={styles.inputGroup}>
-              <Text style={styles.sectionLabel}>{t.destinationSavingsAccount || 'Compte d\'\u00e9pargne de destination'} *</Text>
+              <Text style={styles.sectionLabel}>{t.destinationSavingsAccount} *</Text>
               <View style={styles.accountsContainer}>
                 {savingsAccounts.map((account) => (
                   <TouchableOpacity
@@ -303,7 +303,7 @@ const processContribution = async (contributionAmount: number) => {
                     <View style={styles.accountInfo}>
                       <Text style={styles.accountName}>{account.name}</Text>
                       <Text style={styles.accountBalance}>
-                        {t.balance || 'Solde'}: {formatAmount(account.balance)}
+                        {t.balance}: {formatAmount(account.balance)}
                       </Text>
                     </View>
                     {selectedSavingsAccountId === account.id && (
@@ -316,14 +316,14 @@ const processContribution = async (contributionAmount: number) => {
               </View>
               {savingsAccounts.length === 0 && (
                 <Text style={styles.warningText}>
-                  {t.noSavingsAccount || 'Aucun compte d\'\u00e9pargne disponible.'}
+                  {t.noSavingsAccount}
                 </Text>
               )}
             </View>
 
             {/* Montant personnalisé */}
             <View style={styles.customAmountSection}>
-              <Text style={styles.sectionLabel}>{t.customAmount || 'Montant personnalisé'}</Text>
+              <Text style={styles.sectionLabel}>{t.customAmount}</Text>
               <View style={styles.customAmountInput}>
                 <Text style={styles.currencySymbol}>{currencySymbol}</Text>
                 <TextInput
@@ -346,26 +346,26 @@ const processContribution = async (contributionAmount: number) => {
             {selectedAmount > 0 && selectedAccountId && selectedSavingsAccountId && (
               <View style={styles.previewSection}>
                 <View style={styles.previewRow}>
-                  <Text style={styles.previewLabel}>{t.amountToTransfer || 'Montant à transférer'}:</Text>
+                  <Text style={styles.previewLabel}>{t.amountToTransfer}:</Text>
                   <Text style={styles.previewAmount}>{formatAmount(selectedAmount)}</Text>
                 </View>
                 
                 <View style={styles.previewRow}>
-                  <Text style={styles.previewLabel}>{t.from || 'De'}:</Text>
+                  <Text style={styles.previewLabel}>{t.from}:</Text>
                   <Text style={styles.previewAccount}>
                     {contributionAccounts.find(acc => acc.id === selectedAccountId)?.name}
                   </Text>
                 </View>
 
                 <View style={styles.previewRow}>
-                  <Text style={styles.previewLabel}>{t.to || 'Vers'}:</Text>
+                  <Text style={styles.previewLabel}>{t.to}:</Text>
                   <Text style={styles.previewAccount}>
                     {savingsAccounts.find(acc => acc.id === selectedSavingsAccountId)?.name}
                   </Text>
                 </View>
                 
                 <View style={styles.previewRow}>
-                  <Text style={styles.previewLabel}>{t.newTotal || 'Nouveau total'}:</Text>
+                  <Text style={styles.previewLabel}>{t.newTotal}:</Text>
                   <Text style={styles.previewTotal}>{formatAmount(newTotal)}</Text>
                 </View>
                 
@@ -379,7 +379,7 @@ const processContribution = async (contributionAmount: number) => {
                 {willComplete && (
                   <View style={styles.completionWarning}>
                     <Text style={styles.completionWarningText}>
-                      🎉 {t.goalWillBeReached || 'Cette contribution atteindra votre objectif'} !
+                      🎉 {t.goalWillBeReached} !
                     </Text>
                   </View>
                 )}
@@ -396,7 +396,7 @@ const processContribution = async (contributionAmount: number) => {
                 disabled={loading}
               >
                 <Text style={styles.cancelButtonText}>
-                  {loading ? (t.canceling || 'Annulation...') : t.cancel}
+                  {loading ? t.canceling : t.cancel}
                 </Text>
               </TouchableOpacity>
               

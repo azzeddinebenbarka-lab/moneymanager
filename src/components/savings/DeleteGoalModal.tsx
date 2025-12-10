@@ -1,13 +1,14 @@
 // src/components/savings/DeleteGoalModal.tsx - VERSION AMÉLIORÉE AVEC AFFICHAGE DES TRANSACTIONS
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
+import { useLanguage } from '../../context/LanguageContext';
 import { useSavings } from '../../hooks/useSavings';
 import { SavingsGoal } from '../../types/Savings';
 
@@ -26,6 +27,7 @@ export const DeleteGoalModal = ({ visible, onClose, onConfirm, goal, loading = f
   const [relatedTransactions, setRelatedTransactions] = useState<any[]>([]);
   const [showTransactionsDetails, setShowTransactionsDetails] = useState<boolean>(false);
   
+  const { t } = useLanguage();
   const { getRelatedTransactionsCount, getRelatedTransactionsDetails } = useSavings();
 
   useEffect(() => {
@@ -86,7 +88,7 @@ export const DeleteGoalModal = ({ visible, onClose, onConfirm, goal, loading = f
           <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
             {/* En-tête */}
             <View style={styles.header}>
-              <Text style={styles.title}>Supprimer l'objectif</Text>
+              <Text style={styles.title}>{t.deleteGoalTitle}</Text>
               <Text style={styles.subtitle}>{goal.name}</Text>
             </View>
 
@@ -163,7 +165,7 @@ export const DeleteGoalModal = ({ visible, onClose, onConfirm, goal, loading = f
                   {refundOption === 'refund' && <View style={styles.optionRadioSelected} />}
                 </View>
                 <View style={styles.optionContent}>
-                  <Text style={styles.optionTitle}>💸 Rembourser sur le compte source</Text>
+                  <Text style={styles.optionTitle}>{t.refundToSourceAccount}</Text>
                   <Text style={styles.optionDescription}>
                     L'argent sera transféré vers les comptes d'origine
                   </Text>
@@ -206,7 +208,7 @@ export const DeleteGoalModal = ({ visible, onClose, onConfirm, goal, loading = f
                   {deleteTransactions && <View style={styles.optionRadioSelected} />}
                 </View>
                 <View style={styles.optionContent}>
-                  <Text style={styles.optionTitle}>🗑️ Supprimer les transactions liées</Text>
+                  <Text style={styles.optionTitle}>{t.deleteRelatedTransactions}</Text>
                   <Text style={styles.optionDescription}>
                     {relatedTransactionsCount > 0 
                       ? `${relatedTransactionsCount} transaction${relatedTransactionsCount > 1 ? 's' : ''} seront supprimée${relatedTransactionsCount > 1 ? 's' : ''}`
@@ -269,7 +271,7 @@ export const DeleteGoalModal = ({ visible, onClose, onConfirm, goal, loading = f
               onPress={handleClose}
               disabled={loading}
             >
-              <Text style={styles.cancelButtonText}>Annuler</Text>
+              <Text style={styles.cancelButtonText}>{t.cancel}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity
@@ -281,7 +283,7 @@ export const DeleteGoalModal = ({ visible, onClose, onConfirm, goal, loading = f
               disabled={loading}
             >
               <Text style={styles.confirmButtonText}>
-                {loading ? 'Suppression...' : 'Confirmer'}
+                {loading ? t.deletingGoal : t.confirm}
               </Text>
             </TouchableOpacity>
           </View>

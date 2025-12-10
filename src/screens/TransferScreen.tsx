@@ -1,6 +1,6 @@
 // src/screens/TransferScreen.tsx - VERSION CORRIGÉE AVEC NAVIGATION ET MAD
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -81,7 +81,7 @@ const TransferScreen = ({ navigation, route }: any) => {
 
     } catch (error: any) {
       console.error('❌ [TransferScreen] Erreur transfert:', error);
-      Alert.alert('❌ Erreur', error.message || 'Erreur lors du transfert');
+      Alert.alert(t.transferError, error.message || t.transferErrorMessage);
     } finally {
       setLoading(false);
     }

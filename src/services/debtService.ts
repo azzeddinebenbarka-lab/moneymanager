@@ -197,6 +197,36 @@ export const debtService = {
   },
 
   /**
+   * ✅ MIGRATION : Corriger les user_id incorrects (default_id → default-user)
+   */
+  async migrateUserIds(): Promise<void> {
+    try {
+      const db = await getDatabase();
+      
+      console.log('🔄 [debtService] Migrating user_id values...');
+      
+      // Mettre à jour les dettes
+      await db.execAsync(`
+        UPDATE debts 
+        SET user_id = 'default-user' 
+        WHERE user_id != 'default-user';
+      `);
+      
+      // Mettre à jour les paiements
+      await db.execAsync(`
+        UPDATE debt_payments 
+        SET user_id = 'default-user' 
+        WHERE user_id != 'default-user';
+      `);
+      
+      console.log('✅ [debtService] user_id migration completed successfully');
+    } catch (error) {
+      console.error('❌ [debtService] Error migrating user_id:', error);
+      // Ne pas bloquer l'application si la migration échoue
+    }
+  },
+
+  /**
    * ✅ AJOUT DE PAIEMENT CORRIGÉ - SOUSTRACTION DU COMPTE
    */
   async addPayment(
@@ -941,7 +971,10 @@ export const debtService = {
       const paidDebts = debts.filter(debt => debt.status === 'paid').length;
       const futureDebts = debts.filter(debt => debt.status === 'future').length;
       
-      const totalRemaining = debts.reduce((sum, debt) => sum + debt.currentAmount, 0);
+      // ✅ CORRECTION : Exclure les dettes payées du calcul du montant restant
+      const totalRemaining = debts
+        .filter(debt => debt.status !== 'paid')
+        .reduce((sum, debt) => sum + debt.currentAmount, 0);
       const totalPaid = debts.reduce((sum, debt) => sum + (debt.initialAmount - debt.currentAmount), 0);
       const monthlyPayment = debts
         .filter(debt => debt.status === 'active' || debt.status === 'overdue')

@@ -1,6 +1,6 @@
 // src/components/savings/SavingsGoalForm.tsx - VERSION AVEC DÉFILEMENT CORRIGÉ
 import DateTimePicker from '@react-native-community/datetimepicker';
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -13,6 +13,7 @@ import {
   View
 } from 'react-native';
 import { useCurrency } from '../../context/CurrencyContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useAccounts } from '../../hooks/useAccounts';
 import { useSavings } from '../../hooks/useSavings';
@@ -35,16 +36,6 @@ interface Props {
   loading: boolean;
 }
 
-const CATEGORIES = [
-  { value: 'vacation' as const, label: '🏖️ Vacances', color: '#FF6B6B' },
-  { value: 'emergency' as const, label: '🆘 Fonds d\'urgence', color: '#FFD93D' },
-  { value: 'house' as const, label: '🏠 Maison', color: '#6BCF7F' },
-  { value: 'car' as const, label: '🚗 Voiture', color: '#4D96FF' },
-  { value: 'education' as const, label: '🎓 Éducation', color: '#9B51E0' },
-  { value: 'retirement' as const, label: '👵 Retraite', color: '#F2994A' },
-  { value: 'other' as const, label: '💰 Autre', color: '#828282' },
-]; 
-
 const COLORS = [
   '#FF6B6B', '#4D96FF', '#6BCF7F', '#F2994A', '#9B51E0', '#FFD93D', '#828282'
 ];
@@ -52,8 +43,20 @@ const COLORS = [
 export const SavingsGoalForm = ({ onSubmit, loading }: Props) => {
   const { theme } = useTheme();
   const { formatAmount } = useCurrency();
+  const { t } = useLanguage();
   const { accounts } = useAccounts();
   const { calculateRequiredMonthlySavings, calculateGoalAchievementDate } = useSavings();
+  
+  // Définir les catégories avec traductions
+  const CATEGORIES = [
+    { value: 'vacation' as const, label: `🏖️ ${t.vacation}`, color: '#FF6B6B' },
+    { value: 'emergency' as const, label: `🆘 ${t.emergency}`, color: '#FFD93D' },
+    { value: 'house' as const, label: `🏠 ${t.house}`, color: '#6BCF7F' },
+    { value: 'car' as const, label: `🚗 ${t.car}`, color: '#4D96FF' },
+    { value: 'education' as const, label: `🎓 ${t.education}`, color: '#9B51E0' },
+    { value: 'retirement' as const, label: `👵 ${t.retirement}`, color: '#F2994A' },
+    { value: 'other' as const, label: `💰 ${t.other}`, color: '#828282' },
+  ];
   
   const [formData, setFormData] = useState<SavingsGoalFormData>({
     name: '',
@@ -106,17 +109,17 @@ export const SavingsGoalForm = ({ onSubmit, loading }: Props) => {
   const handleSubmit = () => {
     // Validation
     if (!formData.name.trim()) {
-      Alert.alert('Erreur', 'Veuillez saisir un nom pour l\'objectif');
+      Alert.alert(t.error, t.accountNameRequired);
       return;
     }
 
     if (!formData.targetAmount || parseFloat(formData.targetAmount) <= 0) {
-      Alert.alert('Erreur', 'Le montant cible doit être supérieur à 0');
+      Alert.alert(t.error, t.targetAmountPositive);
       return;
     }
 
     if (!formData.savingsAccountId) {
-      Alert.alert('Erreur', 'Veuillez sélectionner un compte d\'épargne');
+      Alert.alert(t.error, t.selectSavingsAccountRequired);
       return;
     }
 
@@ -134,7 +137,7 @@ export const SavingsGoalForm = ({ onSubmit, loading }: Props) => {
     };
 
     if (submitData.monthlyContribution <= 0) {
-      Alert.alert('Erreur', 'La contribution mensuelle doit être supérieure à 0');
+      Alert.alert(t.error, t.monthlyContributionPositive);
       return;
     }
 
@@ -177,19 +180,19 @@ export const SavingsGoalForm = ({ onSubmit, loading }: Props) => {
       >
         {/* Nom de l'objectif */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>Nom de l'objectif *</Text>
+          <Text style={[styles.label, isDark && styles.darkText]}>{t.goalNameLabel}</Text>
           <TextInput
             style={[styles.input, isDark && styles.darkInput]}
             value={formData.name}
             onChangeText={(value) => updateFormData('name', value)}
-            placeholder="Ex: Achat voiture, Vacances en Grèce..."
+            placeholder={t.savingsGoalPlaceholder}
             placeholderTextColor={isDark ? "#888" : "#999"}
           />
         </View>
 
         {/* Catégorie */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>Catégorie</Text>
+          <Text style={[styles.label, isDark && styles.darkText]}>{t.categoryLabel}</Text>
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false} 
@@ -223,7 +226,7 @@ export const SavingsGoalForm = ({ onSubmit, loading }: Props) => {
 
         {/* Montant cible */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>Montant cible *</Text>
+          <Text style={[styles.label, isDark && styles.darkText]}>{t.targetAmountLabel}</Text>
           <View style={[styles.amountInput, isDark && styles.darkAmountInput]}>
             <Text style={[styles.currencySymbol, isDark && styles.darkText]}>
               {getCurrencySymbol()}
@@ -239,14 +242,14 @@ export const SavingsGoalForm = ({ onSubmit, loading }: Props) => {
           </View>
           {formData.targetAmount && (
             <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-              Objectif: {formatAmount(parseFloat(formData.targetAmount) || 0)}
+              {t.targetAmountHint} {formatAmount(parseFloat(formData.targetAmount) || 0)}
             </Text>
           )}
         </View>
 
         {/* Compte d'épargne */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>Compte d'épargne *</Text>
+          <Text style={[styles.label, isDark && styles.darkText]}>{t.savingsAccountLabel}</Text>
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false} 
@@ -285,14 +288,14 @@ export const SavingsGoalForm = ({ onSubmit, loading }: Props) => {
           </ScrollView>
           {savingsAccounts.length === 0 && (
             <Text style={[styles.warningText, isDark && styles.darkSubtext]}>
-              Aucun compte d'épargne trouvé. Créez d'abord un compte d'épargne.
+              {t.noSavingsAccountFound}
             </Text>
           )}
         </View>
 
         {/* Compte de contribution */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>Compte source des contributions</Text>
+          <Text style={[styles.label, isDark && styles.darkText]}>{t.contributionSourceAccountLabel}</Text>
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false} 
@@ -330,13 +333,13 @@ export const SavingsGoalForm = ({ onSubmit, loading }: Props) => {
             ))}
           </ScrollView>
           <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-            Sélectionnez le compte depuis lequel les fonds seront transférés
+            {t.selectContributionSource}
           </Text>
         </View>
 
         {/* Date cible */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>Date cible</Text>
+          <Text style={[styles.label, isDark && styles.darkText]}>{t.targetDateLabel}</Text>
           <TouchableOpacity 
             style={[styles.dateButton, isDark && styles.darkInput]}
             onPress={() => setShowDatePicker(true)}
@@ -367,7 +370,7 @@ export const SavingsGoalForm = ({ onSubmit, loading }: Props) => {
 
         {/* Mode de calcul */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>Calcul de la mensualité</Text>
+          <Text style={[styles.label, isDark && styles.darkText]}>{t.monthlyContributionCalculationLabel}</Text>
           <View style={styles.calculationMode}>
             <TouchableOpacity
               style={[
@@ -382,7 +385,7 @@ export const SavingsGoalForm = ({ onSubmit, loading }: Props) => {
                 calculateMode === 'auto' && styles.modeButtonTextActive,
                 isDark && styles.darkText
               ]}>
-                Auto
+                {t.autoMode}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -398,7 +401,7 @@ export const SavingsGoalForm = ({ onSubmit, loading }: Props) => {
                 calculateMode === 'manual' && styles.modeButtonTextActive,
                 isDark && styles.darkText
               ]}>
-                Manuel
+                {t.manualMode}
               </Text>
             </TouchableOpacity>
           </View>
@@ -407,7 +410,7 @@ export const SavingsGoalForm = ({ onSubmit, loading }: Props) => {
         {/* Contribution mensuelle */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Contribution mensuelle {calculateMode === 'auto' && '(calculée automatiquement)'}
+            {t.monthlyContributionLabel} {calculateMode === 'auto' && t.calculatedAutomatically}
           </Text>
           <View style={[styles.amountInput, isDark && styles.darkAmountInput]}>
             <Text style={[styles.currencySymbol, isDark && styles.darkText]}>
@@ -430,12 +433,12 @@ export const SavingsGoalForm = ({ onSubmit, loading }: Props) => {
           </View>
           {calculateMode === 'auto' && formData.targetAmount && (
             <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-              Contribution: {formatAmount(calculatedMonthlyContribution)}
+              {t.contributionPrefix} {formatAmount(calculatedMonthlyContribution)}
             </Text>
           )}
           {calculateMode === 'manual' && formData.monthlyContribution && (
             <Text style={[styles.hint, isDark && styles.darkSubtext]}>
-              Contribution: {formatAmount(parseFloat(formData.monthlyContribution) || 0)}
+              {t.contributionPrefix} {formatAmount(parseFloat(formData.monthlyContribution) || 0)}
             </Text>
           )}
         </View>
@@ -444,7 +447,7 @@ export const SavingsGoalForm = ({ onSubmit, loading }: Props) => {
         {calculatedTargetDate && calculateMode === 'manual' && (
           <View style={[styles.calculationInfo, isDark && styles.darkCalculationInfo]}>
             <Text style={[styles.calculationInfoText, isDark && styles.darkText]}>
-              Avec cette contribution, vous atteindrez votre objectif le {' '}
+              {t.withThisContribution} {' '}
               {new Date(calculatedTargetDate).toLocaleDateString('fr-FR', { 
                 day: 'numeric', 
                 month: 'long', 
@@ -457,9 +460,9 @@ export const SavingsGoalForm = ({ onSubmit, loading }: Props) => {
         {calculateMode === 'auto' && (
           <View style={[styles.calculationInfo, isDark && styles.darkCalculationInfo]}>
             <Text style={[styles.calculationInfoText, isDark && styles.darkText]}>
-              Pour atteindre votre objectif à la date choisie, vous devez épargner {' '}
+              {t.toReachGoalByDate} {' '}
               <Text style={styles.highlight}>
-                {formatAmount(calculatedMonthlyContribution)} par mois
+                {formatAmount(calculatedMonthlyContribution)} {t.perMonth}
               </Text>
             </Text>
           </View>
@@ -467,7 +470,7 @@ export const SavingsGoalForm = ({ onSubmit, loading }: Props) => {
 
         {/* Couleur */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>Couleur</Text>
+          <Text style={[styles.label, isDark && styles.darkText]}>{t.colorLabel}</Text>
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false} 
@@ -503,7 +506,7 @@ export const SavingsGoalForm = ({ onSubmit, loading }: Props) => {
           disabled={loading || !formData.name || !formData.targetAmount || !formData.savingsAccountId}
         >
           <Text style={styles.submitButtonText}>
-            {loading ? 'Création en cours...' : 'Créer l\'objectif'}
+            {loading ? t.creatingGoal : t.createGoal}
           </Text>
         </TouchableOpacity>
 

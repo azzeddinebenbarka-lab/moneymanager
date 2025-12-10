@@ -12,6 +12,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useLanguage } from '../../context/LanguageContext';
 import { useDesignSystem } from '../../context/ThemeContext';
 import { Category } from '../../types';
 
@@ -29,14 +30,156 @@ export const CategoryPickerDropdown: React.FC<CategoryPickerDropdownProps> = ({
   categories,
   selectedCategoryId,
   onSelect,
-  placeholder = 'Sélectionner une catégorie',
-  label = 'Catégorie',
+  placeholder,
+  label,
   type = 'all',
   showSubcategories = true,
 }) => {
   const { colors } = useDesignSystem();
+  const { t } = useLanguage();
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Valeurs par défaut avec traduction
+  const displayPlaceholder = placeholder || t.selectCategory;
+  const displayLabel = label || t.category;
+
+  // Fonction pour traduire les noms de catégories depuis la DB (français) vers la langue actuelle
+  const getCategoryTranslatedName = (categoryName: string): string => {
+    // Mapping des noms français de la DB vers les clés de traduction
+    const categoryMapping: Record<string, keyof typeof t> = {
+      // Revenus
+      'Salaire': 'cat_salary',
+      '💼 Salaire': 'cat_salary',
+      'Revenus secondaires': 'cat_secondary_income',
+      '📈 Revenus secondaires': 'cat_secondary_income',
+      'Salaire net': 'cat_net_salary',
+      'Prime': 'cat_bonus',
+      'Primes / heures sup': 'cat_bonus',
+      'Freelance': 'cat_freelance',
+      'Commerce': 'cat_commerce',
+      'Commerce / ventes': 'cat_commerce',
+      'Commissions': 'cat_commissions',
+      'Business': 'cat_business',
+      'Investissement': 'cat_investment',
+      'Autres revenus': 'cat_other_income',
+      
+      // Logement
+      'Logement': 'cat_housing',
+      '🏠 Logement & Charges': 'cat_housing',
+      'Loyer': 'cat_rent',
+      'Loyer / Crédit maison': 'cat_rent',
+      'Électricité': 'cat_electricity',
+      'Eau': 'cat_water',
+      'Internet': 'cat_internet',
+      'Wifi / Internet': 'cat_internet',
+      'Syndic': 'cat_syndic',
+      
+      // Nourriture / Alimentation
+      'Nourriture': 'cat_food',
+      'Alimentation': 'cat_food',
+      '🛒 Nourriture & Courses (T9edya)': 'cat_food',
+      'Courses': 'cat_groceries',
+      'Épicerie': 'cat_groceries',
+      'Légumes': 'cat_vegetables',
+      'Légumes / fruits': 'cat_vegetables',
+      'Viande': 'cat_meat',
+      'Viande / poisson': 'cat_meat',
+      'Produits d\'entretien': 'cat_cleaning_products',
+      'Produits ménagers': 'cat_cleaning_products',
+      
+      // Transport
+      'Transport': 'cat_transport',
+      '🚗 Transport & Voiture': 'cat_transport',
+      'Carburant': 'cat_fuel',
+      'Entretien': 'cat_maintenance',
+      'Assurance': 'cat_insurance',
+      'Lavage': 'cat_wash',
+      'Parking': 'cat_parking',
+      
+      // Santé
+      'Santé': 'cat_health',
+      '💊 Santé': 'cat_health',
+      'Pharmacie': 'cat_pharmacy',
+      'Consultation': 'cat_consultation',
+      'Analyse / consultation': 'cat_consultation',
+      'Assurance santé': 'cat_health_insurance',
+      'Assurance maladie': 'cat_health_insurance',
+      
+      // Enfant
+      'Enfant': 'cat_child',
+      '👶 Enfant': 'cat_child',
+      'Alimentation bébé': 'cat_child_food',
+      'Hygiène': 'cat_hygiene',
+      'École': 'cat_school',
+      'École / crèche': 'cat_school',
+      'Loisirs': 'cat_leisure',
+      
+      // Abonnements
+      'Abonnements': 'cat_subscriptions',
+      '📱 Abonnements': 'cat_subscriptions',
+      'Téléphone': 'cat_phone',
+      'Applications': 'cat_apps',
+      'Streaming': 'cat_streaming',
+      
+      // Personnel
+      'Personnel': 'cat_personal',
+      '👤 Dépenses personnelles': 'cat_personal',
+      'Vêtements': 'cat_clothes',
+      'Coiffure': 'cat_haircut',
+      'Parfums': 'cat_perfume',
+      
+      // Shopping
+      'Shopping': 'cat_shopping',
+      'Électronique': 'cat_electronics',
+      'Maison': 'cat_home',
+      'Cadeaux': 'cat_gifts',
+      
+      // Divertissement / Loisirs
+      'Divertissement': 'cat_entertainment',
+      'Loisirs': 'cat_entertainment',
+      'Restaurants': 'cat_restaurants',
+      'Café': 'cat_cafe',
+      'Cinéma': 'cat_cinema',
+      'Sorties': 'cat_outings',
+      
+      // Finances
+      'Finances': 'cat_finances',
+      'Épargne': 'cat_savings',
+      'Investissements': 'cat_investments',
+      'Prêts': 'cat_loans',
+      'Frais bancaires': 'cat_bank_fees',
+      
+      // Maison
+      '🏡 Maison': 'cat_house',
+      'Cuisine / accessoires': 'cat_kitchen',
+      'Décoration': 'cat_decoration',
+      'Outils / bricolage': 'cat_tools',
+      
+      // Éducation
+      'Éducation': 'cat_education',
+      
+      // Factures
+      'Factures': 'cat_bills',
+      
+      // Autres / Divers
+      'Autre': 'cat_other',
+      'Autres': 'cat_other',
+      'Divers': 'cat_miscellaneous',
+      '🎁 Divers & imprévus': 'cat_misc',
+      'Imprévus': 'cat_unexpected',
+      'Imprévu': 'cat_unexpected',
+      'Aides familiales': 'cat_family_help',
+    };
+
+    const translationKey = categoryMapping[categoryName];
+    if (translationKey && t[translationKey]) {
+      return t[translationKey] as string;
+    }
+    
+    // Si pas de traduction trouvée, retourner le nom original
+    return categoryName;
+  };
 
   // Filtrer les catégories par type
   const filteredCategories = useMemo(() => {
@@ -48,9 +191,11 @@ export const CategoryPickerDropdown: React.FC<CategoryPickerDropdownProps> = ({
     
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(cat =>
-        cat.name.toLowerCase().includes(query)
-      );
+      filtered = filtered.filter(cat => {
+        const translatedName = getCategoryTranslatedName(cat.name).toLowerCase();
+        const originalName = cat.name.toLowerCase();
+        return translatedName.includes(query) || originalName.includes(query);
+      });
     }
     
     return filtered;
@@ -104,7 +249,7 @@ export const CategoryPickerDropdown: React.FC<CategoryPickerDropdownProps> = ({
               selectedCategoryId === item.id && { fontWeight: '600' },
             ]}
           >
-            {item.name}
+            {getCategoryTranslatedName(item.name)}
           </Text>
         </View>
         {selectedCategoryId === item.id && (
@@ -141,7 +286,7 @@ export const CategoryPickerDropdown: React.FC<CategoryPickerDropdownProps> = ({
                     },
                   ]}
                 >
-                  {sub.name}
+                  {getCategoryTranslatedName(sub.name)}
                 </Text>
               </View>
               {selectedCategoryId === sub.id && (
@@ -156,8 +301,8 @@ export const CategoryPickerDropdown: React.FC<CategoryPickerDropdownProps> = ({
 
   return (
     <View style={styles.container}>
-      {label && (
-        <Text style={[styles.label, { color: colors.text.primary }]}>{label}</Text>
+      {displayLabel && (
+        <Text style={[styles.label, { color: colors.text.primary }]}>{displayLabel}</Text>
       )}
       
       <TouchableOpacity
@@ -185,7 +330,7 @@ export const CategoryPickerDropdown: React.FC<CategoryPickerDropdownProps> = ({
               { color: selectedCategory ? colors.text.primary : colors.text.secondary },
             ]}
           >
-            {selectedCategory?.name || placeholder}
+            {selectedCategory ? getCategoryTranslatedName(selectedCategory.name) : displayPlaceholder}
           </Text>
         </View>
         <Ionicons name="chevron-down" size={20} color={colors.text.secondary} />
@@ -205,7 +350,7 @@ export const CategoryPickerDropdown: React.FC<CategoryPickerDropdownProps> = ({
             {/* Header */}
             <View style={[styles.modalHeader, { borderBottomColor: colors.border.primary }]}>
               <Text style={[styles.modalTitle, { color: colors.text.primary }]}>
-                {label}
+                {displayLabel}
               </Text>
               <TouchableOpacity
                 onPress={() => {
@@ -222,7 +367,7 @@ export const CategoryPickerDropdown: React.FC<CategoryPickerDropdownProps> = ({
               <Ionicons name="search" size={20} color={colors.text.secondary} />
               <TextInput
                 style={[styles.searchInput, { color: colors.text.primary }]}
-                placeholder="Rechercher une catégorie..."
+                placeholder={t.searchCategory}
                 placeholderTextColor={colors.text.tertiary}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
@@ -246,7 +391,7 @@ export const CategoryPickerDropdown: React.FC<CategoryPickerDropdownProps> = ({
                 <View style={styles.emptyContainer}>
                   <Ionicons name="search" size={48} color={colors.text.disabled} />
                   <Text style={[styles.emptyText, { color: colors.text.secondary }]}>
-                    Aucune catégorie trouvée
+                    {t.noCategoryFound}
                   </Text>
                 </View>
               }

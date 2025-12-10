@@ -43,7 +43,7 @@ interface AddSavingsGoalScreenProps {
 }
 
 export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navigation }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { colors } = useDesignSystem();
   const { formatAmount } = useCurrency();
   const { createGoal } = useSavings();
@@ -68,13 +68,13 @@ export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navi
   const contributionAccounts = accounts.filter(acc => acc.type !== 'savings');
 
   const categories = [
-    { value: 'vacation' as const, label: 'Vacances', icon: 'airplane' },
-    { value: 'car' as const, label: 'Voiture', icon: 'car' },
-    { value: 'house' as const, label: 'Maison', icon: 'home' },
-    { value: 'emergency' as const, label: 'Urgence', icon: 'medical' },
-    { value: 'education' as const, label: 'Éducation', icon: 'school' },
-    { value: 'retirement' as const, label: 'Retraite', icon: 'heart' },
-    { value: 'other' as const, label: 'Autre', icon: 'flag' },
+    { value: 'vacation' as const, label: t.vacation, icon: 'airplane' },
+    { value: 'car' as const, label: t.car, icon: 'car' },
+    { value: 'house' as const, label: t.house, icon: 'home' },
+    { value: 'emergency' as const, label: t.emergency, icon: 'medical' },
+    { value: 'education' as const, label: t.education, icon: 'school' },
+    { value: 'retirement' as const, label: t.retirement, icon: 'heart' },
+    { value: 'other' as const, label: t.other, icon: 'flag' },
   ];
 
   const goalColors = [
@@ -108,7 +108,7 @@ export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navi
 
   const handleSave = async () => {
     if (!form.name || !form.targetAmount || !form.monthlyContribution || !form.savingsAccountId) {
-      Alert.alert(t.error, 'Veuillez remplir tous les champs obligatoires');
+      Alert.alert(t.error, t.fillAllRequiredFields);
       return;
     }
 
@@ -117,17 +117,17 @@ export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navi
     const currentAmount = parseFloat(form.currentAmount || '0');
 
     if (isNaN(targetAmount) || targetAmount <= 0) {
-      Alert.alert(t.error, 'Le montant cible doit être un nombre positif');
+      Alert.alert(t.error, t.targetAmountPositive);
       return;
     }
 
     if (isNaN(monthlyContribution) || monthlyContribution <= 0) {
-      Alert.alert(t.error, 'La contribution mensuelle doit être un nombre positif');
+      Alert.alert(t.error, t.monthlyContributionPositive);
       return;
     }
 
     if (isNaN(currentAmount) || currentAmount < 0) {
-      Alert.alert(t.error, 'L\'épargne actuelle doit être un nombre positif ou zéro');
+      Alert.alert(t.error, t.currentSavingsPositive);
       return;
     }
 
@@ -148,13 +148,13 @@ export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navi
       await createGoal(goalData);
       
       Alert.alert(
-        'Succès',
-        'Objectif d\'épargne créé avec succès',
+        t.success,
+        t.savingsGoalCreatedSuccess,
         [{ text: 'OK', onPress: () => navigation.navigate('Savings') }]
       );
     } catch (error) {
       console.error('Erreur création objectif:', error);
-      Alert.alert(t.error, 'Impossible de créer l\'objectif d\'épargne');
+      Alert.alert(t.error, t.cannotCreateSavingsGoal);
     } finally {
       setLoading(false);
     }
@@ -204,20 +204,20 @@ export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navi
               <Ionicons name="close" size={24} color={colors.text.primary} />
             </TouchableOpacity>
             <Text style={[styles.title, { color: colors.text.primary }]}>
-              Nouvel Objectif
+              {t.newSavingsGoal}
             </Text>
           </View>
 
           {/* Nom de l'objectif */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text.primary }]}>
-              Nom de l'objectif *
+              {t.goalName} *
             </Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.background.card, color: colors.text.primary, borderColor: colors.border.primary }]}
               value={form.name}
               onChangeText={(text) => setForm(prev => ({ ...prev, name: text }))}
-              placeholder="Ex: Achat voiture, Vacances..."
+              placeholder={t.goalNameLabel}
               placeholderTextColor={colors.text.disabled}
             />
           </View>
@@ -225,7 +225,7 @@ export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navi
           {/* Montant cible */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text.primary }]}>
-              Montant cible *
+              {t.targetAmount} *
             </Text>
             <View style={styles.amountContainer}>
               <TextInput
@@ -248,7 +248,7 @@ export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navi
           {/* Épargne actuelle */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text.primary }]}>
-              Épargne actuelle
+              {t.currentSavings}
             </Text>
             <View style={styles.amountContainer}>
               <TextInput
@@ -271,7 +271,7 @@ export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navi
           {/* Contribution mensuelle */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text.primary }]}>
-              Contribution mensuelle *
+              {t.monthlyContributionLabel} *
             </Text>
             <View style={styles.amountContainer}>
               <TextInput
@@ -291,7 +291,7 @@ export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navi
             )}
             {monthsRemaining > 0 && (
               <Text style={[styles.hint, { color: colors.text.secondary }]}>
-                Temps estimé: {monthsRemaining} mois
+                {t.timeRemaining}: {monthsRemaining} {t.month}
               </Text>
             )}
           </View>
@@ -299,14 +299,14 @@ export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navi
           {/* Date cible */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text.primary }]}>
-              Date cible
+              {t.targetDateLabel}
             </Text>
             <TouchableOpacity 
               style={[styles.dateButton, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
               onPress={() => setShowDatePicker(true)}
             >
               <Text style={[styles.dateText, { color: colors.text.primary }]}>
-                {form.targetDate.toLocaleDateString('fr-FR')}
+                {form.targetDate.toLocaleDateString(language === 'ar' ? 'ar-SA' : language === 'en' ? 'en-US' : 'fr-FR')}
               </Text>
               <Ionicons name="calendar" size={20} color={colors.text.secondary} />
             </TouchableOpacity>
@@ -324,7 +324,7 @@ export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navi
           {/* Compte d'épargne */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text.primary }]}>
-              Compte d'épargne *
+              {t.savingsAccountLabel} *
             </Text>
             <View style={styles.accountsContainer}>
               {savingsAccounts.map((account) => (
@@ -354,7 +354,7 @@ export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navi
             </View>
             {savingsAccounts.length === 0 && (
               <Text style={[styles.warningText, { color: colors.text.secondary }]}>
-                Aucun compte d'épargne trouvé. Créez d'abord un compte d'épargne.
+                {t.noSavingsAccount}
               </Text>
             )}
           </View>
@@ -362,7 +362,7 @@ export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navi
           {/* Compte source des contributions */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text.primary }]}>
-              Compte source des contributions
+              {t.contributionSourceAccountLabel}
             </Text>
             <View style={styles.accountsContainer}>
               {contributionAccounts.map((account) => (
@@ -391,14 +391,14 @@ export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navi
               ))}
             </View>
             <Text style={[styles.hint, { color: colors.text.secondary }]}>
-              Sélectionnez le compte depuis lequel les fonds seront transférés
+              {t.selectSourceAccount}
             </Text>
           </View>
 
           {/* Catégorie */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text.primary }]}>
-              Catégorie
+              {t.category}
             </Text>
             <ScrollView 
               horizontal 
@@ -440,7 +440,7 @@ export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navi
           {/* Couleur */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text.primary }]}>
-              Couleur
+              {t.color}
             </Text>
             <View style={styles.colorsContainer}>
               {goalColors.map((color) => (

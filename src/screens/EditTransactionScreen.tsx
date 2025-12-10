@@ -51,7 +51,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
   useEffect(() => {
     const loadTransaction = async () => {
       if (!transactionId) {
-        Alert.alert(t.error, 'Aucune transaction sélectionnée');
+        Alert.alert(t.error, t.noTransactionSelected);
         navigation.navigate('Transactions');
         return;
       }
@@ -63,7 +63,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
         const transaction = await getTransactionById(transactionId);
         
         if (!transaction) {
-          Alert.alert(t.error, 'Transaction non trouvée');
+          Alert.alert(t.error, t.transactionNotFound);
           navigation.navigate('Transactions');
           return;
         }
@@ -87,7 +87,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
         console.log('✅ Transaction chargée:', transaction);
       } catch (error) {
         console.error('❌ Erreur chargement transaction:', error);
-        Alert.alert(t.error, 'Impossible de charger la transaction');
+        Alert.alert(t.error, t.cannotLoadTransaction);
         navigation.navigate('Transactions');
       } finally {
         setLoading(false);
@@ -100,17 +100,17 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
 
   const handleSave = async () => {
     if (!form.amount || parseFloat(form.amount) <= 0) {
-      Alert.alert(t.error, 'Veuillez saisir un montant valide');
+      Alert.alert(t.error, t.enterValidAmount);
       return;
     }
 
     if (!form.category) {
-      Alert.alert(t.error, 'Veuillez sélectionner une catégorie');
+      Alert.alert(t.error, t.selectCategory);
       return;
     }
 
     if (!form.accountId) {
-      Alert.alert(t.error, 'Veuillez sélectionner un compte');
+      Alert.alert(t.error, t.selectAccount);
       return;
     }
 
@@ -131,8 +131,8 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
       await updateTransaction(transactionId, updateData);
 
       Alert.alert(
-        'Succès',
-        'Transaction modifiée avec succès',
+        t.success,
+        t.transactionUpdatedSuccess,
         [{ 
           text: 'OK', 
           onPress: () => navigation.navigate('Transactions')
@@ -140,7 +140,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
       );
     } catch (error) {
       console.error('❌ Erreur modification transaction:', error);
-      Alert.alert(t.error, 'Impossible de modifier la transaction');
+      Alert.alert(t.error, t.cannotUpdateTransaction);
     } finally {
       setSaving(false);
     }
@@ -148,7 +148,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
 
   const handleDelete = () => {
     Alert.alert(
-      'Confirmation',
+      t.confirmation,
       'Êtes-vous sûr de vouloir supprimer cette transaction ?',
       [
         { text: t.cancel, style: 'cancel' },
@@ -159,8 +159,8 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
             try {
               await deleteTransaction(transactionId);
               Alert.alert(
-                'Succès',
-                'Transaction supprimée avec succès',
+                t.success,
+                t.transactionDeletedSuccess,
                 [{ 
                   text: 'OK', 
                   onPress: () => navigation.navigate('Transactions')
@@ -168,7 +168,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
               );
             } catch (error) {
               console.error('❌ Erreur suppression transaction:', error);
-              Alert.alert(t.error, 'Impossible de supprimer la transaction');
+              Alert.alert(t.error, t.cannotDeleteTransaction);
             }
           }
         }
@@ -198,7 +198,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
           <Text style={[styles.loadingText, isDark && styles.darkText]}>
-            Chargement de la transaction...
+            {t.loadingTransactions}
           </Text>
         </View>
       </SafeAreaView>
@@ -220,7 +220,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
             <Ionicons name="close" size={24} color={isDark ? "#fff" : "#000"} />
           </TouchableOpacity>
           <Text style={[styles.title, isDark && styles.darkText]}>
-            Modifier Transaction
+            {t.editTransaction}
           </Text>
           <TouchableOpacity 
             style={styles.deleteButton}
@@ -248,7 +248,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
               styles.typeButtonText,
               form.type === 'expense' && styles.typeButtonTextActive
             ]}>
-              Dépense
+              {t.expense}
             </Text>
           </TouchableOpacity>
 
@@ -268,7 +268,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
               styles.typeButtonText,
               form.type === 'income' && styles.typeButtonTextActive
             ]}>
-              Revenu
+              {t.income}
             </Text>
           </TouchableOpacity>
         </View>
@@ -276,7 +276,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
         {/* Montant */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Montant *
+            {t.amount} *
           </Text>
           <View style={styles.amountContainer}>
             <TextInput
@@ -301,7 +301,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
         {/* Catégorie */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Catégorie *
+            {t.category} *
           </Text>
           <CategoryPickerDropdown
             categories={filteredCategories}
@@ -317,21 +317,21 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
         {/* Compte */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Compte *
+            {t.account} *
           </Text>
           
           {accountsLoading ? (
             <View style={styles.loadingSmallContainer}>
               <ActivityIndicator size="small" color="#007AFF" />
               <Text style={[styles.loadingText, isDark && styles.darkSubtext]}>
-                Chargement des comptes...
+                {t.loadingAccounts}
               </Text>
             </View>
           ) : accounts.length === 0 ? (
             <View style={styles.emptyState}>
               <Ionicons name="wallet-outline" size={32} color={isDark ? "#555" : "#ccc"} />
               <Text style={[styles.emptyText, isDark && styles.darkSubtext]}>
-                Aucun compte disponible
+                {t.noAccounts}
               </Text>
             </View>
           ) : (
@@ -374,7 +374,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
         {/* Description */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Description
+            {t.description}
           </Text>
           <TextInput
             style={[styles.input, isDark && styles.darkInput]}
@@ -389,7 +389,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
         {/* Date */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Date
+            {t.date}
           </Text>
           <TouchableOpacity 
             style={[styles.dateButton, isDark && styles.darkInput]}
@@ -417,7 +417,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
             onPress={() => navigation.navigate('Transactions', { screen: 'TransactionsList' })}
             disabled={saving}
           >
-            <Text style={styles.cancelButtonText}>Annuler</Text>
+            <Text style={styles.cancelButtonText}>{t.cancel}</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -430,7 +430,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
             disabled={saving || !form.amount || !form.category || !form.accountId}
           >
             <Text style={styles.saveButtonText}>
-              {saving ? 'Modification...' : 'Modifier'}
+              {saving ? t.modifying : t.edit}
             </Text>
           </TouchableOpacity>
         </View>

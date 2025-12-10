@@ -11,6 +11,7 @@ import {
     View,
 } from 'react-native';
 import { useCurrency } from '../../context/CurrencyContext'; // ✅ AJOUT
+import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useCategories } from '../../hooks/useCategories';
 import { Budget, BUDGET_PERIODS } from '../../types';
@@ -31,6 +32,7 @@ const BudgetForm: React.FC<BudgetFormProps> = ({
 }) => {
   const { theme } = useTheme();
   const { formatAmount } = useCurrency(); // ✅ AJOUT
+  const { t } = useLanguage();
   const { categories } = useCategories();
   const isDark = theme === 'dark';
 
@@ -71,17 +73,17 @@ const BudgetForm: React.FC<BudgetFormProps> = ({
 
   const handleSubmit = () => {
     if (!formData.name.trim()) {
-      alert('Veuillez saisir un nom pour le budget');
+      alert(t.accountNameRequired);
       return;
     }
 
     if (!formData.category) {
-      alert('Veuillez sélectionner une catégorie');
+      alert(t.selectCategoryRequired);
       return;
     }
 
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      alert('Veuillez saisir un montant valide');
+      alert(t.invalidAmountForm);
       return;
     }
 
@@ -116,7 +118,7 @@ const BudgetForm: React.FC<BudgetFormProps> = ({
             <Ionicons name="close" size={24} color={isDark ? '#fff' : '#000'} />
           </TouchableOpacity>
           <Text style={[styles.title, isDark && styles.darkText]}>
-            {editingBudget ? 'Modifier le budget' : 'Nouveau budget'}
+            {editingBudget ? t.edit + ' ' + t.budget : t.createBudget}
           </Text>
           <View style={styles.closeButton} />
         </View>
@@ -125,7 +127,7 @@ const BudgetForm: React.FC<BudgetFormProps> = ({
           {/* Nom du budget */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, isDark && styles.darkText]}>
-              Nom du budget
+              {t.budgetNameLabel}
             </Text>
             <TextInput
               style={[styles.input, isDark && styles.darkInput]}
@@ -139,7 +141,7 @@ const BudgetForm: React.FC<BudgetFormProps> = ({
           {/* Catégorie */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, isDark && styles.darkText]}>
-              Catégorie
+              {t.budgetCategoryLabel}
             </Text>
             <CategoryPickerDropdown
               categories={expenseCategories}
@@ -157,7 +159,7 @@ const BudgetForm: React.FC<BudgetFormProps> = ({
           {/* Montant */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, isDark && styles.darkText]}>
-              Montant du budget
+              {t.budgetAmountLabel}
             </Text>
             <View style={[styles.amountContainer, isDark && styles.darkAmountContainer]}>
               <TextInput
@@ -176,7 +178,7 @@ const BudgetForm: React.FC<BudgetFormProps> = ({
             {/* ✅ CORRECTION : Afficher le montant formaté */}
             {formData.amount && (
               <Text style={[styles.helperText, isDark && styles.darkSubtext]}>
-                Montant: {formatAmount(parseFloat(formData.amount) || 0)}
+                {t.budgetAmountDisplay}: {formatAmount(parseFloat(formData.amount) || 0)}
               </Text>
             )}
           </View>
@@ -184,7 +186,7 @@ const BudgetForm: React.FC<BudgetFormProps> = ({
           {/* Période */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, isDark && styles.darkText]}>
-              Période
+              {t.periodLabel}
             </Text>
             <View style={styles.periodGrid}>
               {BUDGET_PERIODS.map((period: any) => (
@@ -212,7 +214,7 @@ const BudgetForm: React.FC<BudgetFormProps> = ({
           {/* Date de début */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, isDark && styles.darkText]}>
-              Date de début
+              {t.startDateLabel}
             </Text>
             <TextInput
               style={[styles.input, isDark && styles.darkInput]}
@@ -226,7 +228,7 @@ const BudgetForm: React.FC<BudgetFormProps> = ({
           {/* Date de fin (optionnelle) */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, isDark && styles.darkText]}>
-              Date de fin (optionnelle)
+              {t.endDateOptionalLabel}
             </Text>
             <TextInput
               style={[styles.input, isDark && styles.darkInput]}
@@ -241,7 +243,7 @@ const BudgetForm: React.FC<BudgetFormProps> = ({
           <View style={styles.inputGroup}>
             <View style={styles.switchContainer}>
               <Text style={[styles.label, isDark && styles.darkText]}>
-                Budget actif
+                {t.activeBudgetLabel}
               </Text>
               <TouchableOpacity
                 style={[
@@ -259,8 +261,8 @@ const BudgetForm: React.FC<BudgetFormProps> = ({
             </View>
             <Text style={[styles.helperText, isDark && styles.darkSubtext]}>
               {formData.isActive 
-                ? 'Le budget sera pris en compte dans les alertes et statistiques' 
-                : 'Le budget est suspendu'
+                ? t.budgetActiveHelper
+                : t.budgetSuspendedHelper
               }
             </Text>
           </View>
@@ -275,7 +277,7 @@ const BudgetForm: React.FC<BudgetFormProps> = ({
             disabled={!isFormValid}
           >
             <Text style={styles.submitButtonText}>
-              {editingBudget ? 'Modifier le budget' : 'Créer le budget'}
+              {editingBudget ? t.edit + ' ' + t.budget : t.createBudget}
             </Text>
           </TouchableOpacity>
 

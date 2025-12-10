@@ -16,7 +16,7 @@ import { useDebts } from '../hooks/useDebts';
 import { Debt } from '../types/Debt';
 
 const DebtsScreen = ({ navigation }: any) => {
-  const { t } = useLanguage();
+  const { t, formatMonthYear } = useLanguage();
   const { theme } = useTheme();
   const { formatAmount } = useCurrency();
   const { debts, stats, refreshDebts, processAutoPayDebts } = useDebts();
@@ -91,8 +91,8 @@ const DebtsScreen = ({ navigation }: any) => {
             {item.creditor}
           </Text>
         </View>
-        <Text style={[styles.modernDebtAmount, { color: '#EF4444' }]}>
-          {formatAmount(item.currentAmount)}
+        <Text style={[styles.modernDebtAmount, { color: item.status === 'paid' ? '#10B981' : '#EF4444' }]}>
+          {formatAmount(item.status === 'paid' ? 0 : item.currentAmount)}
         </Text>
       </View>
 
@@ -100,7 +100,7 @@ const DebtsScreen = ({ navigation }: any) => {
       <View style={styles.modernProgressSection}>
         <View style={styles.modernProgressInfo}>
           <Text style={[styles.modernProgressLabel, isDark && styles.darkSubtext]}>
-            {t.paidAmount}: {formatAmount(item.initialAmount - item.currentAmount)} / {formatAmount(item.initialAmount)}
+            {t.paidAmount}: {formatAmount(item.status === 'paid' ? item.initialAmount : (item.initialAmount - item.currentAmount))} / {formatAmount(item.initialAmount)}
           </Text>
         </View>
         <View style={[styles.modernProgressBar, isDark && styles.darkModernProgressBar]}>
@@ -108,7 +108,7 @@ const DebtsScreen = ({ navigation }: any) => {
             style={[
               styles.modernProgressFill,
               { 
-                width: `${Math.max(0, Math.min(100, ((item.initialAmount - item.currentAmount) / item.initialAmount) * 100))}%`,
+                width: `${item.status === 'paid' ? 100 : Math.max(0, Math.min(100, ((item.initialAmount - item.currentAmount) / item.initialAmount) * 100))}%`,
                 backgroundColor: getStatusColor(item.status)
               }
             ]} 
@@ -131,7 +131,7 @@ const DebtsScreen = ({ navigation }: any) => {
             {t.startDate}:
           </Text>
           <Text style={[styles.modernDetailValue, isDark && styles.darkText]}>
-            {new Date(item.startDate).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}
+            {formatMonthYear(item.startDate)}
           </Text>
         </View>
       </View>
@@ -169,7 +169,7 @@ const DebtsScreen = ({ navigation }: any) => {
             {/* Carte résumé total */}
             <View style={[styles.totalCard, isDark && styles.darkTotalCard]}>
               <Text style={[styles.totalLabel, isDark && styles.darkSubtext]}>
-                {t.totalDebts}
+                {t.totalDebts} - {t.remaining}
               </Text>
               <View style={styles.totalRow}>
                 <Text style={[styles.totalCount, isDark && styles.darkSubtext]}>

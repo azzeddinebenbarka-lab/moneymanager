@@ -11,6 +11,10 @@ export interface Translations {
   reports: string;
   settings: string;
   profile: string;
+  analytics: string;
+  appSlogan: string;
+  lightMode: string;
+  darkMode: string;
   
   // Actions communes
   add: string;
@@ -37,6 +41,9 @@ export interface Translations {
   // Transactions
   newTransaction: string;
   newRecurringTransaction: string;
+  transactionCreated: string;
+  recurringTransactionCreated: string;
+  cannotAddTransaction: string;
   deleteTransaction: string;
   income: string;
   expense: string;
@@ -131,6 +138,59 @@ export interface Translations {
   currencies: string;
   islamicCharges: string;
   categoryAnalysis: string;
+  
+  // Annual charge categories
+  ac_taxes: string;
+  ac_insurance: string;
+  ac_subscriptions: string;
+  ac_maintenance: string;
+  ac_education: string;
+  ac_licenses: string;
+  ac_memberships: string;
+  ac_healthcare: string;
+  ac_other: string;
+  
+  // Annual charge form
+  fillAllRequiredFields: string;
+  enterValidChargeAmount: string;
+  selectAccountForAutoDeduct: string;
+  recurrenceYearly: string;
+  recurrenceMonthly: string;
+  recurrenceQuarterly: string;
+  recurrenceOneTime: string;
+  normalType: string;
+  obligatoryType: string;
+  recommendedType: string;
+  newAnnualCharge: string;
+  newIslamicCharge: string;
+  chargeCreatedSuccess: string;
+  cannotCreateCharge: string;
+  cannotLoadCharge: string;
+  chargeUpdatedSuccess: string;
+  cannotUpdateCharge: string;
+  editCharge: string;
+  newCharge: string;
+  islamicChargeType: string;
+  chargeName: string;
+  chargeNamePlaceholder: string;
+  arabicNameOptional: string;
+  arabicNamePlaceholder: string;
+  amountPlaceholder: string;
+  associatedAccount: string;
+  selectAccountHelper: string;
+  autoDeductActive: string;
+  manualPaymentRequired: string;
+  recurrence: string;
+  reminderDaysBefore: string;
+  reminderPlaceholder: string;
+  reminderHelper: string;
+  notesPlaceholder: string;
+  selectAnAccount: string;
+  autoDeductHelper: string;
+  recurrenceHelper: string;
+  autoDeductActiveHelper: string;
+  autoDeductInactiveHelper: string;
+  
   // New screens
   insights: string;
   insightOfTheDay: string;
@@ -234,8 +294,15 @@ export interface Translations {
   enterDescription: string;
   selectDate: string;
   recurring: string;
+  recurringTransaction: string;
+  recurringTransactionHelper: string;
   frequency: string;
   endDateOptional: string;
+  enable: string;
+  disable: string;
+  selectAccountRequired: string;
+  loadingAccounts: string;
+  loadingError: string;
   editTransaction: string;
   general: string;
   notifications: string;
@@ -280,6 +347,57 @@ export interface Translations {
   registerSuccess: string;
   loginError: string;
   registerError: string;
+  
+  // Formulaires
+  accountNameRequired: string;
+  initialBalanceRequired: string;
+  invalidBalance: string;
+  accountSaveError: string;
+  editAccount: string;
+  newAccount: string;
+  accountNameLabel: string;
+  accountTypeLabelRequired: string;
+  initialBalanceLabel: string;
+  currencyLabel: string;
+  colorLabel: string;
+  accountStatusLabel: string;
+  previewLabel: string;
+  accountNamePlaceholder: string;
+  balancePlaceholder: string;
+  accountNamePreview: string;
+  typePreview: string;
+  selectCategoryRequired: string;
+  invalidAmountForm: string;
+  budgetNameLabel: string;
+  budgetCategoryLabel: string;
+  budgetAmountLabel: string;
+  budgetAmountDisplay: string;
+  periodLabel: string;
+  startDateLabel: string;
+  endDateOptionalLabel: string;
+  activeBudgetLabel: string;
+  budgetActiveHelper: string;
+  budgetSuspendedHelper: string;
+  targetAmountPositive: string;
+  goalNameLabel: string;
+  targetAmountLabel: string;
+  targetDateLabel: string;
+  selectSavingsAccountRequired: string;
+  monthlyContributionPositive: string;
+  categoryLabel: string;
+  savingsAccountLabel: string;
+  contributionSourceAccountLabel: string;
+  monthlyContributionCalculationLabel: string;
+  manualMode: string;
+  autoMode: string;
+  monthlyContributionLabel: string;
+  estimatedAchievementLabel: string;
+  deleteGoalTitle: string;
+  refundToSourceAccount: string;
+  deleteRelatedTransactions: string;
+  deletingGoal: string;
+  automaticSystemTransaction: string;
+  transactionDetail: string;
   
   // Onboarding
   welcomeTitle: string;
@@ -349,6 +467,7 @@ export interface Translations {
   subcategory: string;
   loadingCategories: string;
   searchCategory: string;
+  noCategoryFound: string;
   expensesPlural: string;
   mainCategory: string;
   preview: string;
@@ -440,6 +559,19 @@ export interface Translations {
   education: string;
   retirement: string;
   other: string;
+  savingsGoalPlaceholder: string;
+  targetAmountHint: string;
+  noSavingsAccountFound: string;
+  createSavingsAccountFirst: string;
+  selectContributionSource: string;
+  calculatedAutomatically: string;
+  contributionPrefix: string;
+  withThisContribution: string;
+  youWillReachGoalOn: string;
+  toReachGoalByDate: string;
+  youMustSave: string;
+  perMonth: string;
+  creatingGoal: string;
   
   // Modal ajout contribution
   sourceAccount: string;
@@ -527,6 +659,7 @@ export interface Translations {
   amountToPay: string;
   remainingBalanceLabel: string;
   noAccountSufficientBalance: string;
+  noAccounts: string;
   available: string;
   paying: string;
   newDebt: string;
@@ -735,6 +868,26 @@ export interface Translations {
   replaceCurrentData: string;
   importSuccess: string;
   protectFinancialData: string;
+  cannotModifySettings: string;
+  exportJSONSuccess: string;
+  exportFailed: string;
+  cannotExportData: string;
+  cannotExportTransactions: string;
+  exportError: string;
+  exportCompleted: string;
+  cannotImportData: string;
+  cloudBackup: string;
+  cloudBackupTitle: string;
+  cloudBackupMessage: string;
+  configureCloud: string;
+  cloudProviders: string;
+  soon: string;
+  importDataTitle: string;
+  restoreBackup: string;
+  importFromJSONorCSV: string;
+  importWarning: string;
+  dataSecurity: string;
+  dataSecurityMessage: string;
   autoBackupEnabledMessage: string;
   createBackupQuestion: string;
   createAction: string;
@@ -745,6 +898,67 @@ export interface Translations {
   exportCSVQuestion: string;
   importDataQuestion: string;
   importCompleted: string;
+  
+  // Alert Messages
+  budgetExceededTitle: string;
+  budgetExceededMessage: string;
+  budgetNearLimitTitle: string;
+  budgetNearLimitMessage: string;
+  unusualSpendingTitle: string;
+  unusualSpendingMessage: string;
+  largeTransactionTitle: string;
+  largeTransactionMessage: string;
+  debtPaymentDueTitle: string;
+  debtPaymentDueMessage: string;
+  savingsGoalNearTitle: string;
+  savingsGoalNearMessage: string;
+  lowBalanceTitle: string;
+  lowBalanceMessage: string;
+  dailySummaryTitle: string;
+  dailySummaryMessage: string;
+  goalReachedTitle: string;
+  goalReachedMessage: string;
+  billReminderTitle: string;
+  billReminderMessage: string;
+  debtDueTitle: string;
+  debtDueMessage: string;
+  monthlyReportTitle: string;
+  monthlyReportMessage: string;
+  endOfMonthTitle: string;
+  endOfMonthMessage: string;
+  
+  // Form validation messages
+  noTransactionSelected: string;
+  transactionNotFound: string;
+  cannotLoadTransaction: string;
+  enterValidAmount: string;
+  selectCategory: string;
+  selectAccount: string;
+  success: string;
+  transactionUpdatedSuccess: string;
+  cannotUpdateTransaction: string;
+  confirmation: string;
+  transactionDeletedSuccess: string;
+  cannotDeleteTransaction: string;
+  fillAllRequiredFields: string;
+  budgetUpdatedSuccess: string;
+  cannotUpdateBudget: string;
+  cannotLoadBudget: string;
+  transferError: string;
+  transferErrorMessage: string;
+  deleteTransactionTitle: string;
+  deleteTransactionMessage: string;
+  currentSavingsPositive: string;
+  savingsGoalCreatedSuccess: string;
+  cannotCreateSavingsGoal: string;
+  cannotCreateAccount: string;
+  missingIdentifier: string;
+  accountUpdatedSuccess: string;
+  cannotUpdateAccount: string;
+  deleteAccountTitle: string;
+  deleteAccountMessage: string;
+  accountDeletedSuccess: string;
+  cannotDeleteAccount: string;
   
   // GeneralSettings
   mainCurrency: string;
@@ -909,6 +1123,14 @@ export interface Translations {
   cat_gifts: string;
   cat_family_help: string;
   cat_unexpected: string;
+  
+  // Noms des catégories - Catégories simplifiées
+  cat_entertainment: string;
+  cat_business: string;
+  cat_investment: string;
+  cat_education: string;
+  cat_bills: string;
+  cat_other_income: string;
 }
 
 export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
@@ -924,6 +1146,10 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     reports: 'Rapports',
     settings: 'Paramètres',
     profile: 'Profil',
+    analytics: 'Analyses',
+    appSlogan: 'Maîtrise ton budget, maîtrise ta vie',
+    lightMode: 'Mode Clair',
+    darkMode: 'Mode Sombre',
     
     // Actions communes
     add: 'Ajouter',
@@ -950,6 +1176,9 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     // Transactions
     newTransaction: 'Nouvelle Transaction',
     newRecurringTransaction: 'Nouvelle Transaction Récurrente',
+    transactionCreated: 'Transaction ajoutée avec succès',
+    recurringTransactionCreated: 'Transaction récurrente ajoutée avec succès',
+    cannotAddTransaction: 'Impossible d\'ajouter la transaction',
     deleteTransaction: 'Supprimer la transaction',
     income: 'Revenu',
     expense: 'Dépense',
@@ -1147,8 +1376,15 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     enterDescription: 'Entrer une description',
     selectDate: 'Sélectionner une date',
     recurring: 'Récurrent',
+    recurringTransaction: 'Transaction récurrente',
+    recurringTransactionHelper: 'Cette transaction sera automatiquement créée à chaque échéance (quotidienne, hebdomadaire, mensuelle ou annuelle)',
     frequency: 'Fréquence',
     endDateOptional: 'Date de fin (optionnelle)',
+    enable: 'Activer',
+    disable: 'Désactiver',
+    selectAccountRequired: 'Veuillez sélectionner un compte',
+    loadingAccounts: 'Chargement des comptes...',
+    loadingError: 'Erreur de chargement',
     editTransaction: 'Modifier la transaction',
     general: 'Général',
     notifications: 'Notifications',
@@ -1193,6 +1429,61 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     registerSuccess: 'Inscription réussie',
     loginError: 'Erreur de connexion',
     registerError: 'Erreur lors de l\'inscription',
+    
+    // Formulaire de compte
+    accountNameRequired: 'Veuillez saisir un nom pour le compte',
+    initialBalanceRequired: 'Veuillez saisir un solde initial',
+    invalidBalance: 'Le solde doit être un nombre valide',
+    accountSaveError: 'Impossible de sauvegarder le compte',
+    editAccount: 'Modifier le compte',
+    newAccount: 'Nouveau compte',
+    accountNameLabel: 'Nom du compte *',
+    accountTypeLabelRequired: 'Type de compte *',
+    initialBalanceLabel: 'Solde initial *',
+    currencyLabel: 'Devise',
+    colorLabel: 'Couleur',
+    accountStatusLabel: 'Statut du compte',
+    previewLabel: 'Aperçu',
+    accountNamePlaceholder: 'Ex: Compte courant, Portefeuille...',
+    balancePlaceholder: '0,00',
+    accountNamePreview: 'Nom du compte',
+    typePreview: 'Type',
+    
+    // Formulaire de budget
+    selectCategoryRequired: 'Veuillez sélectionner une catégorie',
+    invalidAmountForm: 'Veuillez saisir un montant valide',
+    budgetNameLabel: 'Nom du budget',
+    budgetCategoryLabel: 'Catégorie',
+    budgetAmountLabel: 'Montant du budget',
+    budgetAmountDisplay: 'Montant',
+    periodLabel: 'Période',
+    startDateLabel: 'Date de début',
+    endDateOptionalLabel: 'Date de fin (optionnelle)',
+    activeBudgetLabel: 'Budget actif',
+    budgetActiveHelper: 'Le budget sera pris en compte dans les alertes et statistiques',
+    budgetSuspendedHelper: 'Le budget est suspendu',
+    
+    // Formulaire d'objectif d'épargne
+    targetAmountPositive: 'Le montant cible doit être supérieur à 0',
+    goalNameLabel: 'Nom de l\'objectif *',
+    targetAmountLabel: 'Montant cible *',
+    targetDateLabel: 'Date cible',
+    selectSavingsAccountRequired: 'Veuillez sélectionner un compte d\'épargne',
+    monthlyContributionPositive: 'La contribution mensuelle doit être supérieure à 0',
+    categoryLabel: 'Catégorie',
+    savingsAccountLabel: 'Compte d\'épargne *',
+    contributionSourceAccountLabel: 'Compte source des contributions',
+    monthlyContributionCalculationLabel: 'Calcul de la mensualité',
+    manualMode: 'Manuel',
+    autoMode: 'Automatique',
+    monthlyContributionLabel: 'Contribution mensuelle',
+    estimatedAchievementLabel: 'Atteinte estimée',
+    deleteGoalTitle: 'Supprimer l\'objectif',
+    refundToSourceAccount: '💸 Rembourser sur le compte source',
+    deleteRelatedTransactions: '🗑️ Supprimer les transactions liées',
+    deletingGoal: 'Suppression...',
+    automaticSystemTransaction: 'Transaction automatique du système',
+    transactionDetail: 'Détail de la transaction',
     
     // Onboarding
     welcomeTitle: 'Bienvenue',
@@ -1262,6 +1553,7 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     subcategory: 'Sous-catégorie',
     loadingCategories: 'Chargement des catégories...',
     searchCategory: 'Rechercher une catégorie...',
+    noCategoryFound: 'Aucune catégorie trouvée',
     expensesPlural: 'Dépenses',
     mainCategory: 'Catégorie principale',
     preview: 'Aperçu',
@@ -1271,6 +1563,58 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     resetCategoriesSuccess: 'Les 50 nouvelles catégories ont été installées avec succès !',
     resetCategoriesError: 'Impossible de réinitialiser les catégories.',
     categoriesInstalled: 'Catégories installées',
+    
+    // Catégories de charges annuelles
+    ac_taxes: 'Impôts',
+    ac_insurance: 'Assurances',
+    ac_subscriptions: 'Abonnements',
+    ac_maintenance: 'Maintenance',
+    ac_education: 'Éducation',
+    ac_licenses: 'Licences',
+    ac_memberships: 'Adhésions',
+    ac_healthcare: 'Santé',
+    ac_other: 'Autres',
+    
+    // Formulaire de charges annuelles
+    fillAllRequiredFields: 'Veuillez remplir tous les champs obligatoires',
+    enterValidChargeAmount: 'Veuillez saisir un montant valide',
+    selectAccountForAutoDeduct: 'Veuillez sélectionner un compte pour le prélèvement automatique',
+    recurrenceYearly: 'Annuelle',
+    recurrenceMonthly: 'Mensuelle',
+    recurrenceQuarterly: 'Trimestrielle',
+    recurrenceOneTime: 'Ponctuelle',
+    normalType: 'Normale',
+    obligatoryType: 'Obligatoire',
+    recommendedType: 'Recommandée',
+    newAnnualCharge: 'Nouvelle Charge Annuelle',
+    newIslamicCharge: 'Nouvelle Charge Islamique',
+    chargeCreatedSuccess: 'Charge annuelle créée avec succès',
+    cannotCreateCharge: 'Impossible de créer la charge annuelle',
+    cannotLoadCharge: 'Impossible de charger la charge annuelle',
+    chargeUpdatedSuccess: 'Charge annuelle modifiée avec succès',
+    cannotUpdateCharge: 'Impossible de modifier la charge annuelle',
+    editCharge: 'Modifier la Charge',
+    newCharge: 'Nouvelle Charge',
+    islamicChargeType: 'Type de charge islamique *',
+    chargeName: 'Nom de la charge *',
+    chargeNamePlaceholder: 'Ex: Assurance habitation, Impôts, Aïd al-Fitr...',
+    arabicNameOptional: 'Nom arabe (optionnel)',
+    arabicNamePlaceholder: 'Ex: عيد الفطر',
+    amountPlaceholder: '0,00',
+    associatedAccount: 'Compte associé',
+    selectAccountHelper: 'Sélectionnez le compte pour le prélèvement automatique',
+    autoDeductActive: 'Le montant sera automatiquement débité à la date d\'échéance',
+    manualPaymentRequired: 'Paiement manuel requis',
+    recurrence: 'Récurrence',
+    reminderDaysBefore: 'Rappel (jours avant)',
+    reminderPlaceholder: '7',
+    reminderHelper: 'Nombre de jours avant l\'échéance pour le rappel',
+    notesPlaceholder: 'Informations supplémentaires...',
+    selectAnAccount: 'Sélectionner un compte',
+    autoDeductHelper: '⚡ Sélectionnez un compte pour activer le prélèvement automatique à la date d\'échéance',
+    recurrenceHelper: '💡 Quand vous payez une charge récurrente, une nouvelle occurrence sera automatiquement créée pour la prochaine échéance',
+    autoDeductActiveHelper: 'Le montant sera automatiquement débité du compte sélectionné à la date d\'échéance',
+    autoDeductInactiveHelper: 'Activez pour débiter automatiquement le compte à l\'échéance',
     
     // Charges Annuelles
     allCharges: 'Toutes',
@@ -1353,6 +1697,19 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     education: 'Éducation',
     retirement: 'Retraite',
     other: 'Autre',
+    savingsGoalPlaceholder: 'Ex: Achat voiture, Vacances en Grèce...',
+    targetAmountHint: 'Objectif:',
+    noSavingsAccountFound: 'Aucun compte d\'épargne trouvé. Créez d\'abord un compte d\'épargne.',
+    createSavingsAccountFirst: 'Créez d\'abord un compte d\'épargne',
+    selectContributionSource: 'Sélectionnez le compte depuis lequel les fonds seront transférés',
+    calculatedAutomatically: '(calculée automatiquement)',
+    contributionPrefix: 'Contribution:',
+    withThisContribution: 'Avec cette contribution, vous atteindrez votre objectif le',
+    youWillReachGoalOn: 'Vous atteindrez votre objectif le',
+    toReachGoalByDate: 'Pour atteindre votre objectif à la date choisie, vous devez épargner',
+    youMustSave: 'vous devez épargner',
+    perMonth: 'par mois',
+    creatingGoal: 'Création en cours...',
     
     // Modal ajout contribution
     sourceAccount: 'Compte source',
@@ -1440,6 +1797,7 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     amountToPay: 'Montant à payer',
     remainingBalanceLabel: 'Solde restant',
     noAccountSufficientBalance: 'Aucun compte avec un solde suffisant',
+    noAccounts: 'Aucun compte disponible',
     available: 'disponible',
     paying: 'Paiement...',
     newDebt: 'Nouvelle Dette',
@@ -1648,6 +2006,26 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     replaceCurrentData: 'Cette fonctionnalité remplacera vos données actuelles. Créez une sauvegarde avant de continuer.',
     importSuccess: 'Import réussi',
     protectFinancialData: 'Protégez vos données financières',
+    cannotModifySettings: 'Impossible de modifier les paramètres',
+    exportJSONSuccess: 'Export JSON complet créé avec succès',
+    exportFailed: 'Échec de l\'export',
+    cannotExportData: 'Impossible d\'exporter les données',
+    cannotExportTransactions: 'Impossible d\'exporter les transactions',
+    exportError: 'Erreur',
+    exportCompleted: 'Export terminé',
+    cannotImportData: 'Impossible d\'importer les données',
+    cloudBackup: 'Sauvegarde cloud',
+    cloudBackupTitle: 'Sauvegarde cloud',
+    cloudBackupMessage: 'Cette fonctionnalité sera disponible prochainement. Elle vous permettra de sauvegarder vos données sur Google Drive, iCloud ou Dropbox.',
+    configureCloud: 'Configurer le cloud',
+    cloudProviders: 'Google Drive, iCloud, Dropbox',
+    soon: 'Bientôt',
+    importDataTitle: 'Import de données',
+    restoreBackup: 'Restaurer une sauvegarde',
+    importFromJSONorCSV: 'Importer depuis JSON ou CSV',
+    importWarning: 'L\'import remplacera toutes vos données actuelles. Créez une sauvegarde avant de procéder.',
+    dataSecurity: 'Sécurité de vos données',
+    dataSecurityMessage: 'Les sauvegardes sont stockées localement sur votre appareil. Pensez à exporter régulièrement vos données vers un stockage externe.',
     autoBackupEnabledMessage: 'Vos données seront sauvegardées automatiquement chaque jour.',
     createBackupQuestion: 'Voulez-vous créer une sauvegarde complète de vos données ?',
     createAction: 'Créer',
@@ -1715,6 +2093,52 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     loadingSettings: 'Chargement des paramètres...',
     pushNotifWork: 'Les notifications push ne fonctionnent que sur un appareil physique.',
     locallyStored: 'Les notifications sont envoyées localement et ne nécessitent pas de connexion internet.',
+    
+    // Alert Messages
+    budgetExceededTitle: 'Budget dépassé',
+    budgetExceededMessage: 'Le budget "{budgetName}" ({categoryName}) a été dépassé de {amount}',
+    budgetNearLimitTitle: 'Budget presque épuisé',
+    budgetNearLimitMessage: 'Le budget "{budgetName}" ({categoryName}) est utilisé à {percentage}%',
+    unusualSpendingTitle: 'Dépense inhabituelle',
+    unusualSpendingMessage: 'Dépense inhabituelle de {amount} dans {categoryName}',
+    largeTransactionTitle: '💸 Transaction importante détectée',
+    largeTransactionMessage: 'Une transaction de {amount} a été enregistrée.',
+    debtPaymentDueTitle: '📅 Paiement de dette imminent',
+    debtPaymentDueMessage: 'Le paiement pour "{debtName}" est dû dans {days} jour(s).',
+    savingsGoalNearTitle: '🎯 Objectif d\'épargne presque atteint',
+    savingsGoalNearMessage: '"{goalName}" est complété à {progress}%.',
+    lowBalanceTitle: '⚠️ Solde faible détecté',
+    lowBalanceMessage: 'Le compte "{accountName}" a un solde faible: {balance}',
+    dailySummaryTitle: '📊 Résumé financier du jour',
+    dailySummaryMessage: 'Aujourd\'hui: {income} de revenus, {expenses} de dépenses. Solde: {netFlow}',
+    goalReachedTitle: '🎉 Objectif atteint !',
+    goalReachedMessage: 'Félicitations ! "{goalName}" - {amount}',
+    billReminderTitle: '📅 Rappel de paiement',
+    billReminderMessage: '{billName} - {amount} - Échéance: {dueDate}',
+    debtDueTitle: '⏰ Dette à rembourser',
+    debtDueMessage: '{debtName} - {amount} dans {daysLeft} jour(s)',
+    monthlyReportTitle: '📊 Rapport mensuel disponible',
+    monthlyReportMessage: 'Votre rapport pour {month} {year} est prêt',
+    endOfMonthTitle: '📊 Fin du mois',
+    endOfMonthMessage: 'Résumé de {month} {year}: {income} revenus, {expenses} dépenses',
+    
+    // Messages de validation des formulaires
+    noTransactionSelected: 'Aucune transaction sélectionnée',
+    transactionNotFound: 'Transaction non trouvée',
+    cannotLoadTransaction: 'Impossible de charger la transaction',
+    enterValidAmount: 'Veuillez saisir un montant valide',
+    selectCategory: 'Veuillez sélectionner une catégorie',
+    selectAccount: 'Veuillez sélectionner un compte',
+    success: 'Succès',
+    transactionUpdatedSuccess: 'Transaction modifiée avec succès',
+    cannotUpdateTransaction: 'Impossible de modifier la transaction',
+    confirmation: 'Confirmation',
+    transactionDeletedSuccess: 'Transaction supprimée avec succès',
+    cannotDeleteTransaction: 'Impossible de supprimer la transaction',
+    fillAllRequiredFields: 'Veuillez remplir tous les champs obligatoires',
+    budgetUpdatedSuccess: 'Budget modifié avec succès',
+    cannotUpdateBudget: 'Impossible de modifier le budget',
+    cannotLoadBudget: 'Impossible de charger le budget',
     
     // SecuritySettings
     biometricAuth: 'Authentification biométrique',
@@ -1822,6 +2246,14 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     cat_gifts: 'Cadeaux',
     cat_family_help: 'Aides familiales',
     cat_unexpected: 'Imprévus',
+    
+    // Noms des catégories - Catégories simplifiées
+    cat_entertainment: '🎮 Loisirs',
+    cat_business: '💼 Business',
+    cat_investment: '📈 Investissement',
+    cat_education: '🎓 Éducation',
+    cat_bills: '📄 Factures',
+    cat_other_income: '💰 Autres revenus',
   },
   
   en: {
@@ -1836,6 +2268,10 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     reports: 'Reports',
     settings: 'Settings',
     profile: 'Profile',
+    analytics: 'Analytics',
+    appSlogan: 'Master your budget, master your life',
+    lightMode: 'Light Mode',
+    darkMode: 'Dark Mode',
     
     // Common actions
     add: 'Add',
@@ -1862,6 +2298,9 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     // Transactions
     newTransaction: 'New Transaction',
     newRecurringTransaction: 'New Recurring Transaction',
+    transactionCreated: 'Transaction added successfully',
+    recurringTransactionCreated: 'Recurring transaction added successfully',
+    cannotAddTransaction: 'Cannot add transaction',
     deleteTransaction: 'Delete transaction',
     income: 'Income',
     expense: 'Expense',
@@ -2059,8 +2498,15 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     enterDescription: 'Enter description',
     selectDate: 'Select date',
     recurring: 'Recurring',
+    recurringTransaction: 'Recurring transaction',
+    recurringTransactionHelper: 'This transaction will be automatically created at each scheduled date (daily, weekly, monthly or yearly)',
     frequency: 'Frequency',
     endDateOptional: 'End date (optional)',
+    enable: 'Enable',
+    disable: 'Disable',
+    selectAccountRequired: 'Please select an account',
+    loadingAccounts: 'Loading accounts...',
+    loadingError: 'Loading error',
     editTransaction: 'Edit transaction',
     general: 'General',
     notifications: 'Notifications',
@@ -2105,6 +2551,61 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     registerSuccess: 'Registration successful',
     loginError: 'Login error',
     registerError: 'Registration error',
+    
+    // Account Form
+    accountNameRequired: 'Please enter an account name',
+    initialBalanceRequired: 'Please enter an initial balance',
+    invalidBalance: 'Balance must be a valid number',
+    accountSaveError: 'Unable to save account',
+    editAccount: 'Edit Account',
+    newAccount: 'New Account',
+    accountNameLabel: 'Account Name *',
+    accountTypeLabelRequired: 'Account Type *',
+    initialBalanceLabel: 'Initial Balance *',
+    currencyLabel: 'Currency',
+    colorLabel: 'Color',
+    accountStatusLabel: 'Account Status',
+    previewLabel: 'Preview',
+    accountNamePlaceholder: 'Ex: Checking account, Wallet...',
+    balancePlaceholder: '0.00',
+    accountNamePreview: 'Account Name',
+    typePreview: 'Type',
+    
+    // Budget Form
+    selectCategoryRequired: 'Please select a category',
+    invalidAmountForm: 'Please enter a valid amount',
+    budgetNameLabel: 'Budget Name',
+    budgetCategoryLabel: 'Category',
+    budgetAmountLabel: 'Budget Amount',
+    budgetAmountDisplay: 'Amount',
+    periodLabel: 'Period',
+    startDateLabel: 'Start Date',
+    endDateOptionalLabel: 'End Date (optional)',
+    activeBudgetLabel: 'Active Budget',
+    budgetActiveHelper: 'Budget will be included in alerts and statistics',
+    budgetSuspendedHelper: 'Budget is suspended',
+    
+    // Savings Goal Form
+    targetAmountPositive: 'Target amount must be greater than 0',
+    goalNameLabel: 'Goal Name *',
+    targetAmountLabel: 'Target Amount *',
+    targetDateLabel: 'Target Date',
+    selectSavingsAccountRequired: 'Please select a savings account',
+    monthlyContributionPositive: 'Monthly contribution must be greater than 0',
+    categoryLabel: 'Category',
+    savingsAccountLabel: 'Savings Account *',
+    contributionSourceAccountLabel: 'Contribution Source Account',
+    monthlyContributionCalculationLabel: 'Monthly Contribution Calculation',
+    manualMode: 'Manual',
+    autoMode: 'Automatic',
+    monthlyContributionLabel: 'Monthly Contribution',
+    estimatedAchievementLabel: 'Estimated Achievement',
+    deleteGoalTitle: 'Delete Goal',
+    refundToSourceAccount: '💸 Refund to Source Account',
+    deleteRelatedTransactions: '🗑️ Delete Related Transactions',
+    deletingGoal: 'Deleting...',
+    automaticSystemTransaction: 'Automatic system transaction',
+    transactionDetail: 'Transaction Detail',
     
     // Onboarding
     welcomeTitle: 'Welcome',
@@ -2174,6 +2675,7 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     subcategory: 'Subcategory',
     loadingCategories: 'Loading categories...',
     searchCategory: 'Search category...',
+    noCategoryFound: 'No category found',
     expensesPlural: 'Expenses',
     mainCategory: 'Main category',
     preview: 'Preview',
@@ -2183,6 +2685,58 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     resetCategoriesSuccess: 'The 50 new categories have been successfully installed!',
     resetCategoriesError: 'Unable to reset categories.',
     categoriesInstalled: 'Categories installed',
+    
+    // Annual charge categories
+    ac_taxes: 'Taxes',
+    ac_insurance: 'Insurance',
+    ac_subscriptions: 'Subscriptions',
+    ac_maintenance: 'Maintenance',
+    ac_education: 'Education',
+    ac_licenses: 'Licenses',
+    ac_memberships: 'Memberships',
+    ac_healthcare: 'Healthcare',
+    ac_other: 'Other',
+    
+    // Annual charge form
+    fillAllRequiredFields: 'Please fill in all required fields',
+    enterValidChargeAmount: 'Please enter a valid amount',
+    selectAccountForAutoDeduct: 'Please select an account for automatic deduction',
+    recurrenceYearly: 'Yearly',
+    recurrenceMonthly: 'Monthly',
+    recurrenceQuarterly: 'Quarterly',
+    recurrenceOneTime: 'One-time',
+    normalType: 'Normal',
+    obligatoryType: 'Obligatory',
+    recommendedType: 'Recommended',
+    newAnnualCharge: 'New Annual Charge',
+    newIslamicCharge: 'New Islamic Charge',
+    chargeCreatedSuccess: 'Annual charge created successfully',
+    cannotCreateCharge: 'Unable to create annual charge',
+    cannotLoadCharge: 'Unable to load annual charge',
+    chargeUpdatedSuccess: 'Annual charge updated successfully',
+    cannotUpdateCharge: 'Unable to update annual charge',
+    editCharge: 'Edit Charge',
+    newCharge: 'New Charge',
+    islamicChargeType: 'Islamic charge type *',
+    chargeName: 'Charge name *',
+    chargeNamePlaceholder: 'Ex: Home insurance, Taxes, Eid al-Fitr...',
+    arabicNameOptional: 'Arabic name (optional)',
+    arabicNamePlaceholder: 'Ex: عيد الفطر',
+    amountPlaceholder: '0.00',
+    associatedAccount: 'Associated account',
+    selectAccountHelper: 'Select the account for automatic deduction',
+    autoDeductActive: 'Amount will be automatically debited on due date',
+    manualPaymentRequired: 'Manual payment required',
+    recurrence: 'Recurrence',
+    reminderDaysBefore: 'Reminder (days before)',
+    reminderPlaceholder: '7',
+    reminderHelper: 'Number of days before due date for reminder',
+    notesPlaceholder: 'Additional information...',
+    selectAnAccount: 'Select an account',
+    autoDeductHelper: '⚡ Select an account to enable automatic deduction on due date',
+    recurrenceHelper: '💡 When you pay a recurring charge, a new occurrence will be automatically created for the next due date',
+    autoDeductActiveHelper: 'Amount will be automatically debited from the selected account on due date',
+    autoDeductInactiveHelper: 'Enable to automatically debit the account on due date',
     
     // Annual Charges
     allCharges: 'All',
@@ -2265,6 +2819,19 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     education: 'Education',
     retirement: 'Retirement',
     other: 'Other',
+    savingsGoalPlaceholder: 'E.g., Car purchase, Trip to Greece...',
+    targetAmountHint: 'Target:',
+    noSavingsAccountFound: 'No savings account found. Create a savings account first.',
+    createSavingsAccountFirst: 'Create a savings account first',
+    selectContributionSource: 'Select the account from which funds will be transferred',
+    calculatedAutomatically: '(calculated automatically)',
+    contributionPrefix: 'Contribution:',
+    withThisContribution: 'With this contribution, you will reach your goal on',
+    youWillReachGoalOn: 'You will reach your goal on',
+    toReachGoalByDate: 'To reach your goal by the chosen date, you must save',
+    youMustSave: 'you must save',
+    perMonth: 'per month',
+    creatingGoal: 'Creating...',
     
     // Add contribution modal
     sourceAccount: 'Source account',
@@ -2352,6 +2919,7 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     amountToPay: 'Amount to pay',
     remainingBalanceLabel: 'Remaining balance',
     noAccountSufficientBalance: 'No account with sufficient balance',
+    noAccounts: 'No accounts available',
     available: 'available',
     paying: 'Paying...',
     newDebt: 'New Debt',
@@ -2560,6 +3128,26 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     replaceCurrentData: 'This will replace your current data. Create a backup before continuing.',
     importSuccess: 'Import successful',
     protectFinancialData: 'Protect your financial data',
+    cannotModifySettings: 'Cannot modify settings',
+    exportJSONSuccess: 'Complete JSON export created successfully',
+    exportFailed: 'Export failed',
+    cannotExportData: 'Cannot export data',
+    cannotExportTransactions: 'Cannot export transactions',
+    exportError: 'Error',
+    exportCompleted: 'Export completed',
+    cannotImportData: 'Cannot import data',
+    cloudBackup: 'Cloud backup',
+    cloudBackupTitle: 'Cloud backup',
+    cloudBackupMessage: 'This feature will be available soon. It will allow you to back up your data to Google Drive, iCloud or Dropbox.',
+    configureCloud: 'Configure cloud',
+    cloudProviders: 'Google Drive, iCloud, Dropbox',
+    soon: 'Soon',
+    importDataTitle: 'Data import',
+    restoreBackup: 'Restore a backup',
+    importFromJSONorCSV: 'Import from JSON or CSV',
+    importWarning: 'Import will replace all your current data. Create a backup before proceeding.',
+    dataSecurity: 'Data security',
+    dataSecurityMessage: 'Backups are stored locally on your device. Remember to regularly export your data to external storage.',
     autoBackupEnabledMessage: 'Your data will be automatically backed up daily.',
     createBackupQuestion: 'Do you want to create a complete backup of your data?',
     createAction: 'Create',
@@ -2627,6 +3215,67 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     loadingSettings: 'Loading settings...',
     pushNotifWork: 'Push notifications only work on a physical device.',
     locallyStored: 'Notifications are sent locally and do not require internet connection.',
+    
+    // Alert Messages
+    budgetExceededTitle: 'Budget exceeded',
+    budgetExceededMessage: 'Budget "{budgetName}" ({categoryName}) exceeded by {amount}',
+    budgetNearLimitTitle: 'Budget nearly exhausted',
+    budgetNearLimitMessage: 'Budget "{budgetName}" ({categoryName}) is {percentage}% used',
+    unusualSpendingTitle: 'Unusual spending',
+    unusualSpendingMessage: 'Unusual spending of {amount} in {categoryName}',
+    largeTransactionTitle: '💸 Large transaction detected',
+    largeTransactionMessage: 'A transaction of {amount} has been recorded.',
+    debtPaymentDueTitle: '📅 Debt payment due soon',
+    debtPaymentDueMessage: 'Payment for "{debtName}" is due in {days} day(s).',
+    savingsGoalNearTitle: '🎯 Savings goal almost reached',
+    savingsGoalNearMessage: '"{goalName}" is {progress}% complete.',
+    lowBalanceTitle: '⚠️ Low balance detected',
+    lowBalanceMessage: 'Account "{accountName}" has a low balance: {balance}',
+    dailySummaryTitle: '📊 Daily financial summary',
+    dailySummaryMessage: 'Today: {income} income, {expenses} expenses. Balance: {netFlow}',
+    goalReachedTitle: '🎉 Goal reached!',
+    goalReachedMessage: 'Congratulations! "{goalName}" - {amount}',
+    billReminderTitle: '📅 Payment reminder',
+    billReminderMessage: '{billName} - {amount} - Due: {dueDate}',
+    debtDueTitle: '⏰ Debt repayment',
+    debtDueMessage: '{debtName} - {amount} in {daysLeft} day(s)',
+    monthlyReportTitle: '📊 Monthly report available',
+    monthlyReportMessage: 'Your report for {month} {year} is ready',
+    endOfMonthTitle: '📊 End of month',
+    endOfMonthMessage: 'Summary for {month} {year}: {income} income, {expenses} expenses',
+    
+    // Form validation messages
+    noTransactionSelected: 'No transaction selected',
+    transactionNotFound: 'Transaction not found',
+    cannotLoadTransaction: 'Cannot load transaction',
+    enterValidAmount: 'Please enter a valid amount',
+    selectCategory: 'Please select a category',
+    selectAccount: 'Please select an account',
+    success: 'Success',
+    transactionUpdatedSuccess: 'Transaction updated successfully',
+    cannotUpdateTransaction: 'Cannot update transaction',
+    confirmation: 'Confirmation',
+    transactionDeletedSuccess: 'Transaction deleted successfully',
+    cannotDeleteTransaction: 'Cannot delete transaction',
+    fillAllRequiredFields: 'Please fill all required fields',
+    budgetUpdatedSuccess: 'Budget updated successfully',
+    cannotUpdateBudget: 'Cannot update budget',
+    cannotLoadBudget: 'Cannot load budget',
+    transferError: '❌ Error',
+    transferErrorMessage: 'Transfer error',
+    deleteTransactionTitle: 'Delete transaction',
+    deleteTransactionMessage: 'Do you want to delete "{description}"?',
+    currentSavingsPositive: 'Current savings must be a positive number or zero',
+    savingsGoalCreatedSuccess: 'Savings goal created successfully',
+    cannotCreateSavingsGoal: 'Cannot create savings goal',
+    cannotCreateAccount: 'Cannot create account',
+    missingIdentifier: 'Missing identifier',
+    accountUpdatedSuccess: 'Account updated successfully',
+    cannotUpdateAccount: 'Cannot update account',
+    deleteAccountTitle: 'Delete account',
+    deleteAccountMessage: 'Are you sure you want to delete account "{accountName}"?\n\nThis action is irreversible.',
+    accountDeletedSuccess: 'Account deleted successfully',
+    cannotDeleteAccount: 'Cannot delete account',
     
     // SecuritySettings
     biometricAuth: 'Biometric authentication',
@@ -2734,6 +3383,14 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     cat_gifts: 'Gifts',
     cat_family_help: 'Family help',
     cat_unexpected: 'Unexpected',
+    
+    // Category names - Simplified categories
+    cat_entertainment: '🎮 Entertainment',
+    cat_business: '💼 Business',
+    cat_investment: '📈 Investment',
+    cat_education: '🎓 Education',
+    cat_bills: '📄 Bills',
+    cat_other_income: '💰 Other Income',
   },
   
   ar: {
@@ -2748,6 +3405,10 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     reports: 'التقارير',
     settings: 'الإعدادات',
     profile: 'الملف الشخصي',
+    analytics: 'التحليلات',
+    appSlogan: 'تحكم في ميزانيتك، تحكم في حياتك',
+    lightMode: 'الوضع النهاري',
+    darkMode: 'الوضع الليلي',
     
     // الإجراءات الشائعة
     add: 'إضافة',
@@ -2774,6 +3435,9 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     // المعاملات
     newTransaction: 'معاملة جديدة',
     newRecurringTransaction: 'معاملة متكررة جديدة',
+    transactionCreated: 'تمت إضافة المعاملة بنجاح',
+    recurringTransactionCreated: 'تمت إضافة المعاملة المتكررة بنجاح',
+    cannotAddTransaction: 'لا يمكن إضافة المعاملة',
     deleteTransaction: 'حذف المعاملة',
     income: 'دخل',
     expense: 'مصروف',
@@ -2971,8 +3635,15 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     enterDescription: 'أدخل وصف',
     selectDate: 'اختر تاريخ',
     recurring: 'متكرر',
+    recurringTransaction: 'معاملة متكررة',
+    recurringTransactionHelper: 'سيتم إنشاء هذه المعاملة تلقائيًا في كل موعد مجدول (يومي، أسبوعي، شهري أو سنوي)',
     frequency: 'التكرار',
     endDateOptional: 'تاريخ الانتهاء (اختياري)',
+    enable: 'تفعيل',
+    disable: 'تعطيل',
+    selectAccountRequired: 'الرجاء اختيار حساب',
+    loadingAccounts: 'جاري تحميل الحسابات...',
+    loadingError: 'خطأ في التحميل',
     editTransaction: 'تعديل المعاملة',
     general: 'عام',
     notifications: 'الإشعارات',
@@ -3017,6 +3688,61 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     registerSuccess: 'تم التسجيل بنجاح',
     loginError: 'خطأ في تسجيل الدخول',
     registerError: 'خطأ في التسجيل',
+    
+    // نماذج الحساب
+    accountNameRequired: 'يرجى إدخال اسم الحساب',
+    initialBalanceRequired: 'يرجى إدخال الرصيد الأولي',
+    invalidBalance: 'يجب أن يكون الرصيد رقمًا صالحًا',
+    accountSaveError: 'تعذر حفظ الحساب',
+    editAccount: 'تعديل الحساب',
+    newAccount: 'حساب جديد',
+    accountNameLabel: 'اسم الحساب *',
+    accountTypeLabelRequired: 'نوع الحساب *',
+    initialBalanceLabel: 'الرصيد الأولي *',
+    currencyLabel: 'العملة',
+    colorLabel: 'اللون',
+    accountStatusLabel: 'حالة الحساب',
+    previewLabel: 'معاينة',
+    accountNamePlaceholder: 'مثال: حساب جاري، محفظة...',
+    balancePlaceholder: '0,00',
+    accountNamePreview: 'اسم الحساب',
+    typePreview: 'النوع',
+    
+    // نموذج الميزانية
+    selectCategoryRequired: 'يرجى اختيار فئة',
+    invalidAmountForm: 'يرجى إدخال مبلغ صالح',
+    budgetNameLabel: 'اسم الميزانية',
+    budgetCategoryLabel: 'الفئة',
+    budgetAmountLabel: 'مبلغ الميزانية',
+    budgetAmountDisplay: 'المبلغ',
+    periodLabel: 'الفترة',
+    startDateLabel: 'تاريخ البدء',
+    endDateOptionalLabel: 'تاريخ الانتهاء (اختياري)',
+    activeBudgetLabel: 'ميزانية نشطة',
+    budgetActiveHelper: 'ستؤخذ الميزانية في الاعتبار في التنبيهات والإحصائيات',
+    budgetSuspendedHelper: 'الميزانية معلقة',
+    
+    // نموذج هدف الادخار
+    targetAmountPositive: 'يجب أن يكون المبلغ المستهدف أكبر من 0',
+    goalNameLabel: 'اسم الهدف *',
+    targetAmountLabel: 'المبلغ المستهدف *',
+    targetDateLabel: 'التاريخ المستهدف',
+    selectSavingsAccountRequired: 'يرجى اختيار حساب ادخار',
+    monthlyContributionPositive: 'يجب أن تكون المساهمة الشهرية أكبر من 0',
+    categoryLabel: 'الفئة',
+    savingsAccountLabel: 'حساب الادخار *',
+    contributionSourceAccountLabel: 'حساب مصدر المساهمات',
+    monthlyContributionCalculationLabel: 'حساب المساهمة الشهرية',
+    manualMode: 'يدوي',
+    autoMode: 'تلقائي',
+    monthlyContributionLabel: 'المساهمة الشهرية',
+    estimatedAchievementLabel: 'الإنجاز المقدر',
+    deleteGoalTitle: 'حذف الهدف',
+    refundToSourceAccount: '💸 إرجاع إلى الحساب المصدر',
+    deleteRelatedTransactions: '🗑️ حذف المعاملات المرتبطة',
+    deletingGoal: 'جاري الحذف...',
+    automaticSystemTransaction: 'معاملة تلقائية من النظام',
+    transactionDetail: 'تفاصيل المعاملة',
     
     // الترحيب
     welcomeTitle: 'مرحباً',
@@ -3086,6 +3812,7 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     subcategory: 'فئة فرعية',
     loadingCategories: 'جاري تحميل الفئات...',
     searchCategory: 'بحث عن فئة...',
+    noCategoryFound: 'لم يتم العثور على فئة',
     expensesPlural: 'النفقات',
     mainCategory: 'فئة رئيسية',
     preview: 'معاينة',
@@ -3095,6 +3822,58 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     resetCategoriesSuccess: 'تم تثبيت 50 فئة جديدة بنجاح!',
     resetCategoriesError: 'تعذر إعادة تعيين الفئات.',
     categoriesInstalled: 'الفئات المثبتة',
+    
+    // فئات الرسوم السنوية
+    ac_taxes: 'الضرائب',
+    ac_insurance: 'التأمين',
+    ac_subscriptions: 'الاشتراكات',
+    ac_maintenance: 'الصيانة',
+    ac_education: 'التعليم',
+    ac_licenses: 'التراخيص',
+    ac_memberships: 'العضويات',
+    ac_healthcare: 'الصحة',
+    ac_other: 'أخرى',
+    
+    // نموذج الرسوم السنوية
+    fillAllRequiredFields: 'يرجى ملء جميع الحقول المطلوبة',
+    enterValidChargeAmount: 'يرجى إدخال مبلغ صالح',
+    selectAccountForAutoDeduct: 'يرجى اختيار حساب للخصم التلقائي',
+    recurrenceYearly: 'سنوية',
+    recurrenceMonthly: 'شهرية',
+    recurrenceQuarterly: 'ربع سنوية',
+    recurrenceOneTime: 'مرة واحدة',
+    normalType: 'عادية',
+    obligatoryType: 'واجبة',
+    recommendedType: 'مستحبة',
+    newAnnualCharge: 'رسوم سنوية جديدة',
+    newIslamicCharge: 'رسوم إسلامية جديدة',
+    chargeCreatedSuccess: 'تم إنشاء الرسوم السنوية بنجاح',
+    cannotCreateCharge: 'تعذر إنشاء الرسوم السنوية',
+    cannotLoadCharge: 'تعذر تحميل الرسوم السنوية',
+    chargeUpdatedSuccess: 'تم تحديث الرسوم السنوية بنجاح',
+    cannotUpdateCharge: 'تعذر تحديث الرسوم السنوية',
+    editCharge: 'تعديل الرسوم',
+    newCharge: 'رسوم جديدة',
+    islamicChargeType: 'نوع الرسوم الإسلامية *',
+    chargeName: 'اسم الرسوم *',
+    chargeNamePlaceholder: 'مثال: تأمين المنزل، الضرائب، عيد الفطر...',
+    arabicNameOptional: 'الاسم بالعربية (اختياري)',
+    arabicNamePlaceholder: 'مثال: عيد الفطر',
+    amountPlaceholder: '0.00',
+    associatedAccount: 'الحساب المرتبط',
+    selectAccountHelper: 'اختر الحساب للخصم التلقائي',
+    autoDeductActive: 'سيتم خصم المبلغ تلقائيًا في تاريخ الاستحقاق',
+    manualPaymentRequired: 'الدفع اليدوي مطلوب',
+    recurrence: 'التكرار',
+    reminderDaysBefore: 'التذكير (أيام قبل)',
+    reminderPlaceholder: '7',
+    reminderHelper: 'عدد الأيام قبل تاريخ الاستحقاق للتذكير',
+    notesPlaceholder: 'معلومات إضافية...',
+    selectAnAccount: 'اختر حساب',
+    autoDeductHelper: '⚡ اختر حساب لتفعيل الخصم التلقائي في تاريخ الاستحقاق',
+    recurrenceHelper: '💡 عند دفع رسوم متكررة، سيتم إنشاء مناسبة جديدة تلقائيًا للتاريخ التالي',
+    autoDeductActiveHelper: 'سيتم خصم المبلغ تلقائيًا من الحساب المحدد في تاريخ الاستحقاق',
+    autoDeductInactiveHelper: 'قم بالتفعيل للخصم التلقائي من الحساب عند الاستحقاق',
     
     // الرسوم السنوية
     allCharges: 'الكل',
@@ -3177,6 +3956,19 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     education: 'تعليم',
     retirement: 'تقاعد',
     other: 'أخرى',
+    savingsGoalPlaceholder: 'مثل: شراء سيارة، رحلة إلى اليونان...',
+    targetAmountHint: 'الهدف:',
+    noSavingsAccountFound: 'لم يتم العثور على حساب ادخار. أنشئ حساب ادخار أولاً.',
+    createSavingsAccountFirst: 'أنشئ حساب ادخار أولاً',
+    selectContributionSource: 'اختر الحساب الذي سيتم تحويل الأموال منه',
+    calculatedAutomatically: '(محسوب تلقائياً)',
+    contributionPrefix: 'المساهمة:',
+    withThisContribution: 'مع هذه المساهمة، ستحقق هدفك في',
+    youWillReachGoalOn: 'ستحقق هدفك في',
+    toReachGoalByDate: 'لتحقيق هدفك في التاريخ المحدد، يجب أن توفر',
+    youMustSave: 'يجب أن توفر',
+    perMonth: 'شهرياً',
+    creatingGoal: 'جاري الإنشاء...',
     
     // نموذج إضافة مساهمة
     sourceAccount: 'الحساب المصدر',
@@ -3264,6 +4056,7 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     amountToPay: 'المبلغ المراد دفعه',
     remainingBalanceLabel: 'الرصيد المتبقي',
     noAccountSufficientBalance: 'لا يوجد حساب برصيد كافٍ',
+    noAccounts: 'لا توجد حسابات متاحة',
     available: 'متاح',
     paying: 'جاري الدفع...',
     newDebt: 'دين جديد',
@@ -3472,6 +4265,26 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     replaceCurrentData: 'ستستبدل هذه الميزة بياناتك الحالية. قم بإنشاء نسخة احتياطية قبل المتابعة.',
     importSuccess: 'نجح الاستيراد',
     protectFinancialData: 'حماية بياناتك المالية',
+    cannotModifySettings: 'لا يمكن تعديل الإعدادات',
+    exportJSONSuccess: 'تم إنشاء تصدير JSON كامل بنجاح',
+    exportFailed: 'فشل التصدير',
+    cannotExportData: 'لا يمكن تصدير البيانات',
+    cannotExportTransactions: 'لا يمكن تصدير المعاملات',
+    exportError: 'خطأ',
+    exportCompleted: 'اكتمل التصدير',
+    cannotImportData: 'لا يمكن استيراد البيانات',
+    cloudBackup: 'النسخ الاحتياطي السحابي',
+    cloudBackupTitle: 'النسخ الاحتياطي السحابي',
+    cloudBackupMessage: 'ستكون هذه الميزة متاحة قريباً. ستسمح لك بنسخ بياناتك احتياطياً على Google Drive أو iCloud أو Dropbox.',
+    configureCloud: 'تكوين السحابة',
+    cloudProviders: 'Google Drive، iCloud، Dropbox',
+    soon: 'قريباً',
+    importDataTitle: 'استيراد البيانات',
+    restoreBackup: 'استعادة نسخة احتياطية',
+    importFromJSONorCSV: 'استيراد من JSON أو CSV',
+    importWarning: 'سيؤدي الاستيراد إلى استبدال جميع بياناتك الحالية. قم بإنشاء نسخة احتياطية قبل المتابعة.',
+    dataSecurity: 'أمان بياناتك',
+    dataSecurityMessage: 'يتم تخزين النسخ الاحتياطية محلياً على جهازك. تذكر تصدير بياناتك بانتظام إلى وحدة تخزين خارجية.',
     autoBackupEnabledMessage: 'سيتم نسخ بياناتك احتياطياً تلقائياً كل يوم.',
     createBackupQuestion: 'هل تريد إنشاء نسخة احتياطية كاملة لبياناتك؟',
     createAction: 'إنشاء',
@@ -3539,6 +4352,67 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     loadingSettings: 'تحميل الإعدادات...',
     pushNotifWork: 'الإشعارات الفورية تعمل فقط على جهاز فعلي.',
     locallyStored: 'يتم إرسال الإشعارات محليًا ولا تحتاج إلى اتصال بالإنترنت.',
+    
+    // رسائل التنبيهات
+    budgetExceededTitle: 'تجاوز الميزانية',
+    budgetExceededMessage: 'تم تجاوز الميزانية "{budgetName}" ({categoryName}) بمبلغ {amount}',
+    budgetNearLimitTitle: 'الميزانية شبه مستنفدة',
+    budgetNearLimitMessage: 'الميزانية "{budgetName}" ({categoryName}) مستخدمة بنسبة {percentage}%',
+    unusualSpendingTitle: 'إنفاق غير عادي',
+    unusualSpendingMessage: 'إنفاق غير عادي بمبلغ {amount} في {categoryName}',
+    largeTransactionTitle: '💸 معاملة كبيرة مكتشفة',
+    largeTransactionMessage: 'تم تسجيل معاملة بمبلغ {amount}.',
+    debtPaymentDueTitle: '📅 موعد دفع الدين قريب',
+    debtPaymentDueMessage: 'دفعة "{debtName}" مستحقة خلال {days} يوم.',
+    savingsGoalNearTitle: '🎯 هدف الادخار على وشك التحقيق',
+    savingsGoalNearMessage: '"{goalName}" مكتمل بنسبة {progress}%.',
+    lowBalanceTitle: '⚠️ رصيد منخفض',
+    lowBalanceMessage: 'الحساب "{accountName}" رصيده منخفض: {balance}',
+    dailySummaryTitle: '📊 الملخص المالي اليومي',
+    dailySummaryMessage: 'اليوم: {income} إيرادات، {expenses} مصروفات. الرصيد: {netFlow}',
+    goalReachedTitle: '🎉 تم تحقيق الهدف!',
+    goalReachedMessage: 'تهانينا! "{goalName}" - {amount}',
+    billReminderTitle: '📅 تذكير بالدفع',
+    billReminderMessage: '{billName} - {amount} - الاستحقاق: {dueDate}',
+    debtDueTitle: '⏰ سداد الدين',
+    debtDueMessage: '{debtName} - {amount} خلال {daysLeft} يوم',
+    monthlyReportTitle: '📊 التقرير الشهري متاح',
+    monthlyReportMessage: 'تقريرك لشهر {month} {year} جاهز',
+    endOfMonthTitle: '📊 نهاية الشهر',
+    endOfMonthMessage: 'ملخص {month} {year}: {income} إيرادات، {expenses} مصروفات',
+    
+    // رسائل التحقق من النماذج
+    noTransactionSelected: 'لم يتم تحديد معاملة',
+    transactionNotFound: 'المعاملة غير موجودة',
+    cannotLoadTransaction: 'تعذر تحميل المعاملة',
+    enterValidAmount: 'الرجاء إدخال مبلغ صالح',
+    selectCategory: 'الرجاء اختيار فئة',
+    selectAccount: 'الرجاء اختيار حساب',
+    success: 'نجح',
+    transactionUpdatedSuccess: 'تم تحديث المعاملة بنجاح',
+    cannotUpdateTransaction: 'تعذر تحديث المعاملة',
+    confirmation: 'تأكيد',
+    transactionDeletedSuccess: 'تم حذف المعاملة بنجاح',
+    cannotDeleteTransaction: 'تعذر حذف المعاملة',
+    fillAllRequiredFields: 'الرجاء ملء جميع الحقول المطلوبة',
+    budgetUpdatedSuccess: 'تم تحديث الميزانية بنجاح',
+    cannotUpdateBudget: 'تعذر تحديث الميزانية',
+    cannotLoadBudget: 'تعذر تحميل الميزانية',
+    transferError: '❌ خطأ',
+    transferErrorMessage: 'خطأ أثناء التحويل',
+    deleteTransactionTitle: 'حذف المعاملة',
+    deleteTransactionMessage: 'هل تريد حذف "{description}"؟',
+    currentSavingsPositive: 'يجب أن يكون الادخار الحالي رقمًا موجبًا أو صفرًا',
+    savingsGoalCreatedSuccess: 'تم إنشاء هدف الادخار بنجاح',
+    cannotCreateSavingsGoal: 'تعذر إنشاء هدف الادخار',
+    cannotCreateAccount: 'تعذر إنشاء الحساب',
+    missingIdentifier: 'المعرف مفقود',
+    accountUpdatedSuccess: 'تم تحديث الحساب بنجاح',
+    cannotUpdateAccount: 'تعذر تحديث الحساب',
+    deleteAccountTitle: 'حذف الحساب',
+    deleteAccountMessage: 'هل أنت متأكد من حذف الحساب "{accountName}"؟\n\nهذا الإجراء لا رجعة فيه.',
+    accountDeletedSuccess: 'تم حذف الحساب بنجاح',
+    cannotDeleteAccount: 'تعذر حذف الحساب',
     
     // إعدادات الأمان
     biometricAuth: 'المصادقة البيومترية',
@@ -3646,5 +4520,13 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     cat_gifts: 'هدايا',
     cat_family_help: 'مساعدة عائلية',
     cat_unexpected: 'غير متوقع',
+    
+    // أسماء الفئات - الفئات المبسطة
+    cat_entertainment: '🎮 ترفيه',
+    cat_business: '💼 أعمال',
+    cat_investment: '📈 استثمار',
+    cat_education: '🎓 تعليم',
+    cat_bills: '📄 فواتير',
+    cat_other_income: '💰 إيرادات أخرى',
   },
 };

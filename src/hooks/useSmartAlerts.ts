@@ -1,5 +1,6 @@
 // src/hooks/useSmartAlerts.ts - VERSION COMPLÈTEMENT CORRIGÉE
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 import SmartAlertService from '../services/SmartAlertService';
 import { secureStorage } from '../services/storage/secureStorage';
 import { Alert, AlertPriority } from '../types/Alert';
@@ -31,15 +32,20 @@ export const useSmartAlerts = (userId: string = 'default-user'): UseSmartAlertsR
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isMounted = useRef(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     isMounted.current = true;
+    // Définir la fonction de traduction pour SmartAlertService
+    const service = SmartAlertService.getInstance();
+    service.setTranslateFunction(t);
+    
     loadAlerts();
 
     return () => {
       isMounted.current = false;
     };
-  }, [userId]);
+  }, [userId, t]);
 
   const loadAlerts = useCallback(async () => {
     if (!isMounted.current) return;

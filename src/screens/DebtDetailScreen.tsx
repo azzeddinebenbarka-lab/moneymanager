@@ -25,7 +25,7 @@ interface DebtDetailScreenProps {
 
 const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }) => {
   const { debtId } = route.params;
-  const { t } = useLanguage();
+  const { t, formatMonthYear, formatFullDate } = useLanguage();
   const { colors } = useDesignSystem();
   const { theme } = useTheme();
   const { formatAmount } = useCurrency(); // ✅ CORRECTION: Ajout du contexte devise
@@ -283,11 +283,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
                     const [year, month, day] = debt.dueDate.split('-').map(Number);
                     const dueDate = new Date(year, month - 1, day); // month - 1 car JS commence à 0
                     
-                    return dueDate.toLocaleDateString('fr-FR', { 
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric'
-                    });
+                    return formatFullDate(dueDate);
                   })()}
                 </Text>
               </View>
@@ -375,7 +371,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
                 {t.startDate}
               </Text>
               <Text style={[styles.infoValue, { color: colors.text.primary }]}>
-                {new Date(debt.startDate).toLocaleDateString('fr-FR')}
+                {formatFullDate(debt.startDate)}
               </Text>
             </View>
             
@@ -385,7 +381,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
                 {t.dueDate}
               </Text>
               <Text style={[styles.infoValue, { color: colors.text.primary }]}>
-                {new Date(debt.dueDate).toLocaleDateString('fr-FR')}
+                {formatFullDate(debt.dueDate)}
               </Text>
             </View>
 
@@ -479,7 +475,7 @@ const DebtDetailScreen: React.FC<DebtDetailScreenProps> = ({ navigation, route }
                         {formatDisplayAmount(payment.amount)} {/* ✅ CORRECTION: Format devise */}
                       </Text>
                       <Text style={[styles.paymentDate, { color: colors.text.secondary }]}>
-                        {new Date(payment.paymentDate).toLocaleDateString('fr-FR')}
+                        {formatFullDate(payment.paymentDate)}
                       </Text>
                     </View>
                   </View>

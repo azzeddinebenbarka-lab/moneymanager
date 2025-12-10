@@ -31,7 +31,7 @@ export default function AnnualChargesScreen({ navigation }: AnnualChargesScreenP
   const { designSystem } = useTheme();
   const colors = designSystem.colors;
   const { formatAmount } = useCurrency();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { 
     charges, 
     loading, 
@@ -231,6 +231,115 @@ export default function AnnualChargesScreen({ navigation }: AnnualChargesScreenP
     return iconMap[category] || 'document-outline';
   };
 
+  // Traduire la catégorie de charge
+  const translateChargeCategory = (category: string): string => {
+    // D'abord, vérifier si c'est une sous-catégorie
+    const subcategoryMap: { [key: string]: string } = {
+      // Taxes
+      'income_tax': language === 'fr' ? 'Impôt sur le revenu' : language === 'en' ? 'Income tax' : 'ضريبة الدخل',
+      'property_tax': language === 'fr' ? 'Taxe foncière' : language === 'en' ? 'Property tax' : 'ضريبة الممتلكات',
+      'business_tax': language === 'fr' ? 'Taxe professionnelle' : language === 'en' ? 'Business tax' : 'الضريبة المهنية',
+      // Assurances
+      'health_insurance': language === 'fr' ? 'Assurance santé' : language === 'en' ? 'Health insurance' : 'التأمين الصحي',
+      'auto_insurance': language === 'fr' ? 'Assurance auto' : language === 'en' ? 'Auto insurance' : 'تأمين السيارات',
+      'home_insurance': language === 'fr' ? 'Assurance habitation' : language === 'en' ? 'Home insurance' : 'تأمين المنزل',
+      // Abonnements
+      'digital_services': language === 'fr' ? 'Services numériques' : language === 'en' ? 'Digital services' : 'الخدمات الرقمية',
+      'media_streaming': language === 'fr' ? 'Streaming multimédia' : language === 'en' ? 'Media streaming' : 'بث الوسائط',
+      'professional_tools': language === 'fr' ? 'Outils professionnels' : language === 'en' ? 'Professional tools' : 'أدوات احترافية',
+      // Maintenance
+      'home_maintenance': language === 'fr' ? 'Entretien maison' : language === 'en' ? 'Home maintenance' : 'صيانة المنزل',
+      'vehicle_maintenance': language === 'fr' ? 'Entretien véhicule' : language === 'en' ? 'Vehicle maintenance' : 'صيانة المركبة',
+      'equipment_maintenance': language === 'fr' ? 'Entretien équipements' : language === 'en' ? 'Equipment maintenance' : 'صيانة المعدات',
+      // Éducation
+      'school_fees': language === 'fr' ? 'Frais scolaires' : language === 'en' ? 'School fees' : 'الرسوم المدرسية',
+      'training_courses': language === 'fr' ? 'Formation continue' : language === 'en' ? 'Training courses' : 'التدريب',
+      'educational_materials': language === 'fr' ? 'Matériel éducatif' : language === 'en' ? 'Educational materials' : 'المواد التعليمية',
+      // Santé
+      'medical_checkup': language === 'fr' ? 'Bilans médicaux' : language === 'en' ? 'Medical checkup' : 'الفحص الطبي',
+      'dental_care': language === 'fr' ? 'Soins dentaires' : language === 'en' ? 'Dental care' : 'العناية بالأسنان',
+      'medical_treatments': language === 'fr' ? 'Traitements médicaux' : language === 'en' ? 'Medical treatments' : 'العلاجات الطبية',
+      // Islamiques
+      'zakat': language === 'fr' ? 'Zakat' : language === 'en' ? 'Zakat' : 'زكاة',
+      'sadaqah': language === 'fr' ? 'Sadaqah' : language === 'en' ? 'Sadaqah' : 'صدقة',
+      'eid_expenses': language === 'fr' ? 'Dépenses Aïd' : language === 'en' ? 'Eid expenses' : 'نفقات العيد',
+      'hajj_umrah': language === 'fr' ? 'Hajj / Omra' : language === 'en' ? 'Hajj / Umrah' : 'الحج والعمرة',
+      'ramadan': language === 'fr' ? 'Ramadan' : language === 'en' ? 'Ramadan' : 'رمضان',
+      'ramadan_expenses': language === 'fr' ? 'Dépenses Ramadan' : language === 'en' ? 'Ramadan expenses' : 'نفقات رمضان',
+      'islamic_charity': language === 'fr' ? 'Œuvres de charité' : language === 'en' ? 'Islamic charity' : 'الأعمال الخيرية',
+      // Véhicule
+      'vehicle_registration': language === 'fr' ? 'Vignette voiture' : language === 'en' ? 'Vehicle registration' : 'تسجيل المركبة',
+      'vehicle_insurance': language === 'fr' ? 'Assurance véhicule' : language === 'en' ? 'Vehicle insurance' : 'تأمين المركبة',
+      'vehicle_tax': language === 'fr' ? 'Taxe véhicule' : language === 'en' ? 'Vehicle tax' : 'ضريبة المركبة',
+      'technical_inspection': language === 'fr' ? 'Contrôle technique' : language === 'en' ? 'Technical inspection' : 'الفحص الفني',
+      // Visite technique
+      'vehicle_technical_visit': language === 'fr' ? 'Visite technique véhicule' : language === 'en' ? 'Vehicle technical visit' : 'الزيارة الفنية للمركبة',
+      'home_technical_visit': language === 'fr' ? 'Diagnostic immobilier' : language === 'en' ? 'Home technical visit' : 'التشخيص العقاري',
+      'equipment_inspection': language === 'fr' ? 'Inspection équipements' : language === 'en' ? 'Equipment inspection' : 'فحص المعدات',
+      'safety_inspection': language === 'fr' ? 'Contrôle de sécurité' : language === 'en' ? 'Safety inspection' : 'فحص السلامة',
+      // Cadeaux
+      'birthday_gifts': language === 'fr' ? 'Cadeaux anniversaires' : language === 'en' ? 'Birthday gifts' : 'هدايا أعياد الميلاد',
+      'holiday_gifts': language === 'fr' ? 'Cadeaux fêtes' : language === 'en' ? 'Holiday gifts' : 'هدايا الأعياد',
+      'special_occasions': language === 'fr' ? 'Occasions spéciales' : language === 'en' ? 'Special occasions' : 'مناسبات خاصة',
+      // Vacances
+      'travel_expenses': language === 'fr' ? 'Frais de voyage' : language === 'en' ? 'Travel expenses' : 'مصاريف السفر',
+      'accommodation': language === 'fr' ? 'Hébergement' : language === 'en' ? 'Accommodation' : 'الإقامة',
+      'leisure_activities': language === 'fr' ? 'Activités loisirs' : language === 'en' ? 'Leisure activities' : 'أنشطة الترفيه',
+    };
+    
+    // Si c'est une sous-catégorie, retourner sa traduction
+    if (subcategoryMap[category]) {
+      return subcategoryMap[category];
+    }
+    
+    // Sinon, essayer de traduire comme catégorie principale
+    const categoryMap: { [key: string]: keyof typeof t } = {
+      // Valeurs anglaises (value dans ANNUAL_CHARGE_CATEGORIES)
+      'taxes': 'ac_taxes',
+      'insurance': 'ac_insurance',
+      'subscriptions': 'ac_subscriptions',
+      'maintenance': 'ac_maintenance',
+      'education': 'ac_education',
+      'licenses': 'ac_licenses',
+      'memberships': 'ac_memberships',
+      'healthcare': 'ac_healthcare',
+      'health': 'ac_healthcare',
+      'gifts': 'ac_other',
+      'vacation': 'ac_other',
+      'islamic': 'ac_other',
+      'vehicle': 'ac_other',
+      'technical_visit': 'ac_other',
+      'other': 'ac_other',
+      // Labels français
+      'Impôts': 'ac_taxes',
+      'Assurances': 'ac_insurance',
+      'Abonnements': 'ac_subscriptions',
+      'Maintenance': 'ac_maintenance',
+      'Éducation': 'ac_education',
+      'Licences': 'ac_licenses',
+      'Adhésions': 'ac_memberships',
+      'Santé': 'ac_healthcare',
+      'Autres': 'ac_other',
+      // Labels anglais (au cas où)
+      'Taxes': 'ac_taxes',
+      'Insurance': 'ac_insurance',
+      'Subscriptions': 'ac_subscriptions',
+      'Education': 'ac_education',
+      'Licenses': 'ac_licenses',
+      'Memberships': 'ac_memberships',
+      'Healthcare': 'ac_healthcare',
+      'Other': 'ac_other'
+    };
+    
+    const key = categoryMap[category.toLowerCase()] || categoryMap[category];
+    return key ? t[key] : category;
+  };
+
+  // Obtenir le code de locale pour les dates
+  const getLocale = (): string => {
+    return language === 'ar' ? 'ar-SA' : language === 'en' ? 'en-US' : 'fr-FR';
+  };
+
   // Obtenir la couleur de statut
   const getStatusColor = (charge: AnnualCharge) => {
     const successColor = '#10B981';
@@ -283,7 +392,7 @@ export default function AnnualChargesScreen({ navigation }: AnnualChargesScreenP
               </Text>
             </View>
             <Text style={[styles.chargeCategory, { color: safeColors.text.secondary }]}>
-              {charge.category}
+              {translateChargeCategory(charge.category)}
             </Text>
           </View>
         </View>
@@ -293,7 +402,7 @@ export default function AnnualChargesScreen({ navigation }: AnnualChargesScreenP
             {formatAmount(charge.amount)}
           </Text>
           <Text style={[styles.chargeDueDate, { color: getStatusColor(charge) }]}>
-            {new Date(charge.dueDate).toLocaleDateString('fr-FR', { 
+            {new Date(charge.dueDate).toLocaleDateString(getLocale(), { 
               day: '2-digit', 
               month: 'short' 
             })}

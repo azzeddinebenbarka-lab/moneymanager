@@ -237,7 +237,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           </Text>
           {item.level === 1 && (
             <Text style={[styles.subCategoryLabel, { color: colors.text.secondary }]}>
-              Sous-catégorie
+              {t.subCategory}
             </Text>
           )}
         </View>

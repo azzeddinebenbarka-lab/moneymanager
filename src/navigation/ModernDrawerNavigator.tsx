@@ -4,6 +4,7 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StyleSheet, View } from 'react-native';
 import ModernDrawerContent from '../components/layout/ModernDrawerContent';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 
 // Import des écrans
@@ -216,14 +217,18 @@ const MonthsStack = () => (
 
 const ModernDrawerNavigator = () => {
   const { theme } = useTheme();
+  const { language } = useLanguage();
   const isDark = theme === 'dark';
+  const isRTL = language === 'ar';
 
   const drawerScreenOptions = {
     headerShown: false,
     drawerType: 'front' as const,
+    drawerPosition: (isRTL ? 'right' : 'left') as 'left' | 'right', // ✅ DROITE EN ARABE, GAUCHE POUR FR/EN
     drawerStyle: {
       backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
-      width: 320,
+      width: '90%',
+      marginLeft: 30,
     },
     drawerActiveTintColor: isDark ? '#FFFFFF' : '#007AFF',
     drawerInactiveTintColor: isDark ? '#8E8E93' : '#8E8E93',
@@ -239,6 +244,11 @@ const ModernDrawerNavigator = () => {
     },
     drawerActiveBackgroundColor: isDark ? '#2C2C2E' : '#F2F2F7',
     overlayColor: 'rgba(0, 0, 0, 0.5)',
+    swipeEnabled: true,
+    swipeEdgeWidth: 100, // ✅ AUGMENTÉ POUR FACILITER L'OUVERTURE
+    sceneContainerStyle: {
+      backgroundColor: 'transparent',
+    },
   };
 
   return (

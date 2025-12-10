@@ -11,6 +11,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useLanguage } from '../../context/LanguageContext';
 import { useDesignSystem } from '../../context/ThemeContext';
 import { Account, ACCOUNT_TYPES } from '../../types';
 
@@ -28,6 +29,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
   editingAccount,
 }) => {
   const { colors } = useDesignSystem();
+  const { t } = useLanguage();
 
   const [form, setForm] = useState({
     name: '',
@@ -101,18 +103,18 @@ const AccountForm: React.FC<AccountFormProps> = ({
 
   const handleSubmit = async () => {
     if (!form.name.trim()) {
-      Alert.alert('Erreur', 'Veuillez saisir un nom pour le compte');
+      Alert.alert(t.error, t.accountNameRequired);
       return;
     }
 
     if (!form.balance) {
-      Alert.alert('Erreur', 'Veuillez saisir un solde initial');
+      Alert.alert(t.error, t.initialBalanceRequired);
       return;
     }
 
     const balance = parseFloat(form.balance);
     if (isNaN(balance)) {
-      Alert.alert('Erreur', 'Le solde doit être un nombre valide');
+      Alert.alert(t.error, t.invalidBalance);
       return;
     }
 
@@ -132,7 +134,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
       onClose();
     } catch (error) {
       console.error('Error submitting account form:', error);
-      Alert.alert('Erreur', 'Impossible de sauvegarder le compte');
+      Alert.alert(t.error, t.accountSaveError);
     } finally {
       setLoading(false);
     }
@@ -154,17 +156,17 @@ const AccountForm: React.FC<AccountFormProps> = ({
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} disabled={loading}>
             <Text style={[styles.cancelText, { color: colors.text.primary }]}>
-              Annuler
+              {t.cancel}
             </Text>
           </TouchableOpacity>
           
           <Text style={[styles.title, { color: colors.text.primary }]}>
-            {editingAccount ? 'Modifier le compte' : 'Nouveau compte'}
+            {editingAccount ? t.editAccount : t.newAccount}
           </Text>
           
           <TouchableOpacity onPress={handleSubmit} disabled={loading}>
             <Text style={[styles.saveText, loading && styles.saveTextDisabled]}>
-              {loading ? '...' : 'Enregistrer'}
+              {loading ? '...' : t.save}
             </Text>
           </TouchableOpacity>
         </View>
@@ -173,13 +175,13 @@ const AccountForm: React.FC<AccountFormProps> = ({
           {/* Nom du compte */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text.primary }]}>
-              Nom du compte *
+              {t.accountNameLabel}
             </Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.background.card, color: colors.text.primary, borderColor: colors.border.primary }]}
               value={form.name}
               onChangeText={(text) => setForm(prev => ({ ...prev, name: text }))}
-              placeholder="Ex: Compte courant, Portefeuille..."
+              placeholder={t.accountNamePlaceholder}
               placeholderTextColor={colors.text.disabled}
               editable={!loading}
             />
@@ -188,7 +190,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
           {/* Type de compte */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text.primary }]}>
-              Type de compte *
+              {t.accountTypeLabelRequired}
             </Text>
             <View style={styles.typesContainer}>
               {ACCOUNT_TYPES.map((type) => (
@@ -226,14 +228,14 @@ const AccountForm: React.FC<AccountFormProps> = ({
           {/* Solde initial */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text.primary }]}>
-              Solde initial *
+              {t.initialBalanceLabel}
             </Text>
             <View style={styles.amountContainer}>
               <TextInput
                 style={[styles.input, styles.amountInput, { backgroundColor: colors.background.card, color: colors.text.primary, borderColor: colors.border.primary }]}
                 value={form.balance}
                 onChangeText={handleAmountChange}
-                placeholder="0,00"
+                placeholder={t.balancePlaceholder}
                 placeholderTextColor={colors.text.disabled}
                 keyboardType="decimal-pad"
                 returnKeyType="done"
@@ -250,7 +252,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
           {/* Devise */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text.primary }]}>
-              Devise
+              {t.currencyLabel}
             </Text>
             <View style={styles.currenciesContainer}>
               <TouchableOpacity
@@ -294,7 +296,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
           {/* Couleur */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text.primary }]}>
-              Couleur
+              {t.colorLabel}
             </Text>
             <View style={styles.colorsContainer}>
               {accountColors.map((color) => (
@@ -319,7 +321,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
           {/* Statut actif/inactif */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text.primary }]}>
-              Statut du compte
+              {t.accountStatusLabel}
             </Text>
             <View style={styles.statusContainer}>
               <TouchableOpacity
@@ -341,7 +343,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
                   form.isActive && styles.statusTextSelected,
                   { color: form.isActive ? '#34C759' : colors.text.primary }
                 ]}>
-                  Actif
+                  {t.active}
                 </Text>
               </TouchableOpacity>
 
@@ -364,7 +366,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
                   !form.isActive && styles.statusTextSelected,
                   { color: !form.isActive ? '#FF3B30' : colors.text.primary }
                 ]}>
-                  Inactif
+                  {t.inactive}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -373,7 +375,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
           {/* Aperçu */}
           <View style={styles.previewSection}>
             <Text style={[styles.label, { color: colors.text.primary }]}>
-              Aperçu
+              {t.previewLabel}
             </Text>
             <View style={[styles.previewCard, { backgroundColor: form.color }]}>
               <View style={styles.previewHeader}>
@@ -384,10 +386,10 @@ const AccountForm: React.FC<AccountFormProps> = ({
                 />
                 <View style={styles.previewInfo}>
                   <Text style={styles.previewName} numberOfLines={1}>
-                    {form.name || 'Nom du compte'}
+                    {form.name || t.accountNamePreview}
                   </Text>
                   <Text style={styles.previewType}>
-                    {ACCOUNT_TYPES.find(t => t.value === form.type)?.label || 'Type'}
+                    {ACCOUNT_TYPES.find(t => t.value === form.type)?.label || t.typePreview}
                   </Text>
                 </View>
               </View>

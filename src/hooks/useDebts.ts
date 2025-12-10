@@ -39,6 +39,9 @@ export const useDebts = (userId: string = 'default-user') => {
       // ✅ S'ASSURER QUE LA TABLE EXISTE AVANT TOUTE OPÉRATION
       await debtService.ensureDebtsTableExists();
       
+      // ✅ MIGRATION DES USER_ID INCORRECTS
+      await debtService.migrateUserIds();
+      
       // ✅ MISE À JOUR AUTOMATIQUE DES STATUTS AVANT CHARGEMENT
       await debtService.updateDebtStatuses(userId);
       

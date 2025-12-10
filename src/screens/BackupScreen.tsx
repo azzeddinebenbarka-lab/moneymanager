@@ -70,7 +70,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         await AutoBackupScheduler.disable();
       }
     } catch (error) {
-      Alert.alert(t.error, 'Impossible de modifier les paramètres');
+      Alert.alert(t.error, t.cannotModifySettings);
     }
   };
 
@@ -116,7 +116,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const handleExportJSON = async () => {
     try {
       Alert.alert(
-        'Export JSON',
+        t.exportJSON,
         t.exportJSONQuestion,
         [
           { text: t.cancel, style: 'cancel' },
@@ -134,7 +134,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   if (canShare) {
                     await Sharing.shareAsync(result.filePath, {
                       mimeType: 'application/json',
-                      dialogTitle: 'Exporter les données'
+                      dialogTitle: t.exportAction
                     });
                   }
                   
@@ -143,15 +143,15 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   await AsyncStorage.setItem(LAST_BACKUP_KEY, now);
                   setLastBackupDate(now);
                   
-                  Alert.alert(t.success, 'Export JSON complet créé avec succès', [{ text: 'OK' }]);
+                  Alert.alert(t.success, t.exportJSONSuccess, [{ text: 'OK' }]);
                 } else {
-                  throw new Error(result.error || 'Échec de l\'export');
+                  throw new Error(result.error || t.exportFailed);
                 }
               } catch (error) {
                 console.error('❌ Erreur export JSON:', error);
                 Alert.alert(
-                  'Erreur',
-                  error instanceof Error ? error.message : 'Impossible d\'exporter les données'
+                  t.exportError,
+                  error instanceof Error ? error.message : t.cannotExportData
                 );
               }
             }
@@ -166,7 +166,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const handleExportCSV = async () => {
     try {
       Alert.alert(
-        'Export CSV',
+        t.exportCSV,
         t.exportCSVQuestion,
         [
           { text: t.cancel, style: 'cancel' },
@@ -181,16 +181,16 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   if (canShare) {
                     await Sharing.shareAsync(result.filePath, {
                       mimeType: 'text/csv',
-                      dialogTitle: 'Exporter les transactions'
+                      dialogTitle: t.exportAction
                     });
                   }
                   
-                  Alert.alert(t.success, 'Export terminé', [{ text: 'OK' }]);
+                  Alert.alert(t.success, t.exportCompleted, [{ text: 'OK' }]);
                 }
               } catch (error) {
                 Alert.alert(
-                  'Erreur',
-                  error instanceof Error ? error.message : 'Impossible d\'exporter les transactions'
+                  t.exportError,
+                  error instanceof Error ? error.message : t.cannotExportTransactions
                 );
               }
             }
@@ -231,19 +231,19 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
                 if (importResult.success) {
                   Alert.alert(
-                    'Import réussi',
+                    t.importSuccess,
                     format === 'json'
                       ? `Import terminé:\n• ${importResult.imported?.accounts || 0} comptes\n• ${importResult.imported?.transactions || 0} transactions\n• ${importResult.imported?.categories || 0} catégories\n• ${importResult.imported?.budgets || 0} budgets\n• ${importResult.imported?.annualCharges || 0} charges annuelles`
                       : `${importResult.imported} transactions importées`,
                     [{ text: 'OK' }]
                   );
                 } else {
-                  Alert.alert('Erreur', importResult.error || 'Impossible d\'importer les données');
+                  Alert.alert(t.error, importResult.error || t.cannotImportData);
                 }
               } catch (error) {
                 Alert.alert(
-                  'Erreur',
-                  error instanceof Error ? error.message : 'Impossible d\'importer les données'
+                  t.error,
+                  error instanceof Error ? error.message : t.cannotImportData
                 );
               }
             }
@@ -256,7 +256,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   };
 
   const formatDate = (isoDate: string | null) => {
-    if (!isoDate) return 'Jamais';
+    if (!isoDate) return t.never;
     
     const date = new Date(isoDate);
     return date.toLocaleDateString('fr-FR', {
@@ -422,43 +422,10 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             </TouchableOpacity>
           </View>
 
-          {/* Sauvegarde cloud */}
-          <View style={styles.section}>
-            <Text style={[styles.sectionHeader, { color: colors.text.secondary }]}>
-              SAUVEGARDE CLOUD
-            </Text>
-            
-            <TouchableOpacity
-              style={[styles.actionCard, { backgroundColor: colors.background.secondary }]}
-              onPress={() => {
-                Alert.alert(
-                  'Sauvegarde cloud',
-                  'Cette fonctionnalité sera disponible prochainement. Elle vous permettra de sauvegarder vos données sur Google Drive, iCloud ou Dropbox.',
-                  [{ text: 'OK' }]
-                );
-              }}
-            >
-              <View style={[styles.actionIconBox, { backgroundColor: '#E8F5E9' }]}>
-                <Ionicons name="cloud-outline" size={24} color="#4CAF50" />
-              </View>
-              <View style={styles.actionContent}>
-                <Text style={[styles.actionTitle, { color: colors.text.primary }]}>
-                  Configurer le cloud
-                </Text>
-                <Text style={[styles.actionDescription, { color: colors.text.secondary }]}>
-                  Google Drive, iCloud, Dropbox
-                </Text>
-              </View>
-              <View style={[styles.badge, { backgroundColor: colors.primary[100] }]}>
-                <Text style={[styles.badgeText, { color: colors.primary[600] }]}>Bientôt</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-
           {/* Import des données */}
           <View style={styles.section}>
             <Text style={[styles.sectionHeader, { color: colors.text.secondary }]}>
-              IMPORT DE DONNÉES
+              {t.importDataTitle.toUpperCase()}
             </Text>
             
             <TouchableOpacity
@@ -470,10 +437,10 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               </View>
               <View style={styles.actionContent}>
                 <Text style={[styles.actionTitle, { color: colors.text.primary }]}>
-                  Restaurer une sauvegarde
+                  {t.restoreBackup}
                 </Text>
                 <Text style={[styles.actionDescription, { color: colors.text.secondary }]}>
-                  Importer depuis JSON ou CSV
+                  {t.importFromJSONorCSV}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
@@ -482,7 +449,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <View style={[styles.warningCard, { backgroundColor: '#FFF3E0' }]}>
               <Ionicons name="warning-outline" size={20} color="#F57C00" />
               <Text style={[styles.warningText, { color: '#E65100' }]}>
-                L'import remplacera toutes vos données actuelles. Créez une sauvegarde avant de procéder.
+                {t.importWarning}
               </Text>
             </View>
           </View>
@@ -492,10 +459,10 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <Ionicons name="information-circle-outline" size={24} color={colors.primary[500]} />
             <View style={styles.infoContent}>
               <Text style={[styles.infoTitle, { color: colors.primary[700] }]}>
-                Sécurité de vos données
+                {t.dataSecurity}
               </Text>
               <Text style={[styles.infoDescription, { color: colors.primary[600] }]}>
-                Les sauvegardes sont stockées localement sur votre appareil. Pensez à exporter régulièrement vos données vers un stockage externe.
+                {t.dataSecurityMessage}
               </Text>
             </View>
           </View>

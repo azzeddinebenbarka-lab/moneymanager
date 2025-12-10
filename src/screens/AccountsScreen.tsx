@@ -63,13 +63,13 @@ const AccountsScreen = ({ navigation }: any) => {
       setEditingAccount(null);
       await refreshAccounts();
     } catch (error) {
-      Alert.alert(t.error, 'Impossible de créer le compte');
+      Alert.alert(t.error, t.cannotCreateAccount);
     }
   };
 
   const handleUpdateAccount = async (accountData: Omit<Account, 'id' | 'createdAt'>) => {
     try {
-      if (!editingAccount?.id) throw new Error('Identifiant manquant');
+      if (!editingAccount?.id) throw new Error(t.missingIdentifier);
       
       console.log('🔄 [AccountsScreen] Modification du compte:', editingAccount.name);
       await updateAccount(editingAccount.id, accountData);
@@ -78,17 +78,17 @@ const AccountsScreen = ({ navigation }: any) => {
       setEditingAccount(null);
       await refreshAccounts();
       
-      Alert.alert(t.success, 'Compte modifié avec succès');
+      Alert.alert(t.success, t.accountUpdatedSuccess);
     } catch (error: any) {
       console.error('❌ [AccountsScreen] Erreur modification:', error);
-      Alert.alert(t.error, error.message || 'Impossible de modifier le compte');
+      Alert.alert(t.error, error.message || t.cannotUpdateAccount);
     }
   };
 
   const handleDeleteAccount = (account: Account) => {
     Alert.alert(
-      'Supprimer le compte',
-      `Êtes-vous sûr de vouloir supprimer le compte "${account.name}" ?\n\nCette action est irréversible.`,
+      t.deleteAccountTitle,
+      t.deleteAccountMessage.replace('{accountName}', account.name),
       [
         { text: t.cancel, style: 'cancel' },
         {
@@ -100,10 +100,10 @@ const AccountsScreen = ({ navigation }: any) => {
               await deleteAccount(account.id);
               // ✅ RAFRAÎCHIR APRÈS SUPPRESSION
               await refreshAccounts();
-              Alert.alert(t.success, 'Compte supprimé avec succès');
+              Alert.alert(t.success, t.accountDeletedSuccess);
             } catch (error: any) {
               console.error('❌ [AccountsScreen] Erreur suppression:', error);
-              Alert.alert(t.error, error.message || 'Impossible de supprimer le compte');
+              Alert.alert(t.error, error.message || t.cannotDeleteAccount);
             }
           },
         },

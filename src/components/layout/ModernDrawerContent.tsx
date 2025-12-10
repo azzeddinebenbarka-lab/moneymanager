@@ -6,14 +6,14 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 
 const ModernDrawerContent = (props: any) => {
   const { theme, toggleTheme } = useTheme();
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const isDark = theme === 'dark';
 
   // ✅ STRUCTURE UNIFIÉE AVEC CHARGES ISLAMIQUES CONDITIONNELLES
@@ -90,20 +90,20 @@ const ModernDrawerContent = (props: any) => {
       ],
     }] : []),
     {
-      title: 'VUE PAR MOIS',
+      title: t.monthView?.toUpperCase() || 'VUE PAR MOIS',
       items: [
         {
-          label: 'Vue par Mois',
+          label: t.monthView || 'Vue par Mois',
           icon: 'calendar' as const,
           screen: 'MonthsOverviewStack',
         },
       ],
     },
     {
-      title: 'RAPPORTS & ANALYSES',
+      title: (t.reports && t.analytics) ? (t.reports.toUpperCase() + ' & ' + t.analytics.toUpperCase()) : 'RAPPORTS & ANALYSES',
       items: [
         {
-          label: 'Rapports',
+          label: t.reports || 'Rapports',
           icon: 'bar-chart' as const,
           screen: 'Analytics',
         },
@@ -233,7 +233,7 @@ const ModernDrawerContent = (props: any) => {
           />
           <View style={styles.userInfo}>
             <Text style={styles.userName}>MoneyManager</Text>
-            <Text style={styles.userEmail}>Maîtrise ton budget, maîtrise ta vie</Text>
+            <Text style={styles.userEmail}>{t.appSlogan || 'Maîtrise ton budget, maîtrise ta vie'}</Text>
             
             {/* ✅ INDICATEURS DE STATUT */}
             <View style={styles.statusIndicators}>
@@ -290,11 +290,11 @@ const ModernDrawerContent = (props: any) => {
                       ]}>
                         <Ionicons 
                           name={item.icon} 
-                          size={20} 
+                          size={24} 
                           color={
                             isActive ? '#007AFF' : 
                             isIslamic ? '#FFD700' :
-                            (isDark ? '#FFFFFF' : '#000000')
+                            (isDark ? '#FFFFFF' : '#333333')
                           } 
                         />
                       </View>
@@ -368,7 +368,7 @@ const ModernDrawerContent = (props: any) => {
             styles.footerButtonText,
             isDark && styles.darkFooterButtonText,
           ]}>
-            {isDark ? 'Mode Clair' : 'Mode Sombre'}
+            {isDark ? t.lightMode : t.darkMode}
           </Text>
         </TouchableOpacity>
       </View>
@@ -381,6 +381,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+    width: '100%',
   },
   darkContainer: {
     backgroundColor: '#1C1C1E',
@@ -477,6 +478,7 @@ const styles = StyleSheet.create({
   },
   sectionItems: {
     paddingHorizontal: 8,
+    alignItems: 'stretch',
   },
   sectionSeparator: {
     height: 1,
@@ -541,6 +543,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#000000',
     marginRight: 8,
+    flex: 1,
+    textAlign: 'left',
   },
   darkMenuItemText: {
     color: '#FFFFFF',

@@ -2,6 +2,9 @@
 import { Alert } from '../types';
 import { getDatabase } from './database/sqlite';
 
+// Type pour la fonction de traduction
+type TranslateFunction = (key: string) => string;
+
 export interface AlertPreferences {
   budgetAlerts: boolean;
   spendingAlerts: boolean;
@@ -37,6 +40,15 @@ interface UserPreferences {
   push_notifications: number;
   user_id: string;
 }
+
+// Fonction helper pour remplacer les paramètres dans les messages
+const formatMessage = (template: string, params: Record<string, string>): string => {
+  let result = template;
+  Object.keys(params).forEach(key => {
+    result = result.replace(`{${key}}`, params[key]);
+  });
+  return result;
+};
 
 export const alertService = {
   // ✅ CORRECTION : Méthode getAlertCounts ajoutée
@@ -228,7 +240,7 @@ export const alertService = {
     }
   },
 
-  async checkBudgetAlerts(userId: string): Promise<Alert[]> {
+  async checkBudgetAlerts(userId: string, t: TranslateFunction): Promise<Alert[]> {
     try {
       const alerts: Alert[] = [];
       const db = await getDatabase();
@@ -242,10 +254,16 @@ export const alertService = {
       
       for (const budget of exceededBudgets) {
         const exceededAmount = budget.spent - budget.amount;
+        const message = formatMessage(t('budgetExceededMessage'), {
+          budgetName: budget.name,
+          categoryName: budget.category_name || '',
+          amount: `${exceededAmount.toFixed(2)} Dh`
+        });
+        
         const alertId = await this.createAlert(userId, {
           type: 'budget_exceeded',
-          title: 'Budget dépassé',
-          message: `Le budget "${budget.name}" (${budget.category_name}) a été dépassé de ${exceededAmount.toFixed(2)}€`,
+          title: t('budgetExceededTitle'),
+          message: message,
           priority: 'high',
           isRead: false,
           data: { budgetId: budget.id, category: budget.category }
@@ -254,8 +272,8 @@ export const alertService = {
         alerts.push({
           id: alertId,
           type: 'budget_exceeded',
-          title: 'Budget dépassé',
-          message: `Le budget "${budget.name}" (${budget.category_name}) a été dépassé de ${exceededAmount.toFixed(2)}€`,
+          title: t('budgetExceededTitle'),
+          message: message,
           priority: 'high',
           isRead: false,
           data: { budgetId: budget.id, category: budget.category },
@@ -272,10 +290,16 @@ export const alertService = {
       
       for (const budget of nearLimitBudgets) {
         const percentage = (budget.spent / budget.amount) * 100;
+        const message = formatMessage(t('budgetNearLimitMessage'), {
+          budgetName: budget.name,
+          categoryName: budget.category_name || '',
+          percentage: percentage.toFixed(1)
+        });
+        
         const alertId = await this.createAlert(userId, {
           type: 'budget_warning',
-          title: 'Budget presque épuisé',
-          message: `Le budget "${budget.name}" (${budget.category_name}) est utilisé à ${percentage.toFixed(1)}%`,
+          title: t('budgetNearLimitTitle'),
+          message: message,
           priority: 'medium',
           isRead: false,
           data: { budgetId: budget.id, category: budget.category, percentage }
@@ -284,8 +308,8 @@ export const alertService = {
         alerts.push({
           id: alertId,
           type: 'budget_warning',
-          title: 'Budget presque épuisé',
-          message: `Le budget "${budget.name}" (${budget.category_name}) est utilisé à ${percentage.toFixed(1)}%`,
+          title: t('budgetNearLimitTitle'),
+          message: message,
           priority: 'medium',
           isRead: false,
           data: { budgetId: budget.id, category: budget.category, percentage },
@@ -375,7 +399,7 @@ export const alertService = {
     }
   },
 
-  async checkSpendingAlerts(userId: string): Promise<Alert[]> {
+  async checkSpendingAlerts(userId: string, t: TranslateFunction): Promise<Alert[]> {
     try {
       const alerts: Alert[] = [];
       const db = await getDatabase();
@@ -399,10 +423,15 @@ export const alertService = {
       `, [userId, userId]);
       
       for (const transaction of unusualSpending) {
+        const message = formatMessage(t('unusualSpendingMessage'), {
+          amount: `${Math.abs(transaction.amount).toFixed(2)} Dh`,
+          categoryName: transaction.category_name || ''
+        });
+        
         const alertId = await this.createAlert(userId, {
           type: 'unusual_spending',
-          title: 'Dépense inhabituelle',
-          message: `Dépense inhabituelle de ${Math.abs(transaction.amount).toFixed(2)}€ dans ${transaction.category_name}`,
+          title: t('unusualSpendingTitle'),
+          message: message,
           priority: 'medium',
           isRead: false,
           data: { 
@@ -415,8 +444,8 @@ export const alertService = {
         alerts.push({
           id: alertId,
           type: 'unusual_spending',
-          title: 'Dépense inhabituelle',
-          message: `Dépense inhabituelle de ${Math.abs(transaction.amount).toFixed(2)}€ dans ${transaction.category_name}`,
+          title: t('unusualSpendingTitle'),
+          message: message,
           priority: 'medium',
           isRead: false,
           data: { 
@@ -448,14 +477,14 @@ export const alertService = {
     }
   },
 
-  async checkAllAlerts(userId: string): Promise<Alert[]> {
+  async checkAllAlerts(userId: string, t: TranslateFunction): Promise<Alert[]> {
     try {
       const allAlerts: Alert[] = [];
       
-      const budgetAlerts = await this.checkBudgetAlerts(userId);
+      const budgetAlerts = await this.checkBudgetAlerts(userId, t);
       allAlerts.push(...budgetAlerts);
       
-      const spendingAlerts = await this.checkSpendingAlerts(userId);
+      const spendingAlerts = await this.checkSpendingAlerts(userId, t);
       allAlerts.push(...spendingAlerts);
       
       return allAlerts;

@@ -56,13 +56,13 @@ const EditBudgetScreen = ({ navigation, route }: any) => {
         });
       }
     } catch (error) {
-      Alert.alert(t.error, 'Impossible de charger le budget');
+      Alert.alert(t.error, t.cannotLoadBudget);
     }
   };
 
   const handleSave = async () => {
     if (!form.name || !form.category || !form.amount || parseFloat(form.amount) <= 0) {
-      Alert.alert(t.error, 'Veuillez remplir tous les champs obligatoires');
+      Alert.alert(t.error, t.fillAllRequiredFields);
       return;
     }
 
@@ -79,15 +79,15 @@ const EditBudgetScreen = ({ navigation, route }: any) => {
       });
 
       Alert.alert(
-        'Succès',
-        'Budget modifié avec succès',
+        t.success,
+        t.budgetUpdatedSuccess,
         [{ 
           text: 'OK', 
           onPress: () => navigation.navigate('BudgetsList')
         }]
       );
     } catch (error) {
-      Alert.alert(t.error, 'Impossible de modifier le budget');
+      Alert.alert(t.error, t.cannotUpdateBudget);
     } finally {
       setLoading(false);
     }
