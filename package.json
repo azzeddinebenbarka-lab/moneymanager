@@ -62,6 +62,7 @@
     "expo-module-scripts": "^5.0.7",
     "metro-minify-terser": "^0.83.3",
     "react-native-worklets": "0.5.1",
+    "sharp": "^0.34.5",
     "typescript": "~5.9.2"
   }
 }
