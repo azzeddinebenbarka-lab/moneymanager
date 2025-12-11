@@ -97,7 +97,7 @@ export const DebtDetailHeader = ({ debt, onAddPayment }: Props) => {
         <View style={styles.detailItem}>
           <Text style={styles.detailLabel}>{t.nextDue}</Text>
           <Text style={styles.detailValue}>
-            {new Date(debt.dueDate).toLocaleDateString('fr-FR')}
+            {debt.nextDueDate ? new Date(debt.nextDueDate).toLocaleDateString('fr-FR') : '-'}
           </Text>
         </View>
         
@@ -106,7 +106,7 @@ export const DebtDetailHeader = ({ debt, onAddPayment }: Props) => {
           <Text style={styles.detailValue}>
             {debt.type === 'personal' ? t.debtPersonal :
              debt.type === 'mortgage' ? t.debtMortgage :
-             debt.type === 'credit_card' ? t.debtCreditCard : t.debtLoan}
+             debt.type === 'revolving_credit' ? t.debtCreditCard : t.debtLoan}
           </Text>
         </View>
       </View>

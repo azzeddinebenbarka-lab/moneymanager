@@ -7,6 +7,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useRecurrenceCharges } from '../../hooks/useRecurrenceCharges';
 
@@ -17,6 +18,7 @@ interface RecurrenceManagerProps {
 export const RecurrenceManager: React.FC<RecurrenceManagerProps> = ({
   onChargesUpdated
 }) => {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const {
     processRecurringCharges,

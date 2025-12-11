@@ -21,7 +21,7 @@ const LANGUAGES: LanguageOption[] = [
 ];
 
 export const LanguageSelector: React.FC = () => {
-  const { language, changeLanguage, isRTL } = useLanguage();
+  const { language, changeLanguage, isRTL, t } = useLanguage();
   const { colors } = useDesignSystem();
 
   // Gestion du changement de langue

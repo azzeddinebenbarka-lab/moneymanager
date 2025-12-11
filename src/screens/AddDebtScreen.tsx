@@ -226,7 +226,7 @@ const AddDebtScreen = ({ navigation }: any) => {
   const handleCategoryChange = (value: string) => {
     setForm(prev => ({ 
       ...prev, 
-      category: value 
+      category: value as DebtCategory
     }));
   };
 

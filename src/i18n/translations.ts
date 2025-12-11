@@ -30,6 +30,10 @@ export interface Translations {
   export: string;
   import: string;
   refresh: string;
+  ok: string;
+  continue: string;
+  calculate: string;
+  validate: string;
   
   // Dashboard
   totalBalance: string;
@@ -754,6 +758,8 @@ export interface Translations {
   cannotDeleteDebt: string;
   debtDetails: string;
   deletionIrreversible: string;
+  initialAmount: string;
+  dueDate: string;
   paymentSuccess: string;
   cannotMakePayment: string;
   fillAllFields: string;
@@ -1366,6 +1372,10 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     export: 'Exporter',
     import: 'Importer',
     refresh: 'Actualiser',
+    ok: 'OK',
+    continue: 'Continuer',
+    calculate: 'Calculer',
+    validate: 'Valider',
     
     // Dashboard
     totalBalance: 'Solde Total',
@@ -2093,6 +2103,8 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     cannotDeleteDebt: 'Impossible de supprimer la dette',
     debtDetails: 'Détails de la Dette',
     deletionIrreversible: 'Cette action est irréversible',
+    initialAmount: 'Montant initial',
+    dueDate: 'Date d\'échéance',
     paymentSuccess: 'Paiement effectué avec succès',
     cannotMakePayment: 'Impossible d\'effectuer le paiement',
     fillAllFields: 'Veuillez remplir tous les champs obligatoires',
@@ -2689,6 +2701,10 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     export: 'Export',
     import: 'Import',
     refresh: 'Refresh',
+    ok: 'OK',
+    continue: 'Continue',
+    calculate: 'Calculate',
+    validate: 'Validate',
     
     // Dashboard
     totalBalance: 'Total Balance',
@@ -3416,6 +3432,8 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     cannotDeleteDebt: 'Cannot delete debt',
     debtDetails: 'Debt Details',
     deletionIrreversible: 'This action is irreversible',
+    initialAmount: 'Initial amount',
+    dueDate: 'Due date',
     paymentSuccess: 'Payment made successfully',
     cannotMakePayment: 'Cannot make payment',
     fillAllFields: 'Please fill in all required fields',
@@ -4027,6 +4045,10 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     export: 'تصدير',
     import: 'استيراد',
     refresh: 'تحديث',
+    ok: 'حسناً',
+    continue: 'متابعة',
+    calculate: 'حساب',
+    validate: 'تأكيد',
     
     // لوحة التحكم
     totalBalance: 'الرصيد الإجمالي',
@@ -4754,6 +4776,8 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     cannotDeleteDebt: 'لا يمكن حذف الدين',
     debtDetails: 'تفاصيل الدين',
     deletionIrreversible: 'هذا الإجراء غير قابل للإلغاء',
+    initialAmount: 'المبلغ الأولي',
+    dueDate: 'تاريخ الاستحقاق',
     paymentSuccess: 'تم الدفع بنجاح',
     cannotMakePayment: 'لا يمكن إجراء الدفع',
     fillAllFields: 'يرجى ملء جميع الحقول الإلزامية',

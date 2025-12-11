@@ -1,9 +1,11 @@
 // Composant de nettoyage des doublons de transactions récurrentes
 import { useState } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useLanguage } from '../../context/LanguageContext';
 import { getDatabase } from '../../services/database/sqlite';
 
 export const CleanDuplicatesButton = () => {
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
 
   const cleanDuplicates = async () => {

@@ -27,7 +27,7 @@ const QUICK_AMOUNTS = [10, 25, 50, 100, 200, 500];
 
 export const AddContributionModal: React.FC<Props> = ({ visible, onClose, onSubmit, goal }) => {
   const { accounts, refreshAccounts } = useAccounts();
-  const { formatAmount, currencySymbol } = useCurrency();
+  const { formatAmount } = useCurrency();
   const { t } = useLanguage();
   
   const [amount, setAmount] = useState<string>('');

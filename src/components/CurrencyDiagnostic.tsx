@@ -2,10 +2,12 @@
 import React from 'react';
 import { Alert, Text, TouchableOpacity, View } from 'react-native';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useCurrencyInitialization } from '../hooks/useCurrencyInitialization';
 import { useMultiCurrency } from '../hooks/useMultiCurrency';
 
 export const CurrencyDiagnostic: React.FC = () => {
+  const { t } = useLanguage();
   const { 
     isInitializing, 
     needsMigration, 

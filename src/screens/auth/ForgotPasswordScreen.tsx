@@ -2,19 +2,21 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLanguage } from '../../context/LanguageContext';
 import { PasswordAuth } from '../../services/auth/passwordAuth';
 
 const ForgotPasswordScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
+  const { t } = useLanguage();
   const [step, setStep] = useState<'verify' | 'reset'>('verify');
   const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');

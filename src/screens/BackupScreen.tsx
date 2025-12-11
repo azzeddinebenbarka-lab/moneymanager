@@ -174,8 +174,11 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             text: t.exportAction,
             onPress: async () => {
               try {
-                const result = await exportTransactions(undefined, undefined, 'csv');
+                // TODO: Implémenter exportTransactions
+                // const result = await exportTransactions(undefined, undefined, 'csv');
                 
+                Alert.alert(t.info || 'Info', 'Fonctionnalité d\'export CSV à venir', [{ text: t.ok }]);
+                /*
                 if (result.success && result.filePath) {
                   const canShare = await Sharing.isAvailableAsync();
                   if (canShare) {
@@ -187,6 +190,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   
                   Alert.alert(t.success, t.exportCompleted, [{ text: t.ok }]);
                 }
+                */
               } catch (error) {
                 Alert.alert(
                   t.exportError,

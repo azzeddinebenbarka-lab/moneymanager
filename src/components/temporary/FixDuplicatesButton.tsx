@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { useLanguage } from '../../context/LanguageContext';
 import { getDatabase } from '../../services/database/sqlite';
 
 async function fixDuplicateDebtPayments() {
@@ -73,6 +74,7 @@ async function fixDuplicateDebtPayments() {
 }
 
 export const FixDuplicatesButton: React.FC<{ onComplete?: () => void }> = ({ onComplete }) => {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
 
   const handleFix = async () => {
