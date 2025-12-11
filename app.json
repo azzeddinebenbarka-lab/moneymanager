@@ -2,7 +2,7 @@
   "expo": {
     "name": "MoneyManager",
     "slug": "moneymanager",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "moneymanager",
@@ -24,8 +24,8 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.azzeddine2025.mylife",
-      "runtimeVersion": "1.0.0",
-      "versionCode": 38,
+      "runtimeVersion": "1.1.0",
+      "versionCode": 39,
       "softwareKeyboardLayoutMode": "pan"
     },
     "plugins": [
