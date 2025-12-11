@@ -266,7 +266,7 @@ const ModernDrawerNavigator = () => {
               <Ionicons name="speedometer" size={size-2} color="#FFFFFF" />
             </View>
           ),
-          drawerLabel: t.dashboard,
+          drawerLabel: () => t.dashboard,
         }}
       />
 
@@ -280,7 +280,7 @@ const ModernDrawerNavigator = () => {
               <Ionicons name="swap-horizontal" size={size-2} color="#FFFFFF" />
             </View>
           ),
-          drawerLabel: t.transactions,
+          drawerLabel: () => t.transactions,
         }}
       />
 
@@ -294,7 +294,7 @@ const ModernDrawerNavigator = () => {
               <Ionicons name="wallet" size={size-2} color="#FFFFFF" />
             </View>
           ),
-          drawerLabel: t.accounts,
+          drawerLabel: () => t.accounts,
         }}
       />
 
@@ -308,7 +308,7 @@ const ModernDrawerNavigator = () => {
               <Ionicons name="pie-chart" size={size-2} color="#FFFFFF" />
             </View>
           ),
-          drawerLabel: t.budgets,
+          drawerLabel: () => t.budgets,
         }}
       />
 
@@ -321,7 +321,7 @@ const ModernDrawerNavigator = () => {
               <Ionicons name="pricetags" size={size-2} color="#FFFFFF" />
             </View>
           ),
-          drawerLabel: t.categories,
+          drawerLabel: () => t.categories,
         }}
       />
 
@@ -334,7 +334,7 @@ const ModernDrawerNavigator = () => {
               <MaterialIcons name="event" size={size-2} color="#FFFFFF" />
             </View>
           ),
-          drawerLabel: t.annualCharges,
+          drawerLabel: () => t.annualCharges,
         }}
       />
 
@@ -348,7 +348,7 @@ const ModernDrawerNavigator = () => {
               <Ionicons name="trending-up" size={size-2} color="#FFFFFF" />
             </View>
           ),
-          drawerLabel: t.savings,
+          drawerLabel: () => t.savings,
         }}
       />
 
@@ -361,7 +361,7 @@ const ModernDrawerNavigator = () => {
               <Ionicons name="trending-down" size={size-2} color="#FFFFFF" />
             </View>
           ),
-          drawerLabel: t.debts,
+          drawerLabel: () => t.debts,
         }}
       />
 
@@ -375,7 +375,7 @@ const ModernDrawerNavigator = () => {
               <Ionicons name="calendar" size={size-2} color="#FFFFFF" />
             </View>
           ),
-          drawerLabel: t.monthView,
+          drawerLabel: () => t.monthView,
         }}
       />
 
@@ -389,7 +389,7 @@ const ModernDrawerNavigator = () => {
               <Ionicons name="bar-chart" size={size-2} color="#FFFFFF" />
             </View>
           ),
-          drawerLabel: t.reports,
+          drawerLabel: () => t.reports,
         }}
       />
 
@@ -403,7 +403,7 @@ const ModernDrawerNavigator = () => {
               <Ionicons name="notifications" size={size-2} color="#FFFFFF" />
             </View>
           ),
-          drawerLabel: t.notifications,
+          drawerLabel: () => t.notifications,
         }}
       />
 
@@ -417,7 +417,7 @@ const ModernDrawerNavigator = () => {
               <Ionicons name="settings" size={size-2} color="#FFFFFF" />
             </View>
           ),
-          drawerLabel: t.settings,
+          drawerLabel: () => t.settings,
         }}
       />
 
