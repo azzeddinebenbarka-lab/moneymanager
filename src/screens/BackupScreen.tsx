@@ -177,7 +177,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 // TODO: Implémenter exportTransactions
                 // const result = await exportTransactions(undefined, undefined, 'csv');
                 
-                Alert.alert(t.info || 'Info', 'Fonctionnalité d\'export CSV à venir', [{ text: t.ok }]);
+                Alert.alert('Info', 'Fonctionnalité d\'export CSV à venir', [{ text: t.ok }]);
                 /*
                 if (result.success && result.filePath) {
                   const canShare = await Sharing.isAvailableAsync();

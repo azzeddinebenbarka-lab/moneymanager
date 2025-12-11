@@ -325,7 +325,7 @@ const processContribution = async (contributionAmount: number) => {
             <View style={styles.customAmountSection}>
               <Text style={styles.sectionLabel}>{t.customAmount}</Text>
               <View style={styles.customAmountInput}>
-                <Text style={styles.currencySymbol}>{currencySymbol}</Text>
+                <Text style={styles.currencySymbol}>DH</Text>
                 <TextInput
                   style={[
                     styles.customAmountTextInput,
