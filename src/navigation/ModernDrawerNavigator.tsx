@@ -223,12 +223,11 @@ const ModernDrawerNavigator = () => {
 
   const drawerScreenOptions = {
     headerShown: false,
-    drawerType: 'front' as const,
+    drawerType: 'slide' as const,
     drawerPosition: (isRTL ? 'right' : 'left') as 'left' | 'right', // ✅ DROITE EN ARABE, GAUCHE POUR FR/EN
     drawerStyle: {
       backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
-      width: '90%',
-      marginLeft: 30,
+      width: 280,
     },
     drawerActiveTintColor: isDark ? '#FFFFFF' : '#007AFF',
     drawerInactiveTintColor: isDark ? '#8E8E93' : '#8E8E93',
