@@ -1,6 +1,7 @@
 // src/navigation/SavingsStackNavigator.tsx - VERSION CORRIGÉE
 import { createStackNavigator } from '@react-navigation/stack';
 import React from 'react';
+import { useLanguage } from '../context/LanguageContext';
 import AddSavingsGoalScreen from '../screens/AddSavingsGoalScreen';
 import SavingsAnalyticsScreen from '../screens/SavingsAnalyticsScreen';
 import SavingsCalculatorScreen from '../screens/SavingsCalculatorScreen';
@@ -30,6 +31,8 @@ export type SavingsStackParamList = {
 const Stack = createStackNavigator<SavingsStackParamList>();
 
 export const SavingsStackNavigator = () => {
+  const { t } = useLanguage();
+  
   return (
     <Stack.Navigator
       screenOptions={{
@@ -43,7 +46,7 @@ export const SavingsStackNavigator = () => {
         name="Savings" 
         component={SavingsScreen}
         options={{
-          title: 'Mes Objectifs',
+          title: t.savingsGoals,
         }}
       />
 
@@ -52,7 +55,7 @@ export const SavingsStackNavigator = () => {
         name="AddSavingsGoal" 
         component={AddSavingsGoalScreen}
         options={{
-          title: 'Nouvel Objectif',
+          title: t.newSavingsGoal,
           presentation: 'modal' as const,
           gestureEnabled: true,
         }}
@@ -63,7 +66,7 @@ export const SavingsStackNavigator = () => {
         name="EditSavingsGoal" 
         component={EditSavingsGoalScreen}
         options={{
-          title: 'Modifier l\'Objectif',
+          title: t.editSavingsGoal,
           presentation: 'modal' as const,
           gestureEnabled: true,
         }}
@@ -74,7 +77,7 @@ export const SavingsStackNavigator = () => {
         name="SavingsDetail" 
         component={SavingsDetailScreen}
         options={{
-          title: 'Détails de l\'Objectif',
+          title: t.savingsGoalDetails,
           gestureEnabled: true,
         }}
       />
@@ -84,7 +87,7 @@ export const SavingsStackNavigator = () => {
         name="SavingsCalculator" 
         component={SavingsCalculatorScreen}
         options={{
-          title: 'Calculateur d\'Épargne',
+          title: t.savingsCalculator,
           gestureEnabled: true,
         }}
       />
@@ -94,7 +97,7 @@ export const SavingsStackNavigator = () => {
         name="SavingsAnalytics" 
         component={SavingsAnalyticsScreen}
         options={{
-          title: 'Analyses d\'Épargne',
+          title: t.savingsAnalytics,
           gestureEnabled: true,
         }}
       />

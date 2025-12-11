@@ -24,7 +24,7 @@ export const CurrencyDiagnostic: React.FC = () => {
 MultiCurrency: ${baseCurrency}
 Synchronisé: ${isSyncedWithContext ? 'OUI' : 'NON'}
 Migration nécessaire: ${needsMigration ? 'OUI' : 'NON'}`,
-      [{ text: 'OK' }]
+      [{ text: t.ok }]
     );
   };
 

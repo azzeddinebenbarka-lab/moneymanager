@@ -82,7 +82,7 @@ const EditBudgetScreen = ({ navigation, route }: any) => {
         t.success,
         t.budgetUpdatedSuccess,
         [{ 
-          text: 'OK', 
+          text: t.ok, 
           onPress: () => navigation.navigate('BudgetsList')
         }]
       );
@@ -94,10 +94,10 @@ const EditBudgetScreen = ({ navigation, route }: any) => {
   };
 
   const periods = [
-    { value: 'daily' as const, label: 'Quotidien' },
-    { value: 'weekly' as const, label: 'Hebdomadaire' },
-    { value: 'monthly' as const, label: 'Mensuel' },
-    { value: 'yearly' as const, label: 'Annuel' },
+    { value: 'daily' as const, label: t.dailyPeriod },
+    { value: 'weekly' as const, label: t.weeklyPeriod },
+    { value: 'monthly' as const, label: t.monthlyPeriod },
+    { value: 'yearly' as const, label: t.yearlyPeriod },
   ];
 
   return (

@@ -69,7 +69,7 @@ export const BackupRestoreScreen: React.FC = () => {
 
     } catch (error) {
       console.error('Error loading backup data:', error);
-      Alert.alert(t.error, 'Impossible de charger les sauvegardes');
+      Alert.alert(t.error, t.cannotLoadBackups);
     } finally {
       setIsLoading(false);
     }
@@ -122,7 +122,7 @@ export const BackupRestoreScreen: React.FC = () => {
         ]
       );
     } catch (error) {
-      Alert.alert(t.error, 'Impossible de créer la sauvegarde');
+      Alert.alert(t.error, t.cannotCreateBackup);
     }
   };
 
@@ -152,7 +152,7 @@ export const BackupRestoreScreen: React.FC = () => {
                 Alert.alert(t.error, result.error || 'Échec de la restauration');
               }
             } catch (error) {
-              Alert.alert(t.error, 'Impossible de restaurer la sauvegarde');
+              Alert.alert(t.error, t.cannotRestoreBackup);
             }
           },
         },
@@ -170,7 +170,7 @@ export const BackupRestoreScreen: React.FC = () => {
                 Alert.alert(t.error, result.error || 'Échec de la restauration');
               }
             } catch (error) {
-              Alert.alert(t.error, 'Impossible de restaurer la sauvegarde');
+              Alert.alert(t.error, t.cannotRestoreBackup);
             }
           },
         },
@@ -194,10 +194,10 @@ export const BackupRestoreScreen: React.FC = () => {
                 await loadBackupData();
                 Alert.alert(t.success, 'Sauvegarde supprimée');
               } else {
-                Alert.alert(t.error, result.error || 'Impossible de supprimer la sauvegarde');
+                Alert.alert(t.error, result.error || t.cannotDeleteBackup);
               }
             } catch (error) {
-              Alert.alert(t.error, 'Impossible de supprimer la sauvegarde');
+              Alert.alert(t.error, t.cannotDeleteBackup);
             }
           },
         },
@@ -216,7 +216,7 @@ export const BackupRestoreScreen: React.FC = () => {
         await CloudBackupService.scheduleAutoBackup(newConfig.backupFrequency || 'weekly');
       }
     } catch (error) {
-      Alert.alert(t.error, 'Impossible de modifier la configuration cloud');
+      Alert.alert(t.error, t.cannotModifyCloudConfig);
     }
   };
 

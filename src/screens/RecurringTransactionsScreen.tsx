@@ -68,7 +68,7 @@ const RecurringTransactionsScreen: React.FC = () => {
 
               <View style={styles.subRight}>
                 <Text style={[styles.subAmount, { color: colors.text.primary }]}>{s.amount ? String(s.amount) : ''}</Text>
-                <Text style={[styles.subFreq, { color: colors.text.secondary }]}>Mensuel</Text>
+                <Text style={[styles.subFreq, { color: colors.text.secondary }]}>{t.monthly}</Text>
               </View>
             </View>
           ))}

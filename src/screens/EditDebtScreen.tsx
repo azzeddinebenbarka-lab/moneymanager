@@ -179,7 +179,7 @@ const EditDebtScreen: React.FC<EditDebtScreenProps> = ({ navigation, route }) =>
       Alert.alert(
         t.success,
         t.debtModifiedSuccess,
-        [{ text: 'OK', onPress: () => navigation.navigate('DebtsList') }]
+        [{ text: t.ok, onPress: () => navigation.navigate('DebtsList') }]
       );
     } catch (error) {
       console.error('❌ [EditDebtScreen] Error updating debt:', error);

@@ -21,7 +21,7 @@ import { useTransactions } from '../hooks/useTransactions';
 type SearchFilter = 'all' | 'transactions' | 'charges' | 'categories';
 
 const SearchScreen: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { colors } = useDesignSystem();
   const { formatAmount } = useCurrency();
   const navigation = useNavigation();
@@ -32,39 +32,122 @@ const SearchScreen: React.FC = () => {
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<SearchFilter>('all');
 
+  // Normaliser le texte (supprimer emojis)
+  const normalizeText = (text: string): string => {
+    return text
+      .replace(/[\u{1F600}-\u{1F64F}]/gu, '')
+      .replace(/[\u{1F300}-\u{1F5FF}]/gu, '')
+      .replace(/[\u{1F680}-\u{1F6FF}]/gu, '')
+      .replace(/[\u{1F1E0}-\u{1F1FF}]/gu, '')
+      .replace(/[\u{2600}-\u{26FF}]/gu, '')
+      .replace(/[\u{2700}-\u{27BF}]/gu, '')
+      .trim().toLowerCase();
+  };
+
+  // Traduire catégorie (mapping complet)
+  const getCategoryTranslatedName = (catName: string): string => {
+    const map: Record<string, keyof typeof t> = {
+      // Revenus
+      'Salaire': 'cat_salary', '💼 Salaire': 'cat_salary',
+      'Revenus secondaires': 'cat_secondary_income', '📈 Revenus secondaires': 'cat_secondary_income',
+      'Salaire net': 'cat_net_salary', 'Prime': 'cat_bonus', 'Primes / heures sup': 'cat_bonus',
+      'Freelance': 'cat_freelance', 'Commerce': 'cat_commerce', 'Commerce / ventes': 'cat_commerce',
+      'Commissions': 'cat_commissions', 'Business': 'cat_business', 'Investissement': 'cat_investment',
+      'Autres revenus': 'cat_other_income',
+      // Logement
+      'Logement': 'cat_housing', '🏠 Logement & Charges': 'cat_housing',
+      'Loyer': 'cat_rent', 'Loyer / Crédit maison': 'cat_rent',
+      'Électricité': 'cat_electricity', 'Eau': 'cat_water',
+      'Internet': 'cat_internet', 'Wifi / Internet': 'cat_internet', 'Syndic': 'cat_syndic',
+      // Nourriture
+      'Nourriture': 'cat_food', 'Alimentation': 'cat_food', '🛒 Nourriture & Courses (T9edya)': 'cat_food',
+      'Courses': 'cat_groceries', 'Épicerie': 'cat_groceries',
+      'Légumes': 'cat_vegetables', 'Légumes / fruits': 'cat_vegetables',
+      'Viande': 'cat_meat', 'Viande / poisson': 'cat_meat',
+      'Produits d\'entretien': 'cat_cleaning_products', 'Produits ménagers': 'cat_cleaning_products',
+      // Transport
+      'Transport': 'cat_transport', '🚗 Transport & Voiture': 'cat_transport',
+      'Carburant': 'cat_fuel', 'Entretien': 'cat_maintenance', 'Assurance': 'cat_insurance',
+      'Lavage': 'cat_wash', 'Parking': 'cat_parking',
+      // Santé
+      'Santé': 'cat_health', '💊 Santé': 'cat_health', 'Pharmacie': 'cat_pharmacy',
+      'Consultation': 'cat_consultation', 'Analyse / consultation': 'cat_consultation',
+      'Assurance santé': 'cat_health_insurance', 'Assurance maladie': 'cat_health_insurance',
+      // Enfant
+      'Enfant': 'cat_child', '👶 Enfant': 'cat_child',
+      'Alimentation bébé': 'cat_child_food', 'Hygiène': 'cat_hygiene',
+      'École': 'cat_school', 'École / crèche': 'cat_school',
+      // Abonnements
+      'Abonnements': 'cat_subscriptions', '📱 Abonnements': 'cat_subscriptions',
+      'Téléphone': 'cat_phone', 'Applications': 'cat_apps', 'Streaming': 'cat_streaming',
+      // Personnel
+      'Personnel': 'cat_personal', '👤 Dépenses personnelles': 'cat_personal',
+      'Vêtements': 'cat_clothes', 'Coiffure': 'cat_haircut', 'Parfums': 'cat_perfume',
+      // Shopping
+      'Shopping': 'cat_shopping', 'Électronique': 'cat_electronics',
+      'Maison': 'cat_home', 'Cadeaux': 'cat_gifts',
+      // Loisirs
+      'Loisirs': 'cat_leisure', 'Divertissement': 'cat_entertainment',
+      'Restaurants': 'cat_restaurants', 'Café': 'cat_cafe',
+      'Cinéma': 'cat_cinema', 'Sorties': 'cat_outings',
+      // Finances
+      'Finances': 'cat_finances', 'Épargne': 'cat_savings',
+      'Investissements': 'cat_investments', 'Prêts': 'cat_loans',
+      'Frais bancaires': 'cat_bank_fees',
+      // Maison
+      '🏡 Maison': 'cat_house', 'Cuisine / accessoires': 'cat_kitchen',
+      'Décoration': 'cat_decoration', 'Outils / bricolage': 'cat_tools',
+      // Éducation
+      'Éducation': 'cat_education',
+      // Factures
+      'Factures': 'cat_bills',
+      // Autres
+      'Autre': 'cat_other', 'Autres': 'cat_other', 'Famille': 'cat_family',
+      'Divers': 'cat_miscellaneous', '🎁 Divers & imprévus': 'cat_misc',
+      'Imprévus': 'cat_unexpected', 'Imprévu': 'cat_unexpected',
+      'Aides familiales': 'cat_family_help',
+    };
+    const normalized = catName.replace(/[\u{1F600}-\u{1F6FF}\s]/gu, '').trim();
+    const key = map[catName] || map[normalized];
+    return key ? t[key] : catName;
+  };
+
   // Recherche dans les transactions
   const filteredTransactions = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = normalizeText(query);
     if (!q) return [];
     return transactions.filter(tn => {
-      const desc = (tn.description || '').toLowerCase();
-      const cat = (tn.category || '').toLowerCase();
-      const amt = String(tn.amount || '').toLowerCase();
-      const date = new Date(tn.date).toLocaleDateString('fr-FR').toLowerCase();
-      return desc.includes(q) || cat.includes(q) || amt.includes(q) || date.includes(q);
+      const desc = normalizeText(tn.description || '');
+      const cat = normalizeText(tn.category || '');
+      const catTrans = normalizeText(getCategoryTranslatedName(tn.category || ''));
+      const amt = normalizeText(String(tn.amount || ''));
+      const date = normalizeText(new Date(tn.date).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'fr-FR'));
+      return desc.includes(q) || cat.includes(q) || catTrans.includes(q) || amt.includes(q) || date.includes(q);
     });
-  }, [query, transactions]);
+  }, [query, transactions, language]);
 
   // Recherche dans les charges annuelles
   const filteredCharges = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = normalizeText(query);
     if (!q) return [];
     return charges.filter(charge => {
-      const name = (charge.name || '').toLowerCase();
-      const cat = (charge.category || '').toLowerCase();
-      const amt = String(charge.amount || '').toLowerCase();
-      return name.includes(q) || cat.includes(q) || amt.includes(q);
+      const name = normalizeText(charge.name || '');
+      const cat = normalizeText(charge.category || '');
+      const catTrans = normalizeText(getCategoryTranslatedName(charge.category || ''));
+      const amt = normalizeText(String(charge.amount || ''));
+      return name.includes(q) || cat.includes(q) || catTrans.includes(q) || amt.includes(q);
     });
   }, [query, charges]);
 
   // Recherche dans les catégories
   const filteredCategories = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = normalizeText(query);
     if (!q) return [];
     return categories.filter(cat => {
-      const name = (cat.name || '').toLowerCase();
-      const type = (cat.type || '').toLowerCase();
-      return name.includes(q) || type.includes(q);
+      const name = normalizeText(cat.name || '');
+      const nameTrans = normalizeText(getCategoryTranslatedName(cat.name || ''));
+      const type = normalizeText(cat.type || '');
+      return name.includes(q) || nameTrans.includes(q) || type.includes(q);
     });
   }, [query, categories]);
 
@@ -124,10 +207,10 @@ const SearchScreen: React.FC = () => {
   };
 
   const filters: { key: SearchFilter; label: string; icon: string }[] = [
-    { key: 'all', label: 'Tout', icon: 'apps' },
-    { key: 'transactions', label: 'Transactions', icon: 'swap-horizontal' },
-    { key: 'charges', label: 'Charges', icon: 'calendar' },
-    { key: 'categories', label: 'Catégories', icon: 'pricetags' },
+    { key: 'all', label: t.all || 'Tout', icon: 'apps' },
+    { key: 'transactions', label: t.transactions || 'Transactions', icon: 'swap-horizontal' },
+    { key: 'charges', label: t.annualCharges || 'Charges', icon: 'calendar' },
+    { key: 'categories', label: t.categories || 'Catégories', icon: 'pricetags' },
   ];
 
   const renderResult = ({ item }: { item: any }) => {
@@ -145,14 +228,17 @@ const SearchScreen: React.FC = () => {
         </View>
         <View style={styles.resultContent}>
           <Text style={[styles.resultTitle, { color: colors.text.primary }]} numberOfLines={1}>
-            {item.name || item.description || 'Sans nom'}
+            {item.resultType === 'category' 
+              ? getCategoryTranslatedName(item.name) || item.description || t.noName || 'Sans nom'
+              : item.name || item.description || t.noName || 'Sans nom'
+            }
           </Text>
           <Text style={[styles.resultSubtitle, { color: colors.text.secondary }]} numberOfLines={1}>
             {item.resultType === 'transaction' 
-              ? `${item.category} • ${new Date(item.date).toLocaleDateString('fr-FR')}`
+              ? `${getCategoryTranslatedName(item.category)} • ${new Date(item.date).toLocaleDateString(language === 'ar' ? 'ar-SA' : language === 'en' ? 'en-US' : 'fr-FR')}`
               : item.resultType === 'charge'
-              ? `${item.category} • Échéance: ${new Date(item.dueDate).toLocaleDateString('fr-FR')}`
-              : `Catégorie ${item.type === 'expense' ? 'de dépense' : 'de revenu'}`
+              ? `${getCategoryTranslatedName(item.category)} • ${t.dueDate}: ${new Date(item.dueDate).toLocaleDateString(language === 'ar' ? 'ar-SA' : language === 'en' ? 'en-US' : 'fr-FR')}`
+              : `${t.category} ${item.type === 'expense' ? t.expense : t.income}`
             }
           </Text>
         </View>
@@ -174,7 +260,7 @@ const SearchScreen: React.FC = () => {
       <View style={[styles.container, { backgroundColor: colors.background.primary }]}> 
         {/* Header */}
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text.primary }]}>Recherche</Text>
+          <Text style={[styles.title, { color: colors.text.primary }]}>{t.search || 'Recherche'}</Text>
         </View>
 
         {/* Search Bar */}
@@ -186,7 +272,7 @@ const SearchScreen: React.FC = () => {
           }]}> 
             <Ionicons name="search" size={22} color={query ? colors.primary[500] : colors.text.tertiary} />
             <TextInput
-              placeholder="Rechercher transactions, charges, catégories..."
+              placeholder={t.searchPlaceholder || 'Rechercher transactions, charges, catégories...'}
               placeholderTextColor={colors.text.tertiary}
               style={[styles.input, { color: colors.text.primary }]}
               value={query}
@@ -241,10 +327,10 @@ const SearchScreen: React.FC = () => {
                 <Ionicons name="search" size={56} color={colors.text.disabled} />
               </View>
               <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>
-                Recherche intelligente
+                {t.smartSearch || 'Recherche intelligente'}
               </Text>
               <Text style={[styles.emptySubtitle, { color: colors.text.secondary }]}>
-                Trouvez rapidement vos transactions, charges annuelles et catégories
+                {t.searchHint || 'Trouvez rapidement vos transactions, charges annuelles et catégories'}
               </Text>
               
               {/* Quick Actions */}
@@ -255,16 +341,16 @@ const SearchScreen: React.FC = () => {
                 >
                   <Ionicons name="fast-food" size={24} color={colors.primary[500]} />
                   <Text style={[styles.quickActionText, { color: colors.text.primary }]}>
-                    Alimentation
+                    {t.cat_food || 'Alimentation'}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={[styles.quickAction, { backgroundColor: colors.background.card }]}
-                  onPress={() => setQuery('Salaire')}
+                  onPress={() => setQuery(t.cat_salary || 'Salaire')}
                 >
                   <Ionicons name="cash" size={24} color="#00B894" />
                   <Text style={[styles.quickActionText, { color: colors.text.primary }]}>
-                    Salaire
+                    {t.cat_salary || 'Salaire'}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -275,16 +361,16 @@ const SearchScreen: React.FC = () => {
                 <Ionicons name="search-outline" size={56} color={colors.text.disabled} />
               </View>
               <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>
-                Aucun résultat
+                {t.noResults || 'Aucun résultat'}
               </Text>
               <Text style={[styles.emptySubtitle, { color: colors.text.secondary }]}>
-                Essayez avec d'autres mots-clés
+                {t.tryDifferentSearch || 'Essayez avec d\'autres mots-clés'}
               </Text>
             </View>
           ) : (
             <>
               <Text style={[styles.resultsCount, { color: colors.text.secondary }]}>
-                {displayResults.length} résultat{displayResults.length > 1 ? 's' : ''}
+                {displayResults.length} {displayResults.length === 1 ? (t.result || 'résultat') : (t.results || 'résultats')}
               </Text>
               <FlatList
                 data={displayResults}

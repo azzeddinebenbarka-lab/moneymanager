@@ -94,31 +94,31 @@ export const DeleteGoalModal = ({ visible, onClose, onConfirm, goal, loading = f
 
             {/* Montant actuel */}
             <View style={styles.amountSection}>
-              <Text style={styles.amountLabel}>Montant épargné</Text>
+              <Text style={styles.amountLabel}>{t.savedAmount}</Text>
               <Text style={styles.amount}>{formatAmount(goal.currentAmount)}</Text>
             </View>
 
             {/* ✅ SECTION TRANSACTIONS LIÉES */}
             {relatedTransactionsCount > 0 && (
               <View style={styles.transactionsInfoSection}>
-                <Text style={styles.sectionLabel}>Transactions liées détectées</Text>
+                <Text style={styles.sectionLabel}>{t.transactionsLinked}</Text>
                 <View style={styles.transactionsSummary}>
                   <Text style={styles.transactionsCount}>
-                    {relatedTransactionsCount} transaction{relatedTransactionsCount > 1 ? 's' : ''} associée{relatedTransactionsCount > 1 ? 's' : ''}
+                    {relatedTransactionsCount} {t.transactionAssociated}{relatedTransactionsCount > 1 ? 's' : ''}
                   </Text>
                   <TouchableOpacity 
                     style={styles.detailsButton}
                     onPress={() => setShowTransactionsDetails(!showTransactionsDetails)}
                   >
                     <Text style={styles.detailsButtonText}>
-                      {showTransactionsDetails ? 'Masquer' : 'Voir'} les détails
+                      {showTransactionsDetails ? t.hideDetails : t.seeDetails} {t.details}
                     </Text>
                   </TouchableOpacity>
                 </View>
 
                 {showTransactionsDetails && (
                   <View style={styles.transactionsDetails}>
-                    <Text style={styles.detailsTitle}>Transactions qui seront supprimées :</Text>
+                    <Text style={styles.detailsTitle}>{t.transactionsToDelete}</Text>
                     {relatedTransactions
                       .filter((transaction, index, self) => 
                         self.findIndex(t => t.id === transaction.id) === index
@@ -141,7 +141,7 @@ export const DeleteGoalModal = ({ visible, onClose, onConfirm, goal, loading = f
                     ))}
                     {relatedTransactions.length > 5 && (
                       <Text style={styles.moreTransactionsText}>
-                        ... et {relatedTransactions.length - 5} autre{relatedTransactions.length - 5 > 1 ? 's' : ''} transaction{relatedTransactions.length - 5 > 1 ? 's' : ''}
+                        ... {t.and} {relatedTransactions.length - 5} {t.moreTransactions}{relatedTransactions.length - 5 > 1 ? 's' : ''}
                       </Text>
                     )}
                   </View>
@@ -151,7 +151,7 @@ export const DeleteGoalModal = ({ visible, onClose, onConfirm, goal, loading = f
 
             {/* Options de remboursement */}
             <View style={styles.optionsSection}>
-              <Text style={styles.sectionLabel}>Que souhaitez-vous faire de l'argent épargné ?</Text>
+              <Text style={styles.sectionLabel}>{t.whatDoWithSavedMoney}</Text>
               
               <TouchableOpacity
                 style={[
@@ -167,7 +167,7 @@ export const DeleteGoalModal = ({ visible, onClose, onConfirm, goal, loading = f
                 <View style={styles.optionContent}>
                   <Text style={styles.optionTitle}>{t.refundToSourceAccount}</Text>
                   <Text style={styles.optionDescription}>
-                    L'argent sera transféré vers les comptes d'origine
+                    {t.moneyWillBeTransferred}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -184,9 +184,9 @@ export const DeleteGoalModal = ({ visible, onClose, onConfirm, goal, loading = f
                   {refundOption === 'keep' && <View style={styles.optionRadioSelected} />}
                 </View>
                 <View style={styles.optionContent}>
-                  <Text style={styles.optionTitle}>💰 Garder sur le compte épargne</Text>
+                  <Text style={styles.optionTitle}>{t.keepOnSavingsAccount}</Text>
                   <Text style={styles.optionDescription}>
-                    L'argent restera disponible pour d'autres objectifs
+                    {t.moneyWillRemain}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -194,7 +194,7 @@ export const DeleteGoalModal = ({ visible, onClose, onConfirm, goal, loading = f
 
             {/* ✅ OPTION : Suppression des transactions */}
             <View style={styles.transactionsSection}>
-              <Text style={styles.sectionLabel}>Gestion des transactions</Text>
+              <Text style={styles.sectionLabel}>{t.transactionsManagement}</Text>
               
               <TouchableOpacity
                 style={[
@@ -211,8 +211,8 @@ export const DeleteGoalModal = ({ visible, onClose, onConfirm, goal, loading = f
                   <Text style={styles.optionTitle}>{t.deleteRelatedTransactions}</Text>
                   <Text style={styles.optionDescription}>
                     {relatedTransactionsCount > 0 
-                      ? `${relatedTransactionsCount} transaction${relatedTransactionsCount > 1 ? 's' : ''} seront supprimée${relatedTransactionsCount > 1 ? 's' : ''}`
-                      : 'Les transactions de transfert vers l\'épargne seront supprimées'
+                      ? `${relatedTransactionsCount} ${t.transactionAssociated}${relatedTransactionsCount > 1 ? 's' : ''} ${t.willBeDeleted}${relatedTransactionsCount > 1 ? 's' : ''}`
+                      : t.savingsTransfersWillBeDeleted
                     }
                   </Text>
                 </View>
@@ -230,9 +230,9 @@ export const DeleteGoalModal = ({ visible, onClose, onConfirm, goal, loading = f
                   {!deleteTransactions && <View style={styles.optionRadioSelected} />}
                 </View>
                 <View style={styles.optionContent}>
-                  <Text style={styles.optionTitle}>📊 Garder les transactions</Text>
+                  <Text style={styles.optionTitle}>{t.keepTransactions}</Text>
                   <Text style={styles.optionDescription}>
-                    L'historique des transferts sera conservé
+                    {t.transferHistoryKept}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -242,7 +242,7 @@ export const DeleteGoalModal = ({ visible, onClose, onConfirm, goal, loading = f
             {refundOption === 'keep' && (
               <View style={styles.warningSection}>
                 <Text style={styles.warningText}>
-                  ⚠️ L'argent restera sur votre compte épargne mais ne sera plus associé à un objectif.
+                  {t.moneyWillStayWarning}
                 </Text>
               </View>
             )}

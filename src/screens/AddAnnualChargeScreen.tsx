@@ -124,7 +124,7 @@ const AddAnnualChargeScreen = ({ navigation, route }: any) => {
       Alert.alert(
         t.success,
         t.chargeCreatedSuccess,
-        [{ text: 'OK', onPress: () => navigation.navigate('AnnualChargesList') }]
+        [{ text: t.ok, onPress: () => navigation.navigate('AnnualChargesList') }]
       );
     } catch (error) {
       console.error('Error creating annual charge:', error);

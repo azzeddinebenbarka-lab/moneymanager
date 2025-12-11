@@ -65,9 +65,9 @@ const ForgotPasswordScreen: React.FC<{ navigation?: any }> = ({ navigation }) =>
     
     // Validation confirmation
     if (!confirmPassword) {
-      newErrors.confirmPassword = 'Veuillez confirmer le mot de passe';
+      newErrors.confirmPassword = t.confirmPasswordRequired;
     } else if (newPassword !== confirmPassword) {
-      newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
+      newErrors.confirmPassword = t.passwordsDoNotMatch;
     }
     
     setErrors(newErrors);
@@ -97,7 +97,7 @@ const ForgotPasswordScreen: React.FC<{ navigation?: any }> = ({ navigation }) =>
         '✉️ Code envoyé', 
         `Un code de vérification a été envoyé à ${email}\n\nCode de test : ${VERIFICATION_CODE}`,
         [{ 
-          text: 'OK',
+          text: t.ok,
           onPress: () => setStep('reset')
         }]
       );
@@ -118,7 +118,7 @@ const ForgotPasswordScreen: React.FC<{ navigation?: any }> = ({ navigation }) =>
       const result = await PasswordAuth.resetPassword(newPassword);
       
       if (!result.success) {
-        Alert.alert('Erreur', result.error || 'Impossible de réinitialiser le mot de passe');
+        Alert.alert('Erreur', result.error || t.cannotResetPassword);
         return;
       }
       
@@ -126,12 +126,12 @@ const ForgotPasswordScreen: React.FC<{ navigation?: any }> = ({ navigation }) =>
         '✅ Mot de passe réinitialisé', 
         'Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter.',
         [{ 
-          text: 'OK',
+          text: t.ok,
           onPress: () => navigation?.navigate('Login')
         }]
       );
     } catch (err: any) {
-      Alert.alert('Erreur', err?.message || 'Impossible de réinitialiser le mot de passe');
+      Alert.alert('Erreur', err?.message || t.cannotResetPassword);
     } finally {
       setLoading(false);
     }

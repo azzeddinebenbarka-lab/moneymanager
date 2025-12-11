@@ -1,6 +1,7 @@
 // /src/components/debts/AmortizationSchedule.tsx
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useLanguage } from '../../context/LanguageContext';
 import { Debt } from '../../types/Debt';
 
 interface PaymentSchedule {
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export const AmortizationSchedule = ({ schedule, debt }: Props) => {
+  const { t } = useLanguage();
   const [showAll, setShowAll] = useState(false);
   
   const displayedSchedule = showAll ? schedule : schedule.slice(0, 6);
@@ -30,10 +32,10 @@ export const AmortizationSchedule = ({ schedule, debt }: Props) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Plan d'amortissement</Text>
+        <Text style={styles.title}>{t.amortizationPlan}</Text>
         <View style={styles.summary}>
           <Text style={styles.summaryText}>
-            Intérêts totaux: <Text style={styles.summaryValue}>€{totalInterest.toFixed(2)}</Text>
+            {t.totalInterests}: <Text style={styles.summaryValue}>€{totalInterest.toFixed(2)}</Text>
           </Text>
         </View>
       </View>
@@ -42,12 +44,12 @@ export const AmortizationSchedule = ({ schedule, debt }: Props) => {
         <View>
           {/* En-tête du tableau */}
           <View style={styles.tableHeader}>
-            <Text style={[styles.headerCell, styles.monthCell]}>Mois</Text>
-            <Text style={[styles.headerCell, styles.dateCell]}>Date</Text>
-            <Text style={[styles.headerCell, styles.amountCell]}>Mensualité</Text>
-            <Text style={[styles.headerCell, styles.amountCell]}>Capital</Text>
-            <Text style={[styles.headerCell, styles.amountCell]}>Intérêts</Text>
-            <Text style={[styles.headerCell, styles.amountCell]}>Reste dû</Text>
+            <Text style={[styles.headerCell, styles.monthCell]}>{t.month}</Text>
+            <Text style={[styles.headerCell, styles.dateCell]}>{t.date}</Text>
+            <Text style={[styles.headerCell, styles.amountCell]}>{t.monthlyPaymentColumn}</Text>
+            <Text style={[styles.headerCell, styles.amountCell]}>{t.capital}</Text>
+            <Text style={[styles.headerCell, styles.amountCell]}>{t.interests}</Text>
+            <Text style={[styles.headerCell, styles.amountCell]}>{t.remainingDue}</Text>
           </View>
 
           {/* Lignes du tableau */}
@@ -86,7 +88,7 @@ export const AmortizationSchedule = ({ schedule, debt }: Props) => {
           onPress={() => setShowAll(!showAll)}
         >
           <Text style={styles.toggleButtonText}>
-            {showAll ? 'Voir moins' : `Voir les ${schedule.length - 6} mois supplémentaires`}
+            {showAll ? t.seeLess : `${t.seeMore} ${schedule.length - 6} ${t.monthsCount}`}
           </Text>
         </TouchableOpacity>
       )}

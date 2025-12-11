@@ -95,7 +95,7 @@ export const FixDuplicatesButton: React.FC<{ onComplete?: () => void }> = ({ onC
                   `${result.deleted} transaction(s) supprimée(s)\n${result.refunded.toFixed(2)} MAD remboursé(s)`,
                   [
                     { 
-                      text: 'OK', 
+                      text: t.ok, 
                       onPress: () => {
                         if (onComplete) onComplete();
                       }

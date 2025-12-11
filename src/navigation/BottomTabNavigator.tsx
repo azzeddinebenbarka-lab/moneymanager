@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import React, { useRef, useState } from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 
 // Import des écrans
@@ -26,10 +27,11 @@ const AddMenuModal: React.FC<{
   navigation: any;
 }> = ({ visible, onClose, navigation }) => {
   const { isDark } = useTheme();
+  const { t } = useLanguage();
 
   const menuItems = [
     {
-      title: 'Transaction',
+      title: t.transaction,
       icon: 'swap-horizontal',
       iconType: 'ionicons',
       color: '#10b981',
@@ -39,7 +41,7 @@ const AddMenuModal: React.FC<{
       },
     },
     {
-      title: 'Dette',
+      title: t.debts,
       icon: 'hand-coin',
       iconType: 'material',
       color: '#ef4444',
@@ -53,7 +55,7 @@ const AddMenuModal: React.FC<{
       },
     },
     {
-      title: 'Épargne',
+      title: t.savings,
       icon: 'piggy-bank',
       iconType: 'material',
       color: '#8b5cf6',
@@ -67,7 +69,7 @@ const AddMenuModal: React.FC<{
       },
     },
     {
-      title: 'Charge Annuelle',
+      title: t.annualCharge,
       icon: 'calendar-check',
       iconType: 'material',
       color: '#f59e0b',
@@ -92,7 +94,7 @@ const AddMenuModal: React.FC<{
       >
         <View style={[styles.modalContent, isDark && styles.modalContentDark]}>
           <Text style={[styles.modalTitle, isDark && styles.modalTitleDark]}>
-            Ajouter
+            {t.add}
           </Text>
           {menuItems.map((item, index) => (
             <TouchableOpacity

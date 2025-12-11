@@ -41,7 +41,7 @@ export const GeneralSettingsScreen: React.FC<{ navigation: any }> = ({ navigatio
               Alert.alert(
                 t.finished,
                 `${result.deleted} ${t.duplicatesDeleted}.\n${result.errors.length > 0 ? `\n⚠️ ${result.errors.length} ${t.error}(s)` : ''}`,
-                [{ text: 'OK' }]
+                [{ text: t.ok }]
               );
             } catch (error) {
               Alert.alert(t.error, t.cannotCleanDuplicates);

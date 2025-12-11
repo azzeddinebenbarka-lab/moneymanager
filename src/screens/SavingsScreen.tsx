@@ -181,7 +181,7 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
         withRefund ? 
           `${t.goalDeletedSuccess} ${formatAmount(selectedGoal.currentAmount)} ${t.goalDeletedWithRefund}` :
           t.goalDeletedSuccess,
-        [{ text: 'OK' }]
+        [{ text: t.ok }]
       );
 
       setDeleteModalVisible(false);
@@ -189,7 +189,7 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la suppression';
-      Alert.alert(t.error, errorMessage, [{ text: 'OK' }]);
+      Alert.alert(t.error, errorMessage, [{ text: t.ok }]);
     } finally {
       setActionLoading(false);
     }
@@ -199,10 +199,10 @@ const handleSubmitContribution = async (amount: number, fromAccountId?: string):
     setActionLoading(true);
     try {
       await markGoalAsCompleted(goal.id);
-      Alert.alert(t.success, t.goalMarkedCompleted, [{ text: 'OK' }]);
+      Alert.alert(t.success, t.goalMarkedCompleted, [{ text: t.ok }]);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-      Alert.alert(t.error, errorMessage, [{ text: 'OK' }]);
+      Alert.alert(t.error, errorMessage, [{ text: t.ok }]);
     } finally {
       setActionLoading(false);
     }

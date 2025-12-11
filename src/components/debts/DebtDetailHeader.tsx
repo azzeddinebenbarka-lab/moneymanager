@@ -1,6 +1,7 @@
 // /src/components/debts/DebtDetailHeader.tsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useLanguage } from '../../context/LanguageContext';
 import { Debt } from '../../types/Debt';
 import { ProgressBar } from '../ui/ProgressBar';
 
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export const DebtDetailHeader = ({ debt, onAddPayment }: Props) => {
+  const { t } = useLanguage();
   const [showPaymentInput, setShowPaymentInput] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,13 +22,13 @@ export const DebtDetailHeader = ({ debt, onAddPayment }: Props) => {
 
   const handleAddPayment = async () => {
     if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
-      Alert.alert('Erreur', 'Veuillez saisir un montant valide');
+      Alert.alert(t.error, t.pleaseEnterValidAmount);
       return;
     } 
 
     const amount = parseFloat(paymentAmount);
     if (amount > debt.currentAmount) {
-      Alert.alert('Erreur', 'Le montant ne peut pas dépasser le solde restant');
+      Alert.alert(t.error, t.amountCannotExceedRemaining);
       return;
     }
 
@@ -51,8 +53,8 @@ export const DebtDetailHeader = ({ debt, onAddPayment }: Props) => {
           <Text style={styles.creditor}>{debt.creditor}</Text>
           <View style={[styles.statusBadge, styles[debt.status]]}>
             <Text style={styles.statusText}>
-              {debt.status === 'active' ? 'Active' : 
-               debt.status === 'overdue' ? 'En Retard' : 'Payée'}
+              {debt.status === 'active' ? t.debtActive : 
+               debt.status === 'overdue' ? t.debtOverdue : t.debtPaid}
             </Text>
           </View>
         </View>
@@ -66,16 +68,16 @@ export const DebtDetailHeader = ({ debt, onAddPayment }: Props) => {
       {/* Barre de progression */}
       <View style={styles.progressSection}>
         <View style={styles.progressHeader}>
-          <Text style={styles.progressLabel}>Progression</Text>
+          <Text style={styles.progressLabel}>{t.progression}</Text>
           <Text style={styles.progressPercentage}>{progress.toFixed(1)}%</Text>
         </View>
         <ProgressBar progress={progress} color="#3498db" height={8} />
         <View style={styles.progressFooter}>
           <Text style={styles.progressText}>
-            €{totalPaid.toLocaleString()} remboursés
+            €{totalPaid.toLocaleString()} {t.reimbursed}
           </Text>
           <Text style={styles.progressText}>
-            €{remainingAmount.toLocaleString()} restants
+            €{remainingAmount.toLocaleString()} {t.remaining}
           </Text>
         </View>
       </View>
@@ -83,28 +85,28 @@ export const DebtDetailHeader = ({ debt, onAddPayment }: Props) => {
       {/* Informations détaillées */}
       <View style={styles.detailsGrid}>
         <View style={styles.detailItem}>
-          <Text style={styles.detailLabel}>Mensualité</Text>
+          <Text style={styles.detailLabel}>{t.monthlyPaymentLabel}</Text>
           <Text style={styles.detailValue}>€{debt.monthlyPayment.toLocaleString()}</Text>
         </View>
         
         <View style={styles.detailItem}>
-          <Text style={styles.detailLabel}>Taux d'intérêt</Text>
+          <Text style={styles.detailLabel}>{t.interestRate}</Text>
           <Text style={styles.detailValue}>{debt.interestRate}%</Text>
         </View>
         
         <View style={styles.detailItem}>
-          <Text style={styles.detailLabel}>Prochaine échéance</Text>
+          <Text style={styles.detailLabel}>{t.nextDue}</Text>
           <Text style={styles.detailValue}>
             {new Date(debt.dueDate).toLocaleDateString('fr-FR')}
           </Text>
         </View>
         
         <View style={styles.detailItem}>
-          <Text style={styles.detailLabel}>Type</Text>
+          <Text style={styles.detailLabel}>{t.typeLabel}</Text>
           <Text style={styles.detailValue}>
-            {debt.type === 'personal' ? 'Personnel' :
-             debt.type === 'mortgage' ? 'Immobilier' :
-             debt.type === 'credit_card' ? 'Carte crédit' : 'Prêt'}
+            {debt.type === 'personal' ? t.debtPersonal :
+             debt.type === 'mortgage' ? t.debtMortgage :
+             debt.type === 'credit_card' ? t.debtCreditCard : t.debtLoan}
           </Text>
         </View>
       </View>
@@ -117,11 +119,11 @@ export const DebtDetailHeader = ({ debt, onAddPayment }: Props) => {
               style={styles.addPaymentButton}
               onPress={() => setShowPaymentInput(true)}
             >
-              <Text style={styles.addPaymentButtonText}>Ajouter un paiement</Text>
+              <Text style={styles.addPaymentButtonText}>{t.addPayment}</Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.paymentInputContainer}>
-              <Text style={styles.paymentInputLabel}>Montant du paiement</Text>
+              <Text style={styles.paymentInputLabel}>{t.paymentAmount}</Text>
               <View style={styles.paymentInputRow}>
                 <Text style={styles.currencySymbol}>€</Text>
                 <TextInput
@@ -138,7 +140,7 @@ export const DebtDetailHeader = ({ debt, onAddPayment }: Props) => {
                   disabled={isSubmitting}
                 >
                   <Text style={styles.confirmButtonText}>
-                    {isSubmitting ? '...' : 'Valider'}
+                    {isSubmitting ? '...' : t.validate}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -148,7 +150,7 @@ export const DebtDetailHeader = ({ debt, onAddPayment }: Props) => {
                     setPaymentAmount('');
                   }}
                 >
-                  <Text style={styles.cancelButtonText}>Annuler</Text>
+                  <Text style={styles.cancelButtonText}>{t.cancel}</Text>
                 </TouchableOpacity>
               </View>
             </View>

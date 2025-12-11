@@ -181,6 +181,19 @@ export const CategoryPickerDropdown: React.FC<CategoryPickerDropdownProps> = ({
     return categoryName;
   };
 
+  // Fonction pour normaliser le texte (supprimer les emojis et espaces inutiles)
+  const normalizeText = (text: string): string => {
+    return text
+      .replace(/[\u{1F600}-\u{1F64F}]/gu, '') // Emojis emoticons
+      .replace(/[\u{1F300}-\u{1F5FF}]/gu, '') // Symboles & pictogrammes
+      .replace(/[\u{1F680}-\u{1F6FF}]/gu, '') // Transport & map
+      .replace(/[\u{1F1E0}-\u{1F1FF}]/gu, '') // Drapeaux
+      .replace(/[\u{2600}-\u{26FF}]/gu, '')   // Symboles divers
+      .replace(/[\u{2700}-\u{27BF}]/gu, '')   // Dingbats
+      .trim()
+      .toLowerCase();
+  };
+
   // Filtrer les catégories par type
   const filteredCategories = useMemo(() => {
     let filtered = categories;
@@ -190,10 +203,12 @@ export const CategoryPickerDropdown: React.FC<CategoryPickerDropdownProps> = ({
     }
     
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
+      const query = normalizeText(searchQuery);
       filtered = filtered.filter(cat => {
-        const translatedName = getCategoryTranslatedName(cat.name).toLowerCase();
-        const originalName = cat.name.toLowerCase();
+        const translatedName = normalizeText(getCategoryTranslatedName(cat.name));
+        const originalName = normalizeText(cat.name);
+        
+        // Rechercher dans le nom traduit ET le nom original
         return translatedName.includes(query) || originalName.includes(query);
       });
     }

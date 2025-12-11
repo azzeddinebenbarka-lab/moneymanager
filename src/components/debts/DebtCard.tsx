@@ -7,6 +7,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Debt } from '../../types/Debt';
 import DebtCalculator from '../../utils/debtCalculator';
@@ -24,6 +25,7 @@ export const DebtCard: React.FC<DebtCardProps> = ({
   onPay,
   showPayButton = true,
 }) => {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -41,31 +43,31 @@ export const DebtCard: React.FC<DebtCardProps> = ({
     switch (debt.status) {
       case 'active':
         return { 
-          label: isDueThisMonth ? 'Échéance ce mois' : 'Active', 
+          label: isDueThisMonth ? t.nextDue + ' ' + t.month.toLowerCase() : t.debtActive, 
           color: isDueThisMonth ? '#FF9500' : '#007AFF',
           icon: isDueThisMonth ? 'alert-circle' : 'time'
         };
       case 'overdue':
         return { 
-          label: 'En retard', 
+          label: t.debtOverdue, 
           color: '#FF3B30', 
           icon: 'warning' 
         };
       case 'paid':
         return { 
-          label: 'Payée', 
+          label: t.debtPaid, 
           color: '#34C759', 
           icon: 'checkmark-circle' 
         };
       case 'future':
         return { 
-          label: 'Future', 
+          label: t.debtFuture, 
           color: '#8E8E93', 
           icon: 'calendar' 
         };
       default:
         return { 
-          label: 'Active', 
+          label: t.debtActive, 
           color: '#007AFF', 
           icon: 'time' 
         };
@@ -95,7 +97,7 @@ export const DebtCard: React.FC<DebtCardProps> = ({
       return (
         <View style={styles.eligibleBadge}>
           <Ionicons name="checkmark-circle" size={14} color="#10B981" />
-          <Text style={styles.eligibleText}>Paiement autorisé</Text>
+          <Text style={styles.eligibleText}>{t.paymentEligible}</Text>
         </View>
       );
     }

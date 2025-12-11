@@ -1,6 +1,6 @@
 // src/screens/CurrencySettingsScreen.tsx - VERSION AVEC API TEMPS RÉEL
 import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -92,7 +92,7 @@ const CurrencySettingsScreen = ({ navigation }: any) => {
       Alert.alert(
         'Erreur',
         'Impossible de charger les taux de change. Vérifiez votre connexion Internet.',
-        [{ text: 'OK' }]
+        [{ text: t.ok }]
       );
     } finally {
       setIsLoading(false);
@@ -135,13 +135,13 @@ const CurrencySettingsScreen = ({ navigation }: any) => {
         Alert.alert(
           'Devise changée',
           `La devise a été changée en ${selectedCurrency.name}. Tous vos montants sont maintenant affichés en ${selectedCurrency.symbol}.`,
-          [{ text: 'OK' }]
+          [{ text: t.ok }]
         );
         
         console.log(`✅ Devise changée en ${selectedCurrency.code}`);
       } catch (error) {
         console.error('❌ Erreur changement devise:', error);
-        Alert.alert(t.error, 'Impossible de changer la devise.', [{ text: 'OK' }]);
+        Alert.alert(t.error, t.cannotChangeCurrency, [{ text: t.ok }]);
       }
     }
   };

@@ -141,22 +141,22 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
 
   const handleSubmit = () => {
     if (!formData.description.trim()) {
-      alert('Veuillez saisir une description');
+      alert(t.pleaseFillDescription);
       return;
     }
 
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      alert('Veuillez saisir un montant valide');
+      alert(t.pleaseFillAmount);
       return;
     }
 
     if (!formData.category) {
-      alert('Veuillez sélectionner une catégorie');
+      alert(t.pleaseSelectCategory);
       return;
     }
 
     if (!formData.accountId) {
-      alert('Veuillez sélectionner un compte');
+      alert(t.pleaseSelectAccount);
       return;
     }
 
@@ -169,7 +169,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     const recurrenceType = formData.isRecurring ? formData.recurrenceType : undefined;
     
     if (formData.isRecurring && !recurrenceType) {
-      alert('Veuillez sélectionner une fréquence pour la transaction récurrente');
+      alert(t.pleaseSelectFrequency);
       return;
     }
 

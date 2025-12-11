@@ -73,6 +73,13 @@ export const categoryNameTranslations: { [key: string]: string } = {
   'Cadeaux': 'cat_gifts',
   'Aides familiales': 'cat_family_help',
   'Imprévus': 'cat_unexpected',
+  
+  // Catégories spéciales (système)
+  'dette': 'cat_debt',
+  'épargne': 'cat_savings',
+  'remboursement épargne': 'cat_savings_refund',
+  'transfert': 'cat_transfer',
+  'charge_annuelle': 'cat_annual_charge',
 };
 
 /**

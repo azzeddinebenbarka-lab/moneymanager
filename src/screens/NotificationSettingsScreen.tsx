@@ -151,7 +151,7 @@ export default function NotificationSettingsScreen() {
       
       loadScheduledCount();
     } catch (error) {
-      Alert.alert(t.error, 'Impossible de programmer le rappel');
+      Alert.alert(t.error, t.cannotScheduleReminder);
     }
   };
 

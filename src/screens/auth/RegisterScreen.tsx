@@ -137,7 +137,7 @@ const RegisterScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
         // grâce à la navigation conditionnelle dans App.tsx
         console.log('✅ Inscription réussie, redirection automatique...');
       } else {
-        Alert.alert('Erreur', result.error || 'Impossible de créer le compte');
+        Alert.alert('Erreur', result.error || t.cannotCreateAccount);
       }
     } catch (err: any) {
       Alert.alert('Erreur', err?.message || 'Une erreur est survenue');

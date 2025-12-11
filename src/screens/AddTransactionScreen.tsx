@@ -117,7 +117,7 @@ const AddTransactionScreen = ({ navigation, route }: any) => {
         t.success,
         form.isRecurring ? t.recurringTransactionCreated : t.transactionCreated,
         [{ 
-          text: 'OK', 
+          text: t.ok, 
           onPress: () => navigation.navigate('Transactions')
         }]
       );

@@ -37,8 +37,7 @@ export const useSmartAlerts = (userId: string = 'default-user'): UseSmartAlertsR
   useEffect(() => {
     isMounted.current = true;
     // Définir la fonction de traduction pour SmartAlertService
-    const service = SmartAlertService.getInstance();
-    service.setTranslateFunction(t);
+    SmartAlertService.setTranslateFunction(t);
     
     loadAlerts();
 

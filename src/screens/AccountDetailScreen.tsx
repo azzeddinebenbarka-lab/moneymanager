@@ -19,6 +19,7 @@ import { useAccounts } from '../hooks/useAccounts';
 import { useCategories } from '../hooks/useCategories';
 import { useTransactions } from '../hooks/useTransactions';
 import { Account, Transaction } from '../types';
+import { translateCategoryName } from '../utils/categoryTranslations';
 
 type AccountDetailScreenNavigationProp = any;
 type AccountDetailScreenRouteProp = RouteProp<{
@@ -45,7 +46,8 @@ const TransactionItem = React.memo(({
   isProcessing,
   getCategoryName,
   isReadOnly, // ✅ NOUVEAU PROP POUR LECTURE SEULE
-  colors
+  colors,
+  t
 }: { 
   transaction: Transaction;
   isDark: boolean;
@@ -55,6 +57,7 @@ const TransactionItem = React.memo(({
   getCategoryName: (categoryId: string) => string;
   isReadOnly: boolean; // ✅ INDICATION SI LECTURE SEULE
   colors: any;
+  t: any;
 }) => {
   const isSpecialTransaction = READONLY_CATEGORIES.includes(transaction.category);
   
@@ -86,7 +89,7 @@ const TransactionItem = React.memo(({
         />
         <View style={styles.transactionDetails}>
           <Text style={[styles.transactionDescription, { color: colors.text.primary }]}>
-            {transaction.description || 'Sans description'}
+            {transaction.description || t.noDescription}
           </Text>
           <View style={styles.categoryContainer}>
             <Text style={[styles.transactionCategory, { color: colors.text.secondary }]}>
@@ -124,7 +127,8 @@ const TransactionsSection = React.memo(({
   formatAmount,
   isProcessing,
   getCategoryName,
-  colors
+  colors,
+  t
 }: {
   accountTransactions: Transaction[];
   transactionStats: { totalIncome: number; totalExpenses: number; transactionCount: number };
@@ -136,6 +140,7 @@ const TransactionsSection = React.memo(({
   isProcessing: boolean;
   getCategoryName: (categoryId: string) => string;
   colors: any;
+  t: any;
 }) => {
   // ✅ FILTRER LES TRANSACTIONS : TOUTES SAUF CELLES DES CATÉGORIES SPÉCIALES
   const editableTransactions = accountTransactions.filter(
@@ -152,7 +157,7 @@ const TransactionsSection = React.memo(({
       <View style={[styles.emptyContainer, { backgroundColor: colors.background.card }]}>
         <Ionicons name="receipt-outline" size={48} color={colors.text.disabled} />
         <Text style={[styles.emptyText, { color: colors.text.secondary }]}>
-          Aucune transaction
+          {t.noTransaction}
         </Text>
         <TouchableOpacity 
           style={[styles.addTransactionButton, { backgroundColor: colors.primary[500] }, isProcessing && styles.disabledButton]}
@@ -166,7 +171,7 @@ const TransactionsSection = React.memo(({
           disabled={isProcessing}
         >
           <Text style={[styles.addTransactionButtonText, { color: colors.text.inverse }]}>
-            Ajouter une transaction
+            {t.addTransactionButton}
           </Text>
         </TouchableOpacity>
       </View>
@@ -178,11 +183,11 @@ const TransactionsSection = React.memo(({
       <View style={styles.sectionHeader}>
         <View>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            Transactions ({editableTransactions.length})
+            {t.transactions} ({editableTransactions.length})
           </Text>
           {specialTransactionsCount > 0 && (
             <Text style={[styles.specialTransactionsInfo, { color: colors.text.secondary }]}>
-              + {specialTransactionsCount} transaction(s) automatique(s)
+              + {specialTransactionsCount} {t.automaticTransactions}
             </Text>
           )}
         </View>
@@ -196,7 +201,7 @@ const TransactionsSection = React.memo(({
           disabled={isProcessing}
         >
           <Text style={[styles.seeAllText, { color: colors.text.secondary }]}>
-            Voir tout
+            {t.seeAll}
           </Text>
         </TouchableOpacity>
       </View>
@@ -228,7 +233,7 @@ const TransactionsSection = React.memo(({
         <View style={[styles.specialInfoCard, { backgroundColor: colors.primary[100] }]}>
           <Ionicons name="information-circle" size={20} color={colors.primary[500]} />
           <Text style={[styles.specialInfoText, { color: colors.text.primary }]}>
-            Les transactions de dettes, épargne et charges annuelles sont en lecture seule
+            {t.automaticTransactionInfo}
           </Text>
         </View>
       )}
@@ -252,6 +257,7 @@ const TransactionsSection = React.memo(({
             getCategoryName={getCategoryName}
             isReadOnly={READONLY_CATEGORIES.includes(transaction.category)} // ✅ PASSER L'INFO LECTURE SEULE
             colors={colors}
+            t={t}
           />
         ))}
         
@@ -267,7 +273,7 @@ const TransactionsSection = React.memo(({
             disabled={isProcessing}
           >
             <Text style={[styles.moreTransactionsText, { color: colors.text.secondary }]}>
-              Voir les {accountTransactions.length - 15} transactions restantes
+              {t.seeRemaining.replace('{count}', String(accountTransactions.length - 15))}
             </Text>
             <Ionicons name="chevron-forward" size={16} color={colors.text.secondary} />
           </TouchableOpacity>
@@ -295,13 +301,25 @@ const AccountDetailScreen = () => {
 
   // ✅ FONCTION POUR OBTENIR LE NOM DE LA CATÉGORIE
   const getCategoryName = useCallback((categoryId: string): string => {
+    // Vérifier d'abord si c'est une catégorie spéciale (utiliser categoryId directement)
+    const specialCategory = translateCategoryName(categoryId, t);
+    if (specialCategory !== categoryId) {
+      // Si la traduction a changé le nom, c'est une catégorie spéciale reconnue
+      return specialCategory;
+    }
+    
+    // Sinon, chercher dans les catégories normales
     if (!categories || categories.length === 0) {
-      return 'Catégorie inconnue';
+      return categoryId; // Retourner l'ID tel quel si pas de catégories
     }
     
     const category = categories.find(cat => cat.id === categoryId);
-    return category?.name || 'Catégorie inconnue';
-  }, [categories]);
+    if (!category) {
+      return categoryId; // Retourner l'ID tel quel si catégorie non trouvée
+    }
+    
+    return translateCategoryName(category.name, t);
+  }, [categories, t]);
 
   // ✅ CORRECTION : Navigation sécurisée pour les actions
   const handleAddTransaction = useCallback((type: 'income' | 'expense') => {
@@ -384,12 +402,12 @@ const AccountDetailScreen = () => {
       setShowAccountForm(false);
       
       setTimeout(() => {
-        Alert.alert(t.success, 'Compte modifié avec succès');
+        Alert.alert(t.success, t.accountSuccessModified);
       }, 300);
       
     } catch (error) {
       console.error('❌ [AccountDetailScreen] Erreur modification:', error);
-      Alert.alert(t.error, 'Impossible de modifier le compte');
+      Alert.alert(t.error, t.cannotModifyAccount);
     } finally {
       setIsProcessing(false);
     }
@@ -400,8 +418,8 @@ const AccountDetailScreen = () => {
     if (!account) return;
 
     Alert.alert(
-      'Supprimer le compte',
-      `Êtes-vous sûr de vouloir supprimer le compte "${account.name}" ?\n\nCette action est irréversible et supprimera toutes les données associées.`,
+      t.deleteAccountTitle,
+      t.deleteAccountMessage.replace('{accountName}', account.name),
       [
         { text: t.cancel, style: 'cancel' },
         {
@@ -421,7 +439,7 @@ const AccountDetailScreen = () => {
               
             } catch (error: any) {
               console.error('❌ [AccountDetailScreen] Erreur suppression:', error);
-              Alert.alert(t.error, error.message || 'Impossible de supprimer le compte');
+              Alert.alert(t.error, error.message || t.cannotDeleteAccount);
             } finally {
               setIsProcessing(false);
             }
@@ -448,7 +466,7 @@ const AccountDetailScreen = () => {
       <View style={[styles.container, { backgroundColor: colors.background.primary }, styles.center]}>
         <ActivityIndicator size="large" color={colors.primary[500]} />
         <Text style={[styles.loadingText, { color: colors.text.secondary }]}>
-          Chargement du compte...
+          {t.loadingAccount}
         </Text>
       </View>
     );
@@ -459,13 +477,13 @@ const AccountDetailScreen = () => {
       <View style={[styles.container, { backgroundColor: colors.background.primary }, styles.center]}>
         <Ionicons name="alert-circle" size={64} color={colors.semantic.error} />
         <Text style={[styles.errorText, { color: colors.text.primary }]}>
-          Compte non trouvé
+          {t.accountNotFound}
         </Text>
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={[styles.backButtonText, { color: colors.primary[500] }]}>Retour</Text>
+          <Text style={[styles.backButtonText, { color: colors.primary[500] }]}>{t.backButton}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -483,7 +501,7 @@ const AccountDetailScreen = () => {
           <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: colors.text.primary }]}>
-          Détails du compte
+          {t.accountDetails}
         </Text>
         <TouchableOpacity 
           style={[styles.editButton, isProcessing && styles.disabledButton]}
@@ -508,9 +526,9 @@ const AccountDetailScreen = () => {
                 {account.name}
               </Text>
               <Text style={[styles.accountType, { color: colors.text.secondary }]}>
-                {account.type === 'cash' ? 'Espèces' : 
-                 account.type === 'bank' ? 'Banque' : 
-                 account.type === 'card' ? 'Carte' : 'Épargne'}
+                {account.type === 'cash' ? t.cash : 
+                 account.type === 'bank' ? t.bankAccount : 
+                 account.type === 'card' ? t.cardAccount : t.savingsAccount}
               </Text>
             </View>
           </View>
@@ -523,7 +541,7 @@ const AccountDetailScreen = () => {
         {/* Actions rapides */}
         <View style={[styles.actionsCard, { backgroundColor: colors.background.card }]}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            Actions
+            {t.actions}
           </Text>
           
           <View style={styles.actionsGrid}>
@@ -534,7 +552,7 @@ const AccountDetailScreen = () => {
             >
               <Ionicons name="arrow-up" size={24} color={colors.semantic.error} />
               <Text style={[styles.actionText, { color: colors.text.primary }]}>
-                Dépense
+                {t.expense}
               </Text>
             </TouchableOpacity>
 
@@ -545,7 +563,7 @@ const AccountDetailScreen = () => {
             >
               <Ionicons name="arrow-down" size={24} color={colors.semantic.success} />
               <Text style={[styles.actionText, { color: colors.text.primary }]}>
-                Revenu
+                {t.revenue}
               </Text>
             </TouchableOpacity>
 
@@ -556,7 +574,7 @@ const AccountDetailScreen = () => {
             >
               <Ionicons name="swap-horizontal" size={24} color={colors.primary[500]} />
               <Text style={[styles.actionText, { color: colors.text.primary }]}>
-                Transfert
+                {t.transfer}
               </Text>
             </TouchableOpacity>
           </View>
@@ -570,33 +588,32 @@ const AccountDetailScreen = () => {
           account={account}
           isDark={isDark}
           navigation={navigation}
-          formatAmount={formatAmount}
-          isProcessing={isProcessing}
-          getCategoryName={getCategoryName}
-          colors={colors}
-        />
-
-        {/* Informations détaillées */}
+            formatAmount={formatAmount}
+            isProcessing={isProcessing}
+            getCategoryName={getCategoryName}
+            colors={colors}
+            t={t}
+          />        {/* Informations détaillées */}
         <View style={[styles.infoCard, { backgroundColor: colors.background.card }]}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            Informations
+            {t.informations}
           </Text>
           
           <View style={styles.infoList}>
             <View style={styles.infoItem}>
               <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>
-                Type de compte
+                {t.accountType}
               </Text>
               <Text style={[styles.infoValue, { color: colors.text.primary }]}>
-                {account.type === 'cash' ? 'Espèces' : 
-                 account.type === 'bank' ? 'Compte bancaire' : 
-                 account.type === 'card' ? 'Carte' : 'Compte épargne'}
+                {account.type === 'cash' ? t.cash : 
+                 account.type === 'bank' ? t.bankAccount : 
+                 account.type === 'card' ? t.cardAccount : t.savingsAccount}
               </Text>
             </View>
             
             <View style={styles.infoItem}>
               <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>
-                Date de création
+                {t.creationDate}
               </Text>
               <Text style={[styles.infoValue, { color: colors.text.primary }]}>
                 {new Date(account.createdAt).toLocaleDateString('fr-FR')}
@@ -605,7 +622,7 @@ const AccountDetailScreen = () => {
 
             <View style={styles.infoItem}>
               <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>
-                Nombre de transactions
+                {t.transactionCount}
               </Text>
               <Text style={[styles.infoValue, { color: colors.text.primary }]}>
                 {accountTransactions.length}
@@ -617,10 +634,10 @@ const AccountDetailScreen = () => {
         {/* Zone de danger */}
         <View style={[styles.dangerCard, { backgroundColor: colors.background.card }]}>
           <Text style={[styles.dangerTitle, { color: colors.semantic.error }]}>
-            Zone de danger
+            {t.dangerZone}
           </Text>
           <Text style={[styles.dangerText, { color: colors.text.secondary }]}>
-            La suppression est irréversible et supprimera toutes les données associées à ce compte.
+            {t.deletionWarning}
           </Text>
           <TouchableOpacity 
             style={[styles.deleteButton, isProcessing && styles.disabledButton]}
@@ -632,7 +649,7 @@ const AccountDetailScreen = () => {
             ) : (
               <>
                 <Ionicons name="trash-outline" size={20} color="#FF3B30" />
-                <Text style={styles.deleteButtonText}>Supprimer le compte</Text>
+                <Text style={styles.deleteButtonText}>{t.deleteAccountButton}</Text>
               </>
             )}
           </TouchableOpacity>

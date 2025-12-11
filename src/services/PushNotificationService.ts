@@ -507,10 +507,23 @@ class PushNotificationService {
         }
       }
 
+      // Récupérer la langue actuelle
+      const LANGUAGE_KEY = '@app_language';
+      const savedLanguage = await AsyncStorage.getItem(LANGUAGE_KEY);
+      const currentLanguage = (savedLanguage === 'en' || savedLanguage === 'ar') ? savedLanguage : 'fr';
+      const t = translations[currentLanguage];
+      
+      const incomeFormatted = `${income.toFixed(2)} MAD`;
+      const expensesFormatted = `${expenses.toFixed(2)} MAD`;
+      const netFlowFormatted = `${netFlow.toFixed(2)} MAD`;
+
       // Programmer pour 20h00 chaque jour
       return await this.scheduleNotification({
-        title: '📊 Résumé financier du jour',
-        body: `Aujourd'hui: ${income.toFixed(2)} MAD de revenus, ${expenses.toFixed(2)} MAD de dépenses. Solde: ${netFlow.toFixed(2)} MAD`,
+        title: t.dailySummaryTitle,
+        body: t.dailySummaryMessage
+          .replace('{income}', incomeFormatted)
+          .replace('{expenses}', expensesFormatted)
+          .replace('{netFlow}', netFlowFormatted),
         data: { 
           type: 'daily_summary',
           income,

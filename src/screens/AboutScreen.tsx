@@ -17,7 +17,7 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     Alert.alert(
       title,
       t.comingSoon,
-      [{ text: 'OK' }]
+      [{ text: t.ok }]
     );
   };
 

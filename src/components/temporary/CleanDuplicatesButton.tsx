@@ -53,7 +53,7 @@ export const CleanDuplicatesButton = () => {
         `${totalDeleted} transaction(s) en double ont été supprimées.`,
         [
           {
-            text: 'OK',
+            text: t.ok,
             onPress: () => {
               // Recharger l'app pour voir les changements
               Alert.alert(

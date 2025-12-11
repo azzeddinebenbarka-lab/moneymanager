@@ -150,7 +150,7 @@ export const AddSavingsGoalScreen: React.FC<AddSavingsGoalScreenProps> = ({ navi
       Alert.alert(
         t.success,
         t.savingsGoalCreatedSuccess,
-        [{ text: 'OK', onPress: () => navigation.navigate('Savings') }]
+        [{ text: t.ok, onPress: () => navigation.navigate('Savings') }]
       );
     } catch (error) {
       console.error('Erreur création objectif:', error);

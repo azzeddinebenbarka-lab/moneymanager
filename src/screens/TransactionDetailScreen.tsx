@@ -1,7 +1,7 @@
 // src/screens/TransactionDetailScreen.tsx - VERSION MODERNISÉE
 import { Ionicons } from '@expo/vector-icons';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
-import React, { useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import {
     Alert,
     ScrollView,
@@ -80,7 +80,7 @@ const TransactionDetailScreen = () => {
               
             } catch (error: any) {
               console.error('❌ [TransactionDetailScreen] Erreur suppression:', error);
-              Alert.alert(t.error, error.message || 'Impossible de supprimer la transaction');
+              Alert.alert(t.error, error.message || t.cannotDeleteTransaction);
             }
           },
         },

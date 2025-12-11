@@ -44,7 +44,7 @@ export const SecuritySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
       Alert.alert(
         t.notAvailableDevice,
         t.notAvailableDevice,
-        [{ text: 'OK' }]
+        [{ text: t.ok }]
       );
       return;
     }
@@ -57,7 +57,7 @@ export const SecuritySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
         Alert.alert(
           t.securityEnabled,
           t.biometricEnabledMessage,
-          [{ text: 'OK' }]
+          [{ text: t.ok }]
         );
       }
     } catch (error: any) {
@@ -87,7 +87,7 @@ export const SecuritySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
       [
         { text: t.cancel, style: 'cancel' },
         {
-          text: 'Confirmer',
+          text: t.confirmButton,
           onPress: async () => {
             try {
               await setAutoLockTimeout(timeout);
@@ -200,7 +200,7 @@ export const SecuritySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
         <View style={[styles.infoCard, { backgroundColor: colors.primary[50] }]}>
           <Ionicons name="shield-checkmark-outline" size={24} color={colors.primary[500]} />
           <Text style={[styles.infoText, { color: colors.primary[700] }]}>
-            L'authentification biométrique utilise le matériel sécurisé de votre appareil pour protéger vos données financières.
+            {t.biometricInfoText}
           </Text>
         </View>
       </ScrollView>

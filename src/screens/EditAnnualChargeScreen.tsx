@@ -149,7 +149,7 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
         Alert.alert(
           t.success,
           t.chargeUpdatedSuccess,
-          [{ text: 'OK', onPress: () => navigation.navigate('AnnualChargesList') }]
+          [{ text: t.ok, onPress: () => navigation.navigate('AnnualChargesList') }]
         );
       } else {
         // Mode création
@@ -157,7 +157,7 @@ const EditAnnualChargeScreen = ({ navigation, route }: any) => {
         Alert.alert(
           t.success,
           t.chargeCreatedSuccess,
-          [{ text: 'OK', onPress: () => navigation.navigate('AnnualChargesList') }]
+          [{ text: t.ok, onPress: () => navigation.navigate('AnnualChargesList') }]
         );
       }
     } catch (error) {

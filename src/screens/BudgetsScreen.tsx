@@ -54,7 +54,7 @@ const BudgetsScreen: React.FC<BudgetsScreenProps> = ({ navigation }) => {
       await createBudget(budgetData);
       setShowBudgetForm(false);
     } catch (error) {
-      Alert.alert(t.error, 'Impossible de créer le budget');
+      Alert.alert(t.error, t.cannotCreateBudget);
     }
   };
 

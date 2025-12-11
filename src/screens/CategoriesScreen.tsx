@@ -176,7 +176,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   const handleSubmit = async (): Promise<void> => {
     if (!formData.name.trim()) {
-      Alert.alert(t.error, 'Veuillez saisir un nom pour la catégorie');
+      Alert.alert(t.error, t.pleaseEnterCategoryName);
       return;
     }
 
@@ -210,7 +210,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               Alert.alert(t.success, 'Catégorie supprimée avec succès');
               await loadCategoryTree();
             } catch (error) {
-              Alert.alert(t.error, error instanceof Error ? error.message : 'Impossible de supprimer la catégorie');
+              Alert.alert(t.error, error instanceof Error ? error.message : t.cannotDeleteCategory);
             }
           }
         },
@@ -473,7 +473,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 <View style={[styles.parentInfo, { backgroundColor: colors.background.card }]}>
                   <Ionicons name="information-circle" size={20} color={colors.primary[500]} />
                   <Text style={[styles.parentInfoText, { color: colors.text.primary }]}>
-                    Sous-catégorie de: {selectedParent.name}
+                    {t.subcategoryOf} {selectedParent.name}
                   </Text>
                 </View>
               )}
@@ -484,7 +484,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   style={[styles.input, { backgroundColor: colors.background.card, color: colors.text.primary, borderColor: colors.border.primary }]}
                   value={formData.name}
                   onChangeText={(text: string) => setFormData({ ...formData, name: text })}
-                  placeholder={selectedParent ? "Nom de la sous-catégorie" : "Nom de la catégorie"}
+                  placeholder={selectedParent ? t.subcategoryNamePlaceholder : t.categoryNamePlaceholder}
                   placeholderTextColor={colors.text.disabled}
                 />
               </View>
@@ -601,7 +601,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 onPress={closeModal}
               >
                 <Text style={[styles.cancelButtonText, { color: colors.text.primary }]}>
-                  Annuler
+                  {t.cancelButton}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -614,7 +614,7 @@ const CategoriesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 disabled={!formData.name}
               >
                 <Text style={[styles.submitButtonText, { color: colors.text.inverse }]}>
-                  {editingCategory ? 'Modifier' : 'Créer'}
+                  {editingCategory ? t.modifyButton : t.createButton}
                 </Text>
               </TouchableOpacity>
             </View>

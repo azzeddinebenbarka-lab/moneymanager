@@ -133,7 +133,7 @@ const processContribution = async (contributionAmount: number) => {
     Alert.alert(
       t.success, 
       result?.message || `${t.contribution} ${formatAmount(contributionAmount)} ${t.contributionAdded}`,
-      [{ text: 'OK', onPress: handleClose }]
+      [{ text: t.ok, onPress: handleClose }]
     );
     
   } catch (error: any) {
@@ -159,19 +159,19 @@ const processContribution = async (contributionAmount: number) => {
 
     // ✅ CORRECTION : VALIDATION DES COMPTES
     if (!selectedAccountId) {
-      Alert.alert('Erreur', 'Veuillez sélectionner un compte source pour la contribution');
+      Alert.alert(t.errorLabel, t.pleaseSelectSourceAccount);
       return;
     }
 
     if (!selectedSavingsAccountId) {
-      Alert.alert('Erreur', 'Veuillez sélectionner un compte d\'épargne de destination');
+      Alert.alert(t.errorLabel, t.pleaseSelectSavingsDestination);
       return;
     }
 
     const contributionAmount = customAmount ? parseFloat(customAmount) : parseFloat(amount);
     
     if (!contributionAmount || contributionAmount <= 0 || isNaN(contributionAmount)) {
-      Alert.alert('Erreur', 'Veuillez saisir un montant valide');
+      Alert.alert(t.errorLabel, t.pleaseEnterValidAmount);
       return;
     }
 
@@ -179,8 +179,8 @@ const processContribution = async (contributionAmount: number) => {
     const selectedAccount = contributionAccounts.find(acc => acc.id === selectedAccountId);
     if (selectedAccount && contributionAmount > selectedAccount.balance) {
       Alert.alert(
-        'Solde insuffisant',
-        `Le solde de ${selectedAccount.name} est de ${formatAmount(selectedAccount.balance)}. Vous ne pouvez pas transférer ${formatAmount(contributionAmount)}.`
+        t.insufficientBalanceTitle,
+        `${t.balanceOf} ${selectedAccount.name} ${t.is} ${formatAmount(selectedAccount.balance)}. ${t.cannotTransfer} ${formatAmount(contributionAmount)}.`
       );
       return;
     }
@@ -188,12 +188,12 @@ const processContribution = async (contributionAmount: number) => {
     // ✅ GESTION DU DÉPASSEMENT D'OBJECTIF
     if (contributionAmount + goal.currentAmount > goal.targetAmount) {
       Alert.alert(
-        'Attention',
-        `Cette contribution dépassera votre objectif de ${formatAmount(goal.targetAmount)}. Souhaitez-vous continuer ?`,
+        t.warningLabel,
+        `${t.contributionExceedsGoal} ${formatAmount(goal.targetAmount)}. ${t.continueQuestion}`,
         [
-          { text: 'Annuler', style: 'cancel' },
+          { text: t.cancel, style: 'cancel' },
           { 
-            text: 'Confirmer', 
+            text: t.confirmButton, 
             onPress: () => processContribution(contributionAmount)
           }
         ]

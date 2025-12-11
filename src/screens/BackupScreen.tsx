@@ -64,7 +64,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         Alert.alert(
           t.autoBackupTitle,
           t.autoBackupEnabledMessage,
-          [{ text: 'OK' }]
+          [{ text: t.ok }]
         );
       } else {
         await AutoBackupScheduler.disable();
@@ -95,7 +95,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   Alert.alert(
                     t.createBackup,
                     t.backupCreated,
-                    [{ text: 'OK' }]
+                    [{ text: t.ok }]
                   );
                 }
               } catch (error) {
@@ -143,7 +143,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   await AsyncStorage.setItem(LAST_BACKUP_KEY, now);
                   setLastBackupDate(now);
                   
-                  Alert.alert(t.success, t.exportJSONSuccess, [{ text: 'OK' }]);
+                  Alert.alert(t.success, t.exportJSONSuccess, [{ text: t.ok }]);
                 } else {
                   throw new Error(result.error || t.exportFailed);
                 }
@@ -185,7 +185,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     });
                   }
                   
-                  Alert.alert(t.success, t.exportCompleted, [{ text: 'OK' }]);
+                  Alert.alert(t.success, t.exportCompleted, [{ text: t.ok }]);
                 }
               } catch (error) {
                 Alert.alert(
@@ -235,7 +235,7 @@ export const BackupScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     format === 'json'
                       ? `Import terminé:\n• ${importResult.imported?.accounts || 0} comptes\n• ${importResult.imported?.transactions || 0} transactions\n• ${importResult.imported?.categories || 0} catégories\n• ${importResult.imported?.budgets || 0} budgets\n• ${importResult.imported?.annualCharges || 0} charges annuelles`
                       : `${importResult.imported} transactions importées`,
-                    [{ text: 'OK' }]
+                    [{ text: t.ok }]
                   );
                 } else {
                   Alert.alert(t.error, importResult.error || t.cannotImportData);

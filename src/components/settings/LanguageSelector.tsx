@@ -51,8 +51,8 @@ export const LanguageSelector: React.FC = () => {
                 code === 'ar' ? 'إعادة التشغيل مطلوبة' : 'Redémarrage requis',
                 code === 'ar'
                   ? 'يرجى إغلاق وإعادة فتح التطبيق'
-                  : 'Veuillez fermer et rouvrir l\'application',
-                [{ text: 'OK' }]
+                  : t.pleaseCloseReopenApp,
+                [{ text: t.ok }]
               );
             },
           },

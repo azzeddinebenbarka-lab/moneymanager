@@ -130,7 +130,7 @@ const AddDebtScreen = ({ navigation }: any) => {
       Alert.alert(
         t.success,
         t.debtAddedSuccess,
-        [{ text: 'OK', onPress: () => navigation.navigate('DebtsList') }]
+        [{ text: t.ok, onPress: () => navigation.navigate('DebtsList') }]
       );
     } catch (error) {
       console.error('❌ [AddDebtScreen] Error creating debt:', error);

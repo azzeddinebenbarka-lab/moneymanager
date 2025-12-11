@@ -81,7 +81,7 @@ export const RecurrenceManager: React.FC<RecurrenceManagerProps> = ({
       `🔸 Trimestrielle: ${stats.quarterly}\n` +
       `✅ Actives: ${stats.active}\n` +
       `❌ Inactives: ${stats.totalRecurring - stats.active}`,
-      [{ text: 'OK' }]
+      [{ text: t.ok }]
     );
   };
 

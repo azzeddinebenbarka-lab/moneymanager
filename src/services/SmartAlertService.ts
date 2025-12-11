@@ -1,8 +1,8 @@
 // src/services/SmartAlertService.ts - VERSION COMPLÈTEMENT CORRIGÉE
 import { Alert, AlertPriority, AlertType } from '../types/Alert';
 
-// Type pour la fonction de traduction
-type TranslateFunction = (key: string) => string;
+// Type pour l'objet de traductions
+type TranslationObject = { [key: string]: string };
 
 // Fonction helper pour remplacer les paramètres dans les messages
 const formatMessage = (template: string, params: Record<string, string | number>): string => {
@@ -37,7 +37,7 @@ export class SmartAlertService {
   private rules: AlertRule[] = [];
   private cooldownCache: Map<string, number> = new Map();
   private fallbackMode: boolean = false;
-  private translateFn: TranslateFunction = (key) => key; // Fonction par défaut
+  private translations: TranslationObject = {}; // Objet de traductions
 
   private constructor() {
     this.initializeRules();
@@ -50,9 +50,14 @@ export class SmartAlertService {
     return SmartAlertService.instance;
   }
 
-  // Méthode pour définir la fonction de traduction
-  setTranslateFunction(translateFn: TranslateFunction): void {
-    this.translateFn = translateFn;
+  // Méthode pour définir l'objet de traductions
+  setTranslateFunction(translations: TranslationObject): void {
+    this.translations = translations;
+  }
+  
+  // Helper pour obtenir une traduction
+  private t(key: string): string {
+    return this.translations[key] || key;
   }
 
   async analyzeAndGenerateAlerts(userId: string = 'default-user'): Promise<AlertAnalysisResult> {
@@ -492,11 +497,10 @@ export class SmartAlertService {
                Math.abs(transaction.amount) > 1000;
       },
       generateAlert: (data) => {
-        const t = this.translateFn;
         const amount = `${Math.abs(data.recentTransaction.amount)} MAD`;
         return {
-          title: formatMessage(t('largeTransactionTitle'), {}),
-          message: formatMessage(t('largeTransactionMessage'), { amount }),
+          title: formatMessage(this.t('largeTransactionTitle'), {}),
+          message: formatMessage(this.t('largeTransactionMessage'), { amount }),
           type: 'transaction',
           priority: 'medium',
           category: 'spending',
@@ -532,7 +536,6 @@ export class SmartAlertService {
         }) || false;
       },
       generateAlert: (data) => {
-        const t = this.translateFn;
         const exceededBudgets = data.budgets?.filter((budget: any) => {
           const percentage = (budget.spent / budget.amount) * 100;
           return budget.isActive && percentage >= 90;
@@ -542,8 +545,8 @@ export class SmartAlertService {
         const percentage = mainBudget ? ((mainBudget.spent / mainBudget.amount) * 100).toFixed(1) : '0';
         
         return {
-          title: formatMessage(t('budgetNearLimitTitle'), {}),
-          message: formatMessage(t('budgetNearLimitMessage'), {
+          title: formatMessage(this.t('budgetNearLimitTitle'), {}),
+          message: formatMessage(this.t('budgetNearLimitMessage'), {
             budgetName: mainBudget?.name || '',
             categoryName: mainBudget?.category || '',
             percentage
@@ -590,7 +593,6 @@ export class SmartAlertService {
         }) || false;
       },
       generateAlert: (data) => {
-        const t = this.translateFn;
         const dueDebts = data.debts?.filter((debt: any) => {
           const today = new Date();
           const nextPayment = debt.nextPaymentDate ? new Date(debt.nextPaymentDate) : new Date();
@@ -603,8 +605,8 @@ export class SmartAlertService {
         const daysUntilDue = Math.ceil((nextPayment.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
         
         return {
-          title: formatMessage(t('debtPaymentDueTitle'), {}),
-          message: formatMessage(t('debtPaymentDueMessage'), {
+          title: formatMessage(this.t('debtPaymentDueTitle'), {}),
+          message: formatMessage(this.t('debtPaymentDueMessage'), {
             debtName: mainDebt?.name || '',
             days: daysUntilDue
           }),
@@ -644,7 +646,6 @@ export class SmartAlertService {
         }) || false;
       },
       generateAlert: (data) => {
-        const t = this.translateFn;
         const progressingGoals = data.savingsGoals?.filter((goal: any) => {
           const progress = (goal.currentAmount / goal.targetAmount) * 100;
           return !goal.isCompleted && progress >= 75 && progress < 100;
@@ -654,8 +655,8 @@ export class SmartAlertService {
         const progress = mainGoal ? ((mainGoal.currentAmount / mainGoal.targetAmount) * 100).toFixed(1) : '0';
         
         return {
-          title: formatMessage(t('savingsGoalNearTitle'), {}),
-          message: formatMessage(t('savingsGoalNearMessage'), {
+          title: formatMessage(this.t('savingsGoalNearTitle'), {}),
+          message: formatMessage(this.t('savingsGoalNearMessage'), {
             goalName: mainGoal?.name || '',
             progress
           }),
@@ -695,7 +696,6 @@ export class SmartAlertService {
         ) || false;
       },
       generateAlert: (data) => {
-        const t = this.translateFn;
         const lowBalanceAccounts = data.accounts?.filter((account: any) => 
           account.isActive && account.balance < 100 && account.balance > 0
         ) || [];
@@ -703,8 +703,8 @@ export class SmartAlertService {
         const mainAccount = lowBalanceAccounts[0];
         
         return {
-          title: formatMessage(t('lowBalanceTitle'), {}),
-          message: formatMessage(t('lowBalanceMessage'), {
+          title: formatMessage(this.t('lowBalanceTitle'), {}),
+          message: formatMessage(this.t('lowBalanceMessage'), {
             accountName: mainAccount?.name || '',
             balance: `${mainAccount?.balance} MAD`
           }),
@@ -736,14 +736,13 @@ export class SmartAlertService {
       isEnabled: true,
       condition: (data) => true,
       generateAlert: (data) => {
-        const t = this.translateFn;
         const totalExpenses = data.cashFlow?.expenses || 0;
         const totalIncome = data.cashFlow?.income || 0;
         const netFlow = data.cashFlow?.netFlow || 0;
         
         return {
-          title: formatMessage(t('dailySummaryTitle'), {}),
-          message: formatMessage(t('dailySummaryMessage'), {
+          title: formatMessage(this.t('dailySummaryTitle'), {}),
+          message: formatMessage(this.t('dailySummaryMessage'), {
             income: `${totalIncome} MAD`,
             expenses: `${totalExpenses} MAD`,
             netFlow: `${netFlow} MAD`
@@ -795,4 +794,6 @@ export class SmartAlertService {
   }
 }
 
-export default SmartAlertService.getInstance();
+// Export de l'instance singleton
+const smartAlertServiceInstance = SmartAlertService.getInstance();
+export default smartAlertServiceInstance;

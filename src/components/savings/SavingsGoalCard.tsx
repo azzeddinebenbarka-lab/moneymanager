@@ -1,6 +1,6 @@
 // /src/components/savings/SavingsGoalCard.tsx
-import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useLanguage } from '../../context/LanguageContext';
 import { SavingsGoal } from '../../types/Savings';
 import { ProgressBar } from '../ui/ProgressBar';
 
@@ -13,6 +13,7 @@ interface Props {
 } 
 
 export const SavingsGoalCard = ({ goal, onPress, onDelete, onMarkCompleted, onAddContribution }: Props) => {
+  const { t } = useLanguage();
   const progress = (goal.currentAmount / goal.targetAmount) * 100;
   const remainingAmount = goal.targetAmount - goal.currentAmount;
   const isCompleted = goal.isCompleted;
@@ -40,12 +41,12 @@ export const SavingsGoalCard = ({ goal, onPress, onDelete, onMarkCompleted, onAd
           <View style={styles.categoryBadge}>
             <Text style={styles.categoryIcon}>{getCategoryIcon(goal.category)}</Text>
             <Text style={styles.categoryText}>
-              {goal.category === 'vacation' ? 'Vacances' :
-               goal.category === 'emergency' ? 'Urgence' :
-               goal.category === 'house' ? 'Maison' :
-               goal.category === 'car' ? 'Voiture' :
-               goal.category === 'education' ? 'Éducation' :
-               goal.category === 'retirement' ? 'Retraite' : 'Autre'}
+              {goal.category === 'vacation' ? t.savingsVacation :
+               goal.category === 'emergency' ? t.savingsEmergency :
+               goal.category === 'house' ? t.savingsHouse :
+               goal.category === 'car' ? t.savingsCar :
+               goal.category === 'education' ? t.savingsEducation :
+               goal.category === 'retirement' ? t.savingsRetirement : t.savingsOther}
             </Text>
           </View>
           <Text style={styles.name}>{goal.name}</Text>
@@ -66,11 +67,11 @@ export const SavingsGoalCard = ({ goal, onPress, onDelete, onMarkCompleted, onAd
 
       <View style={styles.progressInfo}>
         <Text style={styles.progressText}>
-          {progress.toFixed(1)}% atteint
+          {progress.toFixed(1)}% {t.reached}
         </Text>
         {!isCompleted && (
           <Text style={styles.remainingText}>
-            €{remainingAmount.toLocaleString()} restant
+            €{remainingAmount.toLocaleString()} {t.remaining}
           </Text>
         )}
       </View>
@@ -78,7 +79,7 @@ export const SavingsGoalCard = ({ goal, onPress, onDelete, onMarkCompleted, onAd
       {/* Informations supplémentaires */}
       <View style={styles.details}>
         <View style={styles.detailItem}>
-          <Text style={styles.detailLabel}>Échéance</Text>
+          <Text style={styles.detailLabel}>{t.targetDate}</Text>
           <Text style={styles.detailValue}>
             {new Date(goal.targetDate).toLocaleDateString('fr-FR', { 
               day: 'numeric', 
@@ -89,7 +90,7 @@ export const SavingsGoalCard = ({ goal, onPress, onDelete, onMarkCompleted, onAd
         </View>
         
         <View style={styles.detailItem}>
-          <Text style={styles.detailLabel}>Mensualité</Text>
+          <Text style={styles.detailLabel}>{t.monthlyPaymentLabel}</Text>
           <Text style={styles.detailValue}>€{goal.monthlyContribution.toLocaleString()}</Text>
         </View>
       </View>
@@ -101,21 +102,21 @@ export const SavingsGoalCard = ({ goal, onPress, onDelete, onMarkCompleted, onAd
             style={styles.contributionButton}
             onPress={onAddContribution}
           >
-            <Text style={styles.contributionButtonText}>Ajouter</Text>
+            <Text style={styles.contributionButtonText}>{t.addButton}</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
             style={styles.completeButton}
             onPress={onMarkCompleted}
           >
-            <Text style={styles.completeButtonText}>Terminer</Text>
+            <Text style={styles.completeButtonText}>{t.complete}</Text>
           </TouchableOpacity>
         </View>
       )}
 
       {isCompleted && (
         <View style={styles.completedBadge}>
-          <Text style={styles.completedText}>🎉 Objectif Atteint !</Text>
+          <Text style={styles.completedText}>{t.goalReachedBadge}</Text>
         </View>
       )}
     </TouchableOpacity>

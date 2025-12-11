@@ -206,6 +206,17 @@ export interface Translations {
   addSubscription: string;
   nextCharge: string;
   
+  // Search screen
+  smartSearch: string;
+  searchHint: string;
+  noResults: string;
+  tryDifferentSearch: string;
+  result: string;
+  results: string;
+  all: string;
+  annualCharges: string;
+  noName: string;
+  
   // Traductions supplémentaires
   welcome: string;
   financialHealth: string;
@@ -477,6 +488,12 @@ export interface Translations {
   resetCategoriesSuccess: string;
   resetCategoriesError: string;
   categoriesInstalled: string;
+  categoryNamePlaceholder: string;
+  subcategoryNamePlaceholder: string;
+  subcategoryOf: string;
+  cancelButton: string;
+  modifyButton: string;
+  createButton: string;
   
   // Charges Annuelles
   allCharges: string;
@@ -596,6 +613,118 @@ export interface Translations {
   goalWillBeReached: string;
   canceling: string;
   transferring: string;
+  errorLabel: string;
+  pleaseSelectSourceAccount: string;
+  pleaseSelectSavingsDestination: string;
+  pleaseEnterValidAmount: string;
+  insufficientBalanceTitle: string;
+  pleaseSelectSourceDestination: string;
+  pleaseEnterCategoryName: string;
+  tooManyAttempts: string;
+  cannotScheduleReminder: string;
+  cannotDeleteTransaction: string;
+  cannotCreateBudget: string;
+  cannotLoadBackups: string;
+  cannotCreateBackup: string;
+  cannotRestoreBackup: string;
+  cannotDeleteBackup: string;
+  cannotModifyCloudConfig: string;
+  cannotResetPassword: string;
+  cannotCreateAccount: string;
+  cannotModifyAccount: string;
+  cannotChangeCurrency: string;
+  cannotDeleteCategory: string;
+  pleaseCloseReopenApp: string;
+  pleaseFillDescription: string;
+  pleaseFillAmount: string;
+  pleaseSelectCategory: string;
+  pleaseSelectAccount: string;
+  pleaseSelectFrequency: string;
+  confirmPasswordRequired: string;
+  
+  // Transfer Screen
+  transferBetweenAccounts: string;
+  secureTransfer: string;
+  secureTransferDescription: string;
+  fromAccount: string;
+  toAccount: string;
+  transferAmount: string;
+  descriptionOptional: string;
+  transferSummary: string;
+  from: string;
+  to: string;
+  newSourceBalance: string;
+  newDestinationBalance: string;
+  performTransfer: string;
+  transferInProgress: string;
+  transferSuccess: string;
+  transferSuccessMessage: string;
+  insufficientBalance: string;
+  insufficientBalanceMessage: string;
+  transferPlaceholder: string;
+  balance: string;
+  
+  // Buttons and actions
+  addButton: string;
+  complete: string;
+  addPayment: string;
+  paymentAmount: string;
+  goalReachedBadge: string;
+  amountCannotExceedRemaining: string;
+  
+  // Account Detail Screen
+  accountDetails: string;
+  noDescription: string;
+  noTransaction: string;
+  addTransactionButton: string;
+  automaticTransactions: string;
+  automaticTransactionInfo: string;
+  seeAll: string;
+  accountNotFound: string;
+  backButton: string;
+  loadingAccount: string;
+  accountSuccessModified: string;
+  deleteAccountTitle: string;
+  deleteAccountMessage: string;
+  actions: string;
+  expense: string;
+  revenue: string;
+  transfer: string;
+  informations: string;
+  accountType: string;
+  creationDate: string;
+  transactionCount: string;
+  dangerZone: string;
+  deletionWarning: string;
+  deleteAccountButton: string;
+  cash: string;
+  bankAccount: string;
+  cardAccount: string;
+  savingsAccount: string;
+  seeRemaining: string;
+  insufficientBalanceMessage: string;
+  warningLabel: string;
+  exceedsGoalWarning: string;
+  savedAmount: string;
+  transactionsLinked: string;
+  transactionAssociated: string;
+  hideDetails: string;
+  seeDetails: string;
+  transactionsToDelete: string;
+  moreTransactions: string;
+  whatDoWithSavedMoney: string;
+  moneyWillBeTransferred: string;
+  keepOnSavingsAccount: string;
+  moneyWillRemain: string;
+  transactionsManagement: string;
+  keepTransactions: string;
+  transferHistoryKept: string;
+  moneyWillStayWarning: string;
+  transactionsContainingWillBeDeleted: string;
+  linkedTransactionsWillBeKept: string;
+  willBeDeleted: string;
+  savingsTransfersWillBeDeleted: string;
+  and: string;
   
   // Page Dettes
   totalDebts: string;
@@ -1041,6 +1170,8 @@ export interface Translations {
   afterOneMinute: string;
   afterXMinutes: string;
   afterOneHour: string;
+  confirmButton: string;
+  biometricInfoText: string;
   
   // AboutScreen
   helpSupport: string;
@@ -1131,6 +1262,76 @@ export interface Translations {
   cat_education: string;
   cat_bills: string;
   cat_other_income: string;
+  
+  // Catégories spéciales (système)
+  cat_debt: string;
+  cat_savings: string;
+  cat_savings_refund: string;
+  cat_transfer: string;
+  cat_annual_charge: string;
+  
+  // Types de dettes
+  debtPersonal: string;
+  debtMortgage: string;
+  debtCreditCard: string;
+  debtLoan: string;
+  
+  // Périodes de budget
+  dailyPeriod: string;
+  weeklyPeriod: string;
+  monthlyPeriod: string;
+  yearlyPeriod: string;
+  
+  // Catégories d'épargne
+  savingsVacation: string;
+  savingsEmergency: string;
+  savingsHouse: string;
+  savingsCar: string;
+  savingsEducation: string;
+  savingsRetirement: string;
+  savingsOther: string;
+  
+  // Labels de formulaires dettes
+  progression: string;
+  monthlyPaymentLabel: string;
+  interestRate: string;
+  typeLabel: string;
+  nextDue: string;
+  
+  // Fréquences de récurrence
+  daily: string;
+  weekly: string;
+  monthly: string;
+  yearly: string;
+  recurring: string;
+  
+  // Status généraux
+  statusActive: string;
+  statusInactive: string;
+  
+  // Labels divers
+  totalInterests: string;
+  interestsPaid: string;
+  amortizationPlan: string;
+  month: string;
+  monthlyPaymentColumn: string;
+  capital: string;
+  interests: string;
+  remainingDue: string;
+  seeLess: string;
+  seeMore: string;
+  paymentEligible: string;
+  applyToNewDebt: string;
+  manageMyDebts: string;
+  averageMonthly: string;
+  byMonth: string;
+  perMonth: string;
+  monthsCount: string;
+  interestsEarned: string;
+  savingsCalculator: string;
+  viewByMonth: string;
+  retry: string;
+  validate: string;
 }
 
 export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
@@ -1287,6 +1488,17 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     monthlySubscriptions: 'Abonnements mensuels',
     addSubscription: '+ Ajouter un abonnement',
     nextCharge: 'Prochain prélèvement :',
+    
+    // Search screen
+    smartSearch: 'Recherche intelligente',
+    searchHint: 'Trouvez rapidement vos transactions, charges annuelles et catégories',
+    noResults: 'Aucun résultat',
+    tryDifferentSearch: 'Essayez avec d\'autres mots-clés',
+    result: 'résultat',
+    results: 'résultats',
+    all: 'Tout',
+    annualCharges: 'Charges',
+    noName: 'Sans nom',
     
     // Traductions supplémentaires
     welcome: 'Bienvenue',
@@ -1563,6 +1775,12 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     resetCategoriesSuccess: 'Les 50 nouvelles catégories ont été installées avec succès !',
     resetCategoriesError: 'Impossible de réinitialiser les catégories.',
     categoriesInstalled: 'Catégories installées',
+    categoryNamePlaceholder: 'Nom de la catégorie',
+    subcategoryNamePlaceholder: 'Nom de la sous-catégorie',
+    subcategoryOf: 'Sous-catégorie de:',
+    cancelButton: 'Annuler',
+    modifyButton: 'Modifier',
+    createButton: 'Créer',
     
     // Catégories de charges annuelles
     ac_taxes: 'Impôts',
@@ -1734,6 +1952,118 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     goalWillBeReached: 'Cette contribution atteindra votre objectif',
     canceling: 'Annulation...',
     transferring: 'Transfert...',
+    errorLabel: 'Erreur',
+    pleaseSelectSourceAccount: 'Veuillez sélectionner un compte source pour la contribution',
+    pleaseSelectSavingsDestination: 'Veuillez sélectionner un compte d\'épargne de destination',
+    pleaseEnterValidAmount: 'Veuillez saisir un montant valide',
+    insufficientBalanceTitle: 'Solde insuffisant',
+    pleaseSelectSourceDestination: 'Veuillez sélectionner les comptes source et destination',
+    pleaseEnterCategoryName: 'Veuillez saisir un nom pour la catégorie',
+    tooManyAttempts: 'Trop de tentatives échouées. Veuillez réessayer.',
+    cannotScheduleReminder: 'Impossible de programmer le rappel',
+    cannotDeleteTransaction: 'Impossible de supprimer la transaction',
+    cannotCreateBudget: 'Impossible de créer le budget',
+    cannotLoadBackups: 'Impossible de charger les sauvegardes',
+    cannotCreateBackup: 'Impossible de créer la sauvegarde',
+    cannotRestoreBackup: 'Impossible de restaurer la sauvegarde',
+    cannotDeleteBackup: 'Impossible de supprimer la sauvegarde',
+    cannotModifyCloudConfig: 'Impossible de modifier la configuration cloud',
+    cannotResetPassword: 'Impossible de réinitialiser le mot de passe',
+    cannotCreateAccount: 'Impossible de créer le compte',
+    cannotModifyAccount: 'Impossible de modifier le compte',
+    cannotChangeCurrency: 'Impossible de changer la devise',
+    cannotDeleteCategory: 'Impossible de supprimer la catégorie',
+    pleaseCloseReopenApp: 'Veuillez fermer et rouvrir l\'application',
+    pleaseFillDescription: 'Veuillez saisir une description',
+    pleaseFillAmount: 'Veuillez saisir un montant valide',
+    pleaseSelectCategory: 'Veuillez sélectionner une catégorie',
+    pleaseSelectAccount: 'Veuillez sélectionner un compte',
+    pleaseSelectFrequency: 'Veuillez sélectionner une fréquence pour la transaction récurrente',
+    confirmPasswordRequired: 'Veuillez confirmer le mot de passe',
+    
+    // Transfer Screen
+    transferBetweenAccounts: 'Transfert entre comptes',
+    secureTransfer: 'Transfert sécurisé',
+    secureTransferDescription: 'Transférez de l\'argent entre vos comptes en toute sécurité',
+    fromAccount: 'Depuis le compte',
+    toAccount: 'Vers le compte',
+    transferAmount: 'Montant du transfert',
+    descriptionOptional: 'Description (optionnelle)',
+    transferSummary: 'Récapitulatif du transfert',
+    from: 'De',
+    to: 'Vers',
+    newSourceBalance: 'Nouveau solde source',
+    newDestinationBalance: 'Nouveau solde destination',
+    performTransfer: 'Effectuer le transfert',
+    transferInProgress: 'Transfert en cours...',
+    transferSuccess: '✅ Transfert réussi',
+    transferSuccessMessage: 'Transfert de {amount} effectué avec succès',
+    insufficientBalance: '❌ Solde insuffisant',
+    insufficientBalanceMessage: 'Solde disponible: {balance}',
+    transferPlaceholder: 'Ex: Transfert mensuel d\'épargne',
+    balance: 'Solde',
+    
+    // Buttons and actions
+    addButton: 'Ajouter',
+    complete: 'Terminer',
+    addPayment: 'Ajouter un paiement',
+    paymentAmount: 'Montant du paiement',
+    goalReachedBadge: '🎉 Objectif Atteint !',
+    amountCannotExceedRemaining: 'Le montant ne peut pas dépasser le solde restant',
+    
+    // Account Detail Screen
+    accountDetails: 'Détails du compte',
+    noDescription: 'Sans description',
+    noTransaction: 'Aucune transaction',
+    addTransactionButton: 'Ajouter une transaction',
+    automaticTransactions: 'transaction(s) automatique(s)',
+    automaticTransactionInfo: 'Les transactions de dettes, épargne et charges annuelles sont en lecture seule',
+    seeAll: 'Voir tout',
+    accountNotFound: 'Compte non trouvé',
+    backButton: 'Retour',
+    loadingAccount: 'Chargement du compte...',
+    accountSuccessModified: 'Compte modifié avec succès',
+    deleteAccountTitle: 'Supprimer le compte',
+    deleteAccountMessage: 'Êtes-vous sûr de vouloir supprimer le compte "{accountName}" ?\n\nCette action est irréversible et supprimera toutes les données associées.',
+    actions: 'Actions',
+    expense: 'Dépense',
+    revenue: 'Revenu',
+    transfer: 'Transfert',
+    informations: 'Informations',
+    accountType: 'Type de compte',
+    creationDate: 'Date de création',
+    transactionCount: 'Nombre de transactions',
+    dangerZone: 'Zone de danger',
+    deletionWarning: 'La suppression est irréversible et supprimera toutes les données associées à ce compte.',
+    deleteAccountButton: 'Supprimer le compte',
+    cash: 'Espèces',
+    bankAccount: 'Compte bancaire',
+    cardAccount: 'Carte',
+    savingsAccount: 'Compte épargne',
+    seeRemaining: 'Voir les {count} transactions restantes',
+    insufficientBalanceMessage: 'Le solde de {accountName} est de {balance}. Vous ne pouvez pas transférer {amount}.',
+    warningLabel: 'Attention',
+    exceedsGoalWarning: 'Cette contribution dépassera votre objectif de {targetAmount}. Souhaitez-vous continuer ?',
+    savedAmount: 'Montant épargné',
+    transactionsLinked: 'Transactions liées détectées',
+    transactionAssociated: 'transaction associée',
+    hideDetails: 'Masquer',
+    seeDetails: 'Voir',
+    transactionsToDelete: 'Transactions qui seront supprimées :',
+    moreTransactions: 'autre transaction',
+    whatDoWithSavedMoney: 'Que souhaitez-vous faire de l\'argent épargné ?',
+    moneyWillBeTransferred: 'L\'argent sera transféré vers les comptes d\'origine',
+    keepOnSavingsAccount: '💰 Garder sur le compte épargne',
+    moneyWillRemain: 'L\'argent restera disponible pour d\'autres objectifs',
+    transactionsManagement: 'Gestion des transactions',
+    keepTransactions: '📊 Garder les transactions',
+    transferHistoryKept: 'L\'historique des transferts sera conservé',
+    moneyWillStayWarning: '⚠️ L\'argent restera sur votre compte épargne mais ne sera plus associé à un objectif.',
+    transactionsContainingWillBeDeleted: 'transaction contenant "{goalName}" dans leur description seront supprimée',
+    linkedTransactionsWillBeKept: 'Les {count} transaction liées seront conservées dans votre historique.',
+    willBeDeleted: 'seront supprimée',
+    savingsTransfersWillBeDeleted: 'Les transactions de transfert vers l\'\u00e9pargne seront supprimées',
+    and: 'et',
     
     // Page Dettes
     totalDebts: 'Total des dettes',
@@ -2164,6 +2494,8 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     afterOneMinute: '1 minute',
     afterXMinutes: 'minutes',
     afterOneHour: '1 heure',
+    confirmButton: 'Confirmer',
+    biometricInfoText: 'L\'authentification biométrique utilise le matériel sécurisé de votre appareil pour protéger vos données financières.',
     
     // AboutScreen
     helpSupport: 'Aide & Support',
@@ -2254,6 +2586,76 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     cat_education: '🎓 Éducation',
     cat_bills: '📄 Factures',
     cat_other_income: '💰 Autres revenus',
+    
+    // Catégories spéciales (système)
+    cat_debt: 'Dette',
+    cat_savings: 'Épargne',
+    cat_savings_refund: 'Remboursement épargne',
+    cat_transfer: 'Transfert',
+    cat_annual_charge: 'Charge annuelle',
+    
+    // Types de dettes
+    debtPersonal: 'Personnel',
+    debtMortgage: 'Immobilier',
+    debtCreditCard: 'Carte crédit',
+    debtLoan: 'Prêt',
+    
+    // Périodes de budget
+    dailyPeriod: 'Quotidien',
+    weeklyPeriod: 'Hebdomadaire',
+    monthlyPeriod: 'Mensuel',
+    yearlyPeriod: 'Annuel',
+    
+    // Catégories d'épargne
+    savingsVacation: 'Vacances',
+    savingsEmergency: 'Urgence',
+    savingsHouse: 'Maison',
+    savingsCar: 'Voiture',
+    savingsEducation: 'Éducation',
+    savingsRetirement: 'Retraite',
+    savingsOther: 'Autre',
+    
+    // Labels de formulaires dettes
+    progression: 'Progression',
+    monthlyPaymentLabel: 'Mensualité',
+    interestRate: 'Taux d\'intérêt',
+    typeLabel: 'Type',
+    nextDue: 'Prochaine échéance',
+    
+    // Fréquences de récurrence
+    daily: 'Quotidienne',
+    weekly: 'Hebdomadaire',
+    monthly: 'Mensuelle',
+    yearly: 'Annuelle',
+    recurring: 'Récurrente',
+    
+    // Status généraux
+    statusActive: 'Actif',
+    statusInactive: 'Inactif',
+    
+    // Labels divers
+    totalInterests: 'Intérêts totaux',
+    interestsPaid: 'Intérêts payés',
+    amortizationPlan: 'Plan d\'amortissement',
+    month: 'Mois',
+    monthlyPaymentColumn: 'Mensualité',
+    capital: 'Capital',
+    interests: 'Intérêts',
+    remainingDue: 'Reste dû',
+    seeLess: 'Voir moins',
+    seeMore: 'Voir plus',
+    paymentEligible: 'Paiement autorisé',
+    applyToNewDebt: 'Appliquer à une nouvelle dette',
+    manageMyDebts: 'Gérer mes dettes',
+    averageMonthly: 'Moyenne mensuelle',
+    byMonth: 'par mois',
+    perMonth: '/mois',
+    monthsCount: 'mois',
+    interestsEarned: 'Intérêts gagnés',
+    savingsCalculator: 'Calculateur d\'Épargne',
+    viewByMonth: 'Vue par Mois',
+    retry: 'Réessayer',
+    validate: 'Valider',
   },
   
   en: {
@@ -2409,6 +2811,17 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     monthlySubscriptions: 'Monthly subscriptions',
     addSubscription: '+ Add a subscription',
     nextCharge: 'Next charge:',
+    
+    // Search screen
+    smartSearch: 'Smart Search',
+    searchHint: 'Quickly find your transactions, annual charges and categories',
+    noResults: 'No results',
+    tryDifferentSearch: 'Try different keywords',
+    result: 'result',
+    results: 'results',
+    all: 'All',
+    annualCharges: 'Charges',
+    noName: 'No name',
     
     // Additional translations
     welcome: 'Welcome',
@@ -2685,6 +3098,12 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     resetCategoriesSuccess: 'The 50 new categories have been successfully installed!',
     resetCategoriesError: 'Unable to reset categories.',
     categoriesInstalled: 'Categories installed',
+    categoryNamePlaceholder: 'Category name',
+    subcategoryNamePlaceholder: 'Subcategory name',
+    subcategoryOf: 'Subcategory of:',
+    cancelButton: 'Cancel',
+    modifyButton: 'Modify',
+    createButton: 'Create',
     
     // Annual charge categories
     ac_taxes: 'Taxes',
@@ -2856,6 +3275,118 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     goalWillBeReached: 'This contribution will reach your goal',
     canceling: 'Canceling...',
     transferring: 'Transferring...',
+    errorLabel: 'Error',
+    pleaseSelectSourceAccount: 'Please select a source account for the contribution',
+    pleaseSelectSavingsDestination: 'Please select a destination savings account',
+    pleaseEnterValidAmount: 'Please enter a valid amount',
+    insufficientBalanceTitle: 'Insufficient balance',
+    pleaseSelectSourceDestination: 'Please select source and destination accounts',
+    pleaseEnterCategoryName: 'Please enter a category name',
+    tooManyAttempts: 'Too many failed attempts. Please try again.',
+    cannotScheduleReminder: 'Cannot schedule reminder',
+    cannotDeleteTransaction: 'Cannot delete transaction',
+    cannotCreateBudget: 'Cannot create budget',
+    cannotLoadBackups: 'Cannot load backups',
+    cannotCreateBackup: 'Cannot create backup',
+    cannotRestoreBackup: 'Cannot restore backup',
+    cannotDeleteBackup: 'Cannot delete backup',
+    cannotModifyCloudConfig: 'Cannot modify cloud configuration',
+    cannotResetPassword: 'Cannot reset password',
+    cannotCreateAccount: 'Cannot create account',
+    cannotModifyAccount: 'Cannot modify account',
+    cannotChangeCurrency: 'Cannot change currency',
+    cannotDeleteCategory: 'Cannot delete category',
+    pleaseCloseReopenApp: 'Please close and reopen the application',
+    pleaseFillDescription: 'Please enter a description',
+    pleaseFillAmount: 'Please enter a valid amount',
+    pleaseSelectCategory: 'Please select a category',
+    pleaseSelectAccount: 'Please select an account',
+    pleaseSelectFrequency: 'Please select a frequency for the recurring transaction',
+    confirmPasswordRequired: 'Please confirm the password',
+    
+    // Transfer Screen
+    transferBetweenAccounts: 'Transfer between accounts',
+    secureTransfer: 'Secure transfer',
+    secureTransferDescription: 'Transfer money between your accounts securely',
+    fromAccount: 'From account',
+    toAccount: 'To account',
+    transferAmount: 'Transfer amount',
+    descriptionOptional: 'Description (optional)',
+    transferSummary: 'Transfer summary',
+    from: 'From',
+    to: 'To',
+    newSourceBalance: 'New source balance',
+    newDestinationBalance: 'New destination balance',
+    performTransfer: 'Perform transfer',
+    transferInProgress: 'Transfer in progress...',
+    transferSuccess: '✅ Transfer successful',
+    transferSuccessMessage: 'Transfer of {amount} completed successfully',
+    insufficientBalance: '❌ Insufficient balance',
+    insufficientBalanceMessage: 'Available balance: {balance}',
+    transferPlaceholder: 'E.g.: Monthly savings transfer',
+    balance: 'Balance',
+    
+    // Buttons and actions
+    addButton: 'Add',
+    complete: 'Complete',
+    addPayment: 'Add payment',
+    paymentAmount: 'Payment amount',
+    goalReachedBadge: '🎉 Goal Achieved!',
+    amountCannotExceedRemaining: 'Amount cannot exceed remaining balance',
+    
+    // Account Detail Screen
+    accountDetails: 'Account details',
+    noDescription: 'No description',
+    noTransaction: 'No transaction',
+    addTransactionButton: 'Add a transaction',
+    automaticTransactions: 'automatic transaction(s)',
+    automaticTransactionInfo: 'Debt, savings and annual charge transactions are read-only',
+    seeAll: 'See all',
+    accountNotFound: 'Account not found',
+    backButton: 'Back',
+    loadingAccount: 'Loading account...',
+    accountSuccessModified: 'Account successfully modified',
+    deleteAccountTitle: 'Delete account',
+    deleteAccountMessage: 'Are you sure you want to delete the account "{accountName}"?\n\nThis action is irreversible and will delete all associated data.',
+    actions: 'Actions',
+    expense: 'Expense',
+    revenue: 'Income',
+    transfer: 'Transfer',
+    informations: 'Information',
+    accountType: 'Account type',
+    creationDate: 'Creation date',
+    transactionCount: 'Number of transactions',
+    dangerZone: 'Danger zone',
+    deletionWarning: 'Deletion is irreversible and will delete all data associated with this account.',
+    deleteAccountButton: 'Delete account',
+    cash: 'Cash',
+    bankAccount: 'Bank account',
+    cardAccount: 'Card',
+    savingsAccount: 'Savings account',
+    seeRemaining: 'See {count} remaining transactions',
+    insufficientBalanceMessage: 'The balance of {accountName} is {balance}. You cannot transfer {amount}.',
+    warningLabel: 'Warning',
+    exceedsGoalWarning: 'This contribution will exceed your goal of {targetAmount}. Do you want to continue?',
+    savedAmount: 'Saved amount',
+    transactionsLinked: 'Related transactions detected',
+    transactionAssociated: 'associated transaction',
+    hideDetails: 'Hide',
+    seeDetails: 'See',
+    transactionsToDelete: 'Transactions to be deleted:',
+    moreTransactions: 'more transaction',
+    whatDoWithSavedMoney: 'What do you want to do with the saved money?',
+    moneyWillBeTransferred: 'Money will be transferred to original accounts',
+    keepOnSavingsAccount: '💰 Keep on savings account',
+    moneyWillRemain: 'Money will remain available for other goals',
+    transactionsManagement: 'Transactions management',
+    keepTransactions: '📊 Keep transactions',
+    transferHistoryKept: 'Transfer history will be kept',
+    moneyWillStayWarning: '⚠️ Money will remain in your savings account but will no longer be associated with a goal.',
+    transactionsContainingWillBeDeleted: 'transaction containing "{goalName}" in their description will be deleted',
+    linkedTransactionsWillBeKept: 'The {count} linked transactions will be kept in your history.',
+    willBeDeleted: 'will be deleted',
+    savingsTransfersWillBeDeleted: 'Savings transfer transactions will be deleted',
+    and: 'and',
     
     // Debts page
     totalDebts: 'Total debts',
@@ -3301,6 +3832,8 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     afterOneMinute: '1 minute',
     afterXMinutes: 'minutes',
     afterOneHour: '1 hour',
+    confirmButton: 'Confirm',
+    biometricInfoText: 'Biometric authentication uses your device\'s secure hardware to protect your financial data.',
     
     // AboutScreen
     helpSupport: 'Help & Support',
@@ -3391,6 +3924,76 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     cat_education: '🎓 Education',
     cat_bills: '📄 Bills',
     cat_other_income: '💰 Other Income',
+    
+    // Catégories spéciales (système)
+    cat_debt: 'Debt',
+    cat_savings: 'Savings',
+    cat_savings_refund: 'Savings refund',
+    cat_transfer: 'Transfer',
+    cat_annual_charge: 'Annual charge',
+    
+    // Types de dettes
+    debtPersonal: 'Personal',
+    debtMortgage: 'Mortgage',
+    debtCreditCard: 'Credit card',
+    debtLoan: 'Loan',
+    
+    // Périodes de budget
+    dailyPeriod: 'Daily',
+    weeklyPeriod: 'Weekly',
+    monthlyPeriod: 'Monthly',
+    yearlyPeriod: 'Yearly',
+    
+    // Catégories d'épargne
+    savingsVacation: 'Vacation',
+    savingsEmergency: 'Emergency',
+    savingsHouse: 'House',
+    savingsCar: 'Car',
+    savingsEducation: 'Education',
+    savingsRetirement: 'Retirement',
+    savingsOther: 'Other',
+    
+    // Labels de formulaires dettes
+    progression: 'Progression',
+    monthlyPaymentLabel: 'Monthly payment',
+    interestRate: 'Interest rate',
+    typeLabel: 'Type',
+    nextDue: 'Next due',
+    
+    // Fréquences de récurrence
+    daily: 'Daily',
+    weekly: 'Weekly',
+    monthly: 'Monthly',
+    yearly: 'Yearly',
+    recurring: 'Recurring',
+    
+    // Status généraux
+    statusActive: 'Active',
+    statusInactive: 'Inactive',
+    
+    // Labels divers
+    totalInterests: 'Total interests',
+    interestsPaid: 'Interests paid',
+    amortizationPlan: 'Amortization plan',
+    month: 'Month',
+    monthlyPaymentColumn: 'Monthly payment',
+    capital: 'Principal',
+    interests: 'Interests',
+    remainingDue: 'Remaining due',
+    seeLess: 'See less',
+    seeMore: 'See more',
+    paymentEligible: 'Payment eligible',
+    applyToNewDebt: 'Apply to new debt',
+    manageMyDebts: 'Manage my debts',
+    averageMonthly: 'Monthly average',
+    byMonth: 'per month',
+    perMonth: '/month',
+    monthsCount: 'months',
+    interestsEarned: 'Interests earned',
+    savingsCalculator: 'Savings Calculator',
+    viewByMonth: 'View by Month',
+    retry: 'Retry',
+    validate: 'Validate',
   },
   
   ar: {
@@ -3546,6 +4149,17 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
       monthlySubscriptions: 'اشتراكات شهرية',
       addSubscription: '+ إضافة اشتراك',
       nextCharge: 'الخصم التالي :',
+      
+      // Search screen
+      smartSearch: 'بحث ذكي',
+      searchHint: 'ابحث بسرعة عن معاملاتك والرسوم السنوية والفئات',
+      noResults: 'لا توجد نتائج',
+      tryDifferentSearch: 'جرب كلمات مفتاحية أخرى',
+      result: 'نتيجة',
+      results: 'نتائج',
+      all: 'الكل',
+      annualCharges: 'الرسوم',
+      noName: 'بدون اسم',
     
     // ترجمات إضافية
     welcome: 'مرحباً',
@@ -3822,6 +4436,12 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     resetCategoriesSuccess: 'تم تثبيت 50 فئة جديدة بنجاح!',
     resetCategoriesError: 'تعذر إعادة تعيين الفئات.',
     categoriesInstalled: 'الفئات المثبتة',
+    categoryNamePlaceholder: 'اسم الفئة',
+    subcategoryNamePlaceholder: 'اسم الفئة الفرعية',
+    subcategoryOf: 'فئة فرعية من:',
+    cancelButton: 'إلغاء',
+    modifyButton: 'تعديل',
+    createButton: 'إنشاء',
     
     // فئات الرسوم السنوية
     ac_taxes: 'الضرائب',
@@ -3993,6 +4613,118 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     goalWillBeReached: 'هذه المساهمة ستحقق هدفك',
     canceling: 'جاري الإلغاء...',
     transferring: 'جاري التحويل...',
+    errorLabel: 'خطأ',
+    pleaseSelectSourceAccount: 'يرجى اختيار حساب مصدر للمساهمة',
+    pleaseSelectSavingsDestination: 'يرجى اختيار حساب ادخار الوجهة',
+    pleaseEnterValidAmount: 'يرجى إدخال مبلغ صحيح',
+    insufficientBalanceTitle: 'رصيد غير كاف',
+    pleaseSelectSourceDestination: 'يرجى اختيار حسابات المصدر والوجهة',
+    pleaseEnterCategoryName: 'يرجى إدخال اسم للفئة',
+    tooManyAttempts: 'عدد كبير جدًا من المحاولات الفاشلة. يرجى المحاولة مرة أخرى.',
+    cannotScheduleReminder: 'تعذر جدولة التذكير',
+    cannotDeleteTransaction: 'تعذر حذف المعاملة',
+    cannotCreateBudget: 'تعذر إنشاء الميزانية',
+    cannotLoadBackups: 'تعذر تحميل النسخ الاحتياطية',
+    cannotCreateBackup: 'تعذر إنشاء نسخة احتياطية',
+    cannotRestoreBackup: 'تعذر استعادة النسخة الاحتياطية',
+    cannotDeleteBackup: 'تعذر حذف النسخة الاحتياطية',
+    cannotModifyCloudConfig: 'تعذر تعديل إعدادات السحابة',
+    cannotResetPassword: 'تعذر إعادة تعيين كلمة المرور',
+    cannotCreateAccount: 'تعذر إنشاء الحساب',
+    cannotModifyAccount: 'تعذر تعديل الحساب',
+    cannotChangeCurrency: 'تعذر تغيير العملة',
+    cannotDeleteCategory: 'تعذر حذف الفئة',
+    pleaseCloseReopenApp: 'يرجى إغلاق التطبيق وإعادة فتحه',
+    pleaseFillDescription: 'يرجى إدخال وصف',
+    pleaseFillAmount: 'يرجى إدخال مبلغ صحيح',
+    pleaseSelectCategory: 'يرجى اختيار فئة',
+    pleaseSelectAccount: 'يرجى اختيار حساب',
+    pleaseSelectFrequency: 'يرجى اختيار تكرار للمعاملة المتكررة',
+    confirmPasswordRequired: 'يرجى تأكيد كلمة المرور',
+    
+    // Transfer Screen
+    transferBetweenAccounts: 'تحويل بين الحسابات',
+    secureTransfer: 'تحويل آمن',
+    secureTransferDescription: 'قم بتحويل الأموال بين حساباتك بشكل آمن',
+    fromAccount: 'من الحساب',
+    toAccount: 'إلى الحساب',
+    transferAmount: 'مبلغ التحويل',
+    descriptionOptional: 'الوصف (اختياري)',
+    transferSummary: 'ملخص التحويل',
+    from: 'من',
+    to: 'إلى',
+    newSourceBalance: 'الرصيد الجديد للمصدر',
+    newDestinationBalance: 'الرصيد الجديد للوجهة',
+    performTransfer: 'تنفيذ التحويل',
+    transferInProgress: 'التحويل قيد التنفيذ...',
+    transferSuccess: '✅ تم التحويل بنجاح',
+    transferSuccessMessage: 'تم تحويل {amount} بنجاح',
+    insufficientBalance: '❌ رصيد غير كاف',
+    insufficientBalanceMessage: 'الرصيد المتاح: {balance}',
+    transferPlaceholder: 'مثال: تحويل شهري للادخار',
+    balance: 'الرصيد',
+    
+    // Buttons and actions
+    addButton: 'إضافة',
+    complete: 'إكمال',
+    addPayment: 'إضافة دفعة',
+    paymentAmount: 'مبلغ الدفعة',
+    goalReachedBadge: '🎉 تم تحقيق الهدف!',
+    amountCannotExceedRemaining: 'لا يمكن أن يتجاوز المبلغ الرصيد المتبقي',
+    
+    // Account Detail Screen
+    accountDetails: 'تفاصيل الحساب',
+    noDescription: 'بدون وصف',
+    noTransaction: 'لا توجد معاملات',
+    addTransactionButton: 'إضافة معاملة',
+    automaticTransactions: 'معاملة (معاملات) تلقائية',
+    automaticTransactionInfo: 'معاملات الديون والادخار والرسوم السنوية للقراءة فقط',
+    seeAll: 'عرض الكل',
+    accountNotFound: 'الحساب غير موجود',
+    backButton: 'رجوع',
+    loadingAccount: 'جاري تحميل الحساب...',
+    accountSuccessModified: 'تم تعديل الحساب بنجاح',
+    deleteAccountTitle: 'حذف الحساب',
+    deleteAccountMessage: 'هل أنت متأكد من حذف الحساب "{accountName}"؟\n\nهذا الإجراء لا رجعة فيه وسيحذف جميع البيانات المرتبطة.',
+    actions: 'الإجراءات',
+    expense: 'مصروف',
+    revenue: 'إيراد',
+    transfer: 'تحويل',
+    informations: 'المعلومات',
+    accountType: 'نوع الحساب',
+    creationDate: 'تاريخ الإنشاء',
+    transactionCount: 'عدد المعاملات',
+    dangerZone: 'منطقة الخطر',
+    deletionWarning: 'الحذف لا رجعة فيه وسيحذف جميع البيانات المرتبطة بهذا الحساب.',
+    deleteAccountButton: 'حذف الحساب',
+    cash: 'نقد',
+    bankAccount: 'حساب بنكي',
+    cardAccount: 'بطاقة',
+    savingsAccount: 'حساب ادخار',
+    seeRemaining: 'عرض {count} معاملة متبقية',
+    insufficientBalanceMessage: 'رصيد {accountName} هو {balance}. لا يمكنك تحويل {amount}.',
+    warningLabel: 'تحذير',
+    exceedsGoalWarning: 'هذه المساهمة ستتجاوز هدفك البالغ {targetAmount}. هل تريد المتابعة؟',
+    savedAmount: 'المبلغ المدخر',
+    transactionsLinked: 'تم اكتشاف معاملات مرتبطة',
+    transactionAssociated: 'معاملة مرتبطة',
+    hideDetails: 'إخفاء',
+    seeDetails: 'عرض',
+    transactionsToDelete: 'المعاملات التي سيتم حذفها:',
+    moreTransactions: 'معاملة أخرى',
+    whatDoWithSavedMoney: 'ماذا تريد أن تفعل بالمال المدخر؟',
+    moneyWillBeTransferred: 'سيتم تحويل الأموال إلى الحسابات الأصلية',
+    keepOnSavingsAccount: '💰 الاحتفاظ بها في حساب الادخار',
+    moneyWillRemain: 'ستبقى الأموال متاحة لأهداف أخرى',
+    transactionsManagement: 'إدارة المعاملات',
+    keepTransactions: '📊 الاحتفاظ بالمعاملات',
+    transferHistoryKept: 'سيتم الاحتفاظ بسجل التحويلات',
+    moneyWillStayWarning: '⚠️ ستبقى الأموال في حساب الادخار لكنها لن تعود مرتبطة بهدف.',
+    transactionsContainingWillBeDeleted: 'معاملة تحتوي على "{goalName}" في وصفها سيتم حذفها',
+    linkedTransactionsWillBeKept: 'سيتم الاحتفاظ بـ {count} معاملة مرتبطة في سجلك.',
+    willBeDeleted: 'سيتم حذفها',
+    savingsTransfersWillBeDeleted: 'سيتم حذف معاملات التحويل إلى الادخار',
+    and: 'و',
     
     // صفحة الديون
     totalDebts: 'إجمالي الديون',
@@ -4438,6 +5170,8 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     afterOneMinute: 'دقيقة واحدة',
     afterXMinutes: 'دقائق',
     afterOneHour: 'ساعة واحدة',
+    confirmButton: 'تأكيد',
+    biometricInfoText: 'تستخدم المصادقة البيومترية الأجهزة الآمنة في جهازك لحماية بياناتك المالية.',
     
     // شاشة حول
     helpSupport: 'المساعدة والدعم',
@@ -4528,5 +5262,75 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     cat_education: '🎓 تعليم',
     cat_bills: '📄 فواتير',
     cat_other_income: '💰 إيرادات أخرى',
+    
+    // الفئات الخاصة (النظام)
+    cat_debt: 'الدين',
+    cat_savings: 'الادخار',
+    cat_savings_refund: 'استرجاع الادخار',
+    cat_transfer: 'تحويل',
+    cat_annual_charge: 'رسوم سنوية',
+    
+    // أنواع الديون
+    debtPersonal: 'شخصي',
+    debtMortgage: 'عقاري',
+    debtCreditCard: 'بطاقة ائتمان',
+    debtLoan: 'قرض',
+    
+    // فترات الميزانية
+    dailyPeriod: 'يومي',
+    weeklyPeriod: 'أسبوعي',
+    monthlyPeriod: 'شهري',
+    yearlyPeriod: 'سنوي',
+    
+    // فئات الادخار
+    savingsVacation: 'عطلة',
+    savingsEmergency: 'طوارئ',
+    savingsHouse: 'منزل',
+    savingsCar: 'سيارة',
+    savingsEducation: 'تعليم',
+    savingsRetirement: 'تقاعد',
+    savingsOther: 'أخرى',
+    
+    // تسميات نماذج الديون
+    progression: 'التقدم',
+    monthlyPaymentLabel: 'الدفعة الشهرية',
+    interestRate: 'معدل الفائدة',
+    typeLabel: 'النوع',
+    nextDue: 'الاستحقاق القادم',
+    
+    // تكرار التواتر
+    daily: 'يومية',
+    weekly: 'أسبوعية',
+    monthly: 'شهرية',
+    yearly: 'سنوية',
+    recurring: 'متكررة',
+    
+    // الحالات العامة
+    statusActive: 'نشط',
+    statusInactive: 'غير نشط',
+    
+    // تسميات متنوعة
+    totalInterests: 'إجمالي الفوائد',
+    interestsPaid: 'الفوائد المدفوعة',
+    amortizationPlan: 'خطة السداد',
+    month: 'شهر',
+    monthlyPaymentColumn: 'الدفعة الشهرية',
+    capital: 'رأس المال',
+    interests: 'الفوائد',
+    remainingDue: 'المتبقي',
+    seeLess: 'عرض أقل',
+    seeMore: 'عرض المزيد',
+    paymentEligible: 'مؤهل للدفع',
+    applyToNewDebt: 'تطبيق على دين جديد',
+    manageMyDebts: 'إدارة ديوني',
+    averageMonthly: 'المتوسط الشهري',
+    byMonth: 'في الشهر',
+    perMonth: '/شهر',
+    monthsCount: 'أشهر',
+    interestsEarned: 'الفوائد المكتسبة',
+    savingsCalculator: 'حاسبة الادخار',
+    viewByMonth: 'عرض حسب الشهر',
+    retry: 'إعادة المحاولة',
+    validate: 'تأكيد',
   },
 };

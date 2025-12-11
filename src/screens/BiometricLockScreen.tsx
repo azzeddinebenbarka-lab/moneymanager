@@ -41,7 +41,7 @@ export const BiometricLockScreen: React.FC<BiometricLockScreenProps> = ({ onUnlo
         if (attemptCount >= 2) {
           Alert.alert(
             'Authentification échouée',
-            'Trop de tentatives échouées. Veuillez réessayer.',
+            t.tooManyAttempts,
             [
               {
                 text: 'Réessayer',

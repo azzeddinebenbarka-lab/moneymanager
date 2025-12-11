@@ -2,14 +2,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -39,12 +39,12 @@ const TransferScreen = ({ navigation, route }: any) => {
 
   const handleTransfer = async () => {
     if (!transferData.fromAccountId || !transferData.toAccountId) {
-      Alert.alert(t.error, 'Veuillez sélectionner les comptes source et destination');
+      Alert.alert(t.error, t.pleaseSelectSourceDestination);
       return;
     }
 
     if (!transferData.amount || parseFloat(transferData.amount) <= 0) {
-      Alert.alert(t.error, 'Veuillez saisir un montant valide');
+      Alert.alert(t.error, t.pleaseEnterValidAmount);
       return;
     }
 
@@ -65,11 +65,11 @@ const TransferScreen = ({ navigation, route }: any) => {
       await transferService.executeTransfer(transferPayload);
 
       Alert.alert(
-        '✅ Transfert réussi', 
-        `Transfert de ${formatAmount(amount)} effectué avec succès`,
+        t.transferSuccess, 
+        t.transferSuccessMessage.replace('{amount}', formatAmount(amount)),
         [
           { 
-            text: 'OK', 
+            text: t.ok, 
             onPress: () => {
               // Rafraîchir les données et revenir
               refreshAccounts();
@@ -118,7 +118,7 @@ const TransferScreen = ({ navigation, route }: any) => {
           <Ionicons name="arrow-back" size={24} color={isDark ? '#fff' : '#000'} />
         </TouchableOpacity>
         <Text style={[styles.title, isDark && styles.darkText]}>
-          Transfert entre comptes
+          {t.transferBetweenAccounts}
         </Text>
         <View style={styles.headerSpacer} />
       </View>
@@ -133,10 +133,10 @@ const TransferScreen = ({ navigation, route }: any) => {
           <Ionicons name="information-circle" size={24} color="#007AFF" />
           <View style={styles.infoText}>
             <Text style={[styles.infoTitle, isDark && styles.darkText]}>
-              Transfert sécurisé
+              {t.secureTransfer}
             </Text>
             <Text style={[styles.infoDescription, isDark && styles.darkSubtext]}>
-              Transférez de l'argent entre vos comptes en toute sécurité
+              {t.secureTransferDescription}
             </Text>
           </View>
         </View>
@@ -144,7 +144,7 @@ const TransferScreen = ({ navigation, route }: any) => {
         {/* Compte source */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Depuis le compte
+            {t.fromAccount}
           </Text>
           {accounts.map((account) => (
             <TouchableOpacity
@@ -167,7 +167,7 @@ const TransferScreen = ({ navigation, route }: any) => {
                   {account.name}
                 </Text>
                 <Text style={[styles.accountBalance, isDark && styles.darkSubtext]}>
-                  Solde: {formatAmount(account.balance)}
+                  {t.balance}: {formatAmount(account.balance)}
                 </Text>
               </View>
               {transferData.fromAccountId === account.id && (
@@ -185,7 +185,7 @@ const TransferScreen = ({ navigation, route }: any) => {
         {/* Compte destination */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Vers le compte
+            {t.toAccount}
           </Text>
           {accounts
             .filter(account => account.id !== transferData.fromAccountId)
@@ -210,7 +210,7 @@ const TransferScreen = ({ navigation, route }: any) => {
                     {account.name}
                   </Text>
                   <Text style={[styles.accountBalance, isDark && styles.darkSubtext]}>
-                    Solde: {formatAmount(account.balance)}
+                    {t.balance}: {formatAmount(account.balance)}
                   </Text>
                 </View>
                 {transferData.toAccountId === account.id && (
@@ -222,7 +222,7 @@ const TransferScreen = ({ navigation, route }: any) => {
 
         {/* Montant */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>Montant du transfert</Text>
+          <Text style={[styles.label, isDark && styles.darkText]}>{t.transferAmount}</Text>
           <View style={[styles.amountContainer, isDark && styles.darkInput]}>
             <TextInput
               style={[styles.amountInput, isDark && styles.darkText]}
@@ -236,7 +236,7 @@ const TransferScreen = ({ navigation, route }: any) => {
           </View>
           {fromAccount && transferData.amount && amountValue > fromAccount.balance && (
             <Text style={styles.errorText}>
-              ❌ Solde insuffisant. Solde disponible: {formatAmount(fromAccount.balance)}
+              {t.insufficientBalance}. {t.insufficientBalanceMessage.replace('{balance}', formatAmount(fromAccount.balance))}
             </Text>
           )}
         </View>
@@ -244,13 +244,13 @@ const TransferScreen = ({ navigation, route }: any) => {
         {/* Description */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, isDark && styles.darkText]}>
-            Description (optionnelle)
+            {t.descriptionOptional}
           </Text>
           <TextInput
             style={[styles.input, isDark && styles.darkInput, isDark && styles.darkText]}
             value={transferData.description}
             onChangeText={(text) => setTransferData({ ...transferData, description: text })}
-            placeholder="Ex: Transfert mensuel d'épargne"
+            placeholder={t.transferPlaceholder}
             placeholderTextColor={isDark ? '#666' : '#999'}
             editable={!loading}
           />
@@ -258,7 +258,7 @@ const TransferScreen = ({ navigation, route }: any) => {
 
         {/* Date */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, isDark && styles.darkText]}>Date</Text>
+          <Text style={[styles.label, isDark && styles.darkText]}>{t.date}</Text>
           <TextInput
             style={[styles.input, isDark && styles.darkInput, isDark && styles.darkText]}
             value={transferData.date}
@@ -273,34 +273,34 @@ const TransferScreen = ({ navigation, route }: any) => {
         {fromAccount && toAccount && transferData.amount && amountValue > 0 && (
           <View style={[styles.summary, isDark && styles.darkSummary]}>
             <Text style={[styles.summaryTitle, isDark && styles.darkText]}>
-              Récapitulatif du transfert
+              {t.transferSummary}
             </Text>
             <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, isDark && styles.darkSubtext]}>De:</Text>
+              <Text style={[styles.summaryLabel, isDark && styles.darkSubtext]}>{t.from}:</Text>
               <Text style={[styles.summaryValue, isDark && styles.darkText]}>
                 {fromAccount.name}
               </Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, isDark && styles.darkSubtext]}>Vers:</Text>
+              <Text style={[styles.summaryLabel, isDark && styles.darkSubtext]}>{t.to}:</Text>
               <Text style={[styles.summaryValue, isDark && styles.darkText]}>
                 {toAccount.name}
               </Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, isDark && styles.darkSubtext]}>Montant:</Text>
+              <Text style={[styles.summaryLabel, isDark && styles.darkSubtext]}>{t.amount}:</Text>
               <Text style={[styles.summaryValue, isDark && styles.darkText]}>
                 {formatAmount(amountValue)}
               </Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, isDark && styles.darkSubtext]}>Nouveau solde source:</Text>
+              <Text style={[styles.summaryLabel, isDark && styles.darkSubtext]}>{t.newSourceBalance}:</Text>
               <Text style={[styles.summaryValue, isDark && styles.darkText]}>
                 {formatAmount(fromAccount.balance - amountValue)}
               </Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, isDark && styles.darkSubtext]}>Nouveau solde destination:</Text>
+              <Text style={[styles.summaryLabel, isDark && styles.darkSubtext]}>{t.newDestinationBalance}:</Text>
               <Text style={[styles.summaryValue, isDark && styles.darkText]}>
                 {formatAmount(toAccount.balance + amountValue)}
               </Text>
@@ -320,12 +320,12 @@ const TransferScreen = ({ navigation, route }: any) => {
           {loading ? (
             <>
               <ActivityIndicator size="small" color="#fff" />
-              <Text style={styles.transferButtonText}>Transfert en cours...</Text>
+              <Text style={styles.transferButtonText}>{t.transferInProgress}</Text>
             </>
           ) : (
             <>
               <Ionicons name="swap-horizontal" size={20} color="#fff" />
-              <Text style={styles.transferButtonText}>Effectuer le transfert</Text>
+              <Text style={styles.transferButtonText}>{t.performTransfer}</Text>
             </>
           )}
         </TouchableOpacity>

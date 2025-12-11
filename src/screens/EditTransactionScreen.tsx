@@ -134,7 +134,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
         t.success,
         t.transactionUpdatedSuccess,
         [{ 
-          text: 'OK', 
+          text: t.ok, 
           onPress: () => navigation.navigate('Transactions')
         }]
       );
@@ -162,7 +162,7 @@ const EditTransactionScreen = ({ navigation, route }: any) => {
                 t.success,
                 t.transactionDeletedSuccess,
                 [{ 
-                  text: 'OK', 
+                  text: t.ok, 
                   onPress: () => navigation.navigate('Transactions')
                 }]
               );

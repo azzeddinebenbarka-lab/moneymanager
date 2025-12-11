@@ -1,10 +1,10 @@
 // src/services/savingsService.ts - VERSION COMPLÈTEMENT CORRIGÉE
 import {
-  CreateSavingsGoalData,
-  SavingsContribution,
-  SavingsGoal,
-  SavingsStats,
-  UpdateSavingsGoalData
+    CreateSavingsGoalData,
+    SavingsContribution,
+    SavingsGoal,
+    SavingsStats,
+    UpdateSavingsGoalData
 } from '../types/Savings';
 import { accountService } from './accountService';
 import { getDatabase } from './database/sqlite';
@@ -480,16 +480,23 @@ export const savingsService = {
       const db = await getDatabase();
       
       try {
+        // ✅ ÉTAPE 1 : Supprimer les ANCIENNES transactions liées (contributions) SI demandé
+        let transactionsDeleted = 0;
+        if (deleteTransactions) {
+          transactionsDeleted = await this.deleteRelatedTransactions(goalId, userId);
+          console.log(`🗑️ [savingsService] ${transactionsDeleted} anciennes transactions supprimées`);
+        }
+
+        // ✅ ÉTAPE 2 : Créer les NOUVELLES transactions de remboursement
         let totalRefunded = 0;
         let refundedContributions = 0;
 
-        // Rembourser les contributions
         for (const contribution of contributions.reverse()) {
           if (contribution.fromAccountId && goal.savingsAccountId) {
             console.log('💰 [savingsService] Refunding contribution:', {
               amount: contribution.amount,
               fromAccount: contribution.fromAccountId,
-              toAccount: goal.savingsAccountId
+              toSavingsAccount: goal.savingsAccountId
             });
             
             const date = new Date().toISOString().split('T')[0];
@@ -505,6 +512,7 @@ export const savingsService = {
               continue;
             }
 
+            // ✅ Créer les transactions de remboursement (ne seront PAS supprimées)
             await transferService.executeSavingsRefund({
               fromAccountId: goal.savingsAccountId,
               toAccountId: contribution.fromAccountId,
@@ -519,25 +527,19 @@ export const savingsService = {
           }
         }
 
-        // Supprimer les contributions
+        // ✅ ÉTAPE 3 : Supprimer les contributions (historique interne)
         await db.runAsync(
           'DELETE FROM savings_contributions WHERE goal_id = ? AND user_id = ?',
           [goalId, userId]
         );
 
-        // Supprimer les transactions liées si demandé
-        let transactionsDeleted = 0;
-        if (deleteTransactions) {
-          transactionsDeleted = await this.deleteRelatedTransactions(goalId, userId);
-        }
-
-        // Supprimer l'objectif
+        // ✅ ÉTAPE 4 : Supprimer l'objectif
         await db.runAsync(
           'DELETE FROM savings_goals WHERE id = ? AND user_id = ?',
           [goalId, userId]
         );
 
-        console.log(`✅ [savingsService] Savings goal deleted with refund successfully. ${refundedContributions}/${contributions.length} contributions refunded (${totalRefunded}), ${transactionsDeleted} transactions deleted`);
+        console.log(`✅ [savingsService] Savings goal deleted with refund successfully. ${refundedContributions}/${contributions.length} contributions refunded (${totalRefunded}), ${transactionsDeleted} old transactions deleted`);
 
       } catch (error) {
         console.error('❌ [savingsService] Error during refund deletion:', error);

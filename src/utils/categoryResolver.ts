@@ -61,6 +61,15 @@ export function resolveCategoryLabel(
   }
 
   // 4) Fallback: use the raw value as a label
+  // First check if it's a special system category that should be translated
+  if (translations) {
+    const translatedSpecial = translateCategoryName(trimmed, translations);
+    if (translatedSpecial !== trimmed) {
+      // Translation found for special category
+      return { child: translatedSpecial, matchedId: null };
+    }
+  }
+  
   // If value looks like an internal id (e.g. cat_main_housing), try a readable transformation
   if (lower.startsWith('cat_') || lower.includes('_')) {
     const heuristic = trimmed

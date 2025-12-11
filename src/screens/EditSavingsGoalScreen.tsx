@@ -181,7 +181,7 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
       Alert.alert(
         t.success,
         t.goalMarkedCompleted,
-        [{ text: 'OK', onPress: () => navigation.navigate('Savings') }]
+        [{ text: t.ok, onPress: () => navigation.navigate('Savings') }]
       );
     } catch (error) {
       console.error('Erreur modification objectif:', error);
@@ -200,7 +200,7 @@ const EditSavingsGoalScreen: React.FC<EditSavingsGoalScreenProps> = ({ navigatio
       Alert.alert(
         t.success,
         t.goalDeletedSuccess,
-        [{ text: 'OK', onPress: () => navigation.navigate('Savings') }]
+        [{ text: t.ok, onPress: () => navigation.navigate('Savings') }]
       );
     } catch (error) {
       console.error('Erreur suppression objectif:', error);

@@ -1,6 +1,7 @@
 // src/navigation/DebtStackNavigator.tsx - VERSION CORRIGÉE
 import { createStackNavigator } from '@react-navigation/stack';
 import React from 'react';
+import { useLanguage } from '../context/LanguageContext';
 import AddDebtScreen from '../screens/AddDebtScreen';
 import DebtAnalyticsScreen from '../screens/DebtAnalyticsScreen';
 import DebtCalculatorScreen from '../screens/DebtCalculatorScreen';
@@ -20,6 +21,8 @@ export type DebtStackParamList = {
 const Stack = createStackNavigator<DebtStackParamList>();
 
 const DebtStackNavigator: React.FC = () => {
+  const { t } = useLanguage();
+  
   return (
     <Stack.Navigator
       screenOptions={{
@@ -40,42 +43,42 @@ const DebtStackNavigator: React.FC = () => {
         name="DebtsList" 
         component={DebtsScreen}
         options={{ 
-          title: 'Mes Dettes',
+          title: t.myDebts,
         }}
       />
       <Stack.Screen 
         name="AddDebt" 
         component={AddDebtScreen}
         options={{ 
-          title: 'Nouvelle Dette',
+          title: t.newDebt,
         }}
       />
       <Stack.Screen 
         name="DebtDetail" 
         component={DebtDetailScreen}
         options={({ route }) => ({ 
-          title: 'Détails de la Dette',
+          title: t.debtDetails,
         })}
       />
       <Stack.Screen 
         name="EditDebt" 
         component={EditDebtScreen}
         options={{ 
-          title: 'Modifier la Dette',
+          title: t.modifyDebt,
         }}
       />
       <Stack.Screen 
         name="DebtAnalytics" 
         component={DebtAnalyticsScreen}
         options={{ 
-          title: 'Analyses des Dettes',
+          title: t.debtAnalytics,
         }}
       />
       <Stack.Screen 
         name="DebtCalculator" 
         component={DebtCalculatorScreen}
         options={{ 
-          title: 'Calculateur de Dette',
+          title: t.debtCalculator,
         }}
       />
     </Stack.Navigator>
