@@ -51,10 +51,9 @@ const COUNTRIES = [
 
 const RegisterScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
   const { register } = useAuth();
-  const { t, changeLanguage } = useLanguage();
+  const { t, language } = useLanguage();
   const [name, setName] = useState('');
   const [country, setCountry] = useState('');
-  const [selectedLanguage, setSelectedLanguage] = useState<'fr' | 'en' | 'ar'>('fr');
   const [showCountryModal, setShowCountryModal] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
   const [email, setEmail] = useState('');
@@ -128,9 +127,6 @@ const RegisterScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
     setErrors({});
 
     try {
-      // Appliquer la langue choisie AVANT l'inscription
-      await changeLanguage(selectedLanguage);
-      
       const result = await register(email.trim(), password);
       if (result.success) {
         // Sauvegarder le nom et le pays dans AsyncStorage
@@ -139,7 +135,7 @@ const RegisterScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
         
         // L'utilisateur sera automatiquement redirigé vers le dashboard
         // grâce à la navigation conditionnelle dans App.tsx
-        console.log('✅ Inscription réussie avec langue:', selectedLanguage);
+        console.log('✅ Inscription réussie avec langue:', language);
       } else {
         Alert.alert('Erreur', result.error || t.cannotCreateAccount);
       }
@@ -211,39 +207,6 @@ const RegisterScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
               <Ionicons name="chevron-down" size={20} color="#6B7280" />
             </TouchableOpacity>
             {errors.country && <Text style={styles.errorText}>{errors.country}</Text>}
-          </View>
-
-          {/* Langue préférée */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Langue / Language / اللغة</Text>
-            <View style={styles.languageSelector}>
-              <TouchableOpacity
-                style={[styles.languageButton, selectedLanguage === 'fr' && styles.languageButtonActive]}
-                onPress={() => setSelectedLanguage('fr')}
-                disabled={loading}
-              >
-                <Text style={[styles.languageFlag, selectedLanguage === 'fr' && styles.languageTextActive]}>🇫🇷</Text>
-                <Text style={[styles.languageText, selectedLanguage === 'fr' && styles.languageTextActive]}>Français</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.languageButton, selectedLanguage === 'en' && styles.languageButtonActive]}
-                onPress={() => setSelectedLanguage('en')}
-                disabled={loading}
-              >
-                <Text style={[styles.languageFlag, selectedLanguage === 'en' && styles.languageTextActive]}>🇬🇧</Text>
-                <Text style={[styles.languageText, selectedLanguage === 'en' && styles.languageTextActive]}>English</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.languageButton, selectedLanguage === 'ar' && styles.languageButtonActive]}
-                onPress={() => setSelectedLanguage('ar')}
-                disabled={loading}
-              >
-                <Text style={[styles.languageFlag, selectedLanguage === 'ar' && styles.languageTextActive]}>🇸🇦</Text>
-                <Text style={[styles.languageText, selectedLanguage === 'ar' && styles.languageTextActive]}>العربية</Text>
-              </TouchableOpacity>
-            </View>
           </View>
 
           {/* Email */}
@@ -593,41 +556,6 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     color: '#6B7280',
-  },
-  
-  // Styles pour le sélecteur de langue
-  languageSelector: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 4,
-  },
-  languageButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#F9FAFB',
-    gap: 6,
-  },
-  languageButtonActive: {
-    borderColor: '#6C63FF',
-    backgroundColor: '#F0EDFF',
-  },
-  languageFlag: {
-    fontSize: 20,
-  },
-  languageText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#6B7280',
-  },
-  languageTextActive: {
-    color: '#6C63FF',
   },
 });
 

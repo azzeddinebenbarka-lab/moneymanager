@@ -1,27 +1,19 @@
 // src/screens/auth/LoginScreen.tsx
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 
 const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
-  const { login, register, isRegistered } = useAuth();
+  const { login } = useAuth();
   const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [registered, setRegistered] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-
-  useEffect(() => {
-    (async () => {
-      const r = await isRegistered();
-      setRegistered(r);
-    })();
-  }, []);
 
   const validateForm = (): boolean => {
     const newErrors: { email?: string; password?: string } = {};
@@ -36,7 +28,7 @@ const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
     // Validation mot de passe
     if (!password) {
       newErrors.password = t.passwordRequired;
-    } else if (!registered && password.length < 6) {
+    } else if (password.length < 6) {
       newErrors.password = t.passwordMinLength;
     }
     
@@ -51,18 +43,9 @@ const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
     setErrors({});
 
     try {
-      if (registered) {
-        const result = await login(email.trim(), password);
-        if (!result.success) {
-          Alert.alert(t.error, result.error || t.loginError);
-        }
-      } else {
-        const result = await register(email.trim(), password);
-        if (result.success) {
-          Alert.alert(t.registerSuccess, t.loginSuccess);
-        } else {
-          Alert.alert(t.error, result.error || t.registerError);
-        }
+      const result = await login(email.trim(), password);
+      if (!result.success) {
+        Alert.alert(t.error, result.error || t.loginError);
       }
     } catch (err: any) {
       Alert.alert(t.error, err?.message || t.error);
@@ -83,17 +66,6 @@ const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
     }
   };
 
-  if (registered === null) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.centerLoader}>
-          <ActivityIndicator size="large" color="#6C63FF" />
-          <Text style={styles.loadingText}>{t.loading}</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
@@ -111,7 +83,7 @@ const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
 
         <View style={styles.form}>
           <Text style={styles.formTitle}>
-            {registered ? t.login : t.createAccount}
+            {t.signIn}
           </Text>
 
           {/* Email */}
@@ -144,7 +116,7 @@ const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
               <Ionicons name="lock-closed-outline" size={20} color="#6B7280" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder={registered ? '••••••••' : t.passwordMinLength}
+                placeholder="••••••••"
                 value={password}
                 onChangeText={(text) => {
                   setPassword(text);
@@ -176,28 +148,24 @@ const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
             ) : (
               <>
                 <Text style={styles.buttonText}>
-                  {registered ? t.signIn : t.createAccount}
+                  {t.signIn}
                 </Text>
                 <Ionicons name="arrow-forward" size={20} color="#fff" />
               </>
             )}
           </TouchableOpacity>
 
-          {registered && (
-            <TouchableOpacity style={styles.forgot} onPress={handleForgotPassword}>
-              <Text style={styles.forgotText}>{t.forgotPassword}</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity style={styles.forgot} onPress={handleForgotPassword}>
+            <Text style={styles.forgotText}>{t.forgotPassword}</Text>
+          </TouchableOpacity>
 
           {/* Lien vers inscription */}
-          {!registered && (
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>{t.alreadyHaveAccount} </Text>
-              <TouchableOpacity onPress={goToRegister}>
-                <Text style={styles.footerLink}>{t.createAccount}</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>{t.noAccount}</Text>
+            <TouchableOpacity onPress={goToRegister}>
+              <Text style={styles.footerLink}>{t.createAccount}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>

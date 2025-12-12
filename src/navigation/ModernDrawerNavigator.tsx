@@ -228,9 +228,10 @@ const ModernDrawerNavigator = () => {
     drawerStyle: {
       backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
       width: '100%',
-      maxWidth: 280,
+      maxWidth: '100%',
       margin: 0,
       padding: 0,
+
       left: 0,
       right: 0,
     },
