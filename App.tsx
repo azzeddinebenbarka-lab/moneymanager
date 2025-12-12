@@ -53,21 +53,30 @@ const useAppInitialization = () => {
       if (!__DEV__) {
         try {
           console.log('🔄 Vérification des mises à jour OTA...');
+          console.log('📱 Runtime actuel:', Updates.runtimeVersion);
+          console.log('📱 UpdateID actuel:', Updates.updateId);
+          console.log('📱 Channel:', Updates.channel);
+          
           const update = await Updates.checkForUpdateAsync();
+          console.log('📦 Résultat vérification:', update);
           
           if (update.isAvailable) {
             console.log('📥 Mise à jour disponible! Téléchargement...');
+            console.log('🆕 Manifest:', update.manifest);
             await Updates.fetchUpdateAsync();
             console.log('✅ Mise à jour téléchargée! Redémarrage...');
             await Updates.reloadAsync();
             return; // Stoppe l'exécution car l'app va redémarrer
           } else {
-            console.log('✅ Application à jour');
+            console.log('✅ Application à jour - aucune mise à jour disponible');
           }
         } catch (updateError) {
           console.error('❌ Erreur vérification mises à jour:', updateError);
+          console.error('❌ Détails:', JSON.stringify(updateError, null, 2));
           // Continue l'initialisation même si la mise à jour échoue
         }
+      } else {
+        console.log('⚠️ Mode développement - Vérification OTA désactivée');
       }
       
       // Étape 1: Chargement des polices
