@@ -225,15 +225,27 @@ const ModernDrawerContent = (props: any) => {
         styles.header, 
         isDark && styles.darkHeader
       ]}>
-        <View style={styles.headerContent}>
+        <View style={[
+          styles.headerContent,
+          isRTL && { flexDirection: 'row-reverse' }
+        ]}>
           <Image 
             source={require('../../../assets/images/icon.png')}
             style={styles.appIcon}
             resizeMode="contain"
           />
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>MoneyManager</Text>
-            <Text style={styles.userEmail}>{t.appSlogan || 'Maîtrise ton budget, maîtrise ta vie'}</Text>
+          <View style={[
+            styles.userInfo,
+            isRTL && { alignItems: 'flex-end' }
+          ]}>
+            <Text style={[
+              styles.userName,
+              isRTL && { textAlign: 'right' }
+            ]}>MoneyManager</Text>
+            <Text style={[
+              styles.userEmail,
+              isRTL && { textAlign: 'right' }
+            ]}>{t.appSlogan || 'Maîtrise ton budget, maîtrise ta vie'}</Text>
             
             {/* ✅ INDICATEURS DE STATUT */}
             <View style={styles.statusIndicators}>
@@ -258,7 +270,8 @@ const ModernDrawerContent = (props: any) => {
             <Text style={[
               styles.sectionTitle,
               isDark && styles.darkSectionTitle,
-              section.title.includes('ISLAMIQUES') && styles.islamicSectionTitle
+              section.title.includes('ISLAMIQUES') && styles.islamicSectionTitle,
+              isRTL && { marginRight: 16, marginLeft: 0, textAlign: 'right' }
             ]}>
               {section.title}
             </Text>
@@ -275,18 +288,23 @@ const ModernDrawerContent = (props: any) => {
                       styles.menuItem,
                       isActive && styles.activeMenuItem,
                       isDark && styles.darkMenuItem,
-                      isIslamic && styles.islamicMenuItem
+                      isIslamic && styles.islamicMenuItem,
+                      isRTL && { flexDirection: 'row-reverse' }
                     ]}
                     onPress={() => handleNavigation(item.screen)}
                     activeOpacity={0.7}
                   >
-                    <View style={styles.menuItemLeft}>
+                    <View style={[
+                      styles.menuItemLeft,
+                      isRTL && { flexDirection: 'row-reverse' }
+                    ]}>
                       {/* ✅ ICÔNE */}
                       <View style={[
                         styles.iconWrapper,
                         isActive && styles.activeIconWrapper,
                         isDark && styles.darkIconWrapper,
-                        isIslamic && styles.islamicIconWrapper
+                        isIslamic && styles.islamicIconWrapper,
+                        isRTL && { marginRight: 0, marginLeft: 12 }
                       ]}>
                         <Ionicons 
                           name={item.icon} 
@@ -304,7 +322,8 @@ const ModernDrawerContent = (props: any) => {
                         <Text style={[
                           styles.menuItemText,
                           isDark && styles.darkMenuItemText,
-                          isIslamic && styles.islamicMenuText
+                          isIslamic && styles.islamicMenuText,
+                          isRTL && { textAlign: 'right' }
                         ]}>
                           {item.label}
                         </Text>
@@ -321,7 +340,11 @@ const ModernDrawerContent = (props: any) => {
                     {/* ✅ INDICATEUR VISUEL */}
                     {isActive && (
                       <View style={styles.activeIndicator}>
-                        <Ionicons name="chevron-forward" size={16} color="#007AFF" />
+                        <Ionicons 
+                          name={isRTL ? "chevron-back" : "chevron-forward"} 
+                          size={16} 
+                          color="#007AFF" 
+                        />
                       </View>
                     )}
                   </TouchableOpacity>
@@ -349,7 +372,8 @@ const ModernDrawerContent = (props: any) => {
         <TouchableOpacity 
           style={[
             styles.footerButton,
-            isDark && styles.darkFooterButton
+            isDark && styles.darkFooterButton,
+            isRTL && { flexDirection: 'row-reverse' }
           ]}
           onPress={toggleTheme}
           activeOpacity={0.7}
@@ -367,6 +391,7 @@ const ModernDrawerContent = (props: any) => {
           <Text style={[
             styles.footerButtonText,
             isDark && styles.darkFooterButtonText,
+            isRTL && { marginLeft: 0, marginRight: 12, textAlign: 'right' }
           ]}>
             {isDark ? t.lightMode : t.darkMode}
           </Text>
