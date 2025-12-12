@@ -131,8 +131,8 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
       items: [
         {
           icon: 'cloud-download-outline',
-          title: 'Vérifier les mises à jour',
-          description: 'Rechercher les nouvelles versions',
+          title: t.checkForUpdates,
+          description: t.searchNewVersions,
           color: '#007AFF',
           screen: 'CheckUpdates',
           action: checkForUpdates,

@@ -1191,6 +1191,10 @@ export interface Translations {
   manageFinancesSmartly: string;
   madeWithLove: string;
   
+  // Updates
+  checkForUpdates: string;
+  searchNewVersions: string;
+  
   // Noms des catégories - Revenus
   cat_salary: string;
   cat_secondary_income: string;
@@ -2520,6 +2524,10 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     appInfo: 'Informations',
     manageFinancesSmartly: 'Gérez vos finances intelligemment',
     madeWithLove: 'Fait avec ❤️ pour vous',
+    
+    // Updates
+    checkForUpdates: 'Vérifier les mises à jour',
+    searchNewVersions: 'Rechercher les nouvelles versions',
     
     // Noms des catégories - Revenus
     cat_salary: '💼 Salaire',
@@ -3865,6 +3873,10 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     manageFinancesSmartly: 'Manage your finances smartly',
     madeWithLove: 'Made with ❤️ for you',
     
+    // Updates
+    checkForUpdates: 'Check for updates',
+    searchNewVersions: 'Search for new versions',
+    
     // Category names - Income
     cat_salary: '💼 Salary',
     cat_secondary_income: '📈 Secondary income',
@@ -5208,6 +5220,10 @@ export const translations: Record<'fr' | 'en' | 'ar', Translations> = {
     appInfo: 'معلومات',
     manageFinancesSmartly: 'إدارة أموالك بذكاء',
     madeWithLove: 'صنع بـ ❤️ من أجلك',
+    
+    // Updates
+    checkForUpdates: 'التحقق من التحديثات',
+    searchNewVersions: 'البحث عن إصدارات جديدة',
     
     // أسماء الفئات - الدخل
     cat_salary: '💼 الراتب',
