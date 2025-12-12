@@ -335,7 +335,7 @@ const ModernDrawerContent = (props: any) => {
                           styles.menuItemText,
                           isDark && styles.darkMenuItemText,
                           isIslamic && styles.islamicMenuText,
-                          isRTL && { textAlign: 'right', marginRight: 0, marginLeft: 8 }
+                          isRTL && { textAlign: 'right', marginRight: 0, marginLeft: 0, writingDirection: 'rtl' }
                         ]}>
                           {item.label}
                         </Text>
@@ -595,7 +595,6 @@ const styles = StyleSheet.create({
     color: '#000000',
     marginRight: 8,
     flex: 1,
-    textAlign: 'left',
   },
   darkMenuItemText: {
     color: '#FFFFFF',
