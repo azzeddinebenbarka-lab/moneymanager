@@ -1,7 +1,8 @@
 ﻿// src/screens/SettingsScreen.tsx - VERSION MODERNE
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import * as Updates from 'expo-updates';
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { AppHeader } from '../components/layout/AppHeader';
 import { SafeAreaView } from '../components/SafeAreaView';
 import { useAuth } from '../context/AuthContext';
@@ -12,6 +13,7 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
   const { colors } = useDesignSystem();
   const { t } = useLanguage();
   const { user } = useAuth();
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
 
   // Extraction du nom depuis l'email
   const userName = user?.email ? user.email.split('@')[0].split('.')[0] : t.user;
@@ -19,6 +21,58 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
   
   const handleNavigate = (screenName: string) => {
     navigation.navigate(screenName);
+  };
+
+  const checkForUpdates = async () => {
+    setCheckingUpdate(true);
+    try {
+      console.log('🔄 Vérification manuelle des mises à jour OTA...');
+      
+      if (__DEV__) {
+        Alert.alert(
+          'Mode Développement',
+          'Les mises à jour OTA ne sont pas disponibles en mode développement. Veuillez utiliser un build de production.',
+          [{ text: 'OK' }]
+        );
+        setCheckingUpdate(false);
+        return;
+      }
+
+      const update = await Updates.checkForUpdateAsync();
+      
+      if (update.isAvailable) {
+        Alert.alert(
+          'Mise à jour disponible',
+          'Une nouvelle version est disponible. Voulez-vous l\'installer maintenant ?',
+          [
+            { text: 'Plus tard', style: 'cancel' },
+            {
+              text: 'Installer',
+              onPress: async () => {
+                try {
+                  await Updates.fetchUpdateAsync();
+                  Alert.alert(
+                    'Mise à jour installée',
+                    'L\'application va redémarrer pour appliquer les changements.',
+                    [{ text: 'OK', onPress: () => Updates.reloadAsync() }]
+                  );
+                } catch (error) {
+                  console.error('Erreur lors du téléchargement:', error);
+                  Alert.alert('Erreur', 'Impossible de télécharger la mise à jour.');
+                }
+              },
+            },
+          ]
+        );
+      } else {
+        Alert.alert('Aucune mise à jour', 'Votre application est à jour !');
+      }
+    } catch (error) {
+      console.error('Erreur vérification:', error);
+      Alert.alert('Erreur', 'Impossible de vérifier les mises à jour.');
+    } finally {
+      setCheckingUpdate(false);
+    }
   };
 
   const settingsSections = [
@@ -76,6 +130,14 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
       title: t.support.toUpperCase(),
       items: [
         {
+          icon: 'cloud-download-outline',
+          title: 'Vérifier les mises à jour',
+          description: 'Rechercher les nouvelles versions',
+          color: '#007AFF',
+          screen: 'CheckUpdates',
+          action: checkForUpdates,
+        },
+        {
           icon: 'information-circle-outline',
           title: t.about,
           description: t.versionHelp,
@@ -127,11 +189,16 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
               <TouchableOpacity
                 key={itemIndex}
                 style={[styles.settingCard, { backgroundColor: colors.background.secondary }]}
-                onPress={() => handleNavigate(item.screen)}
+                onPress={() => item.action ? item.action() : handleNavigate(item.screen)}
                 activeOpacity={0.7}
+                disabled={item.action && checkingUpdate}
               >
                 <View style={[styles.settingIconContainer, { backgroundColor: item.color + '20' }]}>
-                  <Ionicons name={item.icon as any} size={24} color={item.color} />
+                  {item.action && checkingUpdate ? (
+                    <ActivityIndicator size="small" color={item.color} />
+                  ) : (
+                    <Ionicons name={item.icon as any} size={24} color={item.color} />
+                  )}
                 </View>
                 
                 <View style={styles.settingContent}>
