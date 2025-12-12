@@ -331,12 +331,20 @@ const ModernDrawerContent = (props: any) => {
                         styles.labelContainer,
                         isRTL && { flexDirection: 'row-reverse' }
                       ]}>
-                        <Text style={[
-                          styles.menuItemText,
-                          isDark && styles.darkMenuItemText,
-                          isIslamic && styles.islamicMenuText,
-                          isRTL && { textAlign: 'right', marginRight: 0, marginLeft: 0, writingDirection: 'rtl' }
-                        ]}>
+                        <Text 
+                          style={[
+                            styles.menuItemText,
+                            isDark && styles.darkMenuItemText,
+                            isIslamic && styles.islamicMenuText,
+                            isRTL && { 
+                              textAlign: 'right', 
+                              marginRight: 0, 
+                              marginLeft: 0,
+                              writingDirection: 'rtl'
+                            }
+                          ]}
+                          {...(isRTL && { writingDirection: 'rtl' })}
+                        >
                           {item.label}
                         </Text>
                         
@@ -594,7 +602,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#000000',
     marginRight: 8,
-    flex: 1,
   },
   darkMenuItemText: {
     color: '#FFFFFF',
