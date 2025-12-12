@@ -227,9 +227,12 @@ const ModernDrawerNavigator = () => {
     drawerPosition: (isRTL ? 'right' : 'left') as 'left' | 'right', // ✅ DROITE EN ARABE, GAUCHE POUR FR/EN
     drawerStyle: {
       backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
-      width: 280,
+      width: '100%',
+      maxWidth: 280,
       margin: 0,
       padding: 0,
+      left: 0,
+      right: 0,
     },
     drawerActiveTintColor: isDark ? '#FFFFFF' : '#007AFF',
     drawerInactiveTintColor: isDark ? '#8E8E93' : '#8E8E93',
@@ -253,6 +256,7 @@ const ModernDrawerNavigator = () => {
     drawerContentContainerStyle: {
       margin: 0,
       padding: 0,
+      flex: 1,
     },
   };
 
