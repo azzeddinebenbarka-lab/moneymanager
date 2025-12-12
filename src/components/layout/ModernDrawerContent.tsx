@@ -227,7 +227,7 @@ const ModernDrawerContent = (props: any) => {
       ]}>
         <View style={[
           styles.headerContent,
-          isRTL && { flexDirection: 'row-reverse' }
+          { flexDirection: 'column', alignItems: 'center' }
         ]}>
           <Image 
             source={require('../../../assets/images/icon.png')}
@@ -236,15 +236,15 @@ const ModernDrawerContent = (props: any) => {
           />
           <View style={[
             styles.userInfo,
-            isRTL && { alignItems: 'flex-end' }
+            { alignItems: 'center' }
           ]}>
             <Text style={[
               styles.userName,
-              isRTL && { textAlign: 'right' }
+              { textAlign: 'center' }
             ]}>MoneyManager</Text>
             <Text style={[
               styles.userEmail,
-              isRTL && { textAlign: 'right' }
+              { textAlign: 'center' }
             ]}>{t.appSlogan || 'Maîtrise ton budget, maîtrise ta vie'}</Text>
             
             {/* ✅ INDICATEURS DE STATUT */}
