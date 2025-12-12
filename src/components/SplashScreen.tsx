@@ -10,54 +10,111 @@ interface AnimatedSplashProps {
 
 const AnimatedSplash: React.FC<AnimatedSplashProps> = ({ onFinish }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.5)).current;
+  const scaleAnim = useRef(new Animated.Value(0.3)).current;
   const logoRotate = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const glowAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Séquence d'animations élégante
+    // Animation de pulsation subtile du logo
+    const pulseAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    // Séquence d'animations professionnelle
     Animated.sequence([
-      // Phase 1: Fade in + Scale up du logo
+      // Phase 1: Apparition élégante avec bounce
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 600,
+          duration: 800,
           useNativeDriver: true,
         }),
         Animated.spring(scaleAnim, {
           toValue: 1,
-          tension: 20,
-          friction: 7,
+          tension: 50,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+        Animated.timing(glowAnim, {
+          toValue: 1,
+          duration: 800,
           useNativeDriver: true,
         }),
       ]),
-      // Phase 2: Légère rotation subtile
+      // Phase 2: Démarrer la pulsation
+      Animated.delay(200),
+    ]).start(() => {
+      pulseAnimation.start();
+      
+      // Phase 3: Rotation subtile 360°
       Animated.timing(logoRotate, {
         toValue: 1,
-        duration: 800,
+        duration: 1200,
         useNativeDriver: true,
-      }),
-      // Phase 3: Pause
-      Animated.delay(400),
-      // Phase 4: Fade out
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      onFinish();
+      }).start();
+      
+      // Phase 4: Sortie élégante après 2.5s
+      setTimeout(() => {
+        pulseAnimation.stop();
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 0,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(scaleAnim, {
+            toValue: 1.2,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+        ]).start(() => {
+          onFinish();
+        });
+      }, 2000);
     });
-  }, [fadeAnim, scaleAnim, logoRotate, onFinish]);
+  }, [fadeAnim, scaleAnim, logoRotate, pulseAnim, glowAnim, onFinish]);
 
   const rotate = logoRotate.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', '5deg'],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  const glowOpacity = glowAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 0.3],
   });
 
   return (
     <View style={styles.container}>
       {/* Fond dégradé élégant */}
       <View style={styles.gradientBackground} />
+      
+      {/* Effet de glow animé autour du logo */}
+      <Animated.View
+        style={[
+          styles.glowContainer,
+          {
+            opacity: glowOpacity,
+            transform: [
+              { scale: Animated.multiply(scaleAnim, pulseAnim) }
+            ],
+          },
+        ]}
+      >
+        <View style={styles.glowCircle} />
+      </Animated.View>
       
       {/* Logo central animé */}
       <Animated.View
@@ -66,7 +123,7 @@ const AnimatedSplash: React.FC<AnimatedSplashProps> = ({ onFinish }) => {
           {
             opacity: fadeAnim,
             transform: [
-              { scale: scaleAnim },
+              { scale: Animated.multiply(scaleAnim, pulseAnim) },
               { rotate }
             ],
           },
@@ -98,6 +155,22 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: '#5B4EBB', // Couleur violette moderne comme le GIF
   },
+  glowContainer: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  glowCircle: {
+    width: width * 0.5,
+    height: width * 0.5,
+    borderRadius: (width * 0.5) / 2,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#FFFFFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 40,
+    elevation: 20,
+  },
   content: {
     alignItems: 'center',
     zIndex: 10,
@@ -110,10 +183,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 15,
+    shadowOffset: { width: 0, height: 15 },
+    shadowOpacity: 0.4,
+    shadowRadius: 30,
+    elevation: 20,
   },
   appIcon: {
     width: '70%',
