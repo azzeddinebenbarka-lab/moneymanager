@@ -228,6 +228,8 @@ const ModernDrawerNavigator = () => {
     drawerStyle: {
       backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
       width: 280,
+      margin: 0,
+      padding: 0,
     },
     drawerActiveTintColor: isDark ? '#FFFFFF' : '#007AFF',
     drawerInactiveTintColor: isDark ? '#8E8E93' : '#8E8E93',
@@ -247,6 +249,10 @@ const ModernDrawerNavigator = () => {
     swipeEdgeWidth: 100, // ✅ AUGMENTÉ POUR FACILITER L'OUVERTURE
     sceneContainerStyle: {
       backgroundColor: 'transparent',
+    },
+    drawerContentContainerStyle: {
+      margin: 0,
+      padding: 0,
     },
   };
 

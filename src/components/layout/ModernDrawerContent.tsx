@@ -407,6 +407,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
     width: '100%',
+    margin: 0,
+    padding: 0,
   },
   darkContainer: {
     backgroundColor: '#1C1C1E',
@@ -416,7 +418,8 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingTop: 60,
     alignItems: 'center',
-    borderBottomRightRadius: 20,
+    borderBottomRightRadius: 0,
+    borderBottomLeftRadius: 0,
   },
   darkHeader: {
     backgroundColor: '#0A84FF',
