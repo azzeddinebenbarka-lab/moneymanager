@@ -1,7 +1,7 @@
 // src/context/LanguageContext.tsx
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { I18nManager } from 'react-native';
+import { I18nManager, NativeModules, Platform } from 'react-native';
 import { translations, Translations } from '../i18n/translations';
 
 type Language = 'fr' | 'en' | 'ar';
@@ -19,6 +19,23 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 const LANGUAGE_KEY = '@app_language';
 
+// Fonction pour détecter la langue du système
+const getSystemLanguage = (): Language => {
+  const systemLocale = Platform.OS === 'ios'
+    ? NativeModules.SettingsManager?.settings?.AppleLocale || 
+      NativeModules.SettingsManager?.settings?.AppleLanguages[0]
+    : NativeModules.I18nManager?.localeIdentifier;
+
+  const locale = systemLocale?.toLowerCase() || '';
+  
+  if (locale.startsWith('ar')) return 'ar';
+  if (locale.startsWith('en')) return 'en';
+  if (locale.startsWith('fr')) return 'fr';
+  
+  // Par défaut: français
+  return 'fr';
+};
+
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('fr');
   const [isRTL, setIsRTL] = useState(false);
@@ -30,7 +47,9 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const loadLanguage = async () => {
     try {
       const savedLanguage = await AsyncStorage.getItem(LANGUAGE_KEY);
+      
       if (savedLanguage && (savedLanguage === 'fr' || savedLanguage === 'en' || savedLanguage === 'ar')) {
+        // Utilise la langue sauvegardée
         setLanguage(savedLanguage);
         const rtl = savedLanguage === 'ar';
         setIsRTL(rtl);
@@ -40,6 +59,11 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           I18nManager.forceRTL(rtl);
           I18nManager.allowRTL(rtl);
         }
+      } else {
+        // Premier lancement : détecte la langue du système
+        const systemLang = getSystemLanguage();
+        console.log('🌍 Langue système détectée:', systemLang);
+        await changeLanguage(systemLang);
       }
     } catch (error) {
       console.error('Error loading language:', error);
