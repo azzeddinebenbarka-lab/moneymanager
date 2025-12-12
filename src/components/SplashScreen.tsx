@@ -1,6 +1,6 @@
 // src/components/SplashScreen.tsx - Version moderne minimaliste
 import React, { useEffect, useRef } from 'react';
-import { Animated, Dimensions, Image, StyleSheet, View } from 'react-native';
+import { Animated, Dimensions, Image, StyleSheet, Text, View } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -14,6 +14,8 @@ const AnimatedSplash: React.FC<AnimatedSplashProps> = ({ onFinish }) => {
   const logoRotate = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
+  const titleFade = useRef(new Animated.Value(0)).current;
+  const titleSlide = useRef(new Animated.Value(30)).current;
 
   useEffect(() => {
     // Animation de pulsation subtile du logo
@@ -53,7 +55,20 @@ const AnimatedSplash: React.FC<AnimatedSplashProps> = ({ onFinish }) => {
           useNativeDriver: true,
         }),
       ]),
-      // Phase 2: Démarrer la pulsation
+      // Phase 2: Apparition du titre
+      Animated.parallel([
+        Animated.timing(titleFade, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(titleSlide, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Phase 3: Pause
       Animated.delay(200),
     ]).start(() => {
       pulseAnimation.start();
@@ -137,6 +152,20 @@ const AnimatedSplash: React.FC<AnimatedSplashProps> = ({ onFinish }) => {
           />
         </View>
       </Animated.View>
+      
+      {/* Titre animé */}
+      <Animated.View
+        style={[
+          styles.titleContainer,
+          {
+            opacity: titleFade,
+            transform: [{ translateY: titleSlide }],
+          },
+        ]}
+      >
+        <Text style={styles.title}>My Budget</Text>
+        <Text style={styles.subtitle}>Gérez vos finances intelligemment</Text>
+      </Animated.View>
     </View>
   );
 };
@@ -191,6 +220,30 @@ const styles = StyleSheet.create({
   appIcon: {
     width: '70%',
     height: '70%',
+  },
+  titleContainer: {
+    position: 'absolute',
+    bottom: width * 0.2,
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 42,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 1,
+    marginBottom: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.9)',
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
 });
 
