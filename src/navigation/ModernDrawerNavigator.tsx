@@ -234,7 +234,7 @@ const ModernDrawerNavigator = () => {
     drawerLabelStyle: {
       fontSize: 15,
       fontWeight: '500' as const,
-      marginLeft: -16,
+      ...(isRTL ? { marginRight: -16 } : { marginLeft: -16 }),
     },
     drawerItemStyle: {
       borderRadius: 12,
