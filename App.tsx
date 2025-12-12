@@ -20,7 +20,6 @@ import ModernDrawerNavigator from './src/navigation/ModernDrawerNavigator';
 import ForgotPasswordScreen from './src/screens/auth/ForgotPasswordScreen';
 import LoginScreen from './src/screens/auth/LoginScreen';
 import RegisterScreen from './src/screens/auth/RegisterScreen';
-import WelcomeScreen from './src/screens/auth/WelcomeScreen';
 
 // Hook pour l'initialisation des polices
 const useAppInitialization = () => {
@@ -155,7 +154,6 @@ const AuthStack = createStackNavigator();
 
 const AuthStackNavigator: React.FC = () => (
   <AuthStack.Navigator screenOptions={{ headerShown: false }}>
-    <AuthStack.Screen name="Welcome" component={WelcomeScreen} />
     <AuthStack.Screen name="Login" component={LoginScreen} />
     <AuthStack.Screen name="Register" component={RegisterScreen} />
     <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
