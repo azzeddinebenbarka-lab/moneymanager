@@ -290,14 +290,14 @@ const ModernDrawerContent = (props: any) => {
                       isActive && styles.activeMenuItem,
                       isDark && styles.darkMenuItem,
                       isIslamic && styles.islamicMenuItem,
-                      isRTL && { flexDirection: 'row-reverse' }
+                      isRTL && { flexDirection: 'row-reverse', alignItems: 'center' }
                     ]}
                     onPress={() => handleNavigation(item.screen)}
                     activeOpacity={0.7}
                   >
                     <View style={[
                       styles.menuItemLeft,
-                      isRTL && { flexDirection: 'row-reverse' }
+                      isRTL && { flexDirection: 'row-reverse', flex: 1 }
                     ]}>
                       {/* ✅ ICÔNE */}
                       <View style={[
@@ -319,12 +319,15 @@ const ModernDrawerContent = (props: any) => {
                       </View>
                       
                       {/* ✅ LABEL */}
-                      <View style={styles.labelContainer}>
+                      <View style={[
+                        styles.labelContainer,
+                        isRTL && { flexDirection: 'row-reverse' }
+                      ]}>
                         <Text style={[
                           styles.menuItemText,
                           isDark && styles.darkMenuItemText,
                           isIslamic && styles.islamicMenuText,
-                          isRTL && { textAlign: 'right' }
+                          isRTL && { textAlign: 'right', marginRight: 0, marginLeft: 8 }
                         ]}>
                           {item.label}
                         </Text>
