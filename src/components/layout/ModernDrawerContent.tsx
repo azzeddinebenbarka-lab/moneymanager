@@ -329,7 +329,12 @@ const ModernDrawerContent = (props: any) => {
                       {/* ✅ LABEL */}
                       <View style={[
                         styles.labelContainer,
-                        isRTL && { flexDirection: 'row-reverse' }
+                        isRTL && { 
+                          flexDirection: 'row-reverse',
+                          flex: 1,
+                          justifyContent: 'flex-start',
+                          alignItems: 'center'
+                        }
                       ]}>
                         <Text 
                           style={[
@@ -340,7 +345,8 @@ const ModernDrawerContent = (props: any) => {
                               textAlign: 'right', 
                               marginRight: 0, 
                               marginLeft: 0,
-                              writingDirection: 'rtl'
+                              writingDirection: 'rtl',
+                              width: '100%'
                             }
                           ]}
                           {...(isRTL && { writingDirection: 'rtl' })}
