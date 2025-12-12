@@ -277,7 +277,10 @@ const ModernDrawerContent = (props: any) => {
               {section.title}
             </Text>
             
-            <View style={styles.sectionItems}>
+            <View style={[
+              styles.sectionItems,
+              isRTL && { paddingRight: 8, paddingLeft: 0 }
+            ]}>
               {section.items.map((item) => {
                 const isActive = isScreenActive(item.screen);
                 const isIslamic = item.label.includes('⭐');
@@ -290,7 +293,12 @@ const ModernDrawerContent = (props: any) => {
                       isActive && styles.activeMenuItem,
                       isDark && styles.darkMenuItem,
                       isIslamic && styles.islamicMenuItem,
-                      isRTL && { flexDirection: 'row-reverse', alignItems: 'center' }
+                      isRTL && { 
+                        flexDirection: 'row-reverse', 
+                        alignItems: 'center',
+                        paddingRight: 16,
+                        paddingLeft: 8
+                      }
                     ]}
                     onPress={() => handleNavigation(item.screen)}
                     activeOpacity={0.7}
