@@ -217,7 +217,8 @@ const ModernDrawerContent = (props: any) => {
   return (
     <View style={[
       styles.container, 
-      isDark && styles.darkContainer
+      isDark && styles.darkContainer,
+      { marginLeft: 0, marginRight: 0, paddingLeft: 0, paddingRight: 0 }
     ]}>
       
       {/* ✅ HEADER */}
@@ -415,11 +416,15 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#007AFF',
-    padding: 24,
+    paddingVertical: 24,
+    paddingHorizontal: 0,
     paddingTop: 60,
     alignItems: 'center',
     borderBottomRightRadius: 0,
     borderBottomLeftRadius: 0,
+    width: '100%',
+    marginLeft: 0,
+    marginRight: 0,
   },
   darkHeader: {
     backgroundColor: '#0A84FF',
@@ -478,7 +483,9 @@ const styles = StyleSheet.create({
   },
   menuContainer: {
     flex: 1,
-    paddingHorizontal: 8,
+    paddingHorizontal: 0,
+    marginLeft: 0,
+    marginRight: 0,
   },
   section: {
     marginBottom: 4,
