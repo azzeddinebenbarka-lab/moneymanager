@@ -9,8 +9,7 @@ import { useSync } from '../../hooks/useSync';
 interface HeaderProps {
   title: string;
   showBackButton?: boolean;
-  showIslamicIcon?: boolean;
-  showSyncButton?: boolean;
+  showHeaderIcons?: boolean;
   rightComponent?: React.ReactNode;
   onBack?: () => void;
 }
@@ -18,29 +17,25 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   title,
   showBackButton = false,
-  showIslamicIcon = true,
-  showSyncButton = true,
+  showHeaderIcons = true,
   rightComponent,
   onBack,
 }) => {
   const navigation = useNavigation();
   const { theme } = useTheme();
-  // const { settings } = useIslamicCharges(); // Supprimé
-  const { syncAllData, isSyncing } = useSync();
   
   const isDark = theme === 'dark';
-  const isIslamicChargesEnabled = false; // Désactivé définitivement
 
-  const handleIslamicPress = () => {
-    navigation.navigate('IslamicCharges' as never);
+  const handleNotificationsPress = () => {
+    navigation.navigate('Notifications' as never);
   };
 
-  const handleSyncPress = async () => {
-    try {
-      await syncAllData();
-    } catch (error) {
-      console.error('Erreur synchronisation:', error);
-    }
+  const handleCalendarPress = () => {
+    navigation.navigate('MonthsOverviewStack' as never);
+  };
+
+  const handleSearchPress = () => {
+    navigation.navigate('Transactions' as never);
   };
 
   const handleMenuPress = () => {
@@ -84,37 +79,44 @@ export const Header: React.FC<HeaderProps> = ({
       <View style={styles.rightSection}>
         {rightComponent || (
           <>
-            {/* ✅ BOUTON SYNCHRONISATION */}
-            {showSyncButton && (
-              <TouchableOpacity 
-                style={[styles.syncButton, isDark && styles.darkSyncButton]}
-                onPress={handleSyncPress}
-                disabled={isSyncing}
-              >
-                {isSyncing ? (
-                  <ActivityIndicator size="small" color={isDark ? "#007AFF" : "#007AFF"} />
-                ) : (
+            {showHeaderIcons && (
+              <>
+                {/* Icône Notifications */}
+                <TouchableOpacity 
+                  style={styles.iconButton}
+                  onPress={handleNotificationsPress}
+                >
                   <Ionicons 
-                    name="sync" 
-                    size={20} 
-                    color={isDark ? "#007AFF" : "#007AFF"} 
+                    name="notifications-outline" 
+                    size={24} 
+                    color={isDark ? "#fff" : "#000"} 
                   />
-                )}
-              </TouchableOpacity>
-            )}
-            
-            {/* ✅ ICÔNE CHARGES ISLAMIQUES - CONDITIONNELLE */}
-            {showIslamicIcon && isIslamicChargesEnabled && (
-              <TouchableOpacity 
-                style={[styles.islamicButton, isDark && styles.darkIslamicButton]}
-                onPress={handleIslamicPress}
-              >
-                <Ionicons 
-                  name="star" 
-                  size={20} 
-                  color={isDark ? "#FFD700" : "#FF6B35"} 
-                />
-              </TouchableOpacity>
+                </TouchableOpacity>
+                
+                {/* Icône Calendrier */}
+                <TouchableOpacity 
+                  style={styles.iconButton}
+                  onPress={handleCalendarPress}
+                >
+                  <Ionicons 
+                    name="calendar-outline" 
+                    size={24} 
+                    color={isDark ? "#fff" : "#000"} 
+                  />
+                </TouchableOpacity>
+                
+                {/* Icône Recherche */}
+                <TouchableOpacity 
+                  style={styles.iconButton}
+                  onPress={handleSearchPress}
+                >
+                  <Ionicons 
+                    name="search-outline" 
+                    size={24} 
+                    color={isDark ? "#fff" : "#000"} 
+                  />
+                </TouchableOpacity>
+              </>
             )}
             
             {/* Bouton menu */}
@@ -181,19 +183,9 @@ const styles = StyleSheet.create({
   darkTitle: {
     color: '#fff',
   },
-  syncButton: {
+  iconButton: {
     padding: 8,
-    backgroundColor: 'transparent',
-  },
-  darkSyncButton: {
-    backgroundColor: 'transparent',
-  },
-  islamicButton: {
-    padding: 8,
-    backgroundColor: 'transparent',
-  },
-  darkIslamicButton: {
-    backgroundColor: 'transparent',
+    marginHorizontal: 4,
   },
   menuButton: {
     padding: 8,

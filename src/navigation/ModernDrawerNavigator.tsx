@@ -38,7 +38,6 @@ import SecuritySettingsScreen from '../screens/SecuritySettingsScreen';
 import TransactionDetailScreen from '../screens/TransactionDetailScreen';
 import TransactionsScreen from '../screens/TransactionsScreen';
 import TransferScreen from '../screens/TransferScreen';
-import BottomTabNavigator from './BottomTabNavigator';
 import DebtStackNavigator from './DebtStackNavigator';
 import SavingsStackNavigator from './SavingsStackNavigator';
 
@@ -270,7 +269,7 @@ const ModernDrawerNavigator = () => {
       {/* SECTION PRINCIPALE */}
       <Drawer.Screen
         name="Dashboard"
-        component={BottomTabNavigator}
+        component={DashboardStack}
         options={{
           drawerIcon: ({ color, size }) => (
             <View style={[styles.iconContainer, { backgroundColor: '#007AFF' }]}>
