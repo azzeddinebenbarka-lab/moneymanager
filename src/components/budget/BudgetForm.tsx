@@ -145,12 +145,9 @@ const BudgetForm: React.FC<BudgetFormProps> = ({
             </Text>
             <CategoryPickerDropdown
               categories={expenseCategories}
-              selectedCategoryId={expenseCategories.find((c: any) => c.name === formData.category)?.id || null}
-              onSelect={(categoryId) => {
-                const selectedCat = expenseCategories.find((c: any) => c.id === categoryId);
-                if (selectedCat) {
-                  setFormData({ ...formData, category: selectedCat.name });
-                }
+              selectedCategoryId={expenseCategories.find((c: any) => c.name === formData.category)?.id || undefined}
+              onSelect={(selectedCategory) => {
+                setFormData({ ...formData, category: selectedCategory.name });
               }}
               type="expense"
             />
