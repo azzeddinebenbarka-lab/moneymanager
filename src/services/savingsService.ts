@@ -30,10 +30,10 @@ interface DatabaseSavingsGoal {
 
 interface DatabaseSavingsContribution {
   id: string;
-  goal_id: string;
+  savings_goal_id: string;
   user_id: string;
   amount: number;
-  date: string;
+  contribution_date: string;
   created_at: string;
   from_account_id?: string;
 }
@@ -54,13 +54,13 @@ export const savingsService = {
         await db.execAsync(`
           CREATE TABLE IF NOT EXISTS savings_contributions (
             id TEXT PRIMARY KEY NOT NULL,
-            goal_id TEXT NOT NULL,
+            savings_goal_id TEXT NOT NULL,
             user_id TEXT NOT NULL,
             amount REAL NOT NULL,
-            date TEXT NOT NULL,
+            contribution_date TEXT NOT NULL,
             created_at TEXT NOT NULL,
             from_account_id TEXT,
-            FOREIGN KEY (goal_id) REFERENCES savings_goals (id) ON DELETE CASCADE
+            FOREIGN KEY (savings_goal_id) REFERENCES savings_goals (id) ON DELETE CASCADE
           );
         `);
         
@@ -73,10 +73,10 @@ export const savingsService = {
         
         const requiredColumns = [
           { name: 'id', type: 'TEXT' },
-          { name: 'goal_id', type: 'TEXT' },
+          { name: 'savings_goal_id', type: 'TEXT' },
           { name: 'user_id', type: 'TEXT' },
           { name: 'amount', type: 'REAL' },
-          { name: 'date', type: 'TEXT' },
+          { name: 'contribution_date', type: 'TEXT' },
           { name: 'created_at', type: 'TEXT' },
           { name: 'from_account_id', type: 'TEXT' }
         ];
@@ -184,7 +184,7 @@ export const savingsService = {
 
       // Enregistrer la contribution
       await db.runAsync(
-        `INSERT INTO savings_contributions (id, goal_id, user_id, amount, date, created_at, from_account_id) 
+        `INSERT INTO savings_contributions (id, savings_goal_id, user_id, amount, contribution_date, created_at, from_account_id) 
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [id, goalId, userId, amount, date, createdAt, effectiveFromAccountId]
       );
@@ -389,16 +389,16 @@ export const savingsService = {
       
       const result = await db.getAllAsync(
         `SELECT sc.* FROM savings_contributions sc
-         WHERE sc.goal_id = ? AND sc.user_id = ?
-         ORDER BY sc.date DESC`,
+         WHERE sc.savings_goal_id = ? AND sc.user_id = ?
+         ORDER BY sc.contribution_date DESC`,
         [goalId, userId]
       ) as DatabaseSavingsContribution[];
 
       const contributions: SavingsContribution[] = result.map((item) => ({
         id: item.id,
-        goalId: item.goal_id,
+        goalId: item.savings_goal_id,
         amount: item.amount,
-        date: item.date,
+        date: item.contribution_date,
         createdAt: item.created_at,
         fromAccountId: item.from_account_id || undefined,
       }));
@@ -431,7 +431,7 @@ export const savingsService = {
       try {
         // 1. Supprimer toutes les contributions associées
         await db.runAsync(
-          'DELETE FROM savings_contributions WHERE goal_id = ? AND user_id = ?',
+          'DELETE FROM savings_contributions WHERE savings_goal_id = ? AND user_id = ?',
           [goalId, userId]
         );
 
@@ -529,7 +529,7 @@ export const savingsService = {
 
         // ✅ ÉTAPE 3 : Supprimer les contributions (historique interne)
         await db.runAsync(
-          'DELETE FROM savings_contributions WHERE goal_id = ? AND user_id = ?',
+          'DELETE FROM savings_contributions WHERE savings_goal_id = ? AND user_id = ?',
           [goalId, userId]
         );
 
@@ -567,7 +567,7 @@ export const savingsService = {
         throw new Error('Contribution non trouvée');
       }
 
-      const goal = await this.getSavingsGoalById(contribution.goal_id, userId);
+      const goal = await this.getSavingsGoalById(contribution.savings_goal_id, userId);
       if (!goal) {
         throw new Error('Objectif d\'épargne non trouvé');
       }
